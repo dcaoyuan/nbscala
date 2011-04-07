@@ -1,0 +1,78 @@
+(*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2007 Robert Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ *)
+
+(**
+ * Typing rules for the simply typed lambda calculus.
+ *
+ * @author Robert Grimm
+ * @version $Revision: 1.3 $
+ *)
+module xtc.lang.TypedLambda;
+
+mltype node =
+  | Application of node * node
+  | Abstraction of node * node * node
+  | Identifier of string
+  | IntegerConstant of string
+  | StringConstant of string
+  | FunctionType of node * node
+  | IntegerType
+  | StringType
+  ;
+
+mltype raw_type = IntegerT | StringT | FunctionT of type * type ;
+
+scope Abstraction (id,_,body) -> Scope(Anonymous("lambda"), [id, body]) ;
+
+namespace default : type = Identifier (id) -> SimpleName(id) ;
+
+mlvalue analyze = function
+  | Application (lambda, expr) ->
+      let tl = analyze lambda
+      and tr = analyze expr in 
+        require (predicate FunctionT _) tl.type
+        error "application of non-function" in begin
+          match tl.type, tr with
+            | FunctionT (param, res), param -> res
+            | _ -> error "argument/parameter type mismatch"
+        end
+  | Abstraction (id, type, body) ->
+      let param = analyze type in
+      let _     = define id param in
+      let res   = analyze body in
+        { type = FunctionT (param, res) }
+  | Identifier _ as id ->
+      let t = lookup id in
+         require t != bottom error (get_name id) ^ " undefined" in t
+  | IntegerConstant _ ->
+      { type = IntegerT }
+  | StringConstant _ ->
+      { type = StringT }
+  | FunctionType (parameter, result) ->
+      { type = FunctionT (analyze parameter, analyze result) }
+  | IntegerType ->
+      { type = IntegerT }
+  | StringType ->
+      { type = StringT }
+  ;
+
+mlvalue get_name = function
+  | Identifier (name) -> name
+  | _ -> bottom
+  ;

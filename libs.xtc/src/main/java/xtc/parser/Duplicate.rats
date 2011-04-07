@@ -1,0 +1,18 @@
+// A contrived grammar for testing the folding of duplicate productions.
+
+module xtc.parser.Duplicate;
+
+public Boolean Top =
+  ( One
+  / Two
+  / Three
+  ) { yyValue = Boolean.TRUE; }
+  ;
+
+void One     = "Text" _ [0-9] Nested1? Nested2* Nested3+ ;
+void Two     = "Text" _ [0-9] Nested1? Nested2* Nested3+ ;
+void Three   = "Text" _ [0-9] Nested1? Nested2* Nested3+ ;
+
+void Nested1 = "1" ;
+void Nested2 = "2" ;
+void Nested3 = "3" ;

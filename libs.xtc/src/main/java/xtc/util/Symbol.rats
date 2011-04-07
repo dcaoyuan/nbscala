@@ -1,0 +1,77 @@
+/*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2005 Robert Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ */
+
+/**
+ * Definition of symbols common to C and Java.
+ *
+ * @author Robert Grimm
+ * @version $Revision: 1.7 $
+ */
+module xtc.util.Symbol(Spacing);
+
+import Spacing;
+
+String Symbol = SymbolCharacters Spacing ;
+
+transient String SymbolCharacters =
+    <GreaterGreaterEqual> ">>="
+  / <LessLessEqual>       "<<="
+  / <GreaterGreater>      ">>"
+  / <LessLess>            "<<"
+  / <PlusEqual>           "+="
+  / <MinusEqual>          "-="
+  / <StarEqual>           "*="
+  / <SlashEqual>          "/="
+  / <PercentEqual>        "%="
+  / <AmpersandEqual>      "&="
+  / <CaretEqual>          "^="
+  / <BarEqual>            "|="
+  / <PlusPlus>            "++"
+  / <MinusMinus>          "--"
+  / <AmpersandAmpersand>  "&&"
+  / <BarBar>              "||"
+  / <LessEqual>           "<="
+  / <GreaterEqual>        ">="
+  / <EqualEqual>          "=="
+  / <BangEqual>           "!="
+  / <Semicolon>           ";"
+  / <Colon>               ":"
+  / <Comma>               ","
+  / <Period>              "."
+  / <OpenBrace>           "{"
+  / <CloseBrace>          "}"
+  / <OpenParenthesis>     "("
+  / <CloseParenthesis>    ")"
+  / <OpenBracket>         "["
+  / <CloseBracket>        "]"
+  / <Bang>                "!"
+  / <Tilde>               "~"
+  / <Plus>                "+"
+  / <Minus>               "-"
+  / <Star>                "*"
+  / <Slash>               "/"
+  / <Percent>             "%"
+  / <Less>                "<"
+  / <Greater>             ">"
+  / <Equal>               "="
+  / <Ampersand>           "&"
+  / <Caret>               "^"
+  / <Bar>                 "|"
+  / <Question>            "?"
+  ;

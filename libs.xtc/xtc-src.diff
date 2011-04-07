@@ -1,0 +1,65 @@
+#Patch for containing offset and endOffset in Location.
+
+--- a/xtc/src/xtc/parser/ParserBase.java
++++ b/xtc/src/xtc/parser/ParserBase.java
+@@ -411,7 +411,7 @@
+   public final Location location(final int index) {
+     final Column c = column(index);
+ 
+-    return new Location(c.file, c.line, c.column);
++    return new Location(c.file, c.line, c.column, index, yyCount - 1);
+   }
+ 
+   /**
+@@ -500,7 +500,7 @@
+   public final void setLocation(final Locatable locatable, final int index) {
+     if ((null != locatable) && (! locatable.hasLocation())) {
+       Column c = column(index);
+-      locatable.setLocation(new Location(c.file, c.line, c.column));
++      locatable.setLocation(new Location(c.file, c.line, c.column, index, yyCount - 1));
+     }
+   }
+ 
+--- a/xtc/src/xtc/tree/Location.java
++++ b/xtc/src/xtc/tree/Location.java
+@@ -37,17 +37,27 @@
+   /** The column. */
+   public final int column;
+ 
++  /** The offset. */
++  public final int offset;
++
++  /** The end offset. */
++  public final int endOffset;
++
+   /**
+    * Create a new location.
+    *
+    * @param file The file name.
+    * @param line The line number.
+    * @param column The column.
++   * @param offset The offset.
++   * @param endOffset The end offset.
+    */
+-  public Location(String file, int line, int column) {
++  public Location(String file, int line, int column, int offset, int endOffset) {
+     this.file   = file;
+     this.line   = line;
+     this.column = column;
++    this.offset    = offset;
++    this.endOffset = endOffset;
+   }
+ 
+   public int hashCode() {
+--- a/xtc/src/xtc/tree/Relocator.java
++++ b/xtc/src/xtc/tree/Relocator.java
+@@ -55,7 +55,7 @@
+ 
+     final int line = n.location.line - baseLine - 1 + markedLine;
+     if ((line != n.location.line) || (! n.location.file.equals(markedFile))) {
+-      n.location = new Location(markedFile, line, n.location.column);
++      n.location = new Location(markedFile, line, n.location.column, n.location.offset, n.location.endOffset);
+     }
+   }
+ 
+

@@ -1,0 +1,454 @@
+/*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2004-2008 Robert Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ */
+
+/**
+ * Grammar for <i>Rats!</i>' own grammars.
+ *
+ * @author Robert Grimm
+ * @version $Revision: 1.30 $
+ */ 
+module xtc.parser.PGrammar;
+
+header {
+   import java.util.ArrayList;
+   import java.util.List;
+
+   import xtc.Constants;
+
+   import xtc.tree.Attribute;
+   import xtc.tree.Comment;
+
+   import xtc.util.Utilities;
+}
+
+option withLocation, constant, stateful(PParserState),
+       parser(xtc.parser.PParser);
+
+// ------------------------------------------------------------- Module
+
+public resetting Module Module =
+   Spacing documentation:CodeComment? Spacing
+   "module":Word name:ModuleName params:ModuleList? ";":Symbol
+   deps:ModuleDependency*
+   header:Header? body:Body? footer:Footer? options:Options?
+   productions:Production*
+   EndOfFile
+      {
+         yyValue = new Module(Comment.documentation(documentation), name,
+                              params, deps.list(), header, body, footer,
+			      options, productions.list());
+      }
+   ;
+
+ModuleDependency ModuleDependency =
+     <Modification>  ModuleModification
+   / <Instantiation> ModuleInstantiation
+   / <Import>        ModuleImport
+   ;
+
+ModuleModification ModuleModification =
+   "modify":Word name:ModuleName args:ModuleList? target:ModuleTarget?
+   ";":Symbol
+      { yyValue =
+          new ModuleModification(name, args, target);
+      }
+   ;
+
+ModuleInstantiation ModuleInstantiation =
+   "instantiate":Word name:ModuleName args:ModuleList? target:ModuleTarget?
+   ";":Symbol
+      {
+        yyValue =
+          new ModuleInstantiation(name, args, target);
+      }
+   ;
+
+ModuleImport ModuleImport =
+   "import":Word name:ModuleName args:ModuleList? target:ModuleTarget?
+   ";":Symbol
+      { yyValue = new ModuleImport(name, args, target); }
+   ;
+
+ModuleList ModuleList =
+     "(":Symbol
+        name:ModuleName names:( void:",":Symbol ModuleName )*
+     ")":Symbol
+        { yyValue = new ModuleList(new Pair<ModuleName>(name, names).list()); }
+   / "(":Symbol ")":Symbol
+        { yyValue = new ModuleList(new ArrayList<ModuleName>(0)); }
+   ;
+
+ModuleName ModuleTarget =
+   void:"as":Word ModuleName
+   ;
+
+ModuleName ModuleName = name:Name { yyValue = new ModuleName(name); } ;
+
+Action Header = "header":Word yyValue:Action ;
+Action Body   = "body":Word   yyValue:Action ;
+Action Footer = "footer":Word yyValue:Action ;
+
+List<Attribute> Options =
+   "option":Word att:Attribute atts:( void:",":Symbol Attribute )* ";":Symbol
+      {
+        yyValue = new ArrayList<Attribute>(atts.size() + 1);
+        new Pair<Attribute>(att, atts).addTo(yyValue);
+      }
+   ;
+
+// ------------------------------------------------------------- Production
+
+Production Production =
+     <Full>     FullProduction
+   / <Addition> AlternativeAddition
+   / <Removal>  AlternativeRemoval
+   / <Override> ProductionOverride
+   ;
+
+FullProduction FullProduction =
+   attributes:ProductionAttributes
+   type:TypeName nt:UnqualifiedNonTerminal "=":Symbol choice:Choice
+   ";":Symbol
+      {
+        List<Attribute> list = new ArrayList<Attribute>(attributes.size());
+        attributes.addTo(list);
+        yyValue = new FullProduction(list, type, nt, choice);
+      }
+   ;
+
+AlternativeAddition AlternativeAddition =
+   ( type:TypeName nt:UnqualifiedNonTerminal "+=":Symbol
+     s:SequenceName "...":Symbol "/":Symbol choice:Choice
+     ";":Symbol
+      { yyValue = new AlternativeAddition(type, nt, choice, s, false); }
+   / type:TypeName nt:UnqualifiedNonTerminal "+=":Symbol
+     choice:Choice "/":Symbol s:SequenceName "...":Symbol
+     ";":Symbol
+      { yyValue = new AlternativeAddition(type, nt, choice, s, true); }
+   )
+   ;
+
+AlternativeRemoval AlternativeRemoval =
+   type:TypeName nt:UnqualifiedNonTerminal "-=":Symbol
+   s:SequenceName ss:( void:",":Symbol SequenceName)*
+   ";":Symbol
+      {
+        yyValue = new
+          AlternativeRemoval(type, nt, new Pair<SequenceName>(s, ss).list());
+      }
+   ;
+
+ProductionOverride ProductionOverride =
+   ( type:TypeName nt:UnqualifiedNonTerminal ":=":Symbol choice:Choice ";":Symbol
+      { yyValue = new ProductionOverride(type, nt, choice, true); }
+   / type:TypeName nt:UnqualifiedNonTerminal ":=":Symbol
+     "...":Symbol "/":Symbol choice:Choice
+     ";":Symbol
+      { yyValue = new ProductionOverride(type, nt, choice, false); }
+   / type:TypeName nt:UnqualifiedNonTerminal ":=":Symbol
+     choice:Choice "/":Symbol "...":Symbol
+     ";":Symbol
+      { yyValue = new ProductionOverride(type, nt, choice, false); }
+   / attributes:ProductionAttributes type:TypeName nt:UnqualifiedNonTerminal
+     ":=":Symbol "...":Symbol
+     ";":Symbol
+      {
+        List<Attribute> list = new ArrayList<Attribute>(attributes.size());
+        attributes.addTo(list);
+        yyValue = new ProductionOverride(list, type, nt);
+      }
+   )
+   ;
+
+Pair<Attribute> ProductionAttributes =
+   ( &( TypeName UnqualifiedNonTerminal s:Symbol
+        &{ "=".equals(s) || ":=".equals(s) } )
+      { yyValue = Pair.empty(); }
+   / att:Attribute atts:ProductionAttributes
+      { yyValue = new Pair<Attribute>(att, atts); }
+   )
+   ;
+
+// ------------------------------------------------------------- Choice
+
+OrderedChoice Choice =
+   s:Sequence ss:( void:"/":Symbol Sequence )*
+      { yyValue = new OrderedChoice(new Pair<Sequence>(s, ss).list()); }
+   ;
+
+// ------------------------------------------------------------- Sequence
+
+Sequence Sequence =
+   !Ellipsis n:SequenceName? l:Voided*
+      { yyValue = new Sequence(n, l.list()); }
+   ;
+
+SequenceName SequenceName =
+   "<" name:WordCharacters ">":Symbol
+      { yyValue = new SequenceName(name); }
+   ;
+
+void Ellipsis =
+     SequenceName "...":Symbol
+   / "...":Symbol
+   ;
+
+// ------------------------------------------------------------- Voided
+
+Element Voided =
+   ( "void":Word ":":Symbol p:Voided
+      { yyValue = new VoidedElement(p); }
+   / Prefix
+   )
+   ;
+
+// ------------------------------------------------------------- Prefix
+
+Element Prefix =
+     "&":Symbol s:Suffix
+      {
+        if (s instanceof Action) {
+          yyValue = new SemanticPredicate((Action)s);
+        } else {
+          yyValue = new FollowedBy(s);
+        }
+      }
+   / "!":Symbol s:Suffix
+      { yyValue = new NotFollowedBy(s); }
+   / "^":Symbol s:Suffix &{ s instanceof Action }
+      { yyValue = new ParserAction((Action)s); }
+   / id:Word ":":Symbol s:Suffix
+      { yyValue = new Binding(id, s);   }
+   / t1:StringLiteral Spacing ":":Symbol s:Suffix
+      { 
+         final String t2 = Utilities.unescape(t1.substring(1, t1.length()-1));
+         yyValue = new StringMatch(t2, s);
+      }
+   / Suffix
+   ;
+
+// ------------------------------------------------------------- Suffix
+
+Element Suffix =
+     p:Primary "?":Symbol { yyValue = new Option(p);            }
+   / p:Primary "*":Symbol { yyValue = new Repetition(false, p); }
+   / p:Primary "+":Symbol { yyValue = new Repetition(true,  p); }
+   / Primary
+   ;
+
+// ------------------------------------------------------------- Primary
+
+Element Primary =
+     NullLiteral
+   / NonTerminal
+   / Terminal
+   / NodeMarker
+   / Action
+   / void:"(":Symbol Choice void:")":Symbol
+   ;
+
+// ------------------------------------------------------------- Null literal
+
+NullLiteral NullLiteral =
+   "null":Name { yyValue = new NullLiteral(); }
+   ;
+
+// ------------------------------------------------------------- Nonterminals
+
+NonTerminal NonTerminal =
+   name:Name { yyValue = new NonTerminal(name); }
+   ;
+
+NonTerminal UnqualifiedNonTerminal =
+   name:Word { yyValue = new NonTerminal(name); }
+   ;
+
+// ------------------------------------------------------------- Terminals
+
+Terminal Terminal =
+     '_' Spacing 
+      { yyValue = new AnyChar(); }
+   / c:CharacterLiteral Spacing
+      { yyValue = new CharLiteral(Utilities.unescape(c).charAt(1)); }
+   / '[' l:Range* ']' Spacing
+      { yyValue = new CharClass(l.list()); }
+   / s1:StringLiteral Spacing
+      {
+         final String s2 = Utilities.unescape(s1);
+         yyValue = new StringLiteral(s2.substring(1, s2.length()-1));
+      }
+   ;
+
+CharRange Range =
+     c1:ClassChar '-' c2:ClassChar
+        { 
+           yyValue = new CharRange(Utilities.unescape(c1).charAt(0),
+                                   Utilities.unescape(c2).charAt(0));
+        }
+   / c1:ClassChar
+        {
+           yyValue = new CharRange(Utilities.unescape(c1).charAt(0));
+        }
+   ;
+
+// ------------------------------------------------------------- Node Markers
+
+NodeMarker NodeMarker =
+   '@' name:Word { yyValue = new NodeMarker(name); }
+   ;
+
+// ------------------------------------------------------------- Actions
+
+Action Action =
+   '{' s:ActionBody '}' Spacing
+      { yyValue = new Action(s, yyState.indentations()); }
+   ;
+
+stateful String ActionBody = ActionText;
+
+transient String ActionText =
+   ( '{' { yyState.open(); } ActionText '}' { yyState.close(); }
+   / CharacterLiteral   { yyState.content(); }
+   / StringLiteral      { yyState.content(); }
+   / CodeComment        { yyState.content(); }
+   / TraditionalComment { yyState.content(); }
+   / EndOfLineComment
+   / LineTerminator
+   / Space
+   / ![}\n\r \t\f] _    { yyState.content(); }
+   )*
+   ;
+
+// ------------------------------------------------------------- Attributes
+
+public Attribute Attribute = 
+     "public":Word
+        { yyValue = new Attribute(Constants.NAME_VISIBILITY,
+                                  Constants.VALUE_PUBLIC); }
+   / "protected":Word
+        { yyValue = new Attribute(Constants.NAME_VISIBILITY,
+                                  Constants.VALUE_PROTECTED); }
+   / "private":Word
+        { yyValue = new Attribute(Constants.NAME_VISIBILITY,
+                                  Constants.VALUE_PRIVATE); }
+   / name:Word 
+     value:( void:"(":Symbol AttributeValue void:")":Symbol )?
+        { yyValue = new Attribute(name, value); }
+   ;
+
+Object AttributeValue =
+     lit:IntegerLiteral Spacing
+      {
+         try {
+            yyValue = Integer.decode(lit);
+         } catch (NumberFormatException x) {
+            yyValue = null; // Cannot happen.
+         }
+      }
+   / Name
+   / StringLiteral Spacing
+   ;
+
+// ------------------------------------------------------------- Identifiers
+
+String TypeName = TypeNameCharacters Spacing ;
+
+String TypeNameCharacters =
+   NameCharacters
+      ( SimpleSpacing '<' SimpleSpacing
+        TypeNameCharacters SimpleSpacing
+        ( ',' SimpleSpacing TypeNameCharacters SimpleSpacing )*
+        '>' )?
+   ;
+
+String Name = NameCharacters Spacing ;
+String Word = WordCharacters Spacing ;
+
+String NameCharacters = WordCharacters ( '.' WordCharacters )* ;
+String WordCharacters = [a-zA-Z] ( [_]+ [a-zA-Z0-9] / [a-zA-Z0-9] )* ;
+
+// ------------------------------------------------------------- Literals
+
+String CharacterLiteral = ['] ( EscapeSequence / !['\\] _ )  ['] ;
+String StringLiteral    = ["] ( EscapeSequence / !["\\] _ )* ["] ;
+String ClassChar        = EscapeSequence / ![\\\-\]] _ ;
+
+transient String EscapeSequence =
+   '\\' [btnfr"'\-\[\\\]] / UnicodeEscape / OctalEscape
+   ;
+
+transient String UnicodeEscape = '\\' 'u' HexQuad ;
+
+transient String OctalEscape =
+   '\\' [0-3] OctalDigit OctalDigit
+   / '\\' OctalDigit OctalDigit
+   / '\\' OctalDigit
+   ;
+
+String IntegerLiteral = HexNumeral / OctalNumeral / DecimalNumeral ;
+
+transient String HexNumeral     = '0' [xX] HexDigit+ ;
+transient String HexQuad        = HexDigit HexDigit HexDigit HexDigit ;
+transient String HexDigit       = [0-9a-fA-F] ;
+transient String OctalNumeral   = '0' OctalDigit+ ;
+transient String OctalDigit     = [0-7] ;
+transient String DecimalNumeral = '0' / NonZeroDigit Digit* ;
+transient String NonZeroDigit   = [1-9] ;
+transient String Digit          = [0-9] ;
+
+// ------------------------------------------------------------- Punctuation
+
+String Symbol = SymbolCharacters Spacing ;
+
+String SymbolCharacters =
+     "..."
+   / "+=" / "-=" / ":="
+   / "," / "=" / "/" ![/*] / "&" / "!" / "^" / ":"
+   / "?" / "*" / "+" / "(" / ")" / ";" / "<" / ">"
+   ;
+
+// ------------------------------------------------------------- Spacing
+
+transient void Spacing =
+  ( Space
+  / LineTerminator
+  / TraditionalComment
+  / EndOfLineComment
+  )*
+  ;
+
+transient String SimpleSpacing      = ( LineTerminator / Space )* ;
+
+transient String Space              = ' ' / '\t' / '\f' ;
+transient String CodeComment        = "/**"     CommentBody "*/" ;
+transient String TraditionalComment = "/*" ![*] CommentBody "*/" ;
+transient String EndOfLineComment   = "//" ( ![\n\r] _ )* LineTerminator ;
+transient void   EndOfFile          = !_ ;
+
+transient String CommentBody        =
+   ( '*' !'/' / LineTerminator / ![*\n\r] _ )*
+   ;
+
+transient String LineTerminator     =
+     '\r' '\n' { yyState.newline(); }
+   / '\r'      { yyState.newline(); }
+   / '\n'      { yyState.newline(); }
+   ;
+
+// ============================================================================

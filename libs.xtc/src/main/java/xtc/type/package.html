@@ -1,0 +1,94 @@
+<html>
+<body>
+
+xtc's representation of types.  This package defines a hierarchy of
+type classes, representing types of the C, Java, and ML programming
+languages as well as pseudo-types to help with type-checking programs.
+In particular:<ul>
+
+<li>{@link xtc.type.Type} is the superclass of all type classes and
+defines the common interface.</li>
+
+<li>{@link xtc.type.VoidT} represents the void type.</li>
+
+<li>{@link xtc.type.UnitT} represents the unit type.</li>
+
+<li>{@link xtc.type.BooleanT} represents the boolean type.</li>
+
+<li>{@link xtc.type.IntegerT} and {@link xtc.type.FloatT} represent
+integer and floating point {@link xtc.type.NumberT numbers},
+respectively.</li>
+
+<li>{@link xtc.type.InternalT} represents compiler-internal types,
+such as the <code>__builtin_va_list</code> type used by gcc for
+variable argument lists.</li>
+
+<li>{@link xtc.type.LabelT} and {@link xtc.type.PackageT} represent
+labels and packages, respectively.</li>
+
+<li>{@link xtc.type.PointerT}, {@link xtc.type.ArrayT}, {@link
+xtc.type.StructT}, {@link xtc.type.UnionT}, {@link
+xtc.type.FunctionT}, {@link xtc.type.MethodT}, {@link
+xtc.type.ClassT}, {@link xtc.type.InterfaceT}, {@link
+xtc.type.TupleT}, and {@link xtc.type.VariantT} represent {@link
+xtc.type.DerivedT derived types}.</li>
+
+<li>{@link xtc.type.WrappedT} is the superclass of pseudo-types adding
+symbolic information to any of the previous types.  {@link
+xtc.type.AliasT} represents type aliases; {@link xtc.type.AnnotatedT}
+provides annotations for another type; {@link xtc.type.EnumeratorT}
+and {@link xtc.type.EnumT} represent C enums; {@link
+xtc.type.VariableT} represents globals, locals, fields, and bitfields;
+{@link xtc.type.ParameterizedT} represents parameterized types; and
+{@link xtc.type.InstantiatedT} represents instantiations of
+parameterized types.</li>
+
+<li>{@link xtc.type.Parameter} represents a type parameter and {@link
+xtc.type.Wildcard} represents a wildcard.  Types containing instances
+of these classes are parameterized.  They should be wrapped in a
+{@link xtc.type.ParameterizedT} and instantiated through a {@link
+xtc.type.InstantiatedT}.</li>
+
+<li>Finally, {@link xtc.type.ErrorT} represents typing errors.</li>
+
+</ul>
+
+These type classes are complemented by a common interface for all
+{@link xtc.type.Tagged tagged types} (structs, unions, and enums) and
+for all {@link xtc.type.Constant constant-valued types} (enumerators
+and the <code>ConstantT</code> pseudo-type).
+
+<p />To model the memory shape of lvalues, this package also defines a
+separate hierarchy of references:<ul>
+
+<li>{@link xtc.type.Reference} is the superclass of all reference
+classes and defines the common interface.  All references have a type
+specifying the referenced memory's shape or layout.</li>
+
+<li>{@link xtc.type.NullReference#NULL} represents the zero location
+in memory.  It has <code>void</code> as its type.</li>
+
+<li>{@link xtc.type.StaticReference} and {@link
+xtc.type.DynamicReference} represent statically and dynamically
+allocated variables, respectively.  Both reference classes are
+symbolic representations of memory; they do not have a known
+location.</li>
+
+<li>{@link xtc.type.RelativeReference} is the superclass of all
+relative references, with each relative reference having another
+reference as its base.</li>
+
+<li>{@link xtc.type.CastReference} represents a differently typed
+view on the same memory region.</li>
+
+<li>{@link xtc.type.IndirectReference} represents an indirection
+through a memory region, i.e., pointer.</li>
+
+<li>{@link xtc.type.IndexReference} represents an integer offset from
+another reference, while {@link xtc.type.FieldReference} represents a
+symbolic offset.</li>
+
+</ul>
+
+</body>
+</html>

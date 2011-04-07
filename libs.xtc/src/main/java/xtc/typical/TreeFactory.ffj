@@ -1,0 +1,371 @@
+/*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2007 Robert Grimm, New York University
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ */  
+factory xtc.typical.TreeFactory {
+  
+  addInt             { Primitives.addInt . apply (#argument1, #argument2) }
+  addFloat64         { Primitives.addFloat64 . apply (#argument1, #argument2) }
+  addScopeNode       { processScopeNodes.add(#arg); }
+  
+  ancestorExpression { new Analyzer.NodeMatch () {
+                         public Boolean apply(Node m) {
+                          #statement
+                         }
+                      }    
+                     }  
+  and                { Primitives.and . apply( #argument1, #argument2 ) }
+  annotateType       { if (null != #argument1) { 
+                         #argument1.setProperty("__type", #argument2);
+                       }  
+                     }
+  appendPair         { #name . append ( #argument ) }
+  appendWrapper      { Primitives.wrapAppend( #first, #second ) }
+  apply              { #name .apply ( #[arguments] ) }
+  apply2             { #name .apply() }
+  applyPrimitive     { Primitives . #name . apply ( #[arguments] ) }
+  assign             { #name = #value; }
+  assignField        { #name = cast(#expression); }
+
+  boolVar            { final Boolean #name = #value; }
+  block              { { #[statments] } }  
+
+  breakStmnt         { break; }
+  
+  cast               { Analyzer.cast(#expression) }
+  castInvocation     { Analyzer.cast(#name . #function ( #[arguments] )) }
+  castReturn         { return Analyzer.cast(#argument); }
+   
+  checkEnterScope    { checkEnterScope(#argument); }
+  checkExitScope     { checkExitScope(#argument); }
+
+  classDecl2         { public class #name {} }
+  classDecl3         { protected class #name {}}
+  compareTypes       { res = res && type.equals(other.type); }
+  compareAttributes  { res = res && #arg.equals(other.#arg); }
+  compareMembers     { res = res && Analyzer.equal(this.#arg, other.#arg); }
+  concatStrings      { Primitives.concat.apply(#argument1, #argument2) }
+  concatLists        { Primitives.concatList.apply(#argument1, #argument2) }
+  consWrapper        { Primitives.wrapCons( #head, #tail ) }
+ 
+  makeConstructor    {
+                       public #name(Runtime runt, String nodeType) {
+                         super(runt);
+                         analyzer = analyze;
+                         this.nodeType = nodeType;
+                       }                      
+                     } 
+
+  makeConstructor2   {
+                       public #name(Runtime runt) {
+                         super(runt);
+                         analyzer = analyze;                         
+                       }                      
+                     }
+                     
+  modInt          { Primitives.modInt . apply (#argument1, #argument2) }                                                                     
+
+  typesConstr        { private #name () {} }
+  createInteger      { BigInteger.valueOf(#literal) }
+  createFloat        { new Double(#text) } 
+  curryingPut        { new Function.F2<Void, Object, Hashtable<Object, Object>>() {
+                         public Void apply(Object o, Hashtable table) {
+                           final Object #arg1 = #arg2;
+                           return Primitives.put(#arg1, o, table); 
+                         }
+                       } 
+                     }
+
+  defaultConstr      { protected #name(){} }
+  discard            { Analyzer.discard(#expression); }                        
+  divideInt          { Primitives.divideInt . apply (#argument1, #argument2) }
+  divideFloat64      { Primitives.divideFloat64.apply (#argument1, #argument2) }
+  
+  equal              { Primitives . equal. apply ( #argument1, #argument2 ) } 
+  equality           { (#argument1 == #argument2) }
+  equalsMethod       { public boolean equals(Object o) { } }
+  equalsBottom       { null == #argument }
+  errorClause        { #name ( #argument1, #argument2 ) }
+  expressionStmnt    { #expr ; }
+  extendsDecl        { public static class Name extends Type { } }
+  extendsDecl2       { public static abstract class Name extends Type { } }
+ 
+  fieldDecl          { final #type name = #value; }
+  fieldDecl1         { #type name = #value; }
+  fieldDecl2         { final #type #name = #value; } 
+  fieldDecl3         { Object #name = null; }
+  fieldExpression    { (null == #argument) ? null : #argument . #tail }
+
+  functionExpression {
+                       new Function.F1<#arg1, #arg2>() {
+                         public #arg1 apply(final #arg2 var) {
+                           return #arg3;
+                         } 
+                       }  
+                     }
+
+  getName            { (null == #argument) ? null : ( #argument . getName() ) } 
+  getNameMethod      {
+                       public String getName() {
+                         return #argument;
+                       } 
+                     }
+  getScopeNodesMethod{  
+                       public void getScopeNodes() {}
+                     }
+  getScopeClass      {
+                       class getScope {
+
+                         public Scope apply(GNode n) {
+                           return null;
+                         } 
+
+                       }
+                     }
+  getScopeObject     { final getScope getScope = new getScope(); }
+  getTagAbstract     { public abstract Tag tag(); }
+  getTag             { public final Tag tag() {
+                         return Tag . #tag;
+                       }
+                     }
+  gnodeCast          { GNode.cast( #argument ) }
+  gnodeCreate        { GNode.create ( #[arguments] ) } 
+  guardExpression    { new Guard<#type> () {
+                         public #type apply() {
+                           #[statements]
+                         }    
+                         
+                     }.apply()
+                     }
+  hasNameCall        { ((null != #node) && (#node . hasName( #name ))) }
+  head               { Primitives . head . apply (#argument) }
+  headWrapper        { Primitives.wrapHead( #argument ) }
+   
+  ifStatement        { if (#condition) { #action } }
+  ifStatement1       { if (#argument == null) { return false; } }
+  ifStatement2       { if (!(#argument instanceof Type)) { return false; } }
+  ifStatement3       {
+                       if ((null != #arg1) && !(#arg1)) {
+                         showMessage(#arg2, #arg3, #arg4);
+                       }
+                     }
+  ifStatement4       { if (null == #arg) { return null; } }
+  ifStatement5       { if (#arg) { return null; } }
+  ifExpression       { (null == #condition) || !#condition ? null
+                         : #expression}
+  ifElseExpression   { (null == #condition) ? null 
+                             : ( #condition ? #expr1 : #expr2) }
+  implementsDecl     { public static class Name implements Type { } }
+  invocation         { #name . #function ( #[arguments] ) }
+
+  instanceDecl       { final #type1 #name = new #type2(); }
+ 
+  isBottom           { Primitives.isBottom.apply(#argument) }
+  isEmptyCall        { ((null != #argument) && (((Pair)#argument).isEmpty())) }
+  isNotEmptyCall     { ((null != #argument) && !(((Pair)#argument).isEmpty())) }
+  isMethod           { public boolean isName() { return false; } } 
+  isMethodCall       { ((null != #argument) &&  (#argument . #argument2())) }
+  jand               { ( #argument1 && #argument2 ) }
+  jequals            { (null != #argument1) && (#argument1.equals(#argument2)) }
+  jequals2           { #argument.equals( #argument2 ) }
+  jnot               { !(#condition) }  
+  jor                { (#condition1 || #condition2) }
+  isNull             { (null == #arg) }
+
+  letExpression      { new Let<#type>() {
+                       
+                       }.apply()
+                     }                     
+
+
+  makeNodeBinding    { final Node #name = #node.size() > #size ? 
+                        #node.getGeneric(#size) : null; } 
+
+  makeNodeBinding2    { final String #name = #node.size() > #size ? 
+                        #node.getString(#size) : null; }  
+
+  matchCall          { #qualifier . #match(#argument) }
+
+  matchExpression    { new Match<#type> () {
+                         public #type apply() {
+                           #[statements]
+                         }    
+                         
+                       }.apply()
+                     }
+
+  matchFunction      { static final boolean #match(#type argument) {
+                         return #condition;
+                       }
+                     }
+  
+  matchingNodesAdd   { matching_nodes.add(#argument); }
+  matchingNodesRemove { matching_nodes.remove(matching_nodes.size()-1); }
+  
+  multiplyInt        { Primitives.multiplyInt . apply (#argument1,#argument2)}
+  multiplyFloat64    { Primitives.multiplyFloat64 .apply (#argument1,#argument2)}
+  
+  newExpr            { new #type (#[args]) }
+  newPair            { new #type ( #argument ) }
+
+  newCons            { static final Primitives.Cons<#type> #name = 
+                         new Primitives.Cons<#type>(); }
+  newApplyCons       { new Primitives.Cons<#type>() . apply ( #[agrs] ) }
+                           
+  newHead            { static final Primitives.Head<#type> #name = 
+                         new Primitives.Head<#type>(); }
+  newApplyHead       { new Primitives.Head<#type>() . apply ( #[args] ) }                       
+                         
+  newTail            { static final Primitives.Tail<#type> #name = 
+                         new Primitives.Tail<#type>(); }
+  newApplyTail       { new Primitives.Tail<#type>() . apply ( #[args] ) } 
+                         
+  newNth             { static final Primitives.Nth<#type> #name = 
+                         new Primitives.Nth<#type>(); }
+  newApplyNth        { new Primitives.Nth<#type>() . apply ( #[args] ) }
+                           
+  newExists          { static final Primitives.Exists<#type> #name = 
+                         new Primitives.Exists<#type>(); }
+  newApplyExists     { new Primitives.Exists<#type>() . apply ( #[args] ) }                       
+                         
+  newIter            { static final Primitives.Iter<#type1, #type2> #name = 
+                         new Primitives.Iter<#type1, #type2>(); }
+  newApplyIter       { new Primitives.Iter<#type1, #type2>() . 
+                         apply ( #[args] ) }                       
+                         
+  newMap             { static final Primitives.Map<#type1, #type2> #name = 
+                         new Primitives.Map<#type1, #type2>(); }
+  newApplyMap        { new Primitives.Map<#type1, #type2>() . 
+                         apply ( #[args] ) }                       
+                         
+  newFoldl           { static final Primitives.FoldLeft<#type1, #type2> #name = 
+                         new Primitives.FoldLeft<#type1, #type2>(); }
+  newApplyFoldl      { new Primitives.FoldLeft<#type1, #type2>() . 
+                         apply ( #[args] ) }                                            
+                         
+  newAppend          { static final Primitives.Append<#type> #name = 
+                         new Primitives.Append<#type>(); }
+  newApplyAppend     { new Primitives.Append<#type>() . apply ( #[args] ) }                                          
+  
+  newUnion           { static final Primitives.Union<#type> #name = 
+                         new Primitives.Union<#type>(); }
+  newApplyUnion      { new Primitives.Union<#type>() . apply ( #[args] ) }                                            
+                         
+  newIntersection    { static final Primitives.Intersection<#type> #name = 
+                         new Primitives.Intersection<#type>(); }
+  newApplyIntersection { new Primitives.Intersection<#type>() . 
+                           apply ( #[args] ) }                         
+                         
+  newSubtraction     { static final Primitives.Subtraction<#type> #name = 
+                         new Primitives.Subtraction<#type>(); }
+  newApplySubtraction { new Primitives.Subtraction<#type>() . apply ( #[args] ) }                         
+
+  nextCall           { #argument . next() }
+  
+  nodeTypeDecl       {
+                       protected String nodeType = null;
+                     }   
+  not                { Primitives . not . apply( #argument1 ) }
+  notEqualsBottom    { null != #argument }
+  or                 { Primitives.or . apply( #argument1, #argument2 ) }
+
+  pairEmpty          { Pair.<#type>empty() }
+
+  processScope	     {
+                       if (null != #argument && 
+                           processScopeNodes.contains(#argument.getName())) {
+                           processScope(#argument, getScope);
+                         }
+                     }
+  
+  publicFieldDecl    { public #type #name; }
+
+  recordFieldEqual   { type other = (type)o; }
+  recordEqualReturn  { boolean res = true; }
+  reduceExpression   { new Reduction(#arg1, #arg2, 
+                         matching_nodes.get(matching_nodes.size() -1 )) {
+                        {
+                          #[initStatements]
+                        }                           
+                       }.apply()
+                     }
+  
+  reduceReq          { setReq(); }
+  reduceSing         { setSing(); }
+  reduceOpt          { setOpt(); }
+  reduceList         { setList(); }
+  reduceSet          { setSet(); }
+  reduceDup          { setDup(); }
+  reduceNodup        { setNodup(); }
+  reduceTag          { setTag(#arg); }
+  reduceSet          { setSet(#set); }
+  reduceAddPatterns  { addPattern(#[patterns]); }
+  reduceGetMatch     { Node #name = getMatch(#arg); }
+  
+  relationalExpr     { #name . apply(#argument1, #argument2) }
+  requireExpression  {
+                       new Require<#type>() {
+                         public #type apply() {#[instructions]}
+                       }.apply()
+                     }
+  ret                { return #argument; }  
+  returnBottom       { return null; }
+  setMethod          { void set() { #[statments] } }
+  sizeMethod         { public int size() { return #argument; } } 
+  sizeGreater        { #argument . size () > #value }
+  sizeGreaterEqual   { #argument . size () >= #value }
+  sizeLess           { #argument . size () < #value }
+  sizeEqual          { #argument . size () == #value }
+
+  spOffspringList    { List<Node> #listName = new ArrayList<Node>(); }
+  spRunNode          { Node #nodeName = #param; }
+  spGetGeneric       { #nodeName = #nodeName.getGeneric(#index); }
+  
+  spOffspringListAdd { #listName.add(0, #nodeName); }
+  spForLoop          {
+                       for (Node no : #listName) {
+                         checkExitScope(no);
+                       }
+                     }
+
+  storeValue	       { final Object #name = #value; }  
+
+  staticFieldDecl    { final static protected #type name = #value; }
+  subtractInt        { Primitives.subtractInt . apply (#argument1,#argument2)}
+  subtractFloat64    { Primitives.subtractFloat64.apply (#argument1,#argument2)}
+  
+  support            { #support.#arg }
+  supportNodeMatch   { public static final Analyzer.NodeMatch #arg = #value; }
+  switchStmnt        { 
+                        switch (#arg . tag()) {
+                        }
+                     }
+  switchWrap         { if (null != #arg) #action; }
+ 
+  caseStmnt          { switch (blah) {
+                         case #c : #[action]
+                         break;
+                       }
+                     }
+  tail               { Primitives . tail . apply (#argument) }
+  tailWrapper        { Primitives.wrapTail( #argument ) }
+  thisExpr           { this . #tail }
+  toStringMethod     { public String toString() { String string; } }  
+   
+  unionWrapper       { Primitives.wrapUnion( #first, #second ) }   
+  
+}

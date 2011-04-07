@@ -1,0 +1,93 @@
+/* Test grammar for error detection. */
+module xtc.parser.Malformed;
+
+option withLocation, blahBlahBlah, withLocation ;
+
+public Object One   = "One" Two Three "" ;
+
+Object Two   = !( !( "Predicate within predicate" ) ) "Two" Undefined Three ;
+
+Object Three = "Three" [] [121] [\n2\n\n] [50-9] [0-95] [0-65-9] ;
+
+public Object Four = Five / ( / { yyValue = null; } Six ) ;
+Object Five = "Five" ;
+Object Six = !("Hello") &("World") &{true} Four;
+
+public Object Seven = (Eight)+ Nine;
+Object Eight = "Eight";
+Object Nine  = Seven;
+
+public Object Ten = (Eleven)* Twelve;
+Object Eleven = "Eleven" ;
+Object Twelve = (((((Ten)))));
+
+public Object Thirteen = Fourteen;
+Object Fourteen = Fifteen;
+Object Fifteen = Thirteen;
+
+public Object Sixteen = ("Sixteen")?  Sixteen;
+
+public Object Seventeen = Eighteen;
+Object Eighteen = Nineteen;
+Object Nineteen = Eighteen;
+
+public void Void = "Void" ;
+
+public Object Twenty = "Twenty" value1:Void value2:Whatever ;
+
+public Object TwentyOne = "Twenty" &{ } "One" ;
+
+public Object TwentyTwo = b1:{ ; } { ; }? { ; }* { ; }+ ;
+
+public Object TwentyThree = b1:({ ; }) ({ ; })? ({ ; })* ({ ; })+ ;
+
+public Object TwentyFour = "This is one version" ;
+
+public Object TwentyFour = "This is another" ;
+
+int TwentyFive = "TwentyFour" ;
+
+transient inline void TwentySix = "TwentySix" ;
+memoized transient void TwentySeven = "TwentySeven" ;
+memoized inline void TwentyEight = "TwentyEight" ;
+
+/*
+
+The following errors should be reported:
+
+Malformed.rats:4,21: unrecognized option blahBlahBlah
+Malformed.rats:4,35: duplicate option withLocation
+Malformed.rats:6,38: empty string literal
+Malformed.rats:8,18: syntactic predicate within syntactic predicate
+Malformed.rats:8,60: undefined nonterminal Undefined
+Malformed.rats:10,23: empty character class
+Malformed.rats:10,26: duplicate character '1' in character class
+Malformed.rats:10,32: duplicate character '\n' in character class
+Malformed.rats:10,32: duplicate character '\n' in character class
+Malformed.rats:10,42: character '5' already contained in range 0-9
+Malformed.rats:10,49: character '5' already contained in range 0-9
+Malformed.rats:10,56: ranges 0-6 and 5-9 overlap
+Malformed.rats:36,32: binding for void nonterminal Void
+Malformed.rats:36,51: undefined nonterminal Whatever
+Malformed.rats:38,35: empty test for semantic predicate
+Malformed.rats:40,26: binding for action
+Malformed.rats:40,35: optional action
+Malformed.rats:40,42: repeated action
+Malformed.rats:40,49: repeated action
+Malformed.rats:42,28: binding for action
+Malformed.rats:42,39: optional action
+Malformed.rats:42,48: repeated action
+Malformed.rats:42,57: repeated action
+Malformed.rats:46,0: duplicate definition for nonterminal TwentyFour
+Malformed.rats:48,0: primitive type int for production TwentyFive
+Malformed.rats:50:10: error: inline attribute subsumes transient attribute
+Malformed.rats:51:0: error: memozied attribute contradicts transient attribute
+Malformed.rats:52:0: error: memoized attribute contradicts inline attribute
+Malformed.rats:12,0: left-recursive definition for nonterminal Four
+Malformed.rats:20,0: left-recursive definition for nonterminal Ten
+Malformed.rats:24,0: left-recursive definition for nonterminal Thirteen
+Malformed.rats:28,0: left-recursive definition for nonterminal Sixteen
+Malformed.rats:31,0: left-recursive definition for nonterminal Eighteen
+30 errors
+
+*/

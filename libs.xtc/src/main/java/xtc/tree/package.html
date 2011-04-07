@@ -1,0 +1,36 @@
+<html>
+<body>
+
+xtc's support for abstract syntax trees and for traversing them with
+visitors.  This package defines the {@link xtc.tree.Node base class}
+for all abstract syntax tree nodes and the {@link xtc.tree.Visitor
+base class} for all visitors.  It also defines a {@link xtc.tree.GNode
+generic node class}.
+
+<p />In contrast to the original visitor pattern, node visitors do not
+implement a fixed interface.  Rather, the appropriate method is
+selected through reflection-based dynamic dispatch, based on the type
+of a node.  On invocation of {@link xtc.tree.Visitor#dispatch}, the
+dynamic dispatch mechanism tries to find a method
+name <code>visit()</code> that takes either the specified node, any of
+its interfaces, or any of its superclaseses as its only argument.  The
+search starts with the class of the node, then checks for all
+implemented interfaces, then for the superclass, then for all
+interfaces of the superclass, and so on until it
+reaches <code>java.lang.Object</code>, which is <i>not</i> considered.
+
+<p />For {@link xtc.tree.GNode generic nodes} the appropriate
+<code>visit()</code> method is selected based on the name of the
+generic node.  For example, if the target name is <i>Node</i>, then
+the dynamic dispatch mechanism tries to locate a method
+<code>visitNode(GNode)</code>.  If no such method exists, the dynamic
+dispatch mechanism also tries to locate a <code>visit(GNode)</code>
+and <code>visit(Node)</code> method (in that order).
+
+<p />Note that to improve the performance of dynamic dispatch, our
+implementation uses a static method lookup cache that is <i>not</i>
+thread-safe.  Source-to-source transformers thus cannot be
+multi-threaded.
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+/*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2007 New York University
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ */
+
+/**
+ * The top-level module for the complete Typical grammar.
+ *
+ * @author Laune Harris
+ * @version $Revision: 1.13 $
+ */
+
+module xtc.typical.Typical;
+
+instantiate xtc.typical.Type(xtc.typical.Identifier,
+                             xtc.typical.Symbol) ;
+instantiate xtc.typical.Constant(xtc.typical.Identifier,
+                                        xtc.typical.Spacing) ;
+instantiate xtc.typical.Identifier(xtc.typical.Spacing) ;
+instantiate xtc.typical.Symbol(xtc.typical.Spacing) ;
+instantiate xtc.typical.Spacing(xtc.util.Spacing);
+
+instantiate xtc.util.Spacing;
+
+modify xtc.typical.Core(xtc.typical.Type,
+                               xtc.typical.Constant, 
+                               xtc.typical.Identifier,
+                               xtc.typical.Symbol, 
+                               xtc.typical.Spacing) ;
+
+option withLocation, constant, flatten, parser(xtc.typical.TypicalParser);

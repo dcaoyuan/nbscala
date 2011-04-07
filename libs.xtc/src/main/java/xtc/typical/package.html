@@ -1,0 +1,571 @@
+<html>
+<body>
+<h1>The Typical type checker generator.</h1>
+
+<dl>
+This package implements Typical, a language and compiler for specification and
+generation of type checkers. Typical is a domain specific language based on ML,
+and currently supports Java as a target language. The compiler's main class is
+{@link xtc.typical.Typical}.
+</dl>
+
+<p />The rest of this document covers the following topics:
+<ul>
+  <li><a href="#mlancestry">ML Ancestry</a></li>
+  <li><a href="#features">Features</a></li>
+  <li><a href="#library">Library</a></li>
+  <li><a href="#example">Usage and example</a></li>
+</ul>
+
+<br/>
+<dl>
+<a name="mlancestry"></a>
+<strong>ML Ancestry</strong> <br/>
+Typical is a domain specific language built on the functional core of the 
+O'Caml dialect of ML. Notably; Typical has the following syntactic differences 
+from O'Caml:
+<ul>
+  <li><code>";"</code> instead of <code>";;"</code> for terminators</li>
+  <li>"," instead of ";" for list separators</li>
+  <li>"mltype" instead of "type"</li>
+  <li>"mlvalue" instead of "value"</li>
+  <li>no global "rec" since recursion is automatically detected</li>
+ </ul> 
+ <br/>
+<a href="#features"></a>
+<strong>Features</strong> <br/>
+Typical also provides the following built-in constructs, types, and features 
+specifically for expressing type checker specifications. 
+ <ul>
+ <li><em>Type Representation</em><br/>
+ Typical represents source language types using the variant type 
+<code>raw_type</code>. For example, the type system for an implementation of 
+the Simply Typed Lambda Calculus with Integer and String values can be 
+expressed as:
+<pre>
+   mltype raw_type = IntegerT | StringT | FunctionT of type * type ;
+</pre>
+The raw_type variant is sufficient to represent the type system of some 
+languages such as the Simply Typed Lambda Calculus, ML and Typical 
+itself. For other languages, however, we need to capture information about
+attributes; for example, C's qualifiers and storage classes.
+For representing attributed type systems, Typical provides the 
+<code>attribute</code> and <code>eqattribute</code> constructs. For example, 
+C's type system could be expressed as
+<pre>
+   mltype raw_type = VoidT | IntT | PointerT of type | ... ;
+   mltype storage_class = Auto | Extern | Register | Static | Typedef ;
+   mltype qualifier = Const | Volatile | Restrict ;
+   attribute storage : storage_class ;
+   attribute qualifiers : qualifier list; 
+</pre>
+The Typical compiler collects all attributes and combines them with the 
+<code>raw_type</code> variant to create a record representation of types which
+ will be used by the typechecker.
+<pre>
+   mltype type = { type : raw_type; storage : storage_class; qualifiers = qualifer list; ... } ;
+</pre>
+By default, Typical evaluates type equality as structural equality ignoring
+attributes introduced with <code>attribute</code> as opposed to 
+<code>eqattribute</code>. This default behavior may be overridden for variant 
+types by using the <code>equality</code> construct which specifies which 
+constructor arguments to compare. For example, consider the following 
+definition of C’s structure type:
+<pre>
+   mltype raw_type = ... | StructT of int * string * member list ;
+</pre>
+Consistent with the C standard, it uses its integer argument as
+a nonce that distinguishes between structures that have the same
+name and members but are declared in different scopes. The corresponding
+equality declaration (meaning two <code>StructT</code>s compare equal if they 
+have equal 
+first arguments) reads:
+<pre>
+   equality raw_type = ... | StructT (n, _, _) ;
+</pre>  
+ </li>
+ <li><em>Name Management Features</em><br/>
+ Typical supports name management by providing (1) a symbol table that is 
+implicitly available to all programs, (2) the <code>scope</code> construct to 
+declare which AST nodes introduce which scopes, and (3) the 
+<code>namespace</code> construct to declare individual namespaces, the types 
+of their values, and which AST nodes specify which names. <br/><br/>
+
+ Typical provides the following constructs for symbol table operations: 
+ <code>define</code>, <code>redefine</code>, <code>lookup</code>, and <code>lookup_locally</code>. The constructs have the structures shown:
+<pre>
+  define no type [error|warn "error message"] [at loc]
+  redefine no type
+  lookup no [error|warn "error message"] [at loc]
+  lookup_locally no [error|warn "error message"] [at loc]
+</pre>
+ Both <code>define</code> and <code>redefine</code> take a node argument (no), a value argument (type), and optional error messages and source location nodes. 
+
+ The snippet below illustrates
+ the use of <code>define</code> and <code>lookup</code>. <br/>
+<pre>
+   | Abstraction (id, type, body) ->
+     let param = analyze type in
+     let _     = define id param in
+     let res   = analyze body in
+       { type = FunctionT (param, res) }
+   | Identifier _ as id -> let t = lookup id in t
+</pre>
+ In this snippet, <code>define</code> adds the name derived from the node
+ <code>id</code> to the symbol table with the value type. <code>lookup</code> 
+looks up  the name derived from the node id. The symbol table operations have 
+built in error management. If a name is previously defined (in the case of 
+define) or not defined (in the case of lookup) the operations report default 
+error messages and return an error. The source location for the error is also automatically derived from the current position in the ast. The default source location can be overridden by using the <code>at loc</code> construct where loc is the name of an ast node. The default error messages can be 
+overridden by explicitly adding an error clause to the operations; for example:
+<pre>
+   | Abstraction (id, type, body) ->
+     let param = analyze type in
+     let _     = define id param error "previously defined identifier" in
+     let res   = analyze body in
+       { type = FunctionT (param, res) }
+   | Identifier _ as id -> let t = lookup id error "identifier undefined" in t
+</pre>
+The <code>redefine</code> operator is used for overriding previously defined
+symbol table entries without reporting errors. <code>lookup_locally</code> is
+used to retrieve entries that are only visibly within the current scope.<br/>
+<br/>  
+The symbol table operations depend on Typical's namespace construct to 
+introduce new namespaces and their types and also how to extract names from
+AST nodes. The namespace construct hast the structure shown:
+<pre>
+  namespace "default"|identifier : value = PatternMatching [and "default"|identifier : value = PatternMatching]*
+</pre>
+Here, "default" and identifier identify the namespace, value indicates the type
+of values stored in this namespace, and PatternMatching is a matching from AST nodes to a Name constructor. <br/><br/>
+
+ For example the namespace declaration:
+<pre>
+   namespace default : type = Identifier (id) -> SimpleName(id);
+</pre>
+indicates that there's a single default namespace, where all values have type
+<em>type</em>. Identifiers are matched to names by extracting the string
+child from an Identifier node and using it to create a new SimpleName. Names
+can be simple, omitting the scope, or qualified, explicitly specifying a scope
+ according the built-in variant type declaration:
+<pre>
+   mltype name =
+     | SimpleName of string
+     | QualifiedName of string list ;
+</pre>
+ The symbol table operations also depend on the scope construct to manage
+ scopes while traversing the AST. The scope construct (non-exhaustively) maps 
+AST nodes to scopes; each right-hand side must evaluate to a Scope constructor
+value defined by the built-in variant declarations:
+<pre>
+  mltype scope_kind =
+    | Named of name
+    | Anonymous of string
+    | Temporary of string ;
+  mltype scope =
+    | Scope of scope_kind * node list ;
+</pre>
+A scope spans the specified list of nodes. It can be one of three kinds. 
+First, a named scope is introduced by a function or class. Second, an anonymous
+ scope is introduced by a block or compound statement. Third, a temporary 
+scope, unlike a named or anonymous scope, is deleted after the AST traversal 
+has left the scope’s AST nodes. It is necessary for typing C or C++ function 
+declarations, which may contain parameter names different from the corresponding
+ definitions. Named scopes assume the specified name, while anonymous and 
+temporary scopes receive a fresh name based on the specified string. An 
+implementation of the scope construct depends on the ability to accurately 
+trace a Typical program’s AST traversal. To this end, we restrict AST node
+ patterns: they may specify several (recursively) nested nodes but only use 
+variable or alias patterns for arguments of a single node constructor. With 
+this restriction in place, each right-hand side of a pattern match has a 
+unique parent. As a result, we can easily model the path representing the 
+AST traversal’s dynamic state through a stack:
+<pre>
+   traversal_path : node list
+</pre>
+Typical’s runtime updates the stack with the parent and any matched ancestors 
+before evaluating a pattern match’s right-hand side and restores the stack 
+before returning the right-hand side’s value. Whenever the runtime pushes 
+nodes on the stack, it evaluates the scope construct’s pattern match against
+each node being added to the stack. On a match, it updates the current scope
+ as specified by the corresponding Scope constructor value. Independent of a
+ match, it annotates the node with the result. It uses the annotations to 
+restore previous scopes when popping nodes of the stack. It also uses the 
+annotations to avoid re-evaluation of the scope construct’s pattern match 
+for repeated passes over the same AST.<br/><br/>
+ </li> 
+ <li><em>Error Management, Detection, and Reporting.</em> <br/>
+ For error management, Typical provides a system-wide no-information monad.
+All types are automatically injected into this monad and implicitly represent 
+the union with the <code>bottom</code> type; that type’s only value is 
+<code>bottom</code>. Typical's <code>bottom</code> value can be compared with 
+Java's <code>null</code> value. In fact, in the generated Java code, 
+<code>bottom</code> is represented by <code>null</code>. Built-in constructs 
+and primitives generally return <code>bottom</code> if any of their arguments 
+are <code>bottom</code>. Furthermore, all pattern matches return 
+<code>bottom</code> due to an implicit clause mapping <code>bottom</code> to 
+itself; this default can be overridden by explicitly matching
+<code>bottom</code>. However, type constructors such as those for tuples, 
+lists, and variants treat <code>bottom</code> just like any other value. It 
+allows for marking, say, a type attribute as having no information without 
+forcing the entire type record to <code>bottom</code>. Finally, 
+the <code>is_<code>bottom</code></code> primitive enables the detection of 
+<code>bottom</code> values, since the <code>=</code> and <code>!=</code> 
+operators yield <code>bottom</code> when either operand is 
+<code>bottom</code>.<br/><br/> To actually detect and report error conditions,
+ Typical uses <code>require</code> and <code>guard</code>.
+The require construct enforces one or more boolean constraints on an 
+expression. For example, consider :
+<pre>
+   require param = tr error "argument type mismatch" in res
+</pre>  
+If the constraints, here "param = tr", evaluate to true, <code>require</code> 
+evaluates the expression, here "res" and returns the corresponding value. If
+ the constraints evaluate to false, it reports an error, here "argument type mismatch", and returns <code>bottom</code>. Unless explicitly specified, the 
+traversal_path’s top node supplies the error’s source location. However, if 
+the constraints evaluate to <code>bottom</code>, reduce silently returns 
+<code>bottom</code>. This feature avoids cascading errors since constraints
+ that evaluate to <code>bottom</code> means that an error was previously 
+generated (and reported).
+
+ </li>
+ <br/>
+ <li><em>List Reduction.</em><br/>
+C-like languages rely on lists of specifiers or modifiers to express
+the properties of declarations, including types and their attributes. When 
+processing such lists, a type checker needs to (1) map AST nodes to the 
+corresponding internal representation, (2) enforce semantic constraints on the
+number and combination of specifiers, and (3) provide comprehensive error 
+reporting. Typical addresses these needs using the <code>reduce</code> 
+construct. The reduce construct has the following structure:
+<pre>
+  reduce to ["singleton" | "list" | "set" | "optional" | "required"] tag with PatternMatching
+</pre>
+
+As illustrated in Figure 1 using C’s type specifiers as an example,
+the reduce construct selects values from a list, while also mapping
+them to different values and enforcing constraints on their number
+and combination. It uses an extension of ML’s pattern syntax,
+the set pattern <code>{ ... }</code>, to denote that the elements may
+appear in any order in the list; alternatively, a regular list pattern
+can be used to indicate that the elements must appear in the specified
+order. While mapping the (non-exhaustive) pattern match over
+a list, reduce ignores elements that do not match any patterns;
+we assume that lists, in particular those generated by the parser,
+only contain legal elements. While mapping, reduce also enforces
+the reduction constraints. The singleton constraint in the example
+indicates that the pattern match may be triggered at most
+once, while set and list constraints allow for multiple triggers
+(with duplicate triggers being ignored for set constraints). A further
+optional constraint specifies that the pattern match need not
+match any elements. <br/> <br/>
+ 
+The design of the reduce construct reflects our analysis of how
+to type check C specifiers or Java modifiers and supports a generalization
+of the corresponding requirements. For example, a list of C
+specifiers must include a single type specifier such as int, reducing
+the list to a "singleton". It may optionally include one storage
+class specifier such as register, reducing to an "optional
+singleton". It may also include one or more qualifiers such as
+const, which may be duplicated and thus reduce to an "optional
+set". Furthermore, Figure 5 illustrates how reduce combines several
+type specifiers into one internal value; as an added benefit, the
+code directly reflects the constraints specified in the C99 standard. <br/><br/>
+ 
+Like require and guard, reduce integrates
+error checking and reporting, basing any message on a string <code>tag</code> 
+that describes the kind of values being selected such as "type" or
+ "access modifier". For example, if processing the C declaration <code>long int
+ float foo = 5;</code>, the reduce construct shown below would generate a 
+"multiple types detected" error and indicate the source location.
+
+<pre>
+  (** Reduce a list of declaration specifiers to a type. *)
+  mlvalue extractType = reduce to required singleton "type" with
+      [Unsigned _, Long _, Long _, Int _]    -> {type = ULongLongT}
+    | [Unsigned _, Long _, Long _]           -> {type = ULongLongT}
+    | [Signed _, Long _, Long _, Int _]      -> {type = LongLongT} 
+    | [Signed _, Long _, Long _]             -> {type = LongLongT}
+    | [Unsigned _, Long _, Int _]            -> {type = ULongT}
+    | [Signed _, Long _, Int _]              -> {type = LongT}
+    | [Signed _, Short _, Int _]             -> {type = ShortT}
+    | [Unsigned _, Short _, Int _]           -> {type = UShortT}
+    | [Long _, Double _, Complex _]          -> {type = LongDoubleComplexT} 
+    | [Long _, Long _, Int _]                -> {type = LongLongT} 
+    | [Unsigned _, Long _ ]                  -> {type = ULongT}
+    | [Signed _, Short _]                    -> {type = ShortT}
+    | [Short _, Int _]                       -> {type = ShortT}
+    | [Unsigned _, Short _]                  -> {type = UShortT}
+    | [Signed _, Char _]                     -> {type = SCharT}
+    | [Unsigned _, Char _]                   -> {type = UCharT}
+    | [Float _, Complex _]                   -> {type = FloatComplexT}
+    | [Double _, Complex _]                  -> {type = DoubleComplexT}
+    | [Signed _, Long _]                     -> {type = LongT}
+    | [Long _, Int _]                        -> {type = LongT}
+    | [Long _, Double _]                     -> {type = LongDoubleT}
+    | [Long _, Long _]                       -> {type = LongLongT}
+    | [Unsigned _, Int _]                    -> {type = UIntT}
+    | [Signed _, Int _]                      -> {type = IntT}
+    | [Unsigned _]                           -> {type = UIntT}    
+    | [Signed _]                             -> {type = IntT}
+    | [Long _]                               -> {type = LongT} 
+    | [Int _]                                -> {type = IntT}
+    | [VoidTypeSpecifier _]                  -> {type = VoidT}
+    | [Char _]                               -> {type = CharT}
+    | [Float _]                              -> {type = FloatT}
+    | [Double _]                             -> {type = DoubleT}
+    | [Short _]                              -> {type = ShortT}
+    | [Bool _]                               -> {type = IntT} 
+    | [VarArgListSpecifier _]                -> {type = VarArgT}
+    | [(StructureTypeDefinition _ ) as me]   -> analyze me
+    |  _ (*Similar for enum, union and typedef *)
+    ;
+</pre>
+<center><strong> Figure 1. reduce pattern to process C declaration specifiers</strong></center>
+
+ <li><em>Module System.</em><br/>
+ 
+ </li>
+ </ul>
+</dl>
+
+<dl>
+<a name="library"></a>
+
+<strong>Library</strong> <br/>
+Typical provides a library of primitive operations. The Java implementations 
+of these operations can be found in <a href-"Primitives.java">Primitives.java</a>.
+
+The operations, their signatures and descriptions are listed below:
+<br/><em>Map operations</em>
+<pre>
+get : 'a -> 'b                                  
+put : 'a -> 'b                        
+</pre>
+<em>Prelude operations:</em>
+<pre>
+abs_float : float -> float                      Affirm a float
+abs_int : int -> int                            Affirm an int
+and_bits : int -> int -> int                    Perform logical and on two integers
+ancestor : 'a -> node                           Get the ancestor of the top node of the traversal path if it matches a specified pattern
+annotate : node -> string -> 'a -> 'a           Annotate a node with a named value
+annotate_list node list -> string -> 'a -> 'a   Annotate a list of nodes
+ftoi : float -> int                             Convert a float to an int
+get_annotation : node -> string -> 'a           Get the named annotation from a node
+has_annotation : node -> string -> bool         Test if a node has an annotation with the specified name
+is_bottom : 'a -> bool                          Test a value for bottom
+is_empty  : 'a list -> bool                     Test a list for emptiness
+is_not_bottom : 'a -> bool                      Test if a value is not bottom 
+negate_bits : int -> int                        Compute the bitwise negation of an integer
+negate_float : float -> float                   Negate a float value
+negate_int : int -> int                         Negate an int value
+node_name : node -> string                      Get the name of a node 
+nth : 'a list -> int -> 'a                      Get a list's nth element
+or_bits : int -> int                            Compute the bitwise or of an int
+parent : 'a -> node                             Get the parent of the top node on the traversal path if it matches a specified pattern
+shift_left : int -> int -> int                  Left shift and int by the specified number of bits 
+shift_right : int -> int -> int                 Right shift and int by the specified number of bits
+trace : 'a -> 'a                                Debugging function to print a value to the standard output
+trace2 : 'a -> string -> 'a                     Debugging function to print a prefied value to the standard output
+xor_bits : int -> int -> int                    Compute the exclusive or of two integers 
+</pre>
+<em>List operations</em>
+<pre>
+append : 'a list -> 'a list -> 'a list          Append a list to another
+cons : 'a -> 'a list                            Cons a new list from an value and an existing list
+contains : 'a -> 'a list -> bool                Test if a list contains an element
+exists : (fn : 'a -> bool) -> 'a list           Test if a list element satisfies a predicate
+foldl : (fn: 'a -> 'a -> 'a) -> 'a list         Fold a list   
+head : 'a list -> 'a                            Get the head of a list
+intersection : 'a list -> 'a list 'a list       Compute the intersection of two lists
+iter : (fn: 'a -> 'b) -> 'a list                Iterate a function over a list
+length : 'a list -> int                         Compute the length of a list
+subtraction : 'a list -> 'a list -> 'a list     Get the set subtraction of two lists
+tail : 'a list -> 'a list                       Get the tail of a list
+union : 'a list -> 'a list -> 'a list           Compute the set union of two lists
+</pre>
+<em>String operations</em>
+<pre>
+concat : string -> string -> string             Concatenate two strings
+ends_with : string -> string -> bool            Test if a string ends with a substring
+ends_withi : string -> string -> bool           Test if a string ends with a substring - case insensitive
+join_strings : string list -> string            Combine a list of strings into a single string
+ssize : string -> int                           Compute the size of a string
+starts_with : string -> string -> bool          Test if a string begins with a specified substring
+starts_withi : string -> string -> bool         Test if a string begins with a specified substring - case insensitive
+stof : string -> float                          Convert a string to a float
+stoi : string -> int                            Convert a string to an integer
+substring : string -> int                       Get the substring starting at the specified index
+substring2 : string -> int -> int               Get the substring starting at the specified range
+</pre>
+ 
+<a name="example"></a>
+<strong>Usage and Example</strong> <br/>
+The Typical system encompasses three different programming languages and their 
+compilers. The source language, the meta-language, and the bootstrap language.
+ The source language is the language whose type-checker is being implemented. 
+The meta-language is the language in which the type checker specification is 
+written; i.e. Typical. The Typical compiler will generate code in the bootstrap
+ language, which in the current implementation is Java. <br/>
+
+As an introduction to Typical the following example presents the implementation
+ of a complete type checker using the Simply Typed Lambda Calculus as the 
+source language. In this example, the calculus is treated not as a formal
+ system, but as a programming language whose front end we wish to implement.
+<br/> <br/>
+
+Below we have the calculus' syntax. The corresponding grammar (found in <a href="../lang/TypedLambda.rats"> lang/TypedLambda.rats</a>) 
+is written for the <a href="../parser/package.html"> Rats!</a> parser generator
+ and largely follows the syntactic specification shown.
+<pre>
+Expression      <- Application EOF
+Application     <- Application BasicExpression / BasicExpression
+Abstraction     <- LAMBDA Identifier COLON FunctionType DOT Application 
+BasicExpression <- Abstraction / Identifier / IntegerConstant / StringConstant  / OPEN Application CLOSE
+Identifier      <- [a-zA-Z]+ 
+IntegerConstant <- [1-9] [0-9]* 
+StringConstant  <- ["] (!["] _)* ["]"
+FunctionType    <- BasicType ARROW FunctionType / BasicType
+BasicType       <- IntegerType / StringType / OPEN FunctionType CLOSE
+IntegerType     <- "int"
+StringType      <- "string"
+LAMBDA          <- "\\"
+COLON           <- ":"
+DOT             <- "."
+ARROW           <- "->"
+OPEN            <- "("
+CLOSE           <- ")"
+</pre>
+<center><strong>Figure 2.</strong></center><br/>
+
+Next, we use the Typical compiler and the complete 
+<a href="../lang/TypedLambda.tpcl"> TypedLambda.tpcl</a> specification below 
+in <strong>Figure 3</strong> to create the type checker. 
+
+<pre>
+1.  (**
+2.  * Typing rules for the simply typed lambda calculus.
+3.  *
+4.  * @author Robert Grimm
+5.  * @version $Revision: 1.14 $
+6.  *)
+7.  module xtc.lang.TypedLambda;
+8. 
+9.  mltype node =
+10.   | Application of node * node
+11.   | Abstraction of node * node * node
+12.   | Identifier of string
+13.   | IntegerConstant of string
+14.   | StringConstant of string
+15.   | FunctionType of node * node
+16.   | IntegerType
+17.   | StringType
+18.   ;
+19. 
+20. mltype raw_type = IntegerT | StringT | FunctionT of type * type ;
+21. 
+22. scope Abstraction (id, _, body) -> Scope(Anonymous("lambda"), [id, body]) ;
+23. 
+24. namespace default : type = Identifier (id) -> SimpleName(id) ;
+25. 
+26. mlvalue analyze = function
+27.   | Application (lambda, expr) ->
+28.       let tl = analyze lambda
+29.       and tr = analyze expr in 
+30.         require (predicate FunctionT _) tl.type
+31.           error "application of non-function" in begin
+32.             match tl.type, tr with
+33.               | FunctionT (param, res), param -> res
+34.               | _ -> error "argument/parameter type mismatch"
+35.           end
+36.   | Abstraction (id, type, body) ->
+37.       let param = analyze type in
+38.       let _     = define id param in
+39.       let res   = analyze body in
+40.         { type = FunctionT (param, res) }
+41.   | Identifier _ as id ->
+42.       let t = lookup id in
+43.          require t != bottom error (get_name id) ^ " undefined" in t
+44.   | IntegerConstant _ ->
+45.       { type = IntegerT }
+46.   | StringConstant _ ->
+47.       { type = StringT }
+48.   | FunctionType (parameter, result) ->
+49.       { type = FunctionT (analyze parameter, analyze result) }
+50.   | IntegerType ->
+51.       { type = IntegerT }
+52.   | StringType ->
+53.       { type = StringT }
+54.   ;
+55. 
+56. mlvalue get_name = function
+57.   | Identifier (name) -> name
+58.   | _ -> bottom
+59.   ;
+60.
+</pre>
+<center><strong>Figure 3. Type checker specification for the Simply Typed Lambda Calculus</strong></center><br>
+
+The specification begins with the module declaration on line 7. <br/><br/>
+
+Lines 9-17 declare the variant type node to represent the STLC's abstract
+ syntax tree structure. The variants of the node type indicate the names and 
+the type of the children of all the nodes that may appear in the STLC AST to 
+be type checked. Note that this specification need not be written by hand, but 
+can automatically generated from a Rats! grammar specification using 
+the <code>-ast</code> option.<br/><br/>
+
+Line 20 declares the variant type <code>raw_type</code> to represent the type
+ structure of
+our STLC. In this case we have three types: an integer type, a string type, and
+a function type.<br/><br/>
+
+Line 22 uses Typical's scope construct to declaratively specify scope management
+for the STLC type checker. The declaration can be interpreted as follows: If an
+<code>Abstraction</code> node is encountered while traversing the AST the type
+ checker will
+enter a new Anonymous scope with a name derived from "lambda", and the first
+ and third children of the <code>Abstraction</code> node will belong to the
+ new scope.<br/>
+<br/>
+
+Line 24 uses Typical's scope construct to declaratively specify the STLC's
+namespace management. The declaration can be interpreted as follows: All STLC
+names belong to a single default namespace and have value 'type'. Symbol table
+names are obtained by extracting the string value from an 
+<code>Identifier</code> node, and 
+using this string to create a new SimpleName.<br/><br/>
+
+Lines 26-55 define the type rules of our STLC as pattern matches from nodes to
+type. Lines 27-34 typecheck an <code>Application</code> node by first
+ typechecking each child of the application, then using the
+ <code>require</code> construct to enforce that the first
+child has function type, and the <code>error</code> construct to report failure.
+ Finally the <code>error</code> construct is used to report an error on type/argument mismatch. Lines 
+36-40 process an abstraction node by analysing the second and third children,
+and adding an symbol table entry using the <code>define</code> construct. Since
+the define construct has built in error management, an error will be reported
+if the identifier was previously defined. Successful processing of the 
+<code>Abstraction</code> node returns the appropriate FunctionType. Line 41 
+types an <code>Identifier</code> via
+a symbol table lookup on the node. Lines 44-54 are straightforward mapping of
+the<code> IntegerConstant, StringConstant, FunctionType, IntegerType, and 
+StringType</code> nodes to their corresponding types.
+<br/><br/>
+
+Finally the specification can be compiled using the command <code>java 
+xtc.typical.Typical TypedLambda.tpcl</code>. This generates three files:
+ <a href="../lang/TypedLambdaTypes.java"> TypedLambdaTypes.java</a> which
+ contains definitions for all the types used by the STCL type checker, 
+<a href="../lang/TypedLambdaSupport.java"> TypedLambdaSupport.java </a>
+ which contains general supporting infrastructure, and 
+<a href="../lang/TypedLambdaAnalyzer.java"> TypedLambdaAnalyzer.java</a> which
+ is the STLC typechecker itself. TypedLambdaAnalyzer can be incorporated into
+ a Compiler or Driver (for example,  <a href="../lang/TypedLambda.java">
+ TypedLambda.java</a>) for processing
+STLC programs.
+</dl>
+
+
+</body>
+</html>

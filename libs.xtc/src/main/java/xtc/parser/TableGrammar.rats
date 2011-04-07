@@ -1,0 +1,74 @@
+/*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2005-2007 Robert Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ */
+
+/**
+ * Grammar for memoization table dumps.
+ *
+ * @author Robert Grimm
+ * @version $Revision: 1.7 $
+ */
+module xtc.parser.TableGrammar;
+
+import xtc.util.Spacing;
+
+option withLocation, constant, parser(xtc.parser.TableParser);
+
+// ============================================================================
+
+public generic Column =
+  Number void:"=":Symbol ColumnEntry void:";":Symbol
+  ;
+
+Node ColumnEntry = Null / ColumnValue ;
+
+generic ColumnValue =
+  void:"{":Symbol ( Chunk+ / Field+ ) void:"}":Symbol
+  ;
+
+generic Chunk =
+  void:"Chunk":Word void:"(":Symbol Number void:")":Symbol
+    void:"=":Symbol ChunkEntry void:";":Symbol
+  ;
+
+Node ChunkEntry = Null / ChunkValue ;
+
+generic ChunkValue =
+  void:"{":Symbol Field+ void:"}":Symbol
+  ;
+
+generic Field =
+  Word void:"=":Symbol FieldEntry void:";":Symbol
+  ;
+
+Node FieldEntry = Null / Value / Error ;
+
+generic Null  = void:"null":Word ;
+generic Value = void:"Value":Word void:"(":Symbol Number void:")":Symbol ;
+generic Error = void:"Error":Word void:"(":Symbol Number void:")":Symbol ;
+
+// ============================================================================
+
+String Word                       = WordCharacters Spacing            ;
+transient String WordCharacters   = [a-zA-Z_$] [a-zA-Z0-9_$]*         ;
+String Number                     = Digits Spacing                    ;
+transient String Digits           = [0] / [1-9][0-9]*                 ;
+String Symbol                     = SymbolCharacters Spacing          ;
+transient String SymbolCharacters = "(" / ")" / "=" / "{" / "}" / ";" ;
+
+// ============================================================================

@@ -1,0 +1,3566 @@
+module xtc.typical.Typical ;
+
+(*****************************************************************************
+*                             Node declarations                              *
+*****************************************************************************)
+mltype node =
+  | Module of node * node list
+  | ScopeDefinition of node
+  | AttributeDefinition of string * node
+  | EqualAttributeDefinition of string * node
+  | EqualityDefinition of string * node list
+  | TypeDefinition of node opt * string * node
+  | ValueDefinition of string * node * node
+  | NameSpaceDefinition of node list
+  | ModuleDeclaration of string list
+  | NameSpaceStructure of string * string * node
+  | EqualStructure of node * node * node list
+  | WildCard
+  | Parameters of node list
+  | Parameter of string * node opt
+  | PatternMatching of node list
+  | PatternMatch of node * node
+  | Patterns of node list
+  | TuplePattern of node list
+  | WhenPattern of node * node
+  | AsPattern of node * string
+  | TypedPattern of node * node
+  | ConsPattern of node * node
+  | Variable of string
+  (* FIXME, change to node var *)
+  | TypeConstructorPattern of string * node list
+  | PatternParameters of node list
+  | BottomPattern
+  | ListPattern of node list
+  | RecordPattern of node list
+  | FieldPattern of node * node
+  | TupleLiteral of node list
+  | LogicalOrExpression of node * node
+  | LogicalAndExpression of node * node
+  | EqualityExpression of node * string * node
+  | RelationalExpression of node * string * node
+  | AdditiveExpression of node * string * node
+  | ConcatenationExpression of node * string * node
+  | MultiplicativeExpression of node * string * node
+  | ConsExpression of node * node
+  (* FIXME, change to node var *)
+  | FunctionApplication of node list
+  | Arguments of node list
+  | PredicateArgument of node
+  | PredicateExpression of node * node
+  | FieldExpression of node * string
+  | LogicalNegationExpression of node
+  | LetExpression of node * node
+  | LetBindings of node list
+  | LetBinding of node * node
+  | FunctionExpression of node
+  | FunExpression of node * node
+  | MatchExpression of node * node
+  | RequireExpression of node list
+  | RequireArgs of node * node * node * node opt
+  | MessageTag of string
+  | GuardExpression of node * node
+  | ErrorClause of node * node * node opt
+  | AssertClause of node * node opt
+  | TupleConstructor of string * node list
+  (* FIXME, change to node var *)
+  | RecordExpression of node opt list
+  | WithExpression of node
+  | FieldAssignment of string * node
+  | IfExpression of node * node
+  | IfElseExpression of node * node * node
+  | ListLiteral of node list
+  | Bottom
+  | ReduceExpression of node * node * node
+  | ReduceOptions of string list
+  | LowerID of string
+  | UpperID of string
+  | AliasedType of node * node
+  | FunctionType of node * node
+  | TupleType of node list
+  | ConstructedType of node * string
+  | NaryConstructedType of node * string
+  | NaryType of node list
+  | BooleanType
+  | IntType
+  | Float32
+  | Float64
+  | StringType
+  | AnyType
+  | UserDefinedType of string
+  | TypeVariable of string
+  | ConstraintType of node
+  | PolyVariantType of node list
+  | TypeParameters of node list  
+  | VariantDeclaration of node list
+  | RecordDeclaration of node list
+  | PolyVariantDeclaration of node list
+  | TypeConstructor of string * node opt
+  | FieldType of string * node
+  | PolyTypeConstructor of string * string
+  | IntegerLiteral of string
+  | FloatingLiteral of string
+  | StringLiteral of string
+  | BooleanLiteral of string
+;
+
+(*****************************************************************************
+ *                             raw_type declaration                          *
+ *****************************************************************************)
+mltype raw_type = 
+    BoolT | IntT | Float32T | Float64T | StringT | WildcardT | AnyT
+  | TypeName of string | FunctionT of type list * type 
+  | ConstructorT of string * string * type | VariantT of type list 
+  | FieldT of string * string * type | RecordT of type list 
+  | TupleT of type list | VariableT of string * bool
+  | ConstructedT of type list * string | PairOfType of type * type
+  | PolyVariantT of type list | NodeTypeT | StringName of string
+  | StringList of string list ;
+
+(*****************************************************************************
+ *                             Equality declaration                          *
+ *****************************************************************************)
+equality raw_type = ConstructorT(_,s,_) | FieldT(_,_,t) | ConstructedT(tl,s) ;
+
+(*****************************************************************************
+ *                             Scope declaration                             *
+ *****************************************************************************)
+scope
+    ValueDefinition(s,a,b) -> Scope(Named(SimpleName(s)),[a,b])
+  | LetExpression(_,a)     -> Scope(Anonymous("let"),[a])
+  | FunExpression(a,b)     -> Scope(Anonymous("fun"),[a,b])   
+  | PatternMatch(_,_) as a -> Scope(Anonymous("patternmatching"),[a]);
+
+(*****************************************************************************
+ *                             Name_space declaration                        *
+ *****************************************************************************)
+namespace 
+  constructor: type = UpperID(s) | TypeConstructorPattern(s,_) | 
+    TupleConstructor(s,_) | TypeConstructor(s,_) -> SimpleName(s) and
+
+  poly: type = PolyTypeConstructor(s,_) -> SimpleName(s) and
+
+  type: type = TypeDefinition(_,s,_) | ConstructedType(_,s) | 
+    UserDefinedType(s) -> SimpleName(s) and
+
+  field: type = AttributeDefinition(s,_) | EqualAttributeDefinition(s,_) | 
+    FieldType(s,_) | FieldAssignment(s,_) | FieldExpression(_,s) | 
+    FieldPattern(LowerID(s),_) -> SimpleName(s) and
+
+  value: type = AsPattern(_, s) | LowerID(s) | Variable(s) | Parameter(s, _) |
+    ValueDefinition(s,_,_) -> SimpleName(s) and 
+
+  node: node = NameSpaceStructure(s,_,_) -> SimpleName(s) ;
+
+(*****************************************************************************
+ *                      Some usefule data type definitions                   *
+ *****************************************************************************) 
+mltype call = {caller : string, callee : string};
+
+mltype graph = {functionList : string list, edges : call list};
+
+mltype group = {group : string list, circles : string list list};
+
+mltype nodeRec = {name : string, mutualList : string list, 
+                  dependList : string list} ;
+
+mltype funcRec = {paras : type list, ret : type } ;
+
+mltype entry = {entryName : string, entryType : type} ;
+
+(*****************************************************************************
+ *                              Useful values                                *
+ *****************************************************************************) 
+mlvalue wildt = {type = WildcardT}; 
+mlvalue typet = {type = TypeName("type")};
+mlvalue strt = {type = StringT};
+mlvalue intt = {type = IntT};
+mlvalue boolt = {type = BoolT};
+mlvalue floatt = {type = Float64T};
+mlvalue nodet = {type = NodeTypeT}; 
+
+(* Get the name of a type. *)
+mlvalue getTypeName t = if (is_bottom t) then "null type"
+                        else match t.type with
+    BoolT -> "boolean" 
+  | IntT -> "integer"
+  | Float32T -> "32-bit float" 
+  | Float64T -> "64-bit float"
+  | StringT -> "string"
+  | WildcardT -> "wildcard" 
+  | AnyT -> "'any'"
+  | ConstructorT(s,_,_) | TypeName(s) -> s
+  | FieldT(_,_,ty) -> getTypeName ty 
+  | FunctionT(tl, t) -> 
+       "function type (" ^ (getTypeName (List.head tl)) 
+     ^ (getTypeListName (List.tail tl) "") ^ ") -> " ^ (getTypeName t)   
+  
+  | VariantT(tl) -> 
+      let t = List.head tl in
+        begin match t.type with
+            ConstructorT(s,_,_) -> s
+          | _ -> bottom
+        end
+  
+  | RecordT(tl) -> 
+      let t = List.head tl in
+        begin match t.type with
+            FieldT(s,_,_) -> s
+          | _ -> bottom 
+        end
+  | TupleT(tl) -> "tuple type (" ^ (getTypeName (List.head tl)) 
+              ^ (getTypeListName (List.tail tl) "") ^ ")"
+  | ConstructedT(tl,s) -> s ^ " of (" ^ (getTypeName (List.head tl)) ^
+                          (getTypeListName (List.tail tl) "") ^ ")"
+  | PairOfType(t1,t2) -> "pair of types of " ^ (getTypeName t1) ^ " -> "
+                            ^ (getTypeName t2) 
+  | VariableT(str,_) ->
+      let ty = Map.get str in
+        if (is_bottom ty) then "variable type"
+        else getTypeName ty 
+  | PolyVariantT _ | NodeTypeT -> "node" 
+  | _ -> bottom;      
+
+(* Get name from a list of type. *)
+mlvalue getTypeListName tl str = if (is_bottom tl) then str
+                                 else match tl with
+    [] -> str
+  | x::xs -> getTypeListName xs (str ^ "," ^ (getTypeName x)) ;
+  
+(*****************************************************************************
+ *                      Matching nodes for analyzing                         *
+ *****************************************************************************)
+(** Analyze a node. *)
+mlvalue analyze no = match no with
+      
+  | Module(n,l) -> 
+      let nl = List.append [n] l in
+      let _ = List.map scanNode nl and
+          atts = processAttributes nl in          
+      let _ = createTypeRecord atts and
+          _ = preload no and
+          strList = getNodeTypes nl in          
+      let _ = annotate no "__node_types" {type = StringList(strList)} and
+          _ = List.map analyzeTypeDefinition nl and
+          _ = processFunctionCalls nl and 
+          _ = processScopeSpace nl and 
+          _ = List.map analyze nl and
+          _ = checkUnusedParameters nl and 
+          _ = List.map resolveNode nl in bottom    
+ 
+  | TypeDefinition(tp, s, dec) -> 
+      if (has_annotation no "visited") then bottom
+      else 
+        let _ = annotate no "visited" wildt and
+            _  = annotate dec "parent" {type = StringName(s)} in
+          require (checkMonomorphic no dec) 
+              error s ^ " must be a monomorphic variant" in
+            if (is_bottom tp) then  
+              let tdec = analyze dec in 
+              let _ = redefine no tdec in tdec              
+            else
+              let nl = getNodeList tp in
+              let vars = getTypeVariables nl [] in
+                if (is_not_bottom vars) then
+                  let _ = annotate dec "type_variables" 
+                            {type = StringList(vars)} and
+                      _ = annotate no "type_variables" 
+                            {type = StringList(vars)} and
+                      tdec = analyze dec in
+                    let _ = checkUnusedVariables vars dec and                             
+                        _ = redefine no tdec in tdec                   
+
+  | AttributeDefinition(s,n) | EqualAttributeDefinition(s,n) -> 
+      if (has_annotation no "visited") then lookup no 
+      else let _ = annotate no "visited" wildt and 
+               t = analyze n in
+             if (is_not_bottom t) then          
+               let _ = define no {type = FieldT("type",s,t)}
+                         error "attribute " ^ s 
+                               ^ " has been previously defined" in 
+                 {type = FieldT("type",s,t)}       
+  
+  | EqualityDefinition(s,l) -> let _ = List.map analyze l in
+      require ("raw_type" = s) 
+          error "raw_type is expected in equality definition"
+        in bottom  
+
+  | EqualStructure(up,n,l) -> 
+      let s = getString up and
+          nl = List.append [n] l in 
+      let t = lookup up error "constructor " ^ s ^ " is undefined" in
+        begin match t.type with
+            ConstructorT("raw_type",_,ty) -> 
+              begin match ty.type with
+                  TupleT(tl) ->
+                    if (List.length nl < List.length tl) then
+                      error s ^ " does not have enough children"
+                    else if (List.length nl > List.length tl) then
+                         error s ^ " has too many children"
+                | _ -> require (List.length nl = 1) 
+                    error s ^ " must have only one child" in bottom
+              end
+          | _ -> 
+              error "raw_type constructor is expected in equality definition"
+        end
+
+  | RecordDeclaration(l) -> 
+      let str = getAnnotatedString no "parent" and   
+          vars = getAnnotatedStringList no "type_variables" in 
+      let _ = annotate_list l "parent" {type = StringName(str)} and
+          _ = if (is_not_bottom vars) then
+                annotate_list l "type_variables" 
+                  {type = StringList(vars)} and 
+          tl = List.map analyze l in 
+        if !(List.exists is_bottom tl) then {type = RecordT(tl)}
+ 
+  | FieldType(s, n) -> 
+      let ano = getAnnotatedString no "parent" and 
+         vars = getAnnotatedStringList no "type_variables" in
+      let _ = if (is_not_bottom vars) then
+                annotate n "type_variables" {type = StringList(vars)} and
+          t = analyze n in 
+        if (is_defined no) then
+          error "field " ^ s ^ " has been previously defined"
+        else if (is_not_bottom t) then
+          let _ = redefine no {type = FieldT(ano, s, t)} in
+            {type = FieldT(ano, s, t)}
+ 
+  | VariantDeclaration(nl) -> 
+      let str = getAnnotatedString no "parent" and
+          vars = getAnnotatedStringList no "type_variables" in
+      let _ = annotate_list nl "parent" {type = StringName(str)} and
+          _ = if (is_not_bottom vars) then
+                annotate_list nl "type_variables" {type = StringList(vars)} and
+          tl = List.map analyze nl in 
+        if !(List.exists is_bottom tl) then {type = VariantT(tl)}
+ 
+  | TypeConstructor(s, n) -> 
+      let ano = getAnnotatedString no "parent" and
+          vars = getAnnotatedStringList no "type_variables" in 
+      let _ = if (is_not_bottom vars) then
+                annotate n "type_variables" {type = StringList(vars)} and
+          _ = annotate n "parent" {type = StringName(ano)} and
+          t = analyze n in 
+        if (is_defined no) then
+          error "constructor " ^ s ^ " has been previously defined"
+        else 
+          let _ = redefine no {type = ConstructorT(ano, s, t)} in
+            {type = ConstructorT(ano, s, t)}
+
+  | PolyVariantDeclaration(nl) -> 
+      let str = getAnnotatedString no "parent" in
+        if (reachableFromNode str) then
+          let tl = List.map analyze nl in 
+            if !(List.exists is_bottom tl) then {type = PolyVariantT(tl)}
+            else bottom
+        else error "polymorphic variant is not allowed outside node closure"      
+
+  | PolyTypeConstructor(s1, s2) ->
+      require (is_defined UserDefinedType(s2))
+          error s2 ^ " is undefined" in
+      if (is_defined no) then
+        let t = lookup no in
+          begin match t.type with
+              TypeName(s) ->
+                if (s = s2) then t
+                else error s1 ^ " is previously defined with " ^ s
+            | _ -> error s1 ^ " is previously defined with " ^ (getTypeName t)
+          end
+      else 
+        let _ = redefine no {type = TypeName(s2)} in
+          {type = TypeName(s2)} 
+
+  | ScopeDefinition(n) -> 
+      let _ = annotate n "non_exhaustive" wildt and
+          _ = annotate n "no_binding_check" wildt and
+          _ = annotate n "ensure_node" wildt in analyze n
+ 
+  | NameSpaceDefinition(nl) -> let tl = List.map analyze nl in
+      if !(List.exists is_bottom tl) then 
+        let res = List.foldl unify tl wildt in
+          require (is_not_bottom res) 
+            error "types of pattern matches in matching structure "
+                  ^ "do not match together" in res
+  
+  | NameSpaceStructure(tagStr,typeStr,pat) -> 
+      let ty = lookup UserDefinedType(typeStr) 
+                      error typeStr ^ " is an undefined type" and
+          _ = annotate pat "no_binding_check" wildt and
+          _ = annotate pat "non_exhaustive" wildt and
+          _ = annotate pat "ensure_node" wildt in
+        if (is_not_bottom ty) then
+          if !(is_defined UserDefinedType("tag" ^ tagStr)) then 
+            let _ = redefine UserDefinedType("tag" ^ tagStr) 
+                             {type = TypeName(typeStr)} in analyze pat
+          else let ta = lookup UserDefinedType("tag" ^ tagStr) in
+            require (is_not_bottom (unify ta ty)) error 
+                "tag " ^ tagStr ^ " must be defined with " ^
+                (getTypeName ta) ^ ", found " ^ (getTypeName ty) 
+              in analyze pat
+ 
+  | ValueDefinition(_, p, v) -> 
+      if (has_annotation no "visited") then lookup no 
+      else let _ = annotate no "visited" wildt and 
+               _ = visitDepend no in
+        if !(has_annotation no "secondary") then 
+          let pts = analyze p in
+            begin match pts.type with
+                TupleT([]) -> 
+                  let ty = {type = VariableT(fresh_name "type", false)} in
+                  let _ = redefine no ty and 
+                      _ = processMutual no and   
+                      ret = analyze v in
+                  let _ = unify ty ret and 
+                      _ = resolveMutual no in lookup no 
+              | TupleT(tl) -> 
+                  let ty = {type = VariableT(fresh_name "type", false)} in
+                  let _ = redefine no {type = FunctionT(tl,ty)} and
+                      _ = processMutual no and 
+                      ret = analyze v in
+                  let _ = unify ty ret and 
+                      _ = resolveMutual no in lookup no                
+              | _ -> bottom
+            end         
+        else lookup no 
+                       
+  | FunExpression(p,v) -> 
+      let pts = analyze p in
+        begin match pts.type with
+            TupleT([]) -> error "FunEpression must have parameters"
+          | TupleT(tl) -> 
+              let ret = analyze v in
+              let funT = {type = FunctionT(tl,ret)} in resolveType funT
+          | _ -> bottom       
+        end
+
+  | Parameters(pl) -> let tl = List.map analyze pl in
+      if !(List.exists is_bottom tl) then {type = TupleT(tl)}
+
+  | Parameter(s, n) -> 
+      require !(is_defined_locally no) error 
+          "parameter " ^ s ^ " has been previously defined" in 
+        if (is_bottom n) then
+          let ty = {type = VariableT(fresh_name "type",false)} in
+            let _ = define no ty in ty
+        else let t = analyze n in
+               let _ = define no t in t
+
+  | MatchExpression(n1, n2) -> 
+      let t = analyze n1 and 
+          ty = analyze n2 in
+        begin match ty.type with
+            PairOfType(t1,t2) -> 
+              let _ = guard (unify t t1)
+                        error "type of the expression does not match "
+                              ^ "the type of patterns" 
+                in t2
+          | _ -> bottom        
+        end       
+      
+  | PatternMatching(l) -> 
+      let _ = if (has_annotation no "no_binding_check") then
+                annotate_list l "no_binding_check" wildt and
+          _ = if (has_annotation no "ensure_node") then
+                annotate_list l "ensure_node" wildt and                  
+          typeList = List.map analyze l in 
+        if !(List.exists is_bottom typeList) then                            
+          let res = List.foldl unify typeList wildt in
+            if (is_not_bottom res) then
+              let _ = if (has_annotation no "is_reduce") then
+                        checkReduceMatching l 
+                      else checkIrredundant l and
+                  _ = if !(has_annotation no "non_exhaustive") then
+                        checkExhaustive l 
+                      else true
+              in res
+            else 
+              error "types of pattern matches in pattern matching structure "
+                    ^ "do not match together"
+    
+  | PatternMatch(pat, ne) -> 
+      let _ = if (has_annotation no "no_binding_check") then
+                 annotate pat "no_binding_check" wildt and
+          _ = if (has_annotation no "ensure_node") then
+                 annotate pat "ensure_node" wildt and       
+          tpat = analyze pat in
+      let tne = analyze ne in
+      let strList = retrieveVariables pat in
+      let _ = annotate no "variables" {type = StringList(strList)} and
+          newList = removeUsedVariables strList pat in
+      let _ = checkUnusedVariables newList ne in
+        if (is_not_bottom tpat) && (is_not_bottom tne) then
+          {type = PairOfType(tpat, tne)}
+
+  | Patterns(pl) -> 
+      let _ = if (has_annotation no "no_binding_check") then
+                annotate_list pl "no_binding_check" wildt and
+          tl = List.map analyze pl in
+      if !(List.exists is_bottom tl) then
+        let res = if (has_annotation no "ensure_node") then
+                    checkNodeList tl
+                  else List.foldl unify tl wildt in
+          if (is_bottom res) && !(has_annotation no "ensure_node") then  
+              error "types of the patterns do not match together"
+          else    
+            let strList = retrieveVariables (List.head pl) in
+              if (haveSameVariables strList (List.tail pl)) then 
+                let _ = annotate no "variables" {type = StringList(strList)} in
+                  res
+              else 
+                error "parallel patterns do not have the same variables"
+     
+
+  | TuplePattern(pl) -> 
+      let _ = if (has_annotation no "no_binding_check") then
+                annotate_list pl "no_binding_check" wildt and
+         tl = List.map analyze pl in
+        if !(List.exists is_bottom tl) then 
+          let strList = combineVariables pl in
+          let _ = annotate no "variables" {type = StringList(strList)} in 
+            {type = TupleT(tl)} 
+      
+
+  | WhenPattern(p,e) -> let _ = if (has_annotation no "no_binding_check") then
+                                  annotate p "no_binding_check" wildt and
+                            tp = analyze p and 
+                            te = analyze e in          
+      let _ = guard (unify te boolt) 
+                error "expected boolean, found " ^ (getTypeName te) at e in
+      let _ = annotate no "variables" {type = StringList(retrieveVariables p)} 
+      in if !(has_annotation p "has_bindings") then tp
+         else let _ = annotate no "has_bindings" wildt in tp
+
+  | AsPattern(p, s) -> let _ = if (has_annotation no "no_binding_check") then
+                                  annotate p "no_binding_check" wildt and
+                           tp = analyze p in
+      require !(is_defined_locally no) 
+          error "variable " ^ s ^ " has been previously defined" in
+        let res = if (is_bottom tp) then bottom
+                  else begin match tp.type with
+                           WildcardT -> 
+                             {type = VariableT(fresh_name "type", false)}
+                         | _ -> tp
+                       end in
+        let _ = redefine no res and
+            strList = List.append (retrieveVariables p) [s] in
+        let _ = annotate no "variables" {type = StringList(strList)} in
+          if (has_annotation p "has_bindings") &&
+             !(has_annotation no "no_binding_check") then 
+            error "AsPattern contains bindings in the pattern"
+          else res
+ 
+  | TypedPattern(pat,ty) -> 
+      let _ = if (has_annotation no "no_binding_check") then
+                annotate pat "no_binding_check" wildt and
+          tp = analyze pat and 
+          t = analyze ty in
+      let res = unify t tp in
+      let _ = guard (unify t tp) error "type of the pattern does not match " ^
+                                       "with the explicit type" at pat in     
+      let _ = annotate no "variables" {type = StringList(retrieveVariables pat)}
+      in if !(has_annotation pat "has_bindings") then res
+         else let _ = annotate no "has_bindings" wildt in res          
+
+  | ConsPattern(n,con) -> 
+    let _ = if (has_annotation no "no_binding_check") then
+              let _ = annotate n "no_binding_check" wildt in
+                 annotate con "no_binding_check" wildt and
+        t = analyze n and 
+        tl = analyze con in
+      if (is_not_bottom t) && (is_not_bottom tl) then
+        if (isListType tl) then
+          let res = unify tl {type = ConstructedT([t],"list")} in 
+            require (is_not_bottom res)
+                error "type of the head does not match with " ^ 
+                      "type in the list" ^ " in cons pattern" in
+              require (!(isNodeType t) || (checkBindings [n,con] 0 0))
+                  error "bindings in different nodes in cons pattern" in
+                let strList = List.union (retrieveVariables n) 
+                                         (retrieveVariables con) in
+                  if (List.is_empty strList) then res
+                  else 
+                    let _ = annotate no "variables" 
+                              {type = StringList(strList)} and
+                        _ = annotate no "has_bindings" wildt in res     
+        else error "the tail of a cons pattern must be a list"        
+  
+  | ListPattern(nl) -> let _ = if (has_annotation no "no_binding_check") then
+                                 annotate_list nl "no_binding_check" wildt in
+      begin match nl with
+          [] -> let varT = {type = VariableT(fresh_name "type", false)} in 
+                  {type = ConstructedT([varT],"list")}
+        | _ -> let tl = List.map analyze nl in
+                 if !(List.exists is_bottom tl) then
+                   let res = List.foldl unify tl wildt in
+                     require (is_not_bottom res) 
+                         error "types do not match in list pattern" in 
+                       require (!(isNodeType res) || (checkBindings nl 0 0)) 
+                            error "bindings in different nodes " ^
+                                  "in list pattern" in
+                         let strList = combineVariables nl in
+                           if (List.is_empty strList) then 
+                             {type = ConstructedT([res],"list")} 
+                           else
+                             let _ = annotate no "variables" 
+                                       {type = StringList(strList)} and
+                                 _ = annotate no "has_bindings" wildt in
+                               {type = ConstructedT([res],"list")}                        
+      end
+
+  | RecordPattern(nl) -> 
+      begin match nl with
+          [] -> error "empty record pattern"
+        | x::xs -> let tx = analyze x in
+                     begin match tx.type with
+                         FieldT(s,_,_) -> 
+                           let _ = annotate_list xs "parent" 
+                                     {type = StringName(s)} and
+                               _ = List.map analyze xs and
+                               strList = combineVariables nl in
+                             let _ = annotate no "variables" 
+                                       {type = StringList(strList)} in 
+                               lookup UserDefinedType(s)                   
+                       | _ -> bottom
+                     end 
+      end
+
+  | FieldPattern(name,p) -> let s = getString name in 
+      let t = lookup no error "field " ^ s ^ " is undefined" in
+        begin match t.type with
+            FieldT(str,_,_) ->
+              let ps = if (has_annotation no "parent") then
+                         let stri = getAnnotatedString no "parent" in stri
+                       else str in
+                require (ps = str) error "record " ^ ps ^ 
+                                         " does not contain the field " ^ s in 
+                  let tp = analyze p in 
+                  let _ = guard (unify t tp)
+                            error "type of the pattern does not match with " ^
+                                  "the declared type of field " ^ s in 
+                  let _ = annotate no "variables" 
+                            {type = StringList(retrieveVariables p)} 
+                    in t
+          | _ -> bottom
+        end 
+
+  | Variable(s) -> 
+      if (is_defined_locally no) then 
+        let _ = annotate no "variables" {type = StringList([s])} in lookup no 
+      else let t = {type = VariableT(fresh_name "type",false)} in
+           let _ = define no t and
+               _ = annotate no "variables" {type = StringList([s])} in t     
+
+  | TypeConstructorPattern(s,nl) -> 
+    let ty = lookup no error "constructor " ^ s ^ " is undefined"  and
+        check = has_annotation no "no_binding_check" in
+      if (is_not_bottom ty) then
+        let p = getParent ty in
+        let t = if !(hasTypeVariables p) then ty
+                else copy ty in                  
+          begin match nl with
+              [PatternParameters(pl)] -> 
+              let _ = if check then annotate_list pl "no_binding_check" wildt in            
+                begin match t.type with
+                    ConstructorT(_,_,ty) -> 
+                      if (is_bottom ty) then
+                        error "constructor " ^ s ^ " must have no children"
+                      else begin match ty.type with
+                          TupleT(tl) -> 
+                            if (List.length pl < List.length tl) then
+                              error "constructor " ^ s ^ 
+                                    " does not have enough children"
+                            else if (List.length pl > List.length tl) then
+                                   error "constructor " ^ s ^
+                                         " has too many children"
+                                 else let res = processArguments pl tl t in
+                                   if (is_not_bottom res) then
+                                     require (!(isNodeType t) || check ||
+                                              (checkBindings pl 0 0))
+                                       error "bindings in different nodes ***"
+                                             ^ "in the node pattern" in
+                                     let strList = combineVariables pl in
+                                       if (List.is_empty strList) then res
+                                       else
+                                         let _ = annotate no "variables" 
+                                                   {type = StringList(strList)}
+                                         and _ = annotate no "has_bindings" wildt
+                                           in res
+                        | _ -> require (List.length pl = 1) 
+                                   error s ^ " must have only one child" in
+                                 let res = processArguments pl [ty] t in 
+                                   if (is_not_bottom res) then
+                                     let strList = combineVariables pl in
+                                       if (List.is_empty strList) then res
+                                       else
+                                         let _ = annotate no "variables" 
+                                                   {type = StringList(strList)}
+                                         and _ = annotate no "has_bindings" wildt
+                                           in res                            
+                      end          
+                  | _ -> error "expected constructor type, found " ^
+                               (getTypeName t)
+                end 
+        | [WildCard] -> t
+        | [] -> 
+            begin match t.type with
+                ConstructorT(_,_,ty) -> 
+                  if (is_bottom ty) then t
+                  else error "constructor " ^ s ^ 
+                             " does not have enough children"                  
+              | _ -> error "expected constructor type, found " ^ (getTypeName t)
+            end
+        | _ -> bottom 
+      end
+
+  | TupleLiteral(nl) -> let tl = List.map analyze nl in
+      if !(List.exists is_bottom tl) then {type = TupleT(tl)}
+
+  | LogicalOrExpression(left, right) | 
+    LogicalAndExpression(left,right) ->
+      let tl = analyze left and 
+          tr = analyze right in
+      let _ = guard (unify boolt tl) error "expected boolean, found " ^ 
+                                           (getTypeName tl) at left and
+          _ = guard (unify boolt tr) error "expected boolean, found " ^ 
+                                           (getTypeName tr) at right
+        in boolt
+
+  | EqualityExpression(left, _, right) ->
+      let tl = analyze left and 
+          tr = analyze right in
+      let _ = guard (unify tl tr) error "types of left and right expressions" ^
+                                        " do not match" in boolt
+
+  | RelationalExpression(left, s, right) ->
+      let tl = analyze left and 
+          tr = analyze right in          
+        begin match s with
+            "<=" | "<" | ">=" | ">" ->
+              let _ = guard (unify tl intt) error "expected integer, found " 
+                                             ^ (getTypeName tl) at left and
+                  _ = guard (unify tr intt) error "expected integer, found "
+                                             ^ (getTypeName tr) at right 
+                in boolt
+          | _ ->  
+              let _ = guard (unify tl floatt) error "expected 64-bit float" ^
+                        ", found " ^ (getTypeName tl) at left and
+                  _ = guard (unify tr floatt) error "expected 64-bit float" ^
+                        ", found " ^ (getTypeName tr) at right 
+                in boolt
+        end
+
+  | AdditiveExpression(left,s,right)| 
+    MultiplicativeExpression(left,s,right) ->
+      let tl = analyze left and 
+          tr = analyze right in          
+        begin match s with
+            "+" | "-" | "*" | "/" | "%"-> 
+              let _ = guard (unify tl intt) error "expected integer, found " 
+                                              ^ (getTypeName tl) at left and
+                  _ = guard (unify tr intt) error "expected integer, found " 
+                                              ^ (getTypeName tr) at right 
+                in intt
+          | _ -> 
+              let _ = guard (unify tl floatt) error "expected 64-bit float" ^
+                        ", found " ^ (getTypeName tl) at left and
+                  _ = guard (unify tr floatt) error "expected 64-bit float" ^
+                        ", found " ^ (getTypeName tr) at right 
+                in floatt
+        end
+
+  | ConcatenationExpression(left,_,right) -> 
+      let tl = analyze left and 
+          tr = analyze right in           
+      let _ = guard (unify tl strt) error "expected string, found " ^ 
+                                          (getTypeName tl) at left and
+          _ = guard (unify tr strt) error "expected string, found " ^ 
+                                          (getTypeName tr) at right in strt        
+
+  | ConsExpression(n,con) -> let t = analyze n and 
+                                 tl = analyze con in
+      if (is_not_bottom t) && (is_not_bottom tl) then
+        if (isListType tl) then
+          let res = unify tl {type = ConstructedT([t],"list")} in 
+            require (is_not_bottom res)
+                error "type of the head does not match type of the tail"
+            in res
+        else error "the tail of a cons expression must be a list"        
+
+  | FunctionApplication(pl) -> 
+      begin match pl with
+          [mod, name, args] -> let mol = getString mod and
+                                   s = getString name and
+                                   nl = getNodeList args in
+            begin match mol with
+                "List" | "String" | "Map" | "Float32" ->
+                  if (is_defined Parameter(mol ^ "." ^ s, bottom)) then
+                    let funcType = lookup Parameter(mol ^ "." ^ s, bottom) in
+                      processFunctionApplication (copy funcType) nl
+                  else error mol ^ "." ^ s ^ " is undefined"                     
+              | "Prelude" ->
+                  if (is_defined Parameter(s,bottom)) then 
+                    let funcType = lookup Parameter(s,bottom) in
+                      processFunctionApplication (copy funcType) nl
+                  else error mol ^ "." ^ s ^ " is undefined"                  
+              | _ -> error "module " ^ mol ^ " is undefined" 
+            end 
+        | [name, args] -> let s = getString name and
+                              nl = getNodeList args in
+            begin match s with
+                "lookup" | "lookup_locally" -> 
+                  begin match nl with
+                      [e1,strNode,ErrorClause _ as errNode] -> 
+                        let str = getString strNode and
+                            e2 = match errNode with
+                                     ErrorClause(_,ne,_) -> ne
+                                   | _ -> error "ErrorClause is expected" in
+                        let t1 = analyze e1 and 
+                            t2 = analyze e2 in                 
+                        let _ = guard (ensureNodeType t1) 
+                                  error "expected node, found " ^ 
+                                        (getTypeName t1) at e1 and
+                            _ = guard (unify t2 strt)
+                                  error "expected string, found " ^
+                                        (getTypeName t2) at e2 in
+                           require (is_defined UserDefinedType("tag" ^ str)) 
+                               error "tag " ^ str ^ " is undefined" in 
+                             lookup UserDefinedType("tag" ^ str) 
+                    | [e1, ErrorClause _ as errNode] -> 
+                        let e2 = match errNode with
+                                     ErrorClause(_,ne,_) -> ne
+                                   | _ -> error "ErrorClause is expected" in
+                        let t1 = analyze e1 and
+                            t2 = analyze e2 in                            
+                        let _ = guard (ensureNodeType t1)
+                                  error "node is expedted, found " ^ 
+                                        (getTypeName t1) at e1 and
+                            _ = guard (unify t2 strt)
+                                  error "expected string, found " ^ 
+                                        (getTypeName t2) at e2 in typet  
+                    | [e1, LowerID _ as strNode] -> 
+                        let t1 = analyze e1 and
+                            str = getString strNode in      
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                        (getTypeName t1) at e1 in
+                          require (is_defined UserDefinedType("tag" ^ str)) 
+                              error "tag " ^ str ^ " is undefined" in 
+                            lookup UserDefinedType("tag" ^ str) 
+                    | [e1] -> 
+                        let t1 = analyze e1 in                            
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                    (getTypeName t1) at e1 in typet
+                    | _ -> error s ^ " is applied with invalid arguments" 
+                  end
+              | "define" -> 
+                  begin match nl with
+                      [e1,e2,ErrorClause _ as errNode] -> 
+                        let e3 = match errNode with
+                                     ErrorClause(_,ne,_) -> ne
+                                   | _ -> error "ErrorClause is expected" in
+                        let t1 = analyze e1 and
+                            _  = analyze e2 and 
+                            t3 = analyze e3 in
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                    (getTypeName t1) at e1 and
+                            _ = guard (unify t3 strt)
+                              error "expected string, found " ^ (getTypeName t3)
+                                    at e3 in wildt 
+                    | [e1,e2] -> 
+                        let t1 = analyze e1 and 
+                            _  = analyze e2 in
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                    (getTypeName t1) at e1 in wildt
+                    | _ -> error s ^ " is applied with invalid arguments" 
+                  end
+              | "redefine" ->
+                  begin match nl with
+                      [e1, e2] ->
+                        let t1 = analyze e1 and
+                            _  = analyze e2 in
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                    (getTypeName t1) at e1 in wildt
+                    | _ -> error s ^ " is applied with invalid arguments" 
+                  end
+              | "is_defined" | "is_defined_locally" ->
+                  begin match nl with
+                      [e1] -> 
+                        let t1 = analyze e1 in
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                    (getTypeName t1) at e1 in boolt
+                    | _ -> error s ^ "must have one argument" 
+                  end
+              | "annotate" ->
+                  begin match nl with
+                      [e1,e2,e3] ->
+                        let t1 = analyze e1 and
+                            t2 = analyze e2 and
+                            t3 = analyze e3 in
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                       (getTypeName t1) at e1 and
+                            _ = guard (unify t2 strt)
+                                  error "expected string, found " ^ 
+                                       (getTypeName t2) at e2 and
+                            _ = guard (unify t3 typet)
+                                  error "expected type, found " ^
+                                       (getTypeName t3) at e3 in wildt   
+                    | _ -> bottom
+                  end
+              | "has_annotation" ->
+                  begin match nl with
+                      [e1,e2] ->
+                        let t1 = analyze e1 and
+                            t2 = analyze e2 in
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                        (getTypeName t1) at e1 and
+                            _ = guard (unify t2 strt)
+                                  error "expected string, found " ^ 
+                                        (getTypeName t2) at e2 in boolt   
+                    | _ -> bottom
+                  end
+              | "get_annotation" ->
+                  begin match nl with
+                      [e1,e2] ->
+                        let t1 = analyze e1 and
+                            t2 = analyze e2 in
+                        let _ = guard (ensureNodeType t1)
+                                  error "expected node, found " ^ 
+                                        (getTypeName t1) at e1 and
+                            _ = guard (unify t2 strt)
+                                  error "expected string, found " ^ 
+                                        (getTypeName t2) at e2 in typet   
+                    | _ -> bottom
+                  end
+              | "annotate_list" ->
+                  begin match nl with
+                      [e1,e2,e3] ->
+                        let t1 = analyze e1 and
+                            t2 = analyze e2 and
+                            t3 = analyze e3 in
+                        let _ = guard (ensureNodeList t1)
+                                  error "expected list of node, found " ^ 
+                                        (getTypeName t1) at e1 and
+                            _ = guard (unify t2 strt)
+                                  error "expected string, found " ^ 
+                                        (getTypeName t2) at e2 and
+                            _ = guard (unify t3 typet)
+                                  error "expected type, found " ^
+                                        (getTypeName t2) at e2 in wildt   
+                    | _ -> bottom
+                  end   
+              | _ -> 
+                let lo = List.head pl in
+                let funcT = lookup lo error s ^ " is undefined" and
+                    nod = if (is_defined NameSpaceStructure(s,bottom,bottom))
+                          then
+                            lookup NameSpaceStructure(s,bottom,bottom) node in
+                let muts = if (is_not_bottom nod) then
+                             getAnnotatedStringList nod "mutual" in
+                let _ = if (is_not_bottom muts) then
+                          annotate_list nl "mutual" 
+                            {type = StringList(List.append muts [s])} in     
+                  if (is_not_bottom funcT) then 
+                    begin match funcT.type with
+                        bottom -> bottom
+                      | FunctionT _ -> 
+                          processFunctionApplication (copy funcT) nl
+                      | VariableT _ -> 
+                          processFunctionApplication funcT nl
+                      | _ -> error "expected function type, found " ^
+                                   (getTypeName funcT)
+                    end
+             end          
+        | _ -> bottom
+      end
+
+  | PredicateExpression(pat,e) -> 
+      let left = analyze pat and 
+          right = analyze e in 
+      let _ = guard (unify left right)
+               error "types of the pattern and the expression do not match"
+        in boolt
+
+  | PredicateArgument(pat) -> analyze pat
+
+  | FieldExpression(n,s) -> 
+      begin match n with
+          TupleConstructor(str,_) ->
+            let name = if ("Prelude" = str) then s
+                       else str ^ "." ^ s in
+              if (is_defined Parameter(name, bottom)) then
+                lookup Parameter(name, bottom)
+              else error name ^ " is undefined"
+        | _ ->
+            let temp = analyze n in
+            let tn = resolveRecordType temp and 
+                ts = lookup no error "field " ^ s ^ " is undefined" in
+              if (is_not_bottom ts) then 
+                begin match tn.type with
+                    RecordT(_) -> 
+                      begin match ts.type with
+                          FieldT(pa,_,_) -> 
+                            let res = lookup UserDefinedType(pa) in
+                            let tem = unify tn res in 
+                              require (is_not_bottom tem) 
+                                  error (getTypeName tn) ^ 
+                                        " does not contain the field " ^
+                                        s in ts
+                        | _ -> bottom
+                      end               
+                  | VariableT(_,_) -> 
+                      begin match ts.type with
+                          FieldT(pa,_,_) -> 
+                            let res = lookup UserDefinedType(pa) in
+                            let _   = unify tn res in ts
+                        | _ -> bottom
+                      end
+                  | _ ->  error "expected record, found " ^ (getTypeName tn) 
+                end                
+      end
+      
+
+  | LogicalNegationExpression(n) -> 
+       let t = analyze n in
+         guard (unify t boolt) 
+           error "expected boolean, found " ^ (getTypeName t)
+           
+
+  | LetExpression(n1, n2) ->
+      let nl = getNodeList n1 in 
+      let enList = analyzeBindings nl [] in
+        if !(List.exists is_bottom enList) then 
+          let res = analyzeExpression n2 enList and
+              strList = getNames enList in
+            if (is_not_bottom res) then
+              let _ = checkUnusedVariables strList n2 and
+                  _ = annotate no "variables" {type = StringList(strList)} in res  
+         
+  | FunctionExpression(n) -> let t = analyze n in
+      begin match t.type with
+          PairOfType(tl,ret) -> {type = FunctionT([tl],ret)}
+        | _ -> bottom
+      end     
+
+  | RequireExpression(l) -> 
+      let last = List.nth l ((List.length l) - 1) in
+      let te = analyze last and 
+          _ = List.map analyze (removeLast l) in te      
+
+  | RequireArgs(e,_,ne,atNode) -> 
+      let te = analyze e and 
+          tne = analyze ne in          
+      let _ = guard (unify te boolt)
+                error "expected boolean, found " ^ (getTypeName te) at e and
+          _ = guard (unify tne strt)
+                error "expected string, found " ^ (getTypeName tne) at ne in
+        if (is_bottom atNode) then bottom
+        else let s = getString atNode in
+             let ts = lookup atNode error s ^ " is undefined" in
+               guard (ensureNodeType ts)
+                 error "expected node, found " ^ (getTypeName ts)                    
+  
+  | GuardExpression(n1, n2) -> let _ = analyze n2 in analyze n1
+
+  | ErrorClause(_,e,n) -> let t = analyze e in                              
+      let _ = guard (unify t strt)
+                error "expected string, found " ^ (getTypeName t) at e in
+        if (is_bottom n) then    
+          {type = VariableT(fresh_name "type", false)}
+        else 
+          let tn = analyze n in
+          let _ = guard (ensureNodeType tn) 
+                    error "expected node, found " ^ (getTypeName tn) in
+              {type = VariableT(fresh_name "type", false)}  
+
+  | AssertClause(e1,e2) -> let t1 = analyze e1 and 
+                               t2 = analyze e2 in
+      let _ = guard (unify t1 boolt)
+                error "expected boolean, found " ^ (getTypeName t1) at e1 and
+          _ = guard (unify t2 strt)
+                error "expected string, found " ^ (getTypeName t2) at e1 in 
+        {type = VariableT(fresh_name "type", false)}
+
+  | TupleConstructor(s,nl) -> let ty = lookup no error 
+                                "constructor " ^ s ^ " is undefined" in
+      if (is_not_bottom ty) then
+       let p = getParent ty in
+       let t = if !(hasTypeVariables p) then ty
+               else copy ty in
+          begin match nl with
+              [] -> begin match t.type with
+                        ConstructorT(_,_,ty) ->
+                          if (is_bottom ty.type) then t
+                          else error "contructor " ^ s ^
+                                     " does not have enough children"                          
+                      | _ -> error "expected constructor type, found " ^
+                                   (getTypeName t)
+                    end
+            | _ -> begin match t.type with
+                       ConstructorT(_,_,ty) -> 
+                         begin match ty.type with
+                             TupleT(tl) -> 
+                               if (List.length nl < List.length tl) then
+                                 error "constructor " ^ s ^ 
+                                       "does not have enough children"
+                               else if (List.length nl > List.length tl) then
+                                      error "constructor " ^ s ^ 
+                                            "has too many children"
+                                    else processArguments nl tl t
+                           | _ -> 
+                              require (List.length nl = 1) 
+                                  error s ^ " must have only one child" in
+                                processArguments nl [ty] t
+                         end          
+                     | _ -> error "expected constructor type, found " ^
+                                   (getTypeName t)
+                   end 
+          end
+
+  | RecordExpression(nl) -> 
+      begin match nl with
+          [] -> error "empty record expression"
+        | x::xs ->
+            if (is_bottom x) then
+              let tai = List.tail (List.tail nl) and
+                  hea = List.head (List.tail nl) in
+              let tx = analyze hea in 
+                begin match tx.type with
+                    FieldT(s,_,_) -> 
+                      let _ = annotate_list tai "parent" 
+                                {type = StringName(s)} and
+                          tl = List.map analyze tai in
+                        if !(List.exists is_bottom tl) then
+                          let recT = lookup UserDefinedType(s) in
+                            begin match recT.type with
+                                RecordT(rectl) -> 
+                                  require (List.length rectl = 
+                                           List.length tl + 1)
+                                      error s ^ " does not have enough fields"
+                                        at no in 
+                                    {type = RecordT(tx::tl)} 
+                              | _ -> bottom 
+                            end                   
+                  | _ -> bottom
+                end               
+            else 
+              begin match x with
+                  WithExpression(Bottom()) -> 
+                    let tai = List.tail (List.tail nl) and
+                        hea = List.head (List.tail nl) in
+                    let tx = analyze hea in 
+                        begin match tx.type with
+                            FieldT(s,_,_) -> 
+                              let _ = annotate_list tai "parent" 
+                                        {type = StringName(s)} and
+                                  tl = List.map analyze tai in
+                                if !(List.exists is_bottom tl) then
+                                  lookup UserDefinedType(s)                                  
+                          | _ -> bottom
+                        end  
+                | WithExpression(e) -> let tx = resolveRecordType (analyze e) in
+                      begin match tx.type with
+                          RecordT(rectl) -> 
+                            let field = List.head rectl in
+                              begin match field.type with
+                                  FieldT(s,_,_) -> 
+                                    let _ = annotate_list xs "parent" 
+                                              {type = StringName(s)} and
+                                        tl = List.map analyze xs in 
+                                      if !(List.exists is_bottom tl) then tx                     
+                                 | _ -> bottom
+                               end
+                        | VariableT _ -> let ht = analyze (List.head  xs) in 
+                            if (is_not_bottom ht) then
+                              begin match ht.type with
+                                  FieldT(s,_,_) -> 
+                                    let _ = annotate_list (List.tail xs) "parent" 
+                                              {type = StringName(s)} and
+                                    tl = List.map analyze (List.tail xs) in
+                                    if !(List.exists is_bottom tl) then
+                                      let recT = lookup UserDefinedType(s) in
+                                        unify recT tx        
+                                | _ -> bottom
+                              end
+                            else bottom                                          
+                        | _ -> error "expected record type, found " ^ 
+                                     (getTypeName tx)
+                      end                   
+                | _ -> bottom            
+              end               
+      end
+
+  | FieldAssignment(s,p) -> 
+      let t = lookup no error "field " ^ s ^ " is undefined" in
+        begin match t.type with
+            FieldT(str,_,_) ->
+              let ps = if (has_annotation no "parent") then
+                         let stri = getAnnotatedString no "parent" in stri
+                       else str in
+                require (ps = str) error ps ^ " does not contain the field " 
+                                         ^ s in 
+                  let tp = analyze p in 
+                  let _ = guard (unify t tp)
+                            error "type of field " ^ s ^ " must be " 
+                              ^ (getTypeName t) ^ ", found "
+                              ^ (getTypeName tp) in t
+          | _ -> bottom
+        end 
+  
+  | IfExpression(e1,e2) -> let t1 = analyze e1 and 
+                               t2 = analyze e2 in
+      let _ = guard (unify t1 boolt)
+                error "expected boolean, found " ^ (getTypeName t1) in t2
+
+  | IfElseExpression(e1,e2,e3) -> let t1 = analyze e1 and 
+                                      t2 = analyze e2 and
+                                      t3 = analyze e3 in                                  
+      let _ = guard (unify t1 boolt)
+                error "expected boolean, found " ^ (getTypeName t1) in
+        guard (unify t2 t3) 
+           error "types of if and else expressions do not match"
+
+  | ListLiteral(nl) -> 
+      begin match nl with
+          [] -> let varT = {type = VariableT(fresh_name "type", false)} in 
+               {type = ConstructedT([varT],"list")}
+        | _ -> 
+            let tl = List.map analyze nl in
+              if (is_not_bottom (ancestor (ScopeDefinition _))) then
+                let res = checkNodeList tl in
+                  if (is_bottom res) then bottom
+                else {type = ConstructedT([nodet],"list")}
+              else if !(List.exists is_bottom tl) then
+                let res = List.foldl unify tl wildt in
+                  require (is_not_bottom res) 
+                    error "types do not match in list literal" in
+                    {type = ConstructedT([res],"list")}
+      end
+
+  | ReduceExpression(ops,lit,pat) ->
+      let _ = analyze ops and 
+          opList = getStringList ops and
+          _ = analyze lit and 
+          _ = annotate pat "is_reduce" wildt and 
+          _ = annotate pat "non_exhaustive" wildt and
+          nodeL = {type = ConstructedT([nodet], "list")} 
+      and tpat = analyze pat in
+          begin match tpat.type with
+              PairOfType(_,right) -> 
+                if (List.mem "list" opList) then
+                  let rightL = {type = ConstructedT([right], "list")} in 
+                    {type = FunctionT([nodeL], rightL)}
+                else {type = FunctionT([nodeL], right)}               
+            | _ -> bottom
+          end
+
+  | ReduceOptions(sl) -> 
+      if (List.mem "list" sl) && (List.mem "singleton" sl) then
+        error "'list' and 'singleton' are not compatible"
+      else if (List.mem "list" sl) && (List.mem "set" sl) then
+        error "'list' and 'set' are not compatible"
+      else if (List.mem "singleton" sl) && (List.mem "set" sl) then
+        error "'singleton' and 'set' are not compatible"
+      else if (List.mem "required" sl) && (List.mem "optional" sl) then
+        error "'required' and 'optional' are not compatible"       
+      else {type = ConstructedT([strt],"list")}
+
+  | LowerID(s) -> lookup no error s ^ " is undefined"
+
+  | UpperID(s) -> lookup no error s ^ " is undefined"
+
+  | UserDefinedType(s) -> 
+      require (is_defined no) error "type " ^ s ^ " is undefined" in 
+        {type = TypeName(s)}      
+
+  | TypeVariable(s) -> 
+      let vars = getAnnotatedStringList no "type_variables" in
+        if (is_bottom vars) || !(List.mem s vars) then
+          error "type variable " ^ s ^ " is undefined"
+        else {type = VariableT(s,true)}
+  
+  | ConstraintType(n) ->
+      let s = getString n in
+      let _ = Map.put s nodet in nodet
+
+  | PolyVariantType(nl) -> 
+      let str = getAnnotatedString no "parent" in
+        if (reachableFromNode str) then
+          let tl = List.map analyze nl in 
+            if !(List.exists is_bottom tl) then {type = PolyVariantT(tl)}
+            else bottom 
+        else error "polymorphic variant is not allowed outside node closure"
+
+  | TupleType(l) -> 
+      let str = getAnnotatedString no "parent" and
+          vars = getAnnotatedStringList no "type_variables" in
+      let _ = if (is_not_bottom vars) then
+                annotate_list l "type_variables" {type = StringList(vars)} and
+          _ = annotate_list l "parent" {type = StringName(str)} and
+          tl = List.map analyze l in
+        if !(List.exists is_bottom tl) then {type = TupleT(tl)}
+
+  | ConstructedType(n,s) -> 
+      let str = getAnnotatedString no "parent" and
+          vars = getAnnotatedStringList no "type_variables" in
+      let _ = if (is_not_bottom vars) then
+                annotate n "type_variables" {type = StringList(vars)} and
+          _ = annotate n "parent" {type = StringName(str)} and      
+          t = analyze n in
+        begin match s with
+            "list" | "var" -> 
+              if (is_not_bottom t) then {type = ConstructedT([t],s)}
+          | "opt" -> t
+          | _ -> 
+            require (is_defined no) error "type " ^ s ^ " is undefined"  in
+              let nod = lookup NameSpaceStructure(s,bottom, bottom) node in
+              let var_list = getAnnotatedStringList nod "type_variables" in
+                if (is_bottom var_list) then
+                  error s ^ " is not a constructed type"
+                else if (List.length var_list != 1) then
+                  error "constructed type " ^ s ^ 
+                        " does not have enough type parameters"
+                else if (is_not_bottom t) then
+                  {type = ConstructedT([t],s)}     
+        end  
+  
+  | AliasedType(n,tv) -> let s = getString tv in
+      if (is_defined UserDefinedType(s)) then
+        error s ^ " has been previously defined" 
+      else 
+        let vars = getAnnotatedStringList no "type_variables" in
+        let _ = if (is_not_bottom vars) then
+                  annotate n "type_variabls" {type = StringList(vars)} and
+            t = analyze n in
+        let _ = redefine UserDefinedType(s) t in t
+
+  | FunctionType(n1,n2) -> 
+      let vars = getAnnotatedStringList no "type_variables" and 
+          nl = begin match n1 with
+                   TupleType(l) -> l
+                 | _ -> [n1]
+               end in
+      let _ = if (is_not_bottom vars) then
+                annotate_list (n2::nl) "type_variables" 
+                  {type = StringList(vars)} and
+          tl = List.map analyze nl and
+          ret = analyze n2 in
+        if (is_not_bottom ret) && !(List.exists is_bottom tl) then
+          {type = FunctionT(tl,ret)}
+
+  | NaryConstructedType(n,s) ->
+      if !(is_defined UserDefinedType(s)) then
+        error "type " ^ s ^ " is undefined"
+      else
+        let nod = lookup NameSpaceStructure(s,bottom,bottom) node and
+            nl = getNodeList n in
+          if !(has_annotation nod "type_variables") then
+            error s ^ " is not a contructed type"               
+          else
+            let vars = getAnnotatedStringList nod "type_variables" in
+            let _ = if (is_not_bottom vars) then
+                      annotate_list nl "type_variables" 
+                        {type = StringList(vars)} and
+                tl = List.map analyze nl in
+              if (List.length nl < List.length vars) then
+                error "contructed type " ^ s ^ 
+                      " does not have enough type parameters"
+              else if (List.length nl > List.length vars) then
+                error "contructed type " ^ s ^ 
+                      " has too many type parameters"
+              else if !(List.exists is_bottom tl) then
+                     {type = ConstructedT(tl,s)}  
+     
+  | Bottom() | BottomPattern -> {type = VariableT(fresh_name "type", false)}
+
+  | WildCard() -> {type = VariableT(fresh_name "type", false)} 
+
+  | AnyType() -> let str = getAnnotatedString no "parent" in
+                   if (reachableFromNode str) then {type = AnyT}
+                   else error "any is not allowed outside node closure"   
+
+  | StringLiteral _   | StringType   -> strt 
+
+  | IntegerLiteral _  | IntType      -> intt 
+
+  | BooleanLiteral _  | BooleanType  -> boolt 
+
+  | FloatingLiteral _ | Float64     -> floatt
+  
+  | Float32 -> {type = Float32T}
+ 
+  | _ -> bottom
+; 
+
+(*****************************************************************************
+ *                            Unification                                    *
+ *****************************************************************************) 
+(**
+ * Unify two types, return the unified type,
+ *   update type variables (side effects).
+ *)
+mlvalue unify t1 t2 = if (is_bottom t1) || (is_bottom t2) then bottom
+  else match (t1.type, t2.type) with
+      (WildcardT, _) -> t2
+    | (_, WildcardT) -> t1
+
+    | (BoolT, BoolT) | (IntT, IntT) | (StringT, StringT) |
+      (Float32T, Float32T) | (Float64T, Float64T) |
+      (NodeTypeT, NodeTypeT) -> t1
+
+    | (StringT, AnyT) | (AnyT, StringT) -> {type = AnyT}
+    | (AnyT, _) ->
+        let res = unify t2 strt in
+       if ((is_not_bottom res) || (is_not_bottom (ensureNodeType t2))) then t1
+    | (_, AnyT) -> unify t2 t1
+
+    | (NodeTypeT, _) -> if (is_not_bottom (ensureNodeType t2)) then t1
+    | (_, NodeTypeT) -> if (is_not_bottom (ensureNodeType t1)) then t2    
+    
+    | (TypeName(s1), TypeName(s2)) -> if (s1 = s2) then t1
+    | (TypeName(s), _) ->
+         let t = lookup UserDefinedType(s) in 
+         let res = unify t t2 in
+           if (is_not_bottom res) then t1     
+    | (_, TypeName _) -> unify t2 t1
+
+    | (VariableT(str1, _),VariableT(str2, _)) -> 
+        if (str1 = str2) then t1
+        else let t = Map.get str1 in 
+               if (is_bottom t) then
+                 let ty = Map.get str2 in
+                   if (is_bottom ty) then
+                     let _ = Map.put str1 t2 in t2
+                   else unify t1 ty
+               else unify t t2               
+    | (VariableT(str, _), _) -> 
+        let t = Map.get str in
+          if (is_bottom t) then
+            if (containTypeVar t2 str) then bottom
+            else let _ = Map.put str t2 in t2
+          else unify t t2
+    | (_, VariableT(_, _)) -> unify t2 t1 
+
+    | (PairOfType(tl1, tr1),PairOfType(tl2, tr2)) ->
+       let tl = unify tl1 tl2 and
+           tr = unify tr1 tr2 in
+         if (is_not_bottom tl) && (is_not_bottom tr) then
+           {type = PairOfType(tl, tr)}
+
+    | (FieldT(s1,s2,ty1),FieldT(s3, s4, ty2)) -> 
+         if (s1 = s3) && (s2 = s4) then t1
+         else unify ty1 ty2       
+    | (FieldT(_, _, ty), _) -> unify ty t2
+    | (_, FieldT(_, _, ty)) -> unify ty t1
+
+    | (RecordT(tl1), RecordT(tl2)) -> 
+         if (List.length tl1 = List.length tl2) then
+          let tl = unifyTwoList tl1 tl2 in
+            if (is_not_bottom tl) then {type = RecordT(tl)}
+        
+    | (TupleT(tl1), TupleT(tl2)) -> 
+        if (List.length tl1 = List.length tl2) then
+          let tl = unifyTwoList tl1 tl2 in
+            if (is_not_bottom tl) then {type = TupleT(tl)}
+
+    | (ConstructedT(tl1, s1), ConstructedT(tl2,s2)) ->
+        if (List.length tl1 = List.length tl2) && (s1 = s2) then
+          let tl = unifyTwoList tl1 tl2 in
+             if (is_not_bottom tl) then {type = ConstructedT(tl,s1)}
+
+    | (ConstructedT(tl1, "var"), _) ->
+         let ty = List.head tl1 in unify ty t2
+
+    | (_, ConstructedT(tl2, "var")) -> 
+         let ty = List.head tl2 in unify t1 ty
+     
+    | (PolyVariantT(tl),_) -> if (checkPolyUnify tl t2) then t1
+    | (_,PolyVariantT(tl)) -> if (checkPolyUnify tl t1) then t2    
+
+    | (VariantT(tl1), VariantT(tl2)) ->
+        let h1 = List.head tl1 and
+            h2 = List.head tl2 in
+          begin match (h1.type,h2.type) with
+              (ConstructorT(p1,_,_), ConstructorT(p2,_,_)) ->
+                if (p1 = p2) then 
+                  if !(hasTypeVariables p1) then {type = TypeName(p1)}
+                  else 
+                    let tl = unifyTwoList tl1 tl2 in
+                      if (is_not_bottom tl) then {type = VariantT(tl)}
+            | _ -> bottom
+          end 
+         
+    | (VariantT(tl), ConstructorT(p2, s2, _)) ->
+        let h = List.head tl in
+          begin match h.type with
+              ConstructorT(p1,_,_) ->
+                if (p1 = p2) then 
+                  if !(hasTypeVariables p1) then {type = TypeName(p1)}
+                  else 
+                    let t = getConstructorType s2 tl in
+                    let res = unify t t2 in
+                      if (is_not_bottom res) then t1                    
+            | _ -> bottom 
+          end
+
+    | (ConstructorT _ , VariantT _) -> unify t2 t1
+    
+    (* Constructor type *)
+    | (ConstructorT(s1, s2, ty1), ConstructorT(s3, s4, ty2)) -> 
+        if (s1 = s3) then
+          if !(hasTypeVariables s1) then
+            if (s2 = s4) then t1
+            else {type = TypeName(s1)}
+          else  
+            if (s2 = s4) then 
+              let res = unify ty1 ty2 in
+                if (is_not_bottom res) then
+                  {type = ConstructorT(s1, s2, res)}
+                else if (is_bottom ty1) then t1
+                     else bottom
+            else 
+              let t = copy {type = TypeName(s1)} in
+              let res1 = unify t t1 in
+              let res2 = unify res1 t2 in res2
+  
+    | (FunctionT(tl1, ret1), FunctionT(tl2, ret2)) ->
+         if (List.length tl1 = List.length tl2) then
+           let tl = unifyTwoList tl1 tl2 and
+               ret = unify ret1 ret2 in
+             if (is_not_bottom tl) && (is_not_bottom ret) then
+               {type = FunctionT(tl, ret)}              
+    | _ -> bottom
+;
+
+mlvalue containTypeVar t s = match t.type with
+    FunctionT(l,ty) -> (containTypeVar ty s) || (containTypeVarList l s) 
+  | TupleT(l) | ConstructedT(l,_) -> containTypeVarList l s
+  | VariableT(str,_) ->
+      if (s = str) then true
+      else let ty = Map.get str in
+        if (is_bottom ty) then false
+        else containTypeVar ty s
+  | PairOfType(t1,t2) -> (containTypeVar t1 s) || (containTypeVar t2 s)
+  | _ -> false;
+  
+mlvalue containTypeVarList l s = match l with
+    [] -> false
+  | x::xs -> (containTypeVar x s) || (containTypeVarList xs s);     
+
+(* Unify 2 list of types, return a list of unified types. *)
+mlvalue unifyTwoList tl1 tl2 = match tl1 with
+    [] -> []
+  | x::xs -> match tl2 with
+                 y::ys -> let t = unify x y in
+                            if (is_not_bottom t) then t::(unifyTwoList xs ys)
+               | _ -> bottom
+;
+
+(* Get a constructor type from a variant type by constructor name. *)
+mlvalue getConstructorType name tl = match tl with
+    [] -> bottom
+  | x::xs -> 
+      match x.type with
+          ConstructorT(_,s,_) -> 
+            if (name = s) then x
+            else getConstructorType name xs
+        | _ -> bottom ;
+
+(* Get a field type from a record type. *)
+mlvalue getFieldType name tl = match tl with
+    [] -> bottom
+  | x::xs ->
+     match x.type with
+          FieldT(_,s,_) -> 
+            if (name = s) then x
+            else getFieldType name xs
+        | _ -> bottom ;
+        
+(* Check if a type can be unify with a list of types (from poly variane). *)
+mlvalue checkPolyUnify tl t = match tl with
+    [] -> false
+  | x::xs -> let res = unify x t in
+               if (is_not_bottom res) then true
+               else checkPolyUnify xs t ;  
+
+(*****************************************************************************
+ *                            Processing before analyzing nodes              *
+ *****************************************************************************) 
+(** 
+ * Scan and define a temporary type for values and types. 
+ * Used to distinguish from a undefined and unanalyzed values and types.
+ *)
+mlvalue scanNode n = match n with
+    ValueDefinition(s,_,_) -> 
+      require !(is_defined n) 
+          error s ^ " has been previously defined" at n in
+        let _ = redefine n wildt and 
+            _ = define NameSpaceStructure(s,bottom,bottom) n in bottom
+  | TypeDefinition(_, s, _) -> 
+      require !(is_defined n) 
+          error "type " ^ s ^ " has been previously defined" at n in
+              let _ = redefine NameSpaceStructure(s,bottom,bottom) n and
+                  _ = redefine n wildt in bottom
+  | _ -> bottom ;
+
+(* Analyze type definitions only. *)
+mlvalue analyzeTypeDefinition n = match n with
+    TypeDefinition _ -> analyze n
+  | _ -> bottom ;
+
+(* Analyze attribute declarations. *)
+mlvalue processAttributes nl = match nl with
+    [] -> []
+  | x::xs ->
+      match x with
+          AttributeDefinition _ | EqualAttributeDefinition _ -> 
+            (analyze x) :: (processAttributes xs)
+        | _ -> processAttributes xs ;
+
+(* Process functions in scope and namespace definitions. *)
+mlvalue processScopeSpace nl = 
+  let noList = getScopeSpace nl [] in
+  let n1 = List.head noList and
+      n2 = List.head (List.tail noList) in
+  let calls1 = getCall n1 "" [] and
+      calls2 = getCall n2 "" [] in
+  let callees1 = getCallees calls1 [] and
+      callees2 = getCallees calls2 [] in
+    visitFunctions (List.union callees1 callees2) nl ;
+
+(* Get scope and namespace definitions. *)
+mlvalue getScopeSpace nl res = match nl with
+    [] -> res
+  | x::xs -> match x with
+                 ScopeDefinition _ | NameSpaceDefinition _ ->
+                   getScopeSpace xs (x::res)
+               | _ -> getScopeSpace xs res ;
+
+(* Visit functions in scope and space definitions. *)
+mlvalue visitFunctions strL nl = match nl with
+    [] -> bottom
+  | x::xs -> match x with
+                 ValueDefinition(s,_,_) ->
+                   if (List.mem s strL) then 
+                     let _ = analyze x in visitFunctions strL xs
+                   else visitFunctions strL xs
+               | _ -> visitFunctions strL xs ;
+
+(* Get callees from function calls.*)
+mlvalue getCallees cl res = match cl with
+    [] -> res
+  | x::xs -> let name = x.callee in
+               getCallees xs (name::res) ;
+
+(*****************************************************************************
+ *                      Support variant definitions for nodes                *
+ *****************************************************************************)
+(* Get type names from a type. *)
+mlvalue getTypeNames s n = if (is_bottom n) then []
+                           else match n with
+    VariantDeclaration(nl) | PolyVariantDeclaration(nl) | TupleType(nl) |
+    PolyVariantType(nl) -> 
+      getTypeNameList s nl
+  | TypeConstructor(_, no) -> getTypeNames s no
+  | UserDefinedType(str) ->
+      if (s = str) || !(is_defined UserDefinedType(str)) then []
+      else [str]
+  | PolyTypeConstructor(_, str) ->
+      if (is_defined UserDefinedType(str)) then
+        let no = lookup NameSpaceStructure(str,bottom,bottom) node in
+        let _ = annotate no "monomorphic" wildt in
+          if (s = str) then []
+          else [str]
+      else []
+  | ConstructedType(tn,_) -> getTypeNames s tn
+  | _ -> [] ;
+
+(* Get type names from a list of types. *)
+mlvalue getTypeNameList s nl  = match nl with
+    []    -> []
+  | x::xs -> List.union (getTypeNames s x) (getTypeNameList s xs) ;
+
+(* Get reachable types from a type. *)
+mlvalue getReachableTypes s nl = match nl with
+    []    -> bottom
+  | x::xs -> match x with
+                 TypeDefinition(_, str, n) ->
+                   if (str = s) then 
+                     let _ = annotate x "__node" wildt in getTypeNames s n
+                   else getReachableTypes s xs
+               | _ -> getReachableTypes s xs ;
+
+(* Get all types that are nodes. *)
+mlvalue getNodeTypes nl = 
+  let strL = getReachableTypes node_type nl in
+    if (is_bottom strL) then
+      error "Can not find the root node definition"
+    else processNodeType strL nl [node_type] ;
+
+(* Process node types. *)
+mlvalue processNodeType strL nl resL = match strL with
+    []    -> resL
+  | x::xs -> if List.mem x resL then
+               processNodeType xs nl resL
+             else 
+               let l = getReachableTypes x nl in
+               let newStrL = unionAppend xs l in
+               processNodeType newStrL nl (x::resL) ; 
+
+(* Union 2 list and remain the order. *)
+mlvalue unionAppend (l1: string list) (l2: string list) = match l2 with
+    [] -> l1
+  | x::xs -> if (List.mem x l1) then 
+               unionAppend l1 xs
+             else
+               let l = List.append l1 [x] in
+                 unionAppend l xs ;
+
+(* Check if a type name is reachable from node. *)
+mlvalue reachableFromNode s = 
+  if (node_type = s) then true
+  else 
+    if (is_defined NameSpaceStructure(s,bottom,bottom)) then
+      let nod = lookup NameSpaceStructure(s,bottom,bottom) node in
+        has_annotation nod "__node" 
+    else false ;
+
+(* Check if a type must be monomorphic. *)
+mlvalue checkMonomorphic n dec = 
+  if !(has_annotation n "monomorphic") then true
+  else match dec with
+           PolyVariantDeclaration _ -> false
+         | _ -> true ;
+ 
+(*****************************************************************************
+ *                      Process let expression                               *
+ *****************************************************************************)
+(* Analyze list of bindings. *)
+mlvalue analyzeBindings nl enList = match nl with
+    [] -> enList
+  | x::xs -> 
+    let en = analyzeBinding x in
+      if (is_not_bottom en) then
+        if (is_bottom en.entryName) then 
+          analyzeBindings xs enList
+        else 
+          if !(checkDefined en.entryName enList) then
+            analyzeBindings xs (List.append enList [en])
+          else 
+            let _ = error en.entryName ^ " has been previously defined" at x in
+              analyzeBindings xs (List.append enList bottom)
+      else analyzeBindings xs (List.append enList [en]) ;   
+
+(* Check if a variable has been defined (in let bindings)*)
+mlvalue checkDefined name enList = match enList with
+    [] -> false
+  | x::xs -> if (name = x.entryName) then true
+             else checkDefined name xs ;
+
+(* Analyze a binding*)
+mlvalue analyzeBinding n = match n with
+    LetBinding(l, r) -> let tr = analyze r in          
+      if (is_not_bottom tr) then 
+        begin match l with
+            TypedPattern(Variable _ as var, typ) ->
+              let ty = analyze typ and
+                  s = getString var in
+              let _ = guard (unify tr ty) 
+                    error "types of left and right expressions do not match" in
+              let _ = annotate var "__type" ty and
+                  _ = annotate l "__type" ty and
+                  _ = annotate n "__type" ty in
+                {entryName = s, entryType = ty}
+          | Variable(s) ->
+              let _ = annotate l "__type" tr and
+                  _ = annotate n "__type" tr in
+                {entryName = s, entryType = tr}
+          | _ -> 
+              let _ = annotate l "__type" tr and
+                  _ = annotate n "__type" tr in
+                {entryName = bottom, entryType = tr}
+        end       
+  | _ -> bottom ;
+
+(* Analyze the expression in let expression*)                 
+mlvalue analyzeExpression n enList = 
+  match n with 
+      _ -> let _ = List.map defineEntry enList in analyze n ;
+
+(* Define a list of entry*)
+mlvalue defineEntry en = 
+  let _ = redefine LowerID(en.entryName) en.entryType in bottom ; 
+
+(* Check if a type is a node type. *)
+mlvalue isNodeType t = match t.type with
+    VariableT(str,_) -> let t1 = Map.get str in
+                          if (is_bottom t1) then false
+                          else isNodeType t1
+  | PolyVariantT _ | NodeTypeT -> true
+  | VariantT(tl) -> 
+      let ty = List.head tl in
+        begin match ty.type with
+            ConstructorT(s,_,_) -> reachableFromNode s
+          | _ -> bottom  
+        end
+  | ConstructorT(s,_,_) | TypeName(s) -> reachableFromNode s 
+  | FieldT(_,_,ty) -> isNodeType ty  
+  | ConstructedT(_,"var") -> true         
+  | _ -> false ;
+  
+(* Ensure node type. *)
+mlvalue ensureNodeType t = match t.type with
+    VariableT(str,_) -> 
+      let t1 = Map.get str in
+         if (is_bottom t1) then 
+           let _ = Map.put str nodet in nodet             
+         else ensureNodeType t1
+  | ConstructedT(_,"var") -> nodet
+  | _ -> if (isNodeType t) then nodet ;  
+  
+(* Ensure node list. *)
+mlvalue ensureNodeList t = match t.type with
+    VariableT(str,_) -> 
+      let t1 = Map.get str in
+         if (is_bottom t1) then
+           let _ = Map.put str {type = ConstructedT([nodet], "list")} in nodet
+         else ensureNodeList t1
+  | ConstructedT(tl,"list") -> ensureNodeType (List.head tl)       
+  | _ -> bottom ;
+  
+(* Check if a list contains nodes only. *)
+mlvalue checkNodeList tl = match tl with
+    [] -> nodet
+  | x::xs -> if (isNodeType x) then
+               checkNodeList xs
+             else error "expected node, found " ^ (getTypeName x) ;    
+
+(* Check if a type is a node list. *)
+mlvalue isNodeList t = match t.type with
+    VariableT(str,_) -> let t1 = Map.get str in
+                          if (is_bottom t1) then false
+                          else isNodeList t1
+  | ConstructedT(tl,"list") -> isNodeType (List.head tl)
+  | _ -> false;
+                          
+(* Check if a type could be a list. *)
+mlvalue isListType t = 
+  let lt = {type = ConstructedT([wildt],"list")} in
+    match t.type with
+        VariableT _ | WildcardT | ConstructedT(_,"list") -> true
+      | TypeName _ -> is_not_bottom (unify t lt)
+      | FieldT(_,_,ty) -> is_not_bottom (unify ty lt)
+      | _ -> false ;
+
+(*****************************************************************************
+ *               Some functions to check variables (unused, binding,..)      *
+ *****************************************************************************)
+(* Check if a list of node has bindings in at most one node. *)
+mlvalue checkBindings nl index var = match nl with
+    [] -> index <= 1
+  | x::xs -> if (has_annotation x "has_bindings") then
+               if (index = 0 ) && (var = 0) then
+                  checkBindings xs 1 0
+               else false
+             else 
+               if (has_annotation x "variables") then
+                 if (index = 0) then
+                   checkBindings xs 0 (var + 1)
+                 else false
+               else checkBindings xs index var ;
+
+(* Combine variables from a list of patterns. *)
+mlvalue combineVariables nl = match nl with
+    [] -> []
+  | x::xs -> List.union (retrieveVariables x) (combineVariables xs) ;
+
+(* Check if a list of pattern has the same variables. *)
+mlvalue haveSameVariables strList nl = match nl with
+      [] -> true
+    | x::xs -> let xList = retrieveVariables x in
+                 if (listContains strList xList) && 
+                    (listContains xList strList) then 
+                   haveSameVariables strList xs
+                 else false ;
+
+(* Check and get variables from a pattern. *)
+mlvalue retrieveVariables n = 
+  if (has_annotation n "variables") then
+    let ty = get_annotation n "variables" in 
+      match ty.type with
+          StringList(res) -> res
+        | _ -> bottom       
+  else [] ;
+
+(* Check if a string list contains another string list. *)
+mlvalue listContains (l1: string list) (l2: string list) = match l2 with
+    [] -> true
+  | x::xs -> (List.mem x l1) && (listContains l1 xs) ; 
+
+(* Get the string from LowerID or UpperID node. *)
+mlvalue getString n = match n with
+    LowerID(str) | UpperID(str) | TypeVariable(str) | Variable(str) |
+    Parameter(str,_) -> str
+  | _ -> bottom ;
+
+(* Get string list from a node. *)
+mlvalue getStringList n = match n with
+    ReduceOptions(strL) -> strL
+  | _ -> bottom; 
+
+(* Get the type name from field type or constructor type. *)
+mlvalue getParent t = match t.type with
+    FieldT(s,_,_) | ConstructorT(s,_,_) -> s
+  | _ -> bottom ;
+
+(* Get a node list, that is chilren of a node. *)
+mlvalue getNodeList n = match n with
+    TypeParameters(nl) | NaryType(nl) | Arguments(nl) | Parameters(nl) |
+    LetBindings(nl) | PatternMatch(Patterns(nl),_) -> nl
+  | _ -> bottom ;
+
+(* Get type variables. *)
+mlvalue getTypeVariables nl resList = match nl with
+    [] -> resList
+  | x::xs -> let s = getString x in
+               if !(List.mem s resList) then
+                 getTypeVariables xs (List.append resList [s])
+               else error "type variable " ^ s ^ " has been previously defined";
+               
+(* Get parameters from papameter list *)
+mlvalue get_params nl res = match nl with
+    [] -> res
+  | x::xs -> match x with
+                 Parameter(s,_) -> get_params xs (List.append res [s])
+               | _ -> bottom;                  
+
+(* Check if a variable is unused in a list of node. *)
+mlvalue isUsedInList s nl = match nl with
+      [] -> false
+    | x::xs -> (isUsedVariable s x) || (isUsedInList s xs) ;
+
+(* Check if a variable is unused in a node. *)
+mlvalue isUsedVariable s no = if (is_bottom no) then false
+                              else match no with
+  | TupleLiteral(nl) | FunctionApplication(nl) | Arguments(nl)| 
+    RequireExpression(nl) | TupleConstructor(_,nl) | 
+    RecordExpression(nl) | ListLiteral(nl) | PatternMatching(nl) |
+    Patterns(nl) | TuplePattern(nl) | PatternParameters(nl) | 
+    ListPattern(nl) | RecordPattern(nl) | LetBindings(nl) |
+    TypeConstructorPattern(_,nl) | VariantDeclaration(nl) |
+    RecordDeclaration(nl) | TupleType(nl) | NaryType(nl) -> isUsedInList s nl
+
+  | PredicateArgument(n)| FieldExpression(n,_) | LogicalNegationExpression(n) | 
+    FunctionExpression(n) | FieldAssignment(_,n) | LetBinding(_,n) | 
+    TypeConstructor(_,n) | FieldType(_,n) | AliasedType(n,_) | 
+    ConstructedType(n,_) | NaryConstructedType(n,_) | ConstraintType(n) |
+    WithExpression(n) -> isUsedVariable s n
+
+  | AsPattern(n,_) -> isUsedVariable s n 
+                                 
+  | PatternMatch(_,n) ->
+      let strList = retrieveVariables no in
+        if (List.mem s strList) then false
+        else isUsedVariable s n
+
+  | LetExpression(n1,n2) ->
+      let strList = retrieveVariables no in
+        if (List.mem s strList) then false
+        else (isUsedVariable s n1) || (isUsedVariable s n2)
+        
+  | FunExpression(n1,n2) ->
+      begin match n1 with
+          Parameters(pl) -> 
+            let strList = get_params pl [] in
+              if (List.mem s strList) then false
+              else isUsedVariable s n2
+        | _ -> false  
+      end            
+
+  | LogicalOrExpression(n1,n2) | LogicalAndExpression(n1,n2) | 
+    EqualityExpression(n1,_,n2) | RelationalExpression(n1,_,n2) | 
+    AdditiveExpression(n1,_,n2) | MultiplicativeExpression(n1,_,n2) | 
+    ConsExpression(n1,n2) | PredicateExpression(n1,n2) |
+    MatchExpression(n1,n2) | ConcatenationExpression(n1,_,n2) | 
+    IfExpression(n1,n2) | WhenPattern(n1,n2) | TypedPattern(n1,n2) | 
+    ConsPattern(n1,n2) | FieldPattern(n1,n2) | GuardExpression(n1,n2) |
+    AssertClause(n1,n2) | FunctionType(n1,n2) ->
+      (isUsedVariable s n1) || (isUsedVariable s n2)     
+          
+  | Variable(str) | LowerID(str) | TypeVariable(str) -> s = str     
+        
+  | ErrorClause(n1,n2,n3) | ReduceExpression(n1,n2,n3) | 
+    IfElseExpression(n1,n2,n3) -> 
+      (isUsedVariable s n1) || (isUsedVariable s n2) || (isUsedVariable s n3)
+
+  | RequireArgs(n1,n2,n3,n4) -> 
+      (isUsedVariable s n1) || (isUsedVariable s n2) ||
+      (isUsedVariable s n3) || (isUsedVariable s n4)
+  | _ -> false ; 
+
+(* Check a list of variable for being used or not. *)
+mlvalue checkUnusedVariables strList no = match strList with
+      [] -> bottom
+    | x::xs -> if !(isUsedVariable x no) then
+                 let _ = warning x ^ " is an unused variable" in
+                   checkUnusedVariables xs no
+               else checkUnusedVariables xs no ;
+
+(* Get list of name from list of entries. *)
+mlvalue getNames enList = match enList with
+    [] -> []
+  | x::xs -> List.append [x.entryName] (getNames xs) ;
+
+(* Count how many times a variables appears in a list of nodes. *)
+mlvalue countInList s nl = match nl with
+    [] -> 0
+  | x::xs -> (countAppearance s x) + (countInList s xs) ;
+
+
+(* Count how many times a variable appears in a node (pattern node). *)
+mlvalue countAppearance s no = if (is_bottom no) then 0
+                               else match no with
+  | TupleLiteral(nl) | FunctionApplication(nl) | Arguments(nl)| 
+    RequireExpression(nl) | TupleConstructor(_,nl) | 
+    RecordExpression(nl) | ListLiteral(nl) | PatternMatching(nl) |
+    Patterns(nl) | TuplePattern(nl) | PatternParameters(nl) | ListPattern(nl) |
+    RecordPattern(nl) | LetBindings(nl) | TypeConstructorPattern(_,nl) 
+      -> countInList s nl
+
+  | PredicateArgument(n)| FieldExpression(n,_) | LogicalNegationExpression(n) | 
+    FunctionExpression(n) | FieldAssignment(_,n) | LetBinding(_,n) |
+    AsPattern(n,_) -> countAppearance s n
+
+  | PatternMatch(n1,n2) | LetExpression(n1,n2) ->
+      let strList = retrieveVariables no in
+        if (List.mem s strList) then 0
+        else (countAppearance s n1) + (countAppearance s n2) 
+
+  | LogicalOrExpression(n1,n2) | LogicalAndExpression(n1,n2) | 
+    EqualityExpression(n1,_,n2) | RelationalExpression(n1,_,n2) | 
+    AdditiveExpression(n1,_,n2) | MultiplicativeExpression(n1,_,n2) | 
+    ConsExpression(n1,n2) | PredicateExpression(n1,n2) |
+    MatchExpression(n1,n2) | ConcatenationExpression(n1,_,n2) | 
+    IfExpression(n1,n2) | WhenPattern(n1,n2) | TypedPattern(n1,n2) | 
+    ConsPattern(n1,n2) | FieldPattern(n1,n2) | GuardExpression(n1,n2) |
+    AssertClause(n1,n2) ->
+      (countAppearance s n1) + (countAppearance s n2)     
+          
+  | Variable(str) | LowerID(str) -> if (s = str) then 1
+                                    else 0     
+        
+  | ErrorClause(n1,n2,n3) | ReduceExpression(n1,n2,n3) | 
+    IfElseExpression(n1,n2,n3) -> 
+      (countAppearance s n1) + (countAppearance s n2) + 
+      (countAppearance s n3)
+
+  | RequireArgs(n1,n2,n3,n4) -> 
+      (countAppearance s n1) + (countAppearance s n2) +
+      (countAppearance s n3) + (countAppearance s n4)
+  | _ -> 0 ; 
+
+(* Remove variables that appear in patterns more than once. *)
+mlvalue removeUsedVariables strList no = match strList with
+      [] -> []
+    | x::xs -> if ((countAppearance x no) > 1) then
+                 removeUsedVariables xs no
+               else List.append [x] (removeUsedVariables xs no) ; 
+
+(* Check for unused parameters in value definitions. *)
+mlvalue checkUnusedParameters nl = match nl with
+    [] -> bottom
+  | x::xs -> 
+      match x with
+          ValueDefinition(_,p,v) -> 
+            let t = lookup x in
+              if (is_bottom t.type) then
+                checkUnusedParameters xs
+              else if (is_not_bottom p) then
+                let nl = getNodeList p in
+                let vars = List.map getString nl in
+                let _ = checkUnusedVariables vars v in
+                  checkUnusedParameters xs
+        | _ -> checkUnusedParameters xs ;
+
+(*****************************************************************************
+ *                      Some helper functions                                *
+ *****************************************************************************)
+(* Get annotated string. *)
+mlvalue getAnnotatedString n s = let t = get_annotation n s in
+  match t.type with
+      StringName(res) -> res
+    | _ -> bottom;
+(* Get annotated string list.*)
+mlvalue getAnnotatedStringList n s = let t = get_annotation n s in
+  match t.type with
+      StringList(res) -> res
+    | _ -> bottom;       
+ 
+(* Check if a type has type variables. *)
+mlvalue hasTypeVariables s = 
+  if (is_defined NameSpaceStructure(s,bottom,bottom)) then
+    let nod = lookup NameSpaceStructure(s,bottom,bottom) node in
+      has_annotation nod "type_variables" 
+  else false ;
+
+(* Remove the last node of a list and return the resulted list. *)
+mlvalue removeLast nl = match nl with
+    [] | [_] -> []
+  | x::xs -> List.append [x] (removeLast xs) ;
+
+(**
+  * Process function application.
+  * t: the function type; nl: list of argument nodes.
+  *)
+mlvalue processFunctionApplication t nl: node list = match t.type with
+    FunctionT(tl,ret) -> 
+      if (List.length nl > List.length tl) then
+        error "too many arguments in function application"
+      else processArguments nl tl ret
+  | VariableT(str,_) -> let ty = Map.get str in
+     if (is_not_bottom ty) then 
+       processFunctionApplication ty nl
+     else 
+       let tnl = List.map analyze nl in
+         if !(List.exists is_bottom tnl) then
+           let ret = {type = VariableT(fresh_name "type",false)} in 
+           let _ = Map.put str {type = FunctionT(tnl,ret)} in ret     
+  | _ -> error "expected function, found " ^ (getTypeName t)
+;
+
+(* Copy a function type to make a new function type before application. *)
+mlvalue copy t = match t.type with
+    FunctionT _ | VariantT _ | RecordT _ | ConstructorT _ | FieldT _ -> 
+      let vars = collectTypeVariables t in
+        replaceTypeVariables vars t 
+  | TypeName(s) ->
+      let t = lookup UserDefinedType(s) in 
+        copy t             
+  | _ -> t
+;
+
+(* Replace type variables in a type. *)
+mlvalue replaceTypeVariables vars t = if (is_bottom vars) then t
+                                      else match vars with
+    [] -> t
+  | x::xs -> replaceTypeVariables xs 
+               (replace t x (fresh_name "type")) ;
+
+(* Collect type variables in a type. *)
+mlvalue collectTypeVariables t = match t.type with
+           VariableT(str,true) -> [str]
+         | FunctionT(tl,ret) ->
+             let vars1 = collectTypeVariables ret and
+                 vars2 = makeUnion tl in
+               List.union vars1 vars2 
+         | ConstructorT(_,_,ty) | FieldT(_,_,ty) -> collectTypeVariables ty
+         | VariantT(tl) | RecordT(tl) | TupleT(tl) | ConstructedT(tl,_) -> 
+             makeUnion tl         
+         | PairOfType(t1,t2) -> 
+             let vars1 = collectTypeVariables t1 and
+                 vars2 = collectTypeVariables t2 in List.union vars1 vars2 
+         | _ -> [];
+
+(* Collect type variables from a list of type. *)
+mlvalue makeUnion tl = match tl with
+      [] -> []
+    | x::xs -> List.union (collectTypeVariables x) (makeUnion xs) ;
+
+(* Replace a variable by a new one in a type. *)
+mlvalue replace t str newVar = match t.type with 
+    VariableT(s,_) -> 
+      if (s = str) then {type = VariableT(newVar,false)}
+      else t
+  | FunctionT(tl,ret) ->
+      {type = FunctionT(replaceList tl str newVar, replace ret str newVar)}
+  | ConstructorT(s1,s2,ty) ->
+      {type = ConstructorT(s1, s2, replace ty str newVar)} 
+  | FieldT(s1,s2,ty) ->
+      {type = FieldT(s1, s2, replace ty str newVar)} 
+  | VariantT(tl) -> 
+      let ty = List.head tl in
+        begin match ty.type with
+            ConstructorT(s,_,_) ->
+              if (hasTypeVariables s) then 
+                {type = VariantT(replaceList tl str newVar)}
+              else t
+          | _ -> bottom
+        end      
+  | RecordT(tl) -> 
+      let ty = List.head tl in
+        begin match ty.type with
+            FieldT(s,_,_) ->
+              if (hasTypeVariables s) then 
+                {type = RecordT(replaceList tl str newVar)}
+              else t
+          | _ -> bottom
+        end          
+  | TupleT(tl) -> {type = TupleT(replaceList tl str newVar)}
+  | ConstructedT(tl,s) -> {type = ConstructedT(replaceList tl str newVar,s)}
+  | PairOfType(t1,t2) ->
+      {type = PairOfType(replace t1 str newVar, replace t2 str newVar)}
+  | _ -> t ;
+
+(* Replace a variable by a new one in a list of types. *)
+mlvalue replaceList tl str newStr = match tl with
+      [] -> []
+    | x::xs -> (replace x str newStr)::(replaceList xs str newStr) ;
+
+(* Resolve a parameter type, replace type variables with exact types. *)
+mlvalue resolveType t = match t.type with
+        VariableT(str,_) -> 
+          let newT = Map.get str in
+            if (is_bottom newT) then {type = VariableT(str,true)}
+            else resolveType newT
+      | FunctionT(tl, ret) -> 
+          let left = List.map resolveType tl in                              
+            {type = FunctionT(left, resolveType ret)}
+      | ConstructedT(tyList,s) -> 
+          let tl = List.map resolveType tyList in
+            {type = ConstructedT(tl,s)}
+      | ConstructorT(s1,s2,ty) -> 
+          {type = ConstructorT(s1,s2,resolveType ty)}
+      | VariantT(tyList) -> 
+          let con = List.head tyList in
+          begin match con.type with
+              ConstructorT(s,_,_) ->
+                if !(hasTypeVariables s) then t
+                else 
+                  let tl: type list = List.map resolveType tyList  in 
+                    {type = VariantT(tl)}
+            | _ -> bottom
+          end
+          
+      | FieldT(s1,s2,ty) -> {type = FieldT(s1,s2,resolveType ty)}
+      | RecordT(tyList) -> 
+          let tl = List.map resolveType tyList in 
+            {type = RecordT(tl)}
+      | TupleT(tyList) -> 
+          let tl = List.map resolveType tyList in
+            {type = TupleT(tl)}
+      | PairOfType(t1,t2) -> 
+          {type = PairOfType(resolveType t1, resolveType t2)}
+      | _ -> t ; 
+
+(* Process arguments in a function application. *)
+mlvalue processArguments (nl: node list) (tl: type list) (retType: type) = 
+  match nl with
+      [] -> if (List.is_empty tl) then retType
+            else {type = FunctionT(tl, retType)}
+    | x::xs -> 
+        begin match tl with
+            y::ys -> 
+              let tx = analyze x and
+                  muts = getAnnotatedStringList x "mutual" in
+              let preStr = if (is_not_bottom muts) then
+                             "in mutual functions: " ^ (joinStringList muts "")
+                             ^ "; "
+                           else "" in      
+              let _ = guard (unify tx y)
+                    error preStr ^ " expected " ^ (getTypeName y) ^ ", found " ^
+                          (getTypeName tx) at x in
+                processArguments xs ys retType
+          | _ -> bottom
+         end 
+    | _ -> bottom ;
+
+(* Resolve a record type, used in field access. *)
+mlvalue resolveRecordType t = match t.type with
+    TypeName(s) -> 
+      let ty = lookup UserDefinedType(s) in resolveRecordType ty
+  | FieldT(_,_,ty) -> resolveRecordType ty
+  | VariableT(str,_) ->
+      if (is_defined UserDefinedType(str)) then
+        let ty = lookup UserDefinedType(str) in resolveRecordType ty 
+      else t      
+  | _ -> t ;
+
+(*****************************************************************************
+ *        Call graph processing, mutual detection and processing             *
+ *****************************************************************************) 
+(* Entry function. *)
+mlvalue processFunctionCalls nl = 
+  let tl = buildGraph nl in
+  let edges = removeWrongEdges tl.edges tl.functionList in 
+  let circles = findCircles edges in 
+  let g = groupCircles circles tl.functionList in
+  let res = getResult tl.functionList edges g in 
+    List.map rememberOnNode res ;
+
+(* Annotate nodes with mutual and dependent functions. *)
+mlvalue rememberOnNode n = 
+  let nod = lookup NameSpaceStructure(n.name,bottom,bottom) node in
+  let _ = annotate nod "mutual" {type = StringList(n.mutualList)} and
+      _ = annotate nod "depend" {type = StringList(n.dependList)} in bottom ;
+
+(* Build the call graph. *)
+mlvalue buildGraph l = match l with
+   [] -> {functionList = [], edges = []}
+  | x::xs -> 
+      match x with
+          ValueDefinition(s,_,n) -> 
+            let cal = getCall n s [] and 
+                grap = buildGraph xs in
+              {functionList = s::(grap.functionList),
+               edges = List.union cal grap.edges} 
+        | _ -> buildGraph xs ;
+
+(* Remove wrong edges (edges with callees not in function list). *)
+mlvalue removeWrongEdges edList strList = 
+  match edList with
+      [] -> []
+    | x::xs -> if (List.mem x.callee strList) then 
+                 x::(removeWrongEdges xs strList)
+              else removeWrongEdges xs strList ;
+
+(* Get list of function calls of one caller from a list of nodes. *)
+mlvalue getCallList nl s li = match nl with
+   [] -> []
+  | x::xs -> let li1 = getCall x s li and
+                 li2 = getCallList xs s li in 
+               List.union  li1 li2 ;
+
+(* Get a list of function calls of one caller from a node. *)
+mlvalue getCall no s li = if (is_bottom no) then li
+                          else match no with
+  | TupleLiteral(nl) | LetBindings(nl) | PatternMatching(nl) | 
+    RequireExpression(nl) | TupleConstructor(_,nl) |
+    RecordExpression(nl) | ListLiteral(nl) | NameSpaceDefinition(nl) -> 
+      let caList = getCallList nl s li in List.union li caList
+
+  | LogicalOrExpression(left,right) | LogicalAndExpression(left,right) |
+    EqualityExpression(left,_,right)| RelationalExpression(left,_,right) |
+    AdditiveExpression(left,_,right)| MultiplicativeExpression(left,_,right) |
+    ConsExpression(left,right) | LetExpression(left,right) | 
+    MatchExpression(left,right)| RequireArgs(left,_,right,_) |
+    IfExpression(left,right) | GuardExpression(left,right) |
+    AssertClause(left, right) | ConcatenationExpression(left,_,right) ->
+      let caLeft = getCall left s li and
+          caRight = getCall right s li in
+      let res = List.union caLeft caRight in 
+        List.union li res 
+
+  | IfElseExpression(e1,e2,e3) -> 
+      let ca1 = getCall e1 s li and
+          ca2 = getCall e2 s li and 
+          ca3 = getCall e3 s li in
+        let ca4 = List.union (List.union ca1 ca2) ca3 in 
+          List.union li ca4
+
+  | FunctionApplication(nl) -> 
+      begin match nl with
+          [name, Arguments _ as args] -> 
+            let el = getNodeList args and
+                str = getString name in
+            let caList = getCallList el s li in
+            let ca = {caller = s, callee = str} in 
+              List.union li (ca::caList)                
+        | [UpperID _, LowerID _, Arguments(el)] -> 
+            List.union li (getCallList el s li) 
+        | _ -> bottom
+      end
+
+  | LowerID(str) -> let ca = {caller = s, callee = str} in List.union li [ca]
+
+  | PredicateExpression(_,e) | FieldExpression(e,_) | FunExpression(_,e) |
+    LogicalNegationExpression(e)| LetBinding(_,e) | FunctionExpression(e) | 
+    PatternMatch(_,e) | FieldAssignment(_,e) | ScopeDefinition(e) | 
+    NameSpaceStructure(_, _, e) | ReduceExpression(_,_,e) | ErrorClause(_,e,_)
+    -> List.union li (getCall e s li)    
+
+  | _ -> li ;
+
+(* Find a list of paths from a list of sources to a destination. *)
+mlvalue findPathsList fromList des curPath visitedNodes paths edges = 
+  match fromList with
+      [] -> paths
+    | x::xs -> 
+        let paths1 = findPaths x des curPath visitedNodes 
+                                                 paths edges in
+          findPathsList xs des curPath visitedNodes paths1 edges ;
+
+(* Find a list of paths from a source to a destination. *)
+mlvalue findPaths from des curPath visitedNodes paths edges = 
+  if !(List.mem from visitedNodes) then
+    if !(from = des) then
+      let newVisited = from::visitedNodes and
+          newCur = from::curPath and
+          children = getChildren from edges in
+        findPathsList children des newCur newVisited paths edges                
+    else let res = from::curPath in res::paths       
+  else paths ;
+
+(* Get children of a node in the call graph. *)
+mlvalue getChildren parent edges = match edges with
+    [] -> []
+  | x::xs -> if (x.caller = parent) then (x.callee)::(getChildren parent xs)
+             else getChildren parent xs ;
+
+(* Find all circles in the call graph. *)
+mlvalue findCircles edges = match edges with
+   [] -> []
+  | x::xs -> 
+      let paths1 = findPaths x.callee x.caller [] [] [] xs and
+          paths2 = findCircles xs in 
+        List.union paths1 paths2 ; 
+ 
+(* Group circles that join. *)
+mlvalue groupCircles circles vertices = 
+  match vertices with
+      [] -> circles
+    | x::xs -> 
+        let g = groupBy x circles [] [] in
+        let newCir = List.append [g.group] g.circles in 
+          groupCircles newCir xs ;  
+                   
+(* Group circles that share a common node. *)
+mlvalue groupBy str circles res ret = match circles with
+    [] -> {group = res, circles = ret}
+  | x::xs -> 
+      if (List.mem str x) then 
+        let newRes = List.union x res in            
+          groupBy str xs newRes ret
+      else let newRet = x::ret in 
+             groupBy str xs res newRet ;
+
+(* Resolve the groups that have been found. *)
+mlvalue getResult vertices edges groups = match vertices with
+    [] -> []
+  | x::xs -> let rec = getResultNode x edges groups in
+              rec::(getResult xs edges groups) ;
+
+mlvalue getResultNode str edges groups = 
+  let mutual = getMutual str groups in
+  let depend = getDepend str edges mutual in
+    {name = str, mutualList = mutual, dependList = depend} ;
+
+(* Get mutual functions of a function. *)
+mlvalue getMutual str groups = match groups with
+   [] -> []
+  | x::xs -> if (List.mem str x) then remove str x
+             else getMutual str xs ;
+
+(* Get dependent functions of a function. *)
+mlvalue getDepend str edges mutual = 
+  let children = getChildren str edges in removeMutual children mutual ; 
+
+(* Remove all mutual functions from the children of a function. *)
+mlvalue removeMutual (children: string list) mutual = 
+  match children with
+     [] -> []
+    | x::xs -> if (List.mem x mutual) then removeMutual xs mutual
+               else x::(removeMutual xs mutual) ;
+
+(* Remove a string from a list of string. *)
+mlvalue remove s (li: string list) = match li with
+    [] -> []
+  | x::xs -> if (s = x) then xs
+             else x::(remove s xs) ;
+
+(* Get dependent functions. *)
+mlvalue visitDepend no = 
+  let deps = getAnnotatedStringList no "depend" in 
+    List.map visitDependNode deps ;
+
+(* Analyze a list of dependent functions. *)
+mlvalue visitDependNode s =
+  let no = lookup NameSpaceStructure(s,bottom,bottom) node in analyze no ;
+
+(* Process mutual functions. *)
+mlvalue processMutual no = 
+  let muts = getAnnotatedStringList no "mutual" in
+  let nl = getNodes muts in 
+  let _ = annotate_list nl "secondary" wildt and
+      _ = List.map analyze nl and 
+      recList = List.map createFunctionType nl in
+  let _ = processBodies nl recList in bottom ;
+
+(**
+ * Create function types with type variables for each function in a list of
+ *   mutual functions. 
+ *)
+mlvalue createFunctionType n = match n with
+    ValueDefinition(_,p,_) ->
+      let varT = {type = VariableT(fresh_name "type", false)} and 
+          tp = analyze p in 
+        begin match tp.type with
+            TupleT([]) -> let _ = redefine n varT in varT
+          | TupleT(tl) -> 
+              let _ = redefine n {type = FunctionT(tl,varT)} in varT
+          | _ -> bottom
+        end
+  | _ -> bottom ;
+
+(* Process the bodies of mutual functions. *)
+mlvalue processBodies nl recList = match nl with
+    [] -> []
+  | x::xs -> 
+      match x with
+          ValueDefinition(_,_,e) -> 
+            begin match recList with
+                [] -> bottom
+              | y::ys -> let te = analyze e in 
+                         let _ = unify y te in processBodies xs ys       
+            end
+        | _ -> bottom ;
+
+(* Get a list of nodes from a list of function names. *)
+mlvalue getNodes names = match names with
+   [] -> []
+  | x::xs -> let no = lookup NameSpaceStructure(x,bottom,bottom) node   
+     in List.union [no] (getNodes xs) ;
+
+(* Resolve mutual functions to get correct types. *)
+mlvalue resolveMutual no = match no with
+   ValueDefinition(s,_,_) -> 
+     let muts = getAnnotatedStringList no "mutual" in 
+       List.map resolveMutualName (s::muts)
+  | _ -> bottom ;
+
+(* Resolve a list of mutual functions. *)
+mlvalue resolveMutualName str = 
+  let nod = lookup NameSpaceStructure(str,bottom,bottom) node in
+  let tx = lookup nod in
+  let res = resolveType tx in
+  let _ = redefine nod res and 
+  _ = annotate nod "visited" wildt in bottom ;    
+
+(* Create the type record from raw_type and attributes. *)
+mlvalue createTypeRecord tl = 
+  let ty = lookup UserDefinedType("raw_type") 
+                  error "raw_type must be defined" in
+    if (is_not_bottom ty) then 
+      let t = {type = FieldT("type","type",
+                             {type = TypeName("raw_type")})} in
+      let _ = redefine FieldType("type",bottom) t and
+          _ = redefine UserDefinedType("type") {type = RecordT(t::tl)}
+        in bottom ;
+        
+(* Join a list of string with commas.*)
+mlvalue joinStringList sl res = match sl with
+    [] -> res
+  | [x] -> res ^ "'" ^ x ^ "'" 
+  | x::xs -> joinStringList xs (res ^ "'" ^ x ^ "'" ^ ", ") ;          
+
+(*****************************************************************************
+ *                    Preload predefined values and types                    *
+ *****************************************************************************)
+mlvalue preload n = let
+  strL = {type = ConstructedT([strt],"list")} and 
+  t1 = {type = ConstructorT("name","SimpleName",strt)} and  
+  t2 = {type = TypeName("name")} and
+  t3 = {type = ConstructorT("name","QualifiedName",
+                            {type = ConstructedT([strt],"list")})} and
+  t6 = {type = ConstructorT("scope_kind","Anonymous",strt)} and
+  t7 = {type = ConstructorT("scope_kind","Temporary",strt)} and
+  t9 = {type = TypeName("scope_kind")} and
+  l1 = {type = ConstructedT([wildt],"list")} and
+  l2 = {type = VariableT(fresh_name "type",true)} and
+  l4 = {type = VariableT(fresh_name "type",true)} and
+  t14 = {type = VariableT(fresh_name "type", true)} and
+  tup = {type = TupleT([{type = TypeName("name")},strt,strt])} in
+
+  let
+  _ = load "SimpleName" "constructor" t1 and
+  _ = load "QualifiedName" "constructor" t3 and
+  t4 = {type = VariantT([t1,t3])} and
+  t5 = {type = ConstructorT("scope_kind","Named",t2)} and 
+  t11 = {type = ConstructedT([nodet],"list")} and
+  l3 = {type = ConstructedT([l2],"list")} and
+  l5 = {type = ConstructedT([l4],"list")} and
+  l6 = {type = FunctionT([l2],l4)} and 
+  l7 = {type = FunctionT([l2],boolt)} and
+  l8 = {type = FunctionT([l4,l2], l2)} in
+  
+  let
+  _ = load "name" "type" t4 and
+  _ = load "Named" "constructor" t5 and  
+  _ = load "Anonymous" "constructor" t6 and  
+  _ = load "Temporary" "constructor" t7 and
+  t8 = {type = VariantT([t5,t6,t7])} and
+  t12 = {type = TupleT([t9,t11])} in 
+
+  let
+  _ = load "scope_kind" "type" t8 and
+  t13 = {type = ConstructorT("scopeT","Scope",t12)} in
+
+  let  
+  _ = load "Scope" "constructor" t13 and
+  _ = load "scopeT" "type" {type = VariantT([t13])} and
+  _ = redefine UserDefinedType("scopeT") {type = VariantT([t13])} and
+  _ = load "node_type" "value" strt and    
+  _ = load "String.stoi" "value" {type = FunctionT([strt, intt], intt)} and  
+  _ = load "String.stof" "value" {type = FunctionT([strt], floatt)} and
+  _ = load "String.itos" "value" {type = FunctionT([intt], strt)} and
+  _ = load "String.ftos" "value" {type = FunctionT([floatt], strt)} and
+  _ = load "String.concat" "value" {type = FunctionT([strt, strt], strt)} and
+  _ = load "String.ends_with" "value" {type = FunctionT([strt, strt], 
+                                                        boolt)} and
+  _ = load "String.ends_withi" "value" {type = FunctionT([strt, strt],
+                                                         boolt)} and
+  _ = load "String.join_strings" "value" {type = FunctionT([strL], strt)} and
+  _ = load "String.ssize" "value" {type = FunctionT([strt], intt)} and
+  _ = load "String.starts_with" "value" {type = FunctionT([strt, strt], 
+                                                          boolt)} and
+  _ = load "String.starts_withi" "value" {type = FunctionT([strt, strt], 
+                                                           boolt)} and
+  _ = load "String.substring" "value" {type = FunctionT([strt, intt], 
+                                                        strt)} and
+  _ = load "String.substring2" "value" {type = FunctionT([strt, intt, intt],
+                                                         strt)} and
+  _ = load "abs_float" "value" {type = FunctionT([floatt], floatt)} and
+  _ = load "abs_int" "value" {type = FunctionT([intt], intt)} and
+  _ = load "ftoi" "value" {type = FunctionT([floatt], intt)} and
+  _ = load "shift_left" "value" {type = FunctionT([intt,intt],intt)} and
+  _ = load "shift_right" "value" {type = FunctionT([intt,intt],intt)} and
+  _ = load "and_bits" "value" {type = FunctionT([intt,intt],intt)} and
+  _ = load "or_bits" "value" {type = FunctionT([intt,intt],intt)} and
+  _ = load "xor_bits" "value" {type = FunctionT([intt,intt],intt)} and
+  _ = load "negate_bits" "value" {type = FunctionT([intt],intt)} and
+  _ = load "negate_float" "value" {type = FunctionT([floatt], floatt)} and
+  _ = load "negate_int" "value" {type = FunctionT([intt],intt)} and
+  _ = load "List.is_empty" "value" {type = FunctionT([l1],boolt)} and
+  _ = load "List.length" "value" {type = FunctionT([l1],intt)} and  
+  _ = load "List.mem" "value" {type = FunctionT([l2,l3],boolt)} and
+  _ = load "List.append" "value" {type = FunctionT([l3,l3],l3)} and
+  _ = load "List.head" "value" {type = FunctionT([l3],l2)} and
+  _ = load "List.tail" "value" {type = FunctionT([l3],l3)} and
+  _ = load "List.nth" "value" {type = FunctionT([l3,intt],l2)} and
+  _ = load "List.union" "value" {type = FunctionT([l3,l3],l3)} and
+  _ = load "List.subtraction" "value" {type = FunctionT([l3,l3],l3)} and
+  _ = load "List.intersection" "value" {type = FunctionT([l3,l3],l3)} and
+  _ = load "List.map" "value" {type = FunctionT([l6,l3],l5)} and 
+  _ = load "List.iter" "value" {type = FunctionT([l6,l3],l4)} and 
+  _ = load "List.exists" "value" {type = FunctionT([l7,l5],boolt)} and 
+  _ = load "List.foldl" "value" {type = FunctionT([l8,l5,l2],l2)} and
+  _ = load "List.cons" "value" {type = FunctionT([l2], l3)} and
+  _ = load "trace" "value" {type = FunctionT([t14],t14)} and
+  _ = load "trace2" "value" {type = FunctionT([strt,t14],t14)} and 
+  _ = load "show_symbols" "value" {type = FunctionT([strt],boolt)} and   
+  _ = load "is_defined" "value" {type = FunctionT([nodet],boolt)} and
+  _ = load "is_defined_locally" "value" {type = FunctionT([nodet],boolt)} and
+  _ = load "annotate" "value" {type = FunctionT([nodet,strt,l2],l2)} and
+  _ = load "has_annotation" "value" {type = FunctionT([nodet,strt],boolt)} and
+  _ = load "get_annotation" "value" {type = FunctionT([nodet,strt],wildt)} and
+  _ = load "annotate_list" "value" {type = FunctionT([t11,strt,l2],l2)} and
+  _ = load "Map.get" "value" {type = FunctionT([strt],typet)} and
+  _ = load "Map.put" "value" {type = FunctionT([strt,typet], wildt)} and
+  _ = load "fresh_name" "value" {type = FunctionT([strt],strt)} and
+  _ = load "not_bottom" "value" {type = FunctionT([wildt],boolt)} and
+  _ = load "is_bottom"  "value" {type = FunctionT([wildt],boolt)} and
+  _ = load "is_not_bottom"  "value" {type = FunctionT([wildt],boolt)} and
+  _ = load "node_name" "value" {type = FunctionT([nodet],strt)} and
+  _ = load "load" "value" {type = FunctionT([strt,strt,wildt], wildt)} and 
+  _ = load "ancestor" "value" {type = FunctionT([wildt], nodet)} and
+  _ = load "parent" "value" {type = FunctionT([wildt], nodet)} and
+  _ = load "getNameSpace" "value" {type = FunctionT([nodet],tup)} and
+  _ = load "getScope" "value" {type = FunctionT([nodet],
+                                               {type = TypeName("scopeT")})} and
+  _ = load "Limits.void_size" "value" intt and
+  _ = load "Limits.bool_size" "value" intt and
+  _ = load "Limits.int_size" "value" intt and
+  _ = load "Limits.short_size" "value" intt and
+  _ = load "Limits.long_size" "value" intt and
+  _ = load "Limits.long_long_size" "value" intt and
+  _ = load "Limits.float_size" "value" intt and
+  _ = load "Limits.double_size" "value" intt and
+  _ = load "Limits.pointer_size" "value" intt and
+  _ = load "Limits.long_double_size" "value" intt and
+  _ = load "Limits.function_size" "value" intt and
+  _ = load "Limits.array_max" "value" intt and
+  _ = load "Limits.void_align" "value" intt and
+  _ = load "Limits.bool_align" "value" intt and
+  _ = load "Limits.bool_nat_align" "value" intt and
+  _ = load "Limits.short_align" "value" intt and
+  _ = load "Limits.short_nat_align" "value" intt and
+  _ = load "Limits.int_align" "value" intt and
+  _ = load "Limits.int_nat_align" "value" intt and
+  _ = load "Limits.long_align" "value" intt and
+  _ = load "Limits.long_nat_align" "value" intt and
+  _ = load "Limits.long_long_align" "value" intt and
+  _ = load "Limits.long_long_nat_align" "value" intt and
+  _ = load "Limits.float_align" "value" intt and
+  _ = load "Limits.float_nat_align" "value" intt and
+  _ = load "Limits.double_align" "value" intt and
+  _ = load "Limits.double_nat_align" "value" intt and
+  _ = load "Limits.long_double_align" "value" intt and
+  _ = load "Limits.long_double_nat_align" "value" intt and
+  _ = load "Limits.pointer_align" "value" intt and
+  _ = load "Limits.pointer_nat_align" "value" intt and
+  _ = load "Limits.function_align" "value" intt and
+  _ = load "Limits.char_bits" "value" intt and
+  _ = load "nonce" "value" intt                                                
+  in [n] ;
+
+(*****************************************************************************
+ *                         Support bootstraping                              *
+ *****************************************************************************)
+(*Resolve type of a node. *) 
+mlvalue resolveNode no = match no with
+      
+  | EqualityDefinition(_,nl) | NameSpaceDefinition(nl) |
+    Parameters(nl) | Patterns(nl) | TuplePattern(nl) | PatternParameters(nl) |
+    ListPattern(nl) | RecordPattern(nl) | TupleLiteral(nl) |
+    FunctionApplication(nl) | Arguments(nl)| LetBindings(nl) | 
+    RequireExpression(nl) | TupleConstructor(_,nl) | RecordExpression(nl) |
+    ListLiteral(nl) | TupleType(nl) |  TypeParameters(nl) | 
+    VariantDeclaration(nl) | RecordDeclaration(nl) | PatternMatching(nl) |
+    NaryType(nl) | TypeConstructorPattern(_,nl) -> 
+      let _ = List.map resolveNode nl in
+      if (has_annotation no "__type") then
+        let t = get_annotation no "__type" in
+        let ty = resolveType t in 
+        let _ = annotate no "__type" ty in bottom  
+          
+  | ScopeDefinition(n) | AttributeDefinition(_,n) | NaryConstructedType(n,_) |
+    EqualAttributeDefinition(_,n) | NameSpaceStructure(_,_,n) | 
+    Parameter(_,n) | AsPattern(n,_) | PredicateArgument(n)| 
+    FieldExpression(n,_) | LogicalNegationExpression(n) | 
+    FunctionExpression(n) | FieldAssignment(_,n) | ConstructedType(n,_) | 
+    TypeConstructor(_,n) | FieldType(_,n) | ConstraintType(n)
+     -> let _ = resolveNode n in
+          if (has_annotation no "__type") then
+            let t = get_annotation no "__type" in
+            let ty = resolveType t in 
+            let _ = annotate no "__type" ty in bottom
+                            
+  | TypeDefinition(n1,_,n2) | ValueDefinition(_,n1,n2) | PatternMatch(n1,n2) |
+    WhenPattern(n1,n2) | TypedPattern(n1,n2) | ConsPattern(n1,n2) |
+    FieldPattern(n1,n2) | LogicalOrExpression(n1,n2) | FunExpression(n1,n2) | 
+    LogicalAndExpression(n1,n2) | EqualityExpression(n1,_,n2) |
+    RelationalExpression(n1,_,n2) | AdditiveExpression(n1,_,n2) |
+    MultiplicativeExpression(n1,_,n2) | ConsExpression(n1,n2) |
+    PredicateExpression(n1,n2) | LetExpression(n1,n2) |
+    LetBinding(n1,n2) | MatchExpression(n1,n2) | AliasedType(n1,n2) |
+    FunctionType(n1,n2) | ConcatenationExpression(n1,_,n2) | 
+    IfExpression(n1,n2) | GuardExpression(n1,n2) | AssertClause(n1,n2)     
+     -> let _ = resolveNode n1 and 
+            _ = resolveNode n2 in
+          if (has_annotation no "__type") then
+            let t = get_annotation no "__type" in
+            let ty = resolveType t in 
+            let _ = annotate no "__type" ty in bottom
+          
+  | EqualStructure(n1,n2,nl)-> 
+      let _ = resolveNode n1 and
+          _ = resolveNode n2 and 
+          _ = List.map resolveNode nl in 
+        if (has_annotation no "__type") then
+          let t = get_annotation no "__type" in
+          let ty = resolveType t in  
+          let _ = annotate no "__type" ty in bottom  
+    
+  | Variable _ | MessageTag _ | ReduceOptions _ | LowerID _ | 
+    UpperID _ | UserDefinedType _ | TypeVariable _ 
+     -> if (has_annotation no "__type") then 
+          let t = get_annotation no "__type" in
+          let ty = resolveType t in  
+          let _ = annotate no "__type" ty in bottom
+        
+  | ErrorClause(n1,n2,n3) | ReduceExpression(n1,n2,n3) | 
+    IfElseExpression(n1,n2,n3) -> 
+      let _ = resolveNode n1 and 
+          _ = resolveNode n2 and 
+          _ = resolveNode n3 in
+        if (has_annotation no "__type") then
+          let t = get_annotation no "__type" in
+          let ty = resolveType t in
+          let _ = annotate no "__type" ty in bottom 
+     
+  | RequireArgs(n1,n2,n3,n4) -> 
+      let _ = resolveNode n1 and
+          _ = resolveNode n2 and 
+          _ = resolveNode n3 and 
+          _ = resolveNode n4 in
+        if (has_annotation no "__type") then
+          let t = get_annotation no "__type" in
+          let ty = resolveType t in  
+          let _ = annotate no "__type" ty in bottom          
+  | _ -> bottom ;
+
+(*****************************************************************************
+ *        Checking pattern matchings for irredundancy and exhaustiveness     *
+ *****************************************************************************)
+(** Represent a pattern. *) 
+mltype pattern = BotPattern | WildCardPattern | VariablePattern of string |
+                 ConstantPattern of value |
+                 TupPattern of patternRecord list |
+                 RecPattern of patternRecord list |
+                 EmptyPattern |
+                 PairPattern of patternRecord * patternRecord |
+                 RecFieldPattern of string * patternRecord | 
+                 ConstructorPattern of string * patternRecord list ;
+
+(** 
+ * A record including the pattern, the corresponding node and a field to check
+ *     if the pattern is followed by a when expression. *)
+mltype patternRecord = {pat: pattern, nod: node, guarded: bool} ;
+
+(** A variant to remember the value of a constant pattern. *)
+mltype value = StringValue of string |
+               FloatValue of float64 |
+               IntValue of int |
+               BoolValue of bool ;
+
+(** Function to get a list of pattern nodes from a list of pattern matches. *)
+mlvalue getPatternNodes nl = match nl with
+    [] -> []
+  | x::xs -> let pl = getNodeList x in
+               List.append pl (getPatternNodes xs) ;
+
+(** Function to get a list of pattern records from a list of pattern nodes. *)
+mlvalue getPatternRecords nl = match nl with
+   [] -> []
+  | x::xs -> (getPatternRecord x)::(getPatternRecords xs) ;
+
+(** Function to get a pattern record from a pattern node. *)
+mlvalue getPatternRecord n = match n with
+    TuplePattern(pl) -> 
+      {pat = TupPattern(getPatternRecords  pl),
+       nod = n, guarded = false }
+
+  | WhenPattern(p,_) -> 
+      let pa = getPatternRecord p in 
+        {pat = pa.pat, nod = n, guarded = true}
+
+  | AsPattern(p,_) -> getPatternRecord p
+  | TypedPattern(p,_) -> getPatternRecord p
+
+  | ConsPattern(p1,p2) ->
+      {pat = PairPattern(getPatternRecord p1, getPatternRecord p2),
+       nod = n, guarded = false}
+
+  | Variable(s) -> {pat = VariablePattern(s),
+                    nod = n, guarded = false}
+
+  | TypeConstructorPattern(s,nodList) -> 
+      begin match nodList with
+          [PatternParameters(nl)] -> 
+            let pl = getPatternRecords  nl in
+              {pat = ConstructorPattern(s,pl),
+               nod = n, guarded = false}
+        | [WildCard] -> {pat = ConstructorPattern(s,bottom),
+                         nod = n, guarded = false}
+        | _ -> {pat = ConstructorPattern(s,[]), nod = n, guarded = false}
+     end
+
+  | BottomPattern -> {pat = BotPattern,
+                      nod = n, guarded = false}
+
+  | ListPattern(nl) -> let pl = getPatternRecords  nl in 
+                       let res = getPairFromList pl in
+                         {pat = res.pat, nod = n, guarded = false}
+
+  | RecordPattern(nl) -> {pat = RecPattern(getPatternRecords  nl),
+                        nod = n, guarded = false}
+
+  | FieldPattern( lowID,p) -> let s = getString lowID in 
+      {pat = RecFieldPattern(s,getPatternRecord p), nod = n, guarded = false}
+
+  | StringLiteral(s) -> {pat = ConstantPattern(StringValue(s)),
+                         nod = n, guarded = false} 
+
+  | IntegerLiteral(s) -> {pat = ConstantPattern(IntValue(String.stoi s 10)),
+                          nod = n, guarded = false} 
+
+  | FloatingLiteral(s) -> {pat = ConstantPattern(FloatValue(String.stof s)),
+                           nod = n, guarded = false} 
+
+  | BooleanLiteral(s) -> 
+      let res = if "true"=s then true else false in
+        {pat = ConstantPattern(BoolValue(res)),
+         nod = n, guarded = false} 
+
+  | WildCard() -> {pat = WildCardPattern, nod = n, guarded = false}
+
+  | _ -> bottom ;
+
+(* Get a pattern record from a list pattern. *)
+mlvalue getPairFromList pl = match pl with
+    [] -> { pat = EmptyPattern, nod = ListPattern([]), guarded = false}
+  | x::xs -> 
+      let pt = getPairFromList xs in
+        match pt.nod with
+            ListPattern(nl) ->
+              {pat = PairPattern(x, pt),
+               nod = ListPattern(List.append [x.nod] nl), guarded = false} 
+          | _ -> bottom ;
+               
+
+(** Check if there are any unsued patterns in a list of pattern records. *)
+mlvalue checkPatterns preList posList = match posList with
+    [] -> bottom
+  | x::xs -> let _ = checkUnused preList x in
+               checkPatterns (List.append preList [x]) xs ;
+
+(** Check if a pattern is unused by comparing it with previous patterns. *)
+mlvalue checkUnused preList pat = match preList with
+    [] -> false
+  | x::xs -> if (isMoreGeneral x pat) then
+               let nod = pat.nod in 
+                 let _ = error "unused pattern" at nod in true
+             else checkUnused xs pat ;
+
+(** Check if p <= q, or if p is more general than q. *)
+mlvalue isMoreGeneral p q = match p.pat with
+    WildCardPattern -> true
+  | _ -> 
+     if p.guarded then false
+     else 
+       if (q.guarded && (equalPattern p q)) then true
+       else match p.pat with
+          VariablePattern _ -> true
+        | BotPattern -> begin match q.pat with
+                              BotPattern -> true
+                            | _ -> false
+                          end
+        | ConstantPattern(val) ->
+            begin match q.pat with
+                ConstantPattern(va) -> begin match (val,va) with
+                      (StringValue(s1), StringValue(s2)) -> s1 = s2
+                    | (FloatValue(f1), FloatValue(f2)) -> f1 = f2
+                    | (IntValue(in1), IntValue(in2)) -> in1 = in2
+                    | (BoolValue(b1), BoolValue(b2)) -> b1 = b2
+                    | _ -> false  
+                  end
+              | _ -> false 
+            end
+        | TupPattern(pl) ->
+            begin match q.pat with
+                TupPattern(ql) -> lessPatternList pl ql
+              | _ -> false
+            end
+        | ConstructorPattern(s1,pl) ->
+            begin match q.pat with
+                ConstructorPattern(s2,ql) -> 
+                  if !(s1 = s2) then false
+                  else if (is_bottom pl) then true
+                       else if (is_bottom ql) then false 
+                            else lessPatternList pl ql
+              | _ -> false
+            end
+        | EmptyPattern ->
+            begin match q.pat with
+                EmptyPattern -> true
+              | _ -> false
+            end
+        | PairPattern(hd1, tl1) ->
+            begin match q.pat with
+                PairPattern(hd2,tl2) ->
+                  (isMoreGeneral hd1 hd2) && (isMoreGeneral tl1 tl2)
+              | _ -> false  
+            end            
+        | RecPattern(pl) -> 
+            begin match q.pat with
+                RecPattern(ql) -> checkListInList ql pl
+              | _ -> false
+            end
+        | RecFieldPattern(str1,p1) ->
+            begin match q.pat with
+                RecFieldPattern(str2,p2) -> 
+                  (str1 = str2) && (isMoreGeneral p1 p2)
+              | _ -> false
+            end
+        | _ -> false ;
+
+(** Check if pl <= ql, 2 list of pattern records. *)          
+mlvalue lessPatternList pl ql = match pl with
+    [] -> true
+  | x::xs -> if (isMoreGeneral x (List.head ql)) then 
+               lessPatternList xs (List.tail ql)
+             else false ;  
+
+(** Check if p = q, two patterns are equal. *)
+mlvalue equalPattern p q = match (p.pat,q.pat) with
+    (VariablePattern _, VariablePattern _) -> true
+  | (BotPattern, BotPattern) -> true
+  | (ConstantPattern(val1), ConstantPattern(val2)) -> 
+      begin match (val1,val2) with
+          (StringValue(str1), StringValue(str2)) -> str1 = str2
+        | (FloatValue(f1), FloatValue(f2)) -> f1 = f2
+        | (IntValue(in1), IntValue(in2)) -> in1 = in2
+        | (BoolValue(b1), BoolValue(b2)) -> b1 = b2
+        | _ -> false  
+      end
+  | (TupPattern(pl), TupPattern(ql)) -> equalPatternList pl ql
+  | (ConstructorPattern(s1,pl), ConstructorPattern(s2,ql)) ->
+      if !(s1=s2) then false
+      else
+        if ((is_bottom pl)&&(is_bottom ql)) then true
+        else if ((is_bottom pl) || (is_bottom ql)) then false
+             else equalPatternList pl ql
+  | _ -> false ;
+
+(** Check if pl = ql, 2 list of pattern records. *)          
+mlvalue equalPatternList pl ql = match pl with
+    [] -> true
+  | x::xs -> if (equalPattern x (List.head ql)) then 
+               equalPatternList xs (List.tail ql)
+             else false ;
+
+(** Check if a list of patterns contains another list of patterns. *)
+mlvalue checkListInList pl ql = match ql with
+    [] -> true
+  | x::xs -> if (checkInList pl x) then checkListInList pl xs
+             else false ;
+
+(** Check if a list of patterns contains a pattern q 
+  * (or another p that p <=q). *)
+mlvalue checkInList pl q = match pl with
+    [] -> false
+  | x::xs -> if (isMoreGeneral q x) then true
+             else checkInList xs q ;
+  
+(** Check irredundancy from a list of pattern matches. *)
+mlvalue checkIrredundant nl = 
+  let pl = getPatternNodes nl in
+    if ((List.length pl) > 1) then
+      let patList = getPatternRecords  pl in
+        checkPatterns [(List.head patList)] (List.tail patList) ;  
+
+(** Check irredundancy in reduce expression. *)
+mlvalue checkReduceMatching nl = 
+    let pl = getPatternNodes nl in
+      if ((List.length pl) > 1) then
+        let patList = getPatternRecords  pl in
+          checkReducePatterns [(List.head patList)] (List.tail patList) ;   
+
+(** Check if there are any unsued patterns reduce matching. *)
+mlvalue checkReducePatterns preList posList = match posList with
+    [] -> bottom
+  | x::xs -> let _ = checkReduceUnused preList x in
+               checkReducePatterns (List.append preList [x]) xs ;
+
+(** Check if a pattern is unused by comparing it with previous patterns. *)
+mlvalue checkReduceUnused preList pat = match preList with
+    [] -> bottom
+  | x::xs -> if (containPattern x pat) then
+                let nod = pat.nod in 
+                  error "unused pattern" at nod
+             else checkReduceUnused xs pat ;
+
+(** Check if p <= q, or if p is more general than q. *)
+mlvalue containPattern p q = match p.pat with
+    WildCardPattern -> true
+  | EmptyPattern | PairPattern _ ->
+      let pl = getListFromPair p in 
+        begin match q.pat with
+            EmptyPattern | PairPattern _ ->
+              let ql = getListFromPair q in
+                if (List.length pl > List.length ql) then false
+                else checkContain ql pl
+          | _ -> false 
+        end
+  | _ -> false ;
+
+(* Get a list of pattern records from a pair pattern.*)
+mlvalue getListFromPair p = match p.pat with
+    EmptyPattern -> []
+  | PairPattern(hd,tl) -> List.append [hd] (getListFromPair tl) 
+  | _ -> bottom;
+
+(** Check if a list of pattern contains another, 
+      used in checking reduce matching. *)
+mlvalue checkContain ql pl = 
+  match pl with
+      [] -> true
+    | x::xs -> let rem = checkRemovePattern ql x [] in
+                 if (is_bottom rem) then false
+                 else checkContain rem xs ;
+
+(** Check and remove a pattern from a list of pattern. *)
+mlvalue checkRemovePattern ql pat rem = match ql with
+    [] -> bottom
+  | x::xs -> if (isMoreGeneral x pat) then List.append rem xs
+             else checkRemovePattern xs pat (List.append rem [x]) ;
+
+(******************************************************************************
+ *                         Check for exhaustiveness                           *
+ *****************************************************************************)
+(* Result of exhaustiveness check. *)
+mltype result = None | Some of pattern list ;
+
+(**
+ * Constructor of a pattern, used to build Sigma. 
+ * Sigma is the set of constructors that appear at the root of the patterns
+ *   in the first column of pattern matrix. 
+ *)
+mltype constr = BotConstr | WildConstr | Const of value | 
+                EmptyConstr | PairConstr | 
+                CConstr of string * int | 
+                RecordConstr of int | TupleConstr of int ;
+
+(** 
+ * Check if a pattern is used by comparing it with previous patterns. 
+ * Do not show any error message.
+ *)
+mlvalue checkUsed preList pat = match preList with
+    [] -> true
+  | x::xs -> if (isMoreGeneral x pat) then false
+             else checkUsed xs pat ;
+
+(* Build the matrix of pattern records from the list of pattern records. *)
+mlvalue buildMatrix matrix preList postList = match postList with
+    [] -> matrix
+  | x::xs -> if x.guarded then (buildMatrix matrix 
+                                  (List.append preList [x]) xs)
+             else if !(checkUsed preList x) then
+                    (buildMatrix matrix preList xs)
+                  else let row: patternRecord list = [x] in
+                    buildMatrix (List.append matrix [row]) 
+                                (List.append preList [x]) xs ;
+
+(* Get sigma from the pattern matrix. *)
+mlvalue getSigma sigma matrix = match matrix with
+    [] -> sigma
+  | x::xs -> let patRec = List.head x in
+             let constructor = getConstructor patRec in
+               getSigma (List.append sigma [constructor]) xs ;
+   
+(* Get constructor from a pattern. *)
+mlvalue getConstructor patRec = match patRec.pat with                    
+    BotPattern -> BotConstr 
+
+  | WildCardPattern | VariablePattern _ -> WildConstr
+
+  | ConstantPattern(val) -> Const(val) 
+
+  | TupPattern(pl) -> TupleConstr(List.length pl)
+
+  | RecPattern _ -> let ty = get_annotation patRec.nod "__type" in
+                      begin match ty.type with
+                          RecordT(tl) -> RecordConstr(List.length tl)
+                        | _ -> bottom
+                      end
+  | EmptyPattern -> EmptyConstr
+
+  | PairPattern _ -> PairConstr
+
+  | RecFieldPattern(_,p) -> getConstructor p 
+
+  | ConstructorPattern(s,pl) -> 
+      if (is_bottom pl) then CConstr(s, getConstructorSize s)
+      else CConstr(s,List.length pl) ;              
+
+(* Check Exhaustiveness from a list of pattern matches. *)
+mlvalue checkExhaustive nl = 
+  let nod = List.head nl and
+      pl = getPatternNodes nl in
+  let patList = getPatternRecords pl in      
+  let matrix = buildMatrix [] [] patList in
+    if (List.length matrix = 0) then
+      let _ = warning "all patterns are guarded" at nod in true
+    else 
+      if (quickPartialCheck matrix) then true
+      else
+        let res = checkPartial matrix 1 in
+           match res with
+               None -> true
+             | Some(p) -> 
+                 let mes = showPatterns p in
+                 let _ = error "non-exhaustive match, " ^
+                               "an example of an unmatched value is: " ^ mes 
+                           at nod in false ; 
+
+(** 
+ * Check if there are any unmatched values (patterns). 
+ * The core of the algorithm.
+ *) 
+mlvalue checkPartial matrix n = 
+  if (0 = n) then
+    if (List.length matrix > 0) then None
+    else Some([])
+  else 
+    let sigma = getSigma [] matrix in
+      if (completeSigma sigma) then 
+        (* 
+         * If sigma is a complete signature 
+         * Get all matrice, check and return the first pattern of 
+         *   unmatched values 
+         *)
+        checkSubPartials matrix sigma
+      else (*Sigma is not a complete signature *)
+        (*
+         * Compute D(P), if I(D(P),n-1) = None the None
+         *               else if sigma is empty
+         * else find an unmatched constructor 
+         *)
+        let dMatrix = buildDMatrix matrix in
+        let res = checkPartial dMatrix (n-1) in
+          match res with
+              None -> None
+            | Some(pl) -> if (emptySigma sigma) then
+                            Some(List.append [WildCardPattern] pl)
+                          else 
+                            let p = findUnmatchedPattern sigma  
+                            in Some(List.append [p] pl) ;
+
+(* Compute I(S(ck,P), ak + n -1) for all ck taken from sigma. *)
+mlvalue checkSubPartials matrix sigma = match sigma with
+    [] -> None
+  | x::xs -> 
+     match x with
+         WildConstr -> checkSubPartials matrix xs
+       | _ -> let res = checkSubPartial matrix x in
+                match res with
+                    Some _ -> res
+                  | _ -> checkSubPartials matrix xs ;
+(* Compute I(S(ck,P), ak + n -1) for a ck. *)
+(* CHECK HERE *)
+mlvalue checkSubPartial matrix ck = 
+  let sMatrix = buildSMatrix matrix ck [] in
+  let len = List.length (List.head sMatrix) in
+  let res = checkPartial sMatrix len in
+    match res with
+        None -> None
+      | Some(pl) -> Some(buildResultPattern pl ck) ;
+
+(* Build S(ck,P) from P and ck. *)
+mlvalue buildSMatrix matrix ck res = match matrix with
+    [] -> res
+  | x::xs -> let co = getConstructor (List.head x) in
+               if (co = ck) then 
+                 let subList = expandPattern (List.head x) ck in 
+                 let newRow = List.append subList (List.tail x) in
+                   buildSMatrix xs ck (List.append res [newRow])
+               else buildSMatrix xs ck res ;
+
+(* Expand a pattern to get all the children. *)
+mlvalue expandPattern p ck = match ck with
+    BotConstr | WildConstr | Const _ | EmptyConstr -> []
+
+  | RecordConstr _ -> expandRecPattern p                        
+
+  | TupleConstr _ ->  begin match p.pat with
+                       TupPattern(pl) -> pl
+                      | _ -> bottom
+                    end 
+  | PairConstr -> begin match p.pat with
+                      PairPattern(hd,tl) -> [hd,tl]
+                    | _ -> bottom
+                  end 
+  | CConstr(_,_) -> 
+      match p.pat with
+          ConstructorPattern(s,pl) ->
+            if (is_bottom pl) then 
+              let si = getConstructorSize s in
+                makeWildCards si
+              else pl 
+        | _ -> bottom ;
+     
+(* Get the number of children of a contructor. *)
+mlvalue getConstructorSize s = 
+  let t = lookup TypeConstructor(s,bottom) in
+    match t.type with
+        ConstructorT(_,_,ty) ->
+          if (is_bottom ty) then 0
+          else
+            begin match ty.type with
+                TupleT(tl) -> List.length tl
+              | _ -> 1
+            end    
+      | _ -> bottom ;
+
+(* Expand a record pattern. *)
+mlvalue expandRecPattern p = 
+  let no = p.nod in 
+  let ty = get_annotation no "__type" in 
+    match ty.type with
+        RecordT(tl) -> 
+          begin match p.pat with
+              RecPattern(pl) -> makeFieldPatterns tl pl
+            | _ -> bottom
+          end
+      | _ -> bottom ;
+
+(* Make a list of field patterns for a record pattern. *)
+mlvalue makeFieldPatterns tl pl = 
+  match tl with
+      [] -> []
+    | x::xs -> let s = match x.type with
+                           FieldT(_,str,_) -> str 
+                         | _ -> bottom in
+               let p = makeFieldPattern s pl in
+                 List.append [p] (makeFieldPatterns xs pl) ;
+
+(* Make a field pattern. *)
+mlvalue makeFieldPattern s pl = match pl with
+    [] -> 
+      let wild = {pat = WildCardPattern, nod = bottom, guarded = false} in
+        {pat = RecFieldPattern(s,wild),nod = bottom, guarded = false}
+  | x::xs -> 
+      match x.pat with
+          RecFieldPattern(str,_) ->
+            if (str = s) then x
+            else makeFieldPattern s xs
+        | _ -> bottom ;
+
+(* Make a list of n wildcard patterns. *)
+mlvalue makeWildCards n = match n with
+    0 -> []
+  | _ -> let wild = {pat = WildCardPattern, nod = bottom, guarded = false} in
+           List.append [wild] (makeWildCards (n - 1)) ;
+
+(* Build resulted pattern from a list of pattern and the constructor. *)
+mlvalue buildResultPattern pl ck = match ck with
+    BotConstr -> BotPattern::pl
+   | WildConstr -> WildCardPattern::pl 
+   | Const(val) -> ConstantPattern(val)::pl 
+   | EmptyConstr -> EmptyPattern::pl
+
+   | PairConstr -> let h1 = List.head pl in
+                   let p1 = {pat = h1, nod = bottom, guarded = false} in
+                   let ta = List.tail pl in
+                   let h2 = List.head ta in 
+                   let p2 = {pat = h2, nod = bottom, guarded = false} and
+                       tai = List.tail ta in
+                     PairPattern(p1,p2)::tai
+   | CConstr(s,size) -> reduceTypeConstructorPattern s size pl []  
+
+   | RecordConstr(size) -> reduceRecordPattern size pl []
+
+   | TupleConstr(size) -> reduceTuplePattern size pl [] ;
+
+(* Make ck(r1...ra) p2...pn from r1...rap2...pn. *)
+mlvalue reduceTypeConstructorPattern s size pl children = 
+  if (size = 0) then 
+    let recList = makePatternRecords children in
+      ConstructorPattern(s,recList)::pl
+  else reduceTypeConstructorPattern s (size - 1) (List.tail pl) 
+                                    (List.append children [(List.head pl)]) ;
+
+(* Make ck(r1...ra) p2...pn from r1...rap2...pn. *)   
+mlvalue reduceRecordPattern size pl children = 
+  if (size = 0) then 
+    let recList = makePatternRecords children in
+      RecPattern(recList)::pl
+  else reduceRecordPattern (size - 1) (List.tail pl) 
+                           (List.append children [(List.head pl)]) ;
+
+(* Make ck(r1...ra) p2...pn from r1...rap2...pn. *)
+mlvalue reduceTuplePattern size pl children = 
+  if (size = 0) then 
+    let recList = makePatternRecords children in
+      TupPattern(recList)::pl
+  else reduceTuplePattern (size - 1) (List.tail pl) 
+                          (List.append children [(List.head pl)]) ;
+
+(* Make a list of pattern records from a list of patterns. *)
+mlvalue makePatternRecords pl = match pl with
+    [] -> []
+  | x::xs -> let pr = {pat = x, nod = bottom, guarded = false} in
+               pr::(makePatternRecords xs) ;   
+
+(* Build D(P) from P. *)
+mlvalue buildDMatrix matrix = match matrix with
+    [] -> []
+  | x::xs -> let p = List.head x in
+               match p.pat with
+                   WildCardPattern | VariablePattern _ ->
+                      (List.tail x)::(buildDMatrix xs)
+                 | RecFieldPattern(_,pt) ->
+                     let co = getConstructor pt in
+                       if (co = WildConstr) then 
+                         (List.tail x)::(buildDMatrix xs)
+                       else buildDMatrix xs                     
+                 | _ -> buildDMatrix xs ;
+
+(* Check if sigma is empty (from definition in the algorithm). *)
+mlvalue emptySigma sigma = match sigma with
+    [] -> true
+  | x::xs -> match x with
+                 WildConstr -> emptySigma xs
+               | _ -> false ;
+
+(* Check if sigma is complete (from definition in the algorithm). *)
+mlvalue completeSigma sigma = 
+  let si = removeWildConstr sigma in 
+    if (List.length si = 0) then false
+    else let h = List.head si in 
+      match h with
+          Const(val)  ->
+            begin match val with
+                BoolValue _ -> (List.mem Const(BoolValue(true)) sigma) &&
+                               (List.mem Const(BoolValue(false)) sigma)
+              | _ -> false
+            end
+        | RecordConstr _ | TupleConstr _ -> true
+
+        | EmptyConstr | PairConstr -> (List.mem EmptyConstr si) && 
+                                      (List.mem PairConstr si)
+        | CConstr(s,_) -> 
+            let ty = lookup TypeConstructor(s,bottom) in
+              begin match ty.type with
+                  ConstructorT(str,_,_) -> 
+                    let t = lookup UserDefinedType(str) in
+                      begin match t.type with
+                          VariantT(tl) -> checkComplete tl si 
+                        | _ -> bottom
+                      end
+                | _ -> bottom 
+              end
+        | _ -> bottom ;
+
+(* Check of sigma has all contructors of a variant type. *)
+mlvalue checkComplete tl sigma = 
+  match tl with
+      [] -> true
+    | x::xs -> 
+       match x.type with
+           ConstructorT(_,str,_) ->
+             if (sigmaContains sigma str) then
+               checkComplete xs sigma
+             else false
+         | _ -> bottom ;
+
+(* Check if sigma contains a constructor. *)
+mlvalue sigmaContains sigma s = match sigma with
+    [] -> false
+  | x::xs -> match x with
+                 CConstr(str,_) ->
+                   if (s = str) then true
+                   else sigmaContains xs s 
+               | _ -> bottom ;
+ 
+(* Find pattern of unmatched values from sigma and the corressponding type. *) 
+mlvalue findUnmatchedPattern sigma = 
+  let si = removeWildConstr sigma in
+  let h = List.head si in 
+    match h with
+        Const(val)  ->
+          begin match val with
+              BoolValue _ -> 
+                if !(List.mem Const(BoolValue(true)) sigma) then 
+                  ConstantPattern(BoolValue(true))
+                else ConstantPattern(BoolValue(false))
+
+            | IntValue(i) -> findIntPattern i sigma
+
+            | FloatValue(f) -> findFloatPattern f sigma
+
+            | StringValue(s) -> findStringPattern s sigma
+          end
+      | EmptyConstr | PairConstr -> 
+          if (List.mem EmptyConstr sigma) then 
+            let wild = {pat = WildCardPattern, nod = bottom, guarded = false} in
+              PairPattern(wild, wild)
+          else EmptyPattern
+      | CConstr(s,_) -> 
+         let ty = lookup TypeConstructor(s,bottom) in
+           begin match ty.type with
+               ConstructorT(str,_,_) -> 
+                 let t = lookup UserDefinedType(str) in
+                   begin match t.type with
+                       VariantT(tl) -> findUnmatchedConstructor tl si 
+                     | _ -> bottom
+                   end
+             | _ -> bottom 
+           end
+      | _ -> bottom ;
+
+(* Find a integer pattern that does not match. *)
+mlvalue findIntPattern i sigma = 
+  if !(List.mem Const(IntValue(i + 1)) sigma) then
+    ConstantPattern(IntValue(i+1))
+  else findIntPattern (i+1) sigma ;
+
+(* Find a float pattern that does not match. *)
+mlvalue findFloatPattern f sigma = 
+  if !(List.mem Const(FloatValue(f +. 1.0)) sigma) then
+    ConstantPattern(FloatValue(f +. 1.0))
+  else findFloatPattern (f +. 1.0) sigma ;
+
+(* Find a string pattern that does not match. *)
+mlvalue findStringPattern s sigma = 
+  if !(List.mem Const(StringValue("z" ^ s)) sigma) then
+    ConstantPattern(StringValue("z" ^ s))
+  else findStringPattern ("z" ^ s) sigma ;
+
+(* Find an unmatched constructor. *)
+mlvalue findUnmatchedConstructor tl sigma = match tl with
+    [] -> bottom
+  | x::xs -> 
+     match x.type with
+         ConstructorT(_,str,_) ->
+           if (sigmaContains sigma str) then
+             findUnmatchedConstructor xs sigma
+           else let size = getConstructorSize str in
+                let li = makeWildCards size in
+                ConstructorPattern(str,li)
+       | _ -> bottom ;
+
+(* Remove wild constructor from sigma. *)
+mlvalue removeWildConstr sigma = match sigma with
+    [] -> []
+  | x::xs -> if (x = WildConstr) then removeWildConstr xs
+             else x::(removeWildConstr xs) ;
+
+(* 
+ * Quick partial check, check if any of the pattern rows contains all 
+ *  wildcards or variables.
+ *)
+mlvalue quickPartialCheck matrix = match matrix with
+    [] -> false
+  | x::xs -> if (allWildCard x) then true
+             else quickPartialCheck xs ;
+
+(* Check of a row contains all wildcards and variables. *)
+mlvalue allWildCard row = match row with
+    [] -> true
+  | x::xs -> match x.pat with
+                 WildCardPattern | VariablePattern _ ->
+                   allWildCard xs
+               | TupPattern(pl) ->
+                   (allWildCard pl) && (allWildCard xs)    
+               | _ -> false ;
+
+(* Show unmatched patterns in a pretty form. *)
+mlvalue showPattern p = match p with
+    BotPattern -> "_|_"
+
+  | WildCardPattern | VariablePattern _ -> "_"
+
+  | ConstantPattern(val) ->
+      begin match val with
+          IntValue(i) -> String.itos i
+        | FloatValue(f) -> String.ftos f
+        | StringValue(s) -> s
+        | BoolValue(b) -> if b then "true" else "false"
+      end
+  | TupPattern(pl) -> let mes = showPatternRecords pl in "(" ^ mes ^ ")"
+
+  | RecPattern(pl) -> let mes = showPatternRecords pl in "{" ^ mes ^ "}"
+  
+  | EmptyPattern -> "[]"
+
+  | PairPattern(hd,tl) -> let mes1 = showPattern hd.pat and
+                              mes2 = showPattern tl.pat in
+                            mes1 ^ "::(" ^ mes2 ^ ")"
+  | RecFieldPattern(s,pt) -> let mes = showPattern pt.pat in s ^ "=" ^ mes 
+
+  | ConstructorPattern(s,pl) -> 
+      let mes = showPatternRecords pl in s ^ "(" ^ mes ^ ")"
+  | _ -> bottom ;
+
+(* Show a list of patterns. *)
+mlvalue showPatterns pl = match pl with
+    [] -> ""
+  | [x] -> showPattern x
+  | x::xs -> let me = showPattern x and
+                 mes = showPatterns xs in
+                me ^ mes ;
+
+(* Show a list of pattern records. *)
+mlvalue showPatternRecords pl = match pl with
+    [] -> ""
+  | [x] -> showPattern x.pat
+  | x::xs -> let me = showPattern x.pat and
+                 mes = showPatternRecords xs in
+               me ^ "," ^ mes ;

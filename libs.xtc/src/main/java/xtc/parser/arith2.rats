@@ -1,0 +1,35 @@
+option mainMethod;
+
+public GNode Expression = Addition / Subtraction / Expression2   ;
+GNode   Expression2     = Multiplication / Division / Primary    ;
+GNode   Primary         = Number / Open Expression Close / Words ;
+
+generic Addition        = Expression2 Plus  Expression;
+generic Subtraction     = Expression2 Minus Expression;
+generic Multiplication  = Primary     Times Expression2;
+generic Division        = Primary     Over  Expression2;
+generic Number          = Digits Spacing;
+generic Words           = (Identifier Spacing)*;
+
+transient String Digits   = [0-9]+;
+
+transient String Identifier = [a-zA-Z]+;
+
+void Plus  = '+' Spacing ;
+void Minus = '-' Spacing ;
+void Times = '*' Spacing ;
+void Over  = '/' Spacing ;
+void Open  = '(' Spacing ;
+void Close = ')' Spacing ;
+
+transient void Spacing =
+  ( WhiteSpace
+  / TraditionalComment
+  / EndOfLineComment
+  )*
+  ;
+
+transient void WhiteSpace         = ' ' / '\t' / '\f' / LineTerminator ;
+transient void TraditionalComment = "/*" ( '*' !'/' / !'*' _ )* "*/" ;
+transient void EndOfLineComment   = "//" ( ![\n\r] _ )* LineTerminator ;
+transient void LineTerminator     = '\r' '\n' / '\r' / '\n' ;

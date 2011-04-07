@@ -1,0 +1,128 @@
+/*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2007 New York University
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ */
+
+/**
+ * Definition of Typical types.
+ *
+ * @author Anh Le, Laune Harris
+ * @version $Revision: 1.9 $
+ */
+module xtc.typical.Type(Identifier, Symbol);
+
+import Identifier;
+import Symbol;
+
+transient variant Node TypeExpression = AliasedType ;
+
+generic AliasedType = 
+    <Recursion> AliasedType void:"as":Keyword TypeVariable
+  / <Base>      yyValue:FunctionType
+  ;
+
+generic FunctionType = 
+    <Recursion> TupleType void:"->":Symbol FunctionType
+  / <Base>      yyValue:TupleType
+  ;  
+
+generic TupleType = 
+    <Tuple> ConstructedType (void:"*":Symbol ConstructedType)+
+  / <Base>  yyValue:ConstructedType
+  ;
+
+generic ConstructedType =
+    <Unary> ConstructedType LowerIdentifier
+  / <Nary>  yyValue:NaryConstructedType
+  / <Base>  yyValue:PrimaryType
+  ;
+
+generic NaryConstructedType = NaryType LowerIdentifier ;
+
+generic NaryType = 
+  void:"(":Symbol
+    ConstructedType (void:",":Symbol ConstructedType)+
+  void:")":Symbol ;
+
+Node PrimaryType =
+    <Boolean>            BooleanType
+  / <Int>                IntType
+  / <Float32>	         Float32
+  / <Float64>	         Float64
+  / <String>             StringType
+  / <Any>                AnyType
+  / <UserDefined>        UserDefinedType
+  / <Variable>           TypeVariable
+  / <Constraint> 	     ConstraintType
+  / <PolymorphicVariant> PolyVariantType
+  / <Parenthesized>      void:"(":Symbol TypeExpression void:")":Symbol
+  ;
+
+inline generic BooleanType     = void:"bool":Keyword     ;
+inline generic IntType         = void:"int":Keyword      ;
+inline generic Float32         = void:"float32":Keyword  ;
+inline generic Float64         = void:"float64":Keyword  ;
+inline generic StringType      = void:"string":Keyword   ;
+inline generic AnyType         = void:"any":Keyword      ;
+inline generic UserDefinedType = LowerIdentifier         ;
+inline generic TypeVariable    = void:"'":Symbol LowerIdentifier ;
+inline generic ConstraintType  = void:"Node":Keyword TypeVariable ;
+
+generic TypeParameters =
+    <Nary>  void:"(":Symbol
+              TypeVariable (void:",":Symbol TypeVariable)+
+            void:")":Symbol
+  / <Unary> TypeVariable
+  ;
+
+variant Node TypeInformation =
+    <Variant>            VariantDeclaration
+  / <Record>             RecordDeclaration
+  / <PolymorphicVariant> PolyVariantDeclaration
+  ;
+
+inline generic VariantDeclaration =
+  void:("|":Symbol)? TypeConstructor (void:"|":Symbol TypeConstructor)*
+  ;
+
+inline generic RecordDeclaration =
+  void:"{":Symbol
+    FieldType ( void:",":Symbol FieldType )*
+  void:"}":Symbol
+  ;
+
+inline generic PolyVariantDeclaration = 
+  void:"[":Symbol void:("|":Symbol)? PolyTypeConstructor 
+    (void:"|":Symbol PolyTypeConstructor)* void:"]":Symbol
+  ;
+
+inline generic PolyVariantType = 
+  void:"[":Symbol void:("|":Symbol)? PolyTypeConstructor 
+    (void:"|":Symbol PolyTypeConstructor)* void:"]":Symbol
+  ;
+
+generic TypeConstructor =
+  UpperIdentifier (void:"of":Keyword TypeExpression)?
+  ;
+
+generic FieldType =
+  LowerIdentifier void:":":Symbol TypeExpression
+  ;
+
+generic PolyTypeConstructor =
+  void:"`":Symbol UpperIdentifier void:"of":Keyword LowerIdentifier
+  ;

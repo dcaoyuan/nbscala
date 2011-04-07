@@ -1,0 +1,411 @@
+/*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2007 New York University
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ */
+ 
+/**
+ * Definition of Typical syntax rules.
+ *
+ * @author Laune Harris, Anh Le
+ * @version $Revision: 1.38 $
+ */
+module xtc.typical.Core(Type, Constant, Identifier, Symbol, Spacing);
+
+import Type;
+import Constant;
+import Identifier;
+import Symbol;
+import Spacing;
+
+public generic Module =  Spacing ModuleDeclaration
+  (Definition void:";":Symbol)* EndOfFile ;
+ 
+variant Node Definition = 
+    ScopeDefinition 
+  / NameSpaceDefinition
+  / AttributeDefinition
+  / EqualAttributeDefinition
+  / EqualityDefinition
+  / TypeDefinition
+  / ValueDefinition
+  ;
+
+inline generic ScopeDefinition = void:"scope":Keyword PatternMatching ;
+
+generic NameSpaceDefinition = 
+    void:"namespace":Keyword NameSpaceStructure 
+      (void:"and":Keyword NameSpaceStructure)*
+;
+ 
+generic ModuleDeclaration = 
+  void:"module":Keyword Identifier (void:".":Symbol Identifier)* 
+    void:";":Symbol;
+
+generic NameSpaceStructure = 
+    ("default":Keyword/LowerIdentifier) void:":":Symbol 
+       LowerIdentifier void:"=":Symbol PatternMatching  
+;
+
+inline generic AttributeDefinition = 
+    void:"attribute":Keyword LowerIdentifier void:":":Symbol TypeExpression
+  ;
+
+inline generic EqualAttributeDefinition = 
+    void:"eqattribute":Keyword LowerIdentifier void:":":Symbol TypeExpression
+  ;
+
+inline generic EqualityDefinition = 
+    void:"equality":Keyword LowerIdentifier void:"=":Symbol EqualStructure 
+      (void:"|":Symbol EqualStructure)* 
+  ;
+
+generic EqualStructure = 
+    UpperID void:"(":Symbol (WildCard/Variable) 
+      (void:",":Symbol (WildCard/Variable))* void:")":Symbol
+  ;
+
+inline generic TypeDefinition = 
+    void:"mltype":Keyword (TypeParameters)? LowerIdentifier void:"=":Symbol 
+       TypeInformation  
+  ;
+
+inline generic ValueDefinition = 
+  void:"mlvalue":Keyword LowerIdentifier Parameters void:"=":Symbol Expression
+  ;
+
+generic Parameters = Parameter* ;
+
+generic Parameter =
+    void:"(":Symbol LowerIdentifier (void:":":Symbol TypeExpression)? 
+       void:")":Symbol
+  / LowerIdentifier (void:":":Symbol TypeExpression)? ; 
+
+
+generic PatternMatching =
+  void:("|":Symbol)? PatternMatch (void:"|":Symbol PatternMatch)*   
+  ;
+
+generic PatternMatch    =  Patterns void:"->":Symbol Expression Spacing ;
+generic Patterns        =  Pattern (void:"|":Symbol Pattern)* ;  
+
+Node Pattern = TuplePattern ;
+
+generic TuplePattern = 
+    <Recursion> WhenPattern (void:",":Symbol WhenPattern)+
+  / <Base>      yyValue:WhenPattern
+  ;
+
+generic WhenPattern = 
+    <Recursion> WhenPattern void:"when":Keyword Expression 
+  / <Base> yyValue:AsPattern
+  ;
+
+generic AsPattern = 
+    <Recursion> AsPattern void:"as":Keyword LowerIdentifier
+  / <Base> yyValue:TypedPattern
+  ;
+
+generic TypedPattern = 
+    <Recursive> TypedPattern void:":":Symbol TypeExpression 
+  / <Base> yyValue:ConsPattern
+  ;
+
+generic ConsPattern = 
+    <Recursion> AtomicPattern  void:"::":Symbol ConsPattern
+  / <Base> yyValue:AtomicPattern
+;
+
+Node AtomicPattern = 
+    <RecordPattern>    RecordPattern
+  / <List>             ListPattern
+  / <TypeConstructor>  TypeConstructorPattern
+  / <Parenthesised>    ParenthesisedPattern 
+  / <Variable>         Variable
+  / <BottomPattern>    BottomPattern
+  / <WildCard>         WildCard
+  / <Literal>          Literal
+  ; 
+
+generic Variable = LowerIdentifier;
+
+Node ParenthesisedPattern = void:"(":Symbol Pattern void:")":Symbol ;
+
+generic TypeConstructorPattern = 
+    UpperIdentifier PatternParameters 
+  / UpperIdentifier WildCard
+  / UpperIdentifier (void:"(":Symbol void:")":Symbol)?
+  ; 
+
+generic PatternParameters = 
+    void:"(":Symbol WhenPattern (void:",":Symbol WhenPattern)*  void:")":Symbol
+  ;
+
+generic BottomPattern = void:"bottom":Keyword ;
+  
+
+generic ListPattern = 
+    void:"[":Symbol WhenPattern (void:",":Symbol WhenPattern)* void:"]": Symbol  
+  / void:"[":Symbol void:"]":Symbol
+  ;
+
+generic RecordPattern =
+    void:"{":Symbol FieldPattern (void:",":Symbol FieldPattern)* void:"}":Symbol
+  / void:"{":Symbol void:"}":Symbol
+  ;
+
+generic FieldPattern = LowerID void:"=":Symbol WhenPattern ;
+
+inline generic WildCard = void:"_":Keyword ;
+
+variant Node Expression = TupleLiteral ;
+
+generic TupleLiteral = 
+    <Recursion> LogicalOrExpression ( void:",":Symbol LogicalOrExpression)+
+  / <Base>      yyValue:LogicalOrExpression
+  ;
+
+generic LogicalOrExpression =
+    <Or>   LogicalOrExpression void:"||":Symbol LogicalAndExpression
+  / <Base> yyValue:LogicalAndExpression
+  ;
+
+transient generic LogicalAndExpression =
+    <And>  LogicalAndExpression void:"&&":Symbol EqualityExpression
+  / <Base> yyValue:EqualityExpression
+  ;
+
+transient generic EqualityExpression =
+    <Recursion> EqualityExpression EqualityOperator RelationalExpression
+  / <Base>      yyValue:RelationalExpression
+  ;
+
+String EqualityOperator =
+    <Equal>    "=":Symbol
+  / <NotEqual> "!=":Symbol
+  ;
+
+transient generic RelationalExpression =
+    <Recursion> RelationalExpression RelationalOperator AdditiveExpression
+  / AdditiveExpression
+  ;
+   
+String RelationalOperator = 
+    IntegerRelationalOperator
+  / FloatRelationalOperator
+  ;
+
+String IntegerRelationalOperator =
+    <IntegerLessEqual>    "<=":Symbol
+  / <IntegerLess>         "<":Symbol
+  / <IntegerGreaterEqual> ">=":Symbol
+  / <IntegerGreater>      ">":Symbol
+  ;
+
+String FloatRelationalOperator =
+    <FloatLessEqual>    "<=.":Symbol
+  / <FloatLess>         "<.":Symbol
+  / <FloatGreaterEqual> ">=.":Symbol
+  / <FloatGreater>      ">.":Symbol
+  ;
+
+transient generic AdditiveExpression =
+    <Recursion> AdditiveExpression AdditiveOperator MultiplicativeExpression
+  / <Base> ConcatenationExpression
+  ;
+
+transient generic ConcatenationExpression =
+   <Recursion> ConcatenationExpression ConcatenationOperator 
+               MultiplicativeExpression
+ / <Base> MultiplicativeExpression
+;
+
+String AdditiveOperator = 
+    IntegerAdditiveOperator
+  / FloatAdditiveOperator
+  ;
+
+String ConcatenationOperator = 
+   "^":Symbol 
+ / "@":Symbol 
+;
+
+String IntegerAdditiveOperator =  
+    <IntegerPlus>  "+":Symbol
+  / <IntegerMinus> "-":Symbol
+  ;
+
+String FloatAdditiveOperator =  
+    <FloatPlus>  "+.":Symbol
+  / <FloatMinus> "-.":Symbol
+  ;
+
+transient generic MultiplicativeExpression =
+    <Recursion> MultiplicativeExpression MultiplicativeOperator ConsExpression
+  / <Base> yyValue:ConsExpression
+  ;
+
+String MultiplicativeOperator = 
+    IntegerMultiplicativeOperator
+  / FloatMultiplicativeOperator
+  ;
+
+String IntegerMultiplicativeOperator =
+    <IntegerTimes>  "*":Symbol
+  / <IntegerOver>   "/":Symbol
+  / <Modulo> "%":Symbol
+  ;
+
+String FloatMultiplicativeOperator =
+    <FloatTimes>  "*.":Symbol
+  / <FloatOver>   "/.":Symbol
+  ;
+
+generic ConsExpression = 
+    <Recursive> FunctionApplication void:"::":Symbol ConsExpression
+  / <Base> yyValue:FunctionApplication
+  ;
+
+generic FunctionApplication = 
+    <Library> UpperID void:".":Symbol LowerID Arguments 
+  / <Normal>  LowerID Arguments
+  / <Base> yyValue:FieldExpression
+  ;  
+
+generic Arguments = Argument+ ;
+Node Argument = FieldExpression / Pattern ;
+
+generic PredicateArgument = 
+    void:"(":Symbol void:"predicate":Keyword Patterns void:")":Symbol  
+  / void:"predicate":Keyword Patterns
+  ;
+generic PredicateExpression = PredicateArgument Expression;
+
+generic FieldExpression = 
+    <Recursion> FieldExpression void:".":Symbol LowerIdentifier
+  / <Base> yyValue:PrimaryExpression  
+  ;
+
+Node PrimaryExpression = 
+    <Block>               void:"begin":Keyword Expression void:"end":Keyword
+  / <Parenthesised>       void:"(":Symbol Expression void:")":Symbol
+  / <PredicateExpression> PredicateExpression
+  / <ReduceExpression>    ReduceExpression
+  / <Function>            FunctionExpression
+  / <Fun> 		  FunExpression
+  / <Record>              RecordExpression
+  / <Negation>            LogicalNegationExpression
+  / <Match>               MatchExpression 
+  / <TupleConstructor>    TupleConstructor
+  / <ListLiteral>         ListLiteral 
+  / <Let>                 LetExpression
+  / <Error>               ErrorClause
+  / <Assertion>           AssertClause
+  / <Guard>               GuardExpression
+  / <Require>             RequireExpression 
+  / <IfElse>              IfElseExpression
+  / <If>                  IfExpression
+  / <LowerIdentifier>     LowerID
+  / <Literal>             Literal 
+  ;
+
+generic LetExpression = 
+    void:"let":Keyword LetBindings void:"in":Keyword Expression
+  ;
+
+generic LetBindings = LetBinding ( void:"and":Keyword LetBinding )* ;
+generic LetBinding = Pattern void:"=":Symbol Expression ;
+
+generic FunctionExpression = void:"function":Keyword PatternMatching ;
+
+generic FunExpression = 
+    void:"fun":Keyword Parameters void:"->":Symbol Expression ;
+
+generic MatchExpression = 
+    void:"match":Keyword Expression void:"with":Keyword PatternMatching
+  ;
+
+generic RequireExpression =
+    void:"require":Keyword RequireArgs (void:"and":Keyword RequireArgs)*
+      void:"in":Keyword Expression
+  ;  
+
+generic RequireArgs =  Expression MessageTag Expression 
+  (void:"at":Keyword LowerID)?;
+
+generic MessageTag =  
+    "warning":Keyword 
+  / "error":Keyword
+  ; 
+
+generic GuardExpression = void:"guard":Keyword Expression ErrorClause ;
+
+generic ErrorClause = MessageTag Expression (void:"at":Keyword LowerID)? ;
+
+generic AssertClause = void:"assert":Keyword Expression (Expression)? ;
+
+generic TupleConstructor = 
+    UpperIdentifier void:"(":Symbol  LogicalOrExpression 
+      (void:",":Symbol LogicalOrExpression)* void:")":Symbol
+  / UpperIdentifier  
+  ;
+
+generic RecordExpression =
+    void:"{":Symbol (WithExpression)? 
+      FieldAssignment (void:",":Symbol FieldAssignment)* void:"}":Symbol
+  / void:"{":Symbol void:"}":Symbol
+  ;   
+ 
+generic WithExpression = 
+    Expression void:"with":Keyword  
+  ;   
+
+generic FieldAssignment = LowerIdentifier void:"=":Symbol LogicalOrExpression;
+
+generic IfExpression = void:"if":Keyword Expression void:"then":Keyword 
+  Expression;
+
+generic IfElseExpression = void:"if":Keyword Expression void:"then":Keyword 
+  Expression void:"else":Keyword Expression;
+
+generic ListLiteral = 
+    <ListLiteral> void:"[":Symbol LogicalOrExpression 
+                    (void:",":Symbol LogicalOrExpression )* void:"]":Symbol 
+  / <EmptyList> void:"[":Symbol void:"]":Symbol 
+  ;
+
+inline generic LogicalNegationExpression = void:"!":Symbol PrimaryExpression;
+
+Node Literal =
+    FloatingLiteral Spacing
+  / IntegerLiteral Spacing
+  / StringLiteral Spacing
+  / BooleanLiteral Spacing
+  / Bottom
+  ;
+
+
+generic ReduceExpression = 
+    <Reduce> void:"reduce":Keyword void:"to":Keyword
+               ReduceOptions Literal void:"with":Keyword PatternMatching ; 
+
+generic ReduceOptions = ReduceOption* ;
+
+String ReduceOption = LowerIdentifier ;
+
+generic LowerID = LowerIdentifier ;
+
+generic UpperID = UpperIdentifier ;

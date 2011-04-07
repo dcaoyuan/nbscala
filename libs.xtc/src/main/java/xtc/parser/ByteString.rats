@@ -1,0 +1,33 @@
+module xtc.parser.ByteString;
+
+body {
+  Result parseChars(String number, int start, int base) throws IOException {
+    int n;
+
+    try {
+      n = Integer.parseInt(number);
+    } catch (NumberFormatException x) {
+      return new ParseError("Malformed length", start);
+    }
+    
+    StringBuilder buf = new StringBuilder(n);
+    for (int i=0; i<n; i++) {
+      int c = character(base + i);
+
+      if (c != -1) {
+        buf.append((char)c);
+      } else {
+        return new ParseError("Unexpected end of bytestring", base + i);
+      }
+    }
+
+    return new SemanticValue(buf.toString(), base + n);
+  }
+}
+
+option main(ByteString);
+
+public String ByteString =
+  n:Integer ':' ^{ yyResult = parseChars(n, yyStart, yyBase); } ;
+
+String Integer = [0-9]+ ;

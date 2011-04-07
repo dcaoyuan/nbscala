@@ -1,0 +1,78 @@
+/*
+ * xtc - The eXTensible Compiler
+ * Copyright (C) 2007 Robert Grimm
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+ * USA.
+ */
+
+/**
+ * Grammar for the simply typed lambda calculus.
+ *
+ * @author Robert Grimm
+ * @version $Revision: 1.1 $
+ */
+module xtc.lang.TypedLambda;
+
+import xtc.util.Spacing;
+
+option withLocation, constant, main(Expression);
+
+public Node Expression = Application EndOfFile ;
+
+generic Application =
+    <Recursion> Application BasicExpression
+  / <Base>      BasicExpression
+  ;
+
+Node BasicExpression =
+    <Abstraction>   Abstraction
+  / <Identifier>    Identifier
+  / <Integer>       IntegerConstant
+  / <String>        StringConstant
+  / <Parenthesized> OPEN Application CLOSE
+  ;
+
+generic Abstraction =
+  LAMBDA Identifier COLON FunctionType DOT Application ;
+
+generic Identifier = IdentifierCharacters Spacing ;
+transient String IdentifierCharacters = [a-zA-Z]+ ;
+
+generic IntegerConstant = IntegerCharacters Spacing ;
+transient String IntegerCharacters = [1-9] [0-9]* ;
+
+generic StringConstant = StringCharacters Spacing ;
+transient String StringCharacters = ["] (!["] _)* ["] ;
+
+generic FunctionType =
+    <Recursion> BasicType ARROW FunctionType
+  / <Base>      yyValue:BasicType
+  ;
+
+Node BasicType =
+    <Integer>       IntegerType
+  / <String>        StringType
+  / <Parenthesized> OPEN FunctionType CLOSE
+  ;
+
+inline generic IntegerType = void:"int"    Spacing ;
+inline generic StringType  = void:"string" Spacing ;
+
+void LAMBDA = "\\" Spacing ;
+void COLON  = ":"  Spacing ;
+void DOT    = "."  Spacing ;
+void ARROW  = "->" Spacing ;
+void OPEN   = "("  Spacing ;
+void CLOSE  = ")"  Spacing ;
