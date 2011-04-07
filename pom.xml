@@ -214,6 +214,8 @@
     **************************************************************************************************************** -->
     <modules>
         <module>libs.scala</module>
+        <module>libs.xtc</module>
+        <module>languages.execution</module>
     </modules>
 
 </project>
