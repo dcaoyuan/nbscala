@@ -79,6 +79,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publicPackages>
+                        <publicPackage>org.netbeans.api.scala.platform</publicPackage>
+                        <publicPackage>org.netbeans.spi.scala.platform</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>
