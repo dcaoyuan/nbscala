@@ -1,3 +1,4 @@
 Manifest-Version: 1.0
 OpenIDE-Module-Display-Category: Libraries
 AutoUpdate-Show-In-Client: true
+OpenIDE-Module-Localizing-Bundle: org/netbeans/modules/languages/execution/resources/Bundle.properties

@@ -15,7 +15,7 @@
         <dependency>
             <id>org.netbeans.api:org-netbeans-modules-parsing-api</id>
             <type>spec</type>
-            <explicitValue>org.netbeans.modules.parsing.api/1 = 6</explicitValue>
+            <explicitValue>org.netbeans.modules.parsing.api = 6</explicitValue>
         </dependency>
     </dependencies> 
 </nbm>
