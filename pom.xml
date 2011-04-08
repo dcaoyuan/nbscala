@@ -44,7 +44,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
         <scala.version>2.8.1</scala.version>
-        <netbeans.version>RELEASE691</netbeans.version>
+        <netbeans.version>RELEASE70-BETA2</netbeans.version>
         <deploy.version>snapshots</deploy.version>
     </properties>
 
