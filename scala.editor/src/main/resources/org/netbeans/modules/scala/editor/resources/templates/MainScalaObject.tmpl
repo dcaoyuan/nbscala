@@ -1,0 +1,19 @@
+<#assign licenseFirst = "/*">
+<#assign licensePrefix = " * ">
+<#assign licenseLast = " */">
+<#include "../Licenses/license-${project.license}.txt">
+
+<#if package?? && package != "">
+package ${package}
+
+</#if>
+object ${name} {
+
+  /**
+   * @param args the command line arguments
+   */
+  def main(args: Array[String]): Unit = {
+    println("Hello, world!")
+  }
+
+}

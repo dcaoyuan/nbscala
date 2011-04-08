@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fontscolors PUBLIC "-//NetBeans//DTD Editor Fonts and Colors settings 1.1//EN" "http://www.netbeans.org/dtds/EditorFontsColors-1_1.dtd">
+
+<fontscolors>
+    <!-- See http://ui.netbeans.org/docs/ui/editor_fonts_colors/Editor_fonts_and_colors.htm#ruby -->
+    <!-- A couple of things are not accurate yet; globals are not bold, and method calls are
+         black and bold instead of green (which would be identical to fields) -->
+         
+    <!-- ScalaTokenId categories -->
+   <fontcolor name="CharacterLiteral" default="char"/>
+   <fontcolor name="IntegerLiteral" default="number"/>
+   <fontcolor name="FloatingPointLiteral" default="number"/>
+   <fontcolor name="StringLiteral" default="string"/>
+   <fontcolor name="BlockComment" default="comment"/>
+   <fontcolor name="LineComment" default="comment"/>
+   <fontcolor name="DocComment" default="comment"/>
+   <fontcolor name="CommentTag" default="comment">
+      <font style="bold"/>
+   </fontcolor>
+   <fontcolor name="Error" default="error"/>
+   <fontcolor name="Identifier" default="identifier"/>
+   <fontcolor name="Ws" default="whitespace"/>
+   <fontcolor name="Keyword" default="keyword"/>
+   <fontcolor name="Operator" default="operator"/>
+   <fontcolor name="TODO" foreColor="99006b">
+      <font style="bold"/>
+   </fontcolor>
+   <fontcolor name="xml" foreColor="2E92C7"/>
+
+    <!-- This is intended for an embedded regular expression language -->
+    <!--
+    <fontcolor name="REGEXP_TEXT" foreColor="ff006f00"/>
+    <fontcolor name="REGEXP_META" foreColor="ff006f00">
+        <font style="bold"/>
+    </fontcolor>
+    <fontcolor name="REGEXP_INVALID" foreColor="ffff006b" strikeThrough="ffff006b" >
+        <font style="bold"/>
+    </fontcolor>
+    -->
+
+    <!--"semantic" highlighting:-->
+   <fontcolor name="mod-unused" waveUnderlined="999999"/>
+   <fontcolor name="mod-abstract" />
+   <fontcolor name="mod-field" default="field" foreColor="0000ff"/> <!-- for Function call -->
+   <fontcolor name="mod-local-variable" />
+   <fontcolor name="mod-parameter" foreColor="A06001"/>
+
+   <fontcolor name="mod-method" foreColor="0000ff"/> <!-- function def -->
+   <fontcolor name="mod-constructor" />
+   <fontcolor name="mod-class" foreColor="b8860b"/> <!-- Class declaration -->
+   <fontcolor name="mod-static" foreColor="228b22"/> <!-- for Class  Ref 717ab3, 7777cc, dark red:bc8f8f, purple:a020f0 -->
+   <fontcolor name="mod-global" foreColor="228b22">  <!-- for Object Ref 717ab3, 7777cc -->
+      <font style="italic" />
+   </fontcolor>
+   <fontcolor name="mod-interface" foreColor="0000ff" underline="0000ff"/> <!-- for implicit method Ref -->
+   <fontcolor name="mod-annotation-type" />
+   <fontcolor name="mod-enum" />
+   <fontcolor name="mod-deprecated" strikeThrough="404040" />
+
+   <fontcolor name="mod-private" />
+   <fontcolor name="mod-package-private" />
+   <fontcolor name="mod-protected" />
+   <fontcolor name="mod-public" />
+
+   <fontcolor name="mod-regexp" foreColor="E9C062" />
+    
+    <!--currently not used:-->
+<!--    <fontcolor name="mod-type-parameter-declaration" bgColor="lightGray"/>
+    <fontcolor name="mod-type-parameter-use" bgColor="green"/>
+    <fontcolor name="mod-undefined" foreColor="red"/>-->
+
+    <!--mark occurrences:-->
+   <fontcolor name="mark-occurrences" bgColor="ECEBA3"/>
+    
+    <!-- JsCommentTokenId categories -->
+   <fontcolor name="js-comment-tag" default="comment">
+      <font style="bold" />
+   </fontcolor>
+   <fontcolor name="html-tag" default="comment">
+      <font style="bold" />
+   </fontcolor>
+   <fontcolor name="left-curly" default="comment"/>
+   <fontcolor name="right-curly" default="comment"/>
+    
+</fontscolors>

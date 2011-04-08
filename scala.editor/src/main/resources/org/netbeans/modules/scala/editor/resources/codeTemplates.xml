@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE codetemplates PUBLIC "-//NetBeans//DTD Editor Code Templates settings 1.0//EN" "http://www.netbeans.org/dtds/EditorCodeTemplates-1_0.dtd">
+<codetemplates>
+  <codetemplate abbreviation="ex">
+    <code>extends </code>
+  </codetemplate>
+  <codetemplate abbreviation="re">
+    <code>return </code>
+  </codetemplate>
+  <codetemplate abbreviation="ma">
+    <code>match {</code>
+  </codetemplate>
+  <codetemplate abbreviation="pr">
+    <code>private </code>
+  </codetemplate>
+  <codetemplate abbreviation="ov">
+    <code>override </code>
+  </codetemplate>
+  <codetemplate abbreviation="sy">
+    <code>synchronized </code>
+  </codetemplate>
+
+  <codetemplate abbreviation="th">
+    <code>
+      <![CDATA[@throws(classOf[${cursor}])]]>
+    </code>
+  </codetemplate>
+
+  <codetemplate abbreviation="iff">
+    <code>
+      <![CDATA[if (${cursor}) else]]>
+    </code>
+  </codetemplate>
+
+  <codetemplate abbreviation="ca">
+    <code>
+      <![CDATA[case ${cursor} =>]]>
+    </code>
+  </codetemplate>
+
+  <codetemplate abbreviation="bcom">
+    <code>
+      <![CDATA[/*${selection}*/]]>
+    </code>
+  </codetemplate>
+
+  <codetemplate abbreviation="fcom">
+    <code>
+      <![CDATA[// <editor-fold defaultstate="collapsed" desc="${comment}">
+${selection}${cursor}// </editor-fold>
+]]>
+    </code>
+  </codetemplate>
+
+</codetemplates>

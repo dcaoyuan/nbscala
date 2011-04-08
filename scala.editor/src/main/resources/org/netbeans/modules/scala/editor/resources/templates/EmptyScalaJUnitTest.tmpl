@@ -1,0 +1,27 @@
+<#assign licenseFirst = "/*">
+<#assign licensePrefix = " * ">
+<#assign licenseLast = " */">
+<#include "../Licenses/license-${project.license}.txt">
+
+<#if package?? && package != "">
+package ${package}
+
+</#if>
+import org.junit._
+import Assert._
+
+class ${name} {
+
+    @Before
+    def setUp: Unit = {
+    }
+
+    @After
+    def tearDown: Unit = {
+    }
+
+    @Test
+    def example = {
+    }
+
+}

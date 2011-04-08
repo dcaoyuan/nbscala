@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<filesystem>
+    <folder name="Services">
+        <folder name="MIMEResolver">
+            <file name="Scala.xml" url="ScalaResolver.xml">
+                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editing.resources.Bundle"/>
+                <attr name="position" intvalue="95010"/>
+            </file>
+        </folder>
+    </folder>
+
+
+    <folder name="Editors">
+
+      <!-- Reference binding color themes are under module: main/defaults/src/org/netbeans/modules/defaults -->
+      <!-- color theme for nbeditor-settings-ColoringType -->
+        <folder name="FontsColors">
+            <folder name="Twilight">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="Twilight/editor.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="Twilight/defaults.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                    </file>
+                </folder>
+            </folder>
+            <folder name="EmacsStandard">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="EmacsStandard/defaults.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+
+        <folder name="text">
+            <folder name="x-scala">
+                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editing.Bundle"/>
+
+                <file name="language.instance">
+                    <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.editing.lexer.ScalaTokenId.language"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.api.lexer.Language"/>
+                </file>
+                
+                <!-- TODO - this should not be necessary; I'm doing this now to work around
+                    bugs in color initialization -->
+                <folder name="FontsColors">
+                    <folder name="NetBeans">
+                        <folder name="Defaults">
+                            <file name="coloring.xml" url="fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editing.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                    <folder name="Twilight">
+                        <folder name="Defaults">
+                            <file name="coloring.xml" url="Twilight/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editing.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                    <folder name="EmacsStandard">
+                        <folder name="Defaults">
+                            <file name="coloring.xml" url="EmacsStandard/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editing.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                </folder>
+            
+                <folder name="CodeTemplates">
+                    <folder name="Defaults">
+                        <file name="codetemplates.xml" url="codetemplates.xml">
+                            <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editing.Bundle"/>
+                        </file>
+                    </folder>
+                </folder>
+                <folder name="Keybindings">
+                    <folder name="NetBeans">
+                        <folder name="Defaults">
+                            <file name="org-netbeans-modules-scala-editing-keybindings.xml" url="DefaultKeyBindings.xml"/>
+                            <!--
+                            <file name="org-netbeans-modules-javascript-editing-keybindings-mac.xml" url="DefaultKeyBindings-Mac.xml">
+                                <attr name="nbeditor-settings-targetOS" stringvalue="OS_MAC"/>
+                            </file>
+                            -->
+                        </folder>
+                    </folder>
+                </folder>
+                <!--
+                <folder name="Popup">
+                    <file name="org-netbeans-modules-scala-editing-RunScriptAction.instance">
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.scala.editing.RunScriptAction"/>
+                        <attr name="position" intvalue="801"/>
+                    </file>
+                </folder>
+                -->
+                <folder name="Popup">
+                    <file name="org-netbeans-modules-scala-editing-actions-FixImportsAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/Scala/org-netbeans-modules-scala-editing-actions-FixImportsAction.instance"/>
+                        <attr name="position" intvalue="801"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+
+    <folder name="Actions">
+        <folder name="Scala">
+            <file name="org-netbeans-modules-scala-editing-actions-FixImportsAction.instance">
+                <attr name="instanceClass" stringvalue="org.netbeans.modules.scala.editing.actions.FixImportsAction"/>
+            </file>
+        </folder>
+    </folder>
+
+    <folder name="OptionsDialog">
+        <folder name="PreviewExamples">
+            <folder name="text">
+                <file name="x-scala" url="ScalaExample.scala"/>
+            </folder>
+        </folder>
+
+        <file name="ScalaOptionsCategory.instance">
+            <attr name="instanceClass" stringvalue="org.netbeans.modules.scala.editing.options.ScalaOptionsCategory"/>
+            <attr name="position" intvalue="306"/>
+        </file>
+    </folder>
+
+    <folder name="org.netbeans.modules.scala">
+        <folder name="options">
+            <file name="Formatting.instance">
+                <attr name="position" intvalue="150"/>
+                <attr name="instanceClass" stringvalue="org.netbeans.modules.scala.editing.options.FormattingAdvancedOption"/>
+            </file>
+        </folder>
+    </folder>
+    
+    <folder name="CslPlugins">
+        <folder name="text">
+            <folder name="x-scala">
+                <file name="language.instance">
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.scala.editing.ScalaLanguage"/>
+                </file>
+                <file name="structure.instance">
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.scala.editing.ScalaStructureAnalyzer"/>
+                </file>
+            </folder>
+        </folder>
+    </folder>
+
+    <folder name="Loaders">
+        <folder name="text">
+            <folder name="x-scala">
+                <attr name="SystemFileSystem.icon" urlvalue="nbresloc:/org/netbeans/modules/scala/editing/resources/scala16x16.png"/>
+                <attr name="iconBase" stringvalue="org/netbeans/modules/scala/editing/resources/scala16x16.png"/>
+                <folder name="Actions">
+                    <file name="CopyAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-CopyAction.instance"/>
+                        <attr name="position" intvalue="400"/>
+                    </file>
+                    <file name="CutAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-CutAction.instance"/>
+                        <attr name="position" intvalue="300"/>
+                    </file>
+                    <file name="DeleteAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-DeleteAction.instance"/>
+                        <attr name="position" intvalue="800"/>
+                    </file>
+                    <file name="FileSystemAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/System/org-openide-actions-FileSystemAction.instance"/>
+                        <attr name="position" intvalue="1300"/>
+                    </file>
+                    <file name="NewAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/System/org-openide-actions-NewAction.instance"/>
+                        <attr name="position" intvalue="700"/>
+                    </file>
+                    <file name="OpenAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/System/org-openide-actions-OpenAction.instance"/>
+                        <attr name="position" intvalue="100"/>
+                    </file>
+                    <file name="PasteAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-PasteAction.instance"/>
+                        <attr name="position" intvalue="500"/>
+                    </file>
+                    <file name="PropertiesAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/System/org-openide-actions-PropertiesAction.instance"/>
+                        <attr name="position" intvalue="1600"/>
+                    </file>
+                    <file name="RenameAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/System/org-openide-actions-RenameAction.instance"/>
+                        <attr name="position" intvalue="900"/>
+                    </file>
+                    <file name="SaveAsTemplateAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/System/org-openide-actions-SaveAsTemplateAction.instance"/>
+                        <attr name="position" intvalue="1100"/>
+                    </file>
+                    <file name="Separator1.instance">
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr name="position" intvalue="200"/>
+                    </file>
+                    <file name="Separator2.instance">
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr name="position" intvalue="600"/>
+                    </file>
+                    <file name="Separator3.instance">
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr name="position" intvalue="1000"/>
+                    </file>
+                    <file name="Separator4.instance">
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr name="position" intvalue="1200"/>
+                    </file>
+                    <file name="Separator5.instance">
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr name="position" intvalue="1400"/>
+                    </file>
+                    <file name="ToolsAction.shadow">
+                        <attr name="originalFile" stringvalue="Actions/System/org-openide-actions-ToolsAction.instance"/>
+                        <attr name="position" intvalue="1500"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+
+    <!--
+    <folder name="Actions">
+        <folder name="Edit">
+            <file name="org-netbeans-modules-javascript-editing-ReflowParagraphAction.instance">
+                <attr name="instanceClass" stringvalue="org.netbeans.modules.javascript.editing.ReflowParagraphAction"/>
+            </file>
+        </folder>
+    </folder>
+    -->
+    <!--
+    <folder name="Templates">
+        <folder name="Other">
+            <file name="javascript.js" url="jstemplate.js">
+                <attr name="position" intvalue="400"/>
+                <attr name="template" boolvalue="true"/>
+                <attr name="javax.script.ScriptEngine" stringvalue="freemarker"/>
+                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.javascript.editing.Bundle"/>
+                <attr name="templateCategory" stringvalue="simple-files"/>
+                <attr name="templateWizardURL" urlvalue="nbresloc:/org/netbeans/modules/javascript/editing/javascript.html"/>
+            </file>
+            <file name="json.json" url="jsontemplate.json">
+                <attr name="position" intvalue="450"/>
+                <attr name="template" boolvalue="true"/>
+                <attr name="javax.script.ScriptEngine" stringvalue="freemarker"/>
+                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.javascript.editing.Bundle"/>
+                <attr name="templateCategory" stringvalue="simple-files"/>
+                <attr name="templateWizardURL" urlvalue="nbresloc:/org/netbeans/modules/javascript/editing/json.html"/>
+            </file>
+        </folder>
+        <folder name="JSP_Servlet">
+            <file name="javascript.shadow">
+                <attr name="originalFile" stringvalue="Templates/Other/javascript.js"/>
+                <attr name="position" intvalue="700"/>
+                <attr name="templateCategory" stringvalue="web-types"/>
+            </file>
+            <file name="json.shadow">
+                <attr name="originalFile" stringvalue="Templates/Other/json.json"/>
+                <attr name="position" intvalue="750"/>
+                <attr name="templateCategory" stringvalue="web-types"/>
+            </file>
+        </folder>
+        <folder name="Ruby">
+            <file name="javascript.shadow">
+                <attr name="originalFile" stringvalue="Templates/Other/javascript.js"/>
+                <attr name="position" intvalue="703"/>
+                <attr name="templateCategory" stringvalue="ruby"/>
+            </file>
+            <file name="json.shadow">
+                <attr name="originalFile" stringvalue="Templates/Other/json.json"/>
+                <attr name="position" intvalue="750"/>
+                <attr name="templateCategory" stringvalue="ruby"/>
+            </file>
+        </folder>
+    </folder>
+    -->
+</filesystem>

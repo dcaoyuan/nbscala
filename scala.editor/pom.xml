@@ -205,8 +205,23 @@
             <version>${netbeans.version}</version>
         </dependency>
         
-        <!-- transitive dependencies (scala compiler needs explicit deeply dependent classes) -->
-        
+        <!-- transitive dependencies (scalac will check class dependencies deeply) -->
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-parsing-lucene</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-editor-codetemplates</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId> org-netbeans-modules-editor-errorstripe</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+
         <!-- subproject dependencies -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Services">
+        <folder name="Hidden">
+            <folder name="PathRecognizers">
+                <file name="org-netbeans-modules-scala-editor-ScalaLanguage.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr methodvalue="org.netbeans.modules.parsing.impl.indexing.DefaultPathRecognizer.createInstance" name="instanceCreate"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.modules.parsing.spi.indexing.PathRecognizer"/>
+                    <attr name="sourcePathIds" stringvalue="scala/classpath/source"/>
+                    <attr name="libraryPathIds" stringvalue="scala/classpath/boot"/>
+                    <attr name="mimeTypes" stringvalue="text/x-scala"/>
+                </file>
+            </folder>
+        </folder>
+    </folder>
+    <folder name="CslPlugins">
+        <folder name="text">
+            <folder name="x-scala">
+                <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                <attr intvalue="2" name="genver"/>
+                <file name="language.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.scala.editor.ScalaLanguage"/>
+                </file>
+            </folder>
+        </folder>
+    </folder>
+    <folder name="Editors">
+        <folder name="text">
+            <folder name="x-scala">
+                <file name="org-netbeans-modules-csl-core-TLIndexerFactory.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.core.TLIndexerFactory"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.modules.parsing.spi.indexing.EmbeddingIndexerFactory"/>
+                </file>
+                <file name="org-netbeans-modules-csl-core-CslEditorKit-createEditorKitInstance.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr methodvalue="org.netbeans.modules.csl.core.CslEditorKit.createEditorKitInstance" name="instanceCreate"/>
+                    <attr name="instanceOf" stringvalue="javax.swing.text.EditorKit"/>
+                </file>
+                <file name="org-netbeans-modules-csl-core-CslEditorKit-createLexerLanguageInstance.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr methodvalue="org.netbeans.modules.csl.core.CslEditorKit.createLexerLanguageInstance" name="instanceCreate"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.api.lexer.Language"/>
+                </file>
+                <file name="org-netbeans-modules-csl-core-GsfParserFactory-create.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr methodvalue="org.netbeans.modules.csl.core.GsfParserFactory.create" name="instanceCreate"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.modules.parsing.spi.ParserFactory"/>
+                </file>
+                <folder name="CompletionProviders">
+                    <file name="org-netbeans-lib-editor-codetemplates-CodeTemplateCompletionProvider.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.lib.editor.codetemplates.CodeTemplateCompletionProvider"/>
+                    </file>
+                    <file name="org-netbeans-modules-csl-editor-completion-GsfCompletionProvider.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.editor.completion.GsfCompletionProvider"/>
+                    </file>
+                </folder>
+                <folder name="SideBar">
+                    <file name="org-netbeans-modules-csl-editor-GsfCodeFoldingSideBarFactory.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.editor.GsfCodeFoldingSideBarFactory"/>
+                        <attr intvalue="1200" name="position"/>
+                    </file>
+                </folder>
+                <folder name="FoldManager">
+                    <file name="org-netbeans-modules-csl-editor-fold-GsfFoldManagerFactory.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.editor.fold.GsfFoldManagerFactory"/>
+                    </file>
+                </folder>
+                <folder name="CodeTemplateProcessorFactories">
+                    <file name="org-netbeans-modules-csl-editor-codetemplates-GsfCodeTemplateProcessor$Factory.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.editor.codetemplates.GsfCodeTemplateProcessor$Factory"/>
+                    </file>
+                </folder>
+                <folder name="CodeTemplateFilterFactories">
+                    <file name="org-netbeans-modules-csl-editor-codetemplates-GsfCodeTemplateFilter$Factory.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.editor.codetemplates.GsfCodeTemplateFilter$Factory"/>
+                    </file>
+                </folder>
+                <folder name="HyperlinkProviders">
+                    <file name="org-netbeans-modules-csl-editor-hyperlink-GsfHyperlinkProvider.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.editor.hyperlink.GsfHyperlinkProvider"/>
+                        <attr name="instanceOf" stringvalue="org.netbeans.lib.editor.hyperlink.spi.HyperlinkProviderExt"/>
+                    </file>
+                </folder>
+                <file name="org-netbeans-modules-csl-editor-semantic-HighlightsLayerFactoryImpl.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.editor.semantic.HighlightsLayerFactoryImpl"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.spi.editor.highlighting.HighlightsLayerFactory"/>
+                </file>
+                <folder name="UpToDateStatusProvider">
+                    <file name="org-netbeans-modules-csl-hints-GsfUpToDateStateProviderFactory.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.hints.GsfUpToDateStateProviderFactory"/>
+                        <attr name="instanceOf" stringvalue="org.netbeans.spi.editor.errorstripe.UpToDateStatusProviderFactory"/>
+                    </file>
+                    <file name="org-netbeans-modules-csl-editor-semantic-OccurrencesMarkProviderCreator.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.editor.semantic.OccurrencesMarkProviderCreator"/>
+                        <attr name="instanceOf" stringvalue="org.netbeans.modules.editor.errorstripe.privatespi.MarkProviderCreator"/>
+                    </file>
+                </folder>
+                <folder name="Popup">
+                    <folder name="goto">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr intvalue="500" name="position"/>
+                        <attr bundlevalue="org.netbeans.modules.csl.core.Bundle#generate-goto-popup" name="displayName"/>
+                        <file name="goto-declaration">
+                            <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                            <attr intvalue="500" name="position"/>
+                        </file>
+                        <file name="goto">
+                            <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                            <attr intvalue="600" name="position"/>
+                        </file>
+                    </folder>
+                    <file name="SeparatorBeforeCut.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr intvalue="1200" name="position"/>
+                    </file>
+                    <file name="format">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr intvalue="750" name="position"/>
+                    </file>
+                    <file name="SeparatorAfterFormat.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr intvalue="780" name="position"/>
+                    </file>
+                </folder>
+                <folder name="Toolbars">
+                    <folder name="Default">
+                        <file name="Separator-before-comment.instance">
+                            <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                            <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                            <attr intvalue="30000" name="position"/>
+                        </file>
+                        <file name="comment">
+                            <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                            <attr intvalue="30100" name="position"/>
+                        </file>
+                        <file name="uncomment">
+                            <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                            <attr intvalue="30200" name="position"/>
+                        </file>
+                    </folder>
+                </folder>
+                <file name="org-netbeans-modules-csl-core-GsfReformatTaskFactory.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.core.GsfReformatTaskFactory"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.modules.editor.indent.spi.ReformatTask$Factory"/>
+                </file>
+                <file name="org-netbeans-modules-csl-core-GsfIndentTaskFactory.instance">
+                    <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.core.GsfIndentTaskFactory"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.modules.editor.indent.spi.IndentTask$Factory"/>
+                </file>
+            </folder>
+        </folder>
+    </folder>
+    <folder name="Navigator">
+        <folder name="Panels">
+            <folder name="text">
+                <folder name="x-scala">
+                    <file name="org-netbeans-modules-csl-navigation-ClassMemberPanel.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.navigation.ClassMemberPanel"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+    <folder name="Loaders">
+        <folder name="text">
+            <folder name="x-scala">
+                <folder name="Factories">
+                    <file name="org-netbeans-modules-csl-core-GsfDataLoader.instance">
+                        <!--org.netbeans.modules.scala.editor.ScalaLanguage-->
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.core.GsfDataLoader"/>
+                        <attr intvalue="89998" name="position"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>
