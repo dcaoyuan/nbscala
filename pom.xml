@@ -47,7 +47,7 @@
         <netbeans.version>RELEASE70-BETA2</netbeans.version>
         <deploy.version>snapshots</deploy.version>
         
-        <!-- modules version -->
+        <!-- module versions -->
         <libs.scala.version>2.9</libs.scala.version>
         <libs.xtc.version>1.15</libs.xtc.version>
         <languages.execution.version>0.11</languages.execution.version>
@@ -58,6 +58,7 @@
         <scala.console.version>0.11</scala.console.version>
         <scala.platform.version>0.12</scala.platform.version>
         <scala.stdplatform.version>0.12</scala.stdplatform.version>
+        <scala.project.version>1.5</scala.project.version>
     </properties>
 
     <repositories>
@@ -177,7 +178,7 @@
                         <jvmArgs>
                             <jvmArg>-Xms64m</jvmArg>
                             <jvmArg>-Xmx512m</jvmArg>
-                            <jvmArg>-Xss64m</jvmArg> <!-- avoid StackOverFlowError -->
+                            <jvmArg>-Xss64m</jvmArg> <!-- to avoid StackOverFlowError -->
                         </jvmArgs>
                         <scalaVersion>${scala.version}</scalaVersion>
                         <args>
@@ -212,7 +213,7 @@
                 <configuration>
                     <descriptor>src/main/nbm/module.xml</descriptor>
                     <cluster>scala</cluster>
-                    <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'run-ide' find an executable nb -->
+                    <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'run-ide' find an executable nb, set it on your maven setting.xml -->
                 </configuration>
             </plugin>
         </plugins>
@@ -235,6 +236,7 @@
         <module>scala.debugger</module>
         <module>scala.platform</module>
         <module>scala.stdplatform</module>
+        <module>scala.project</module>
     </modules>
 
 </project>

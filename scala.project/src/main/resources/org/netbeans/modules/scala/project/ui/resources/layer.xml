@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+Copyright 1997-2007 Sun Microsystems, Inc. All rights reserved.
+
+
+The contents of this file are subject to the terms of either the GNU
+General Public License Version 2 only ("GPL") or the Common
+Development and Distribution License("CDDL") (collectively, the
+"License"). You may not use this file except in compliance with the
+License. You can obtain a copy of the License at
+http://www.netbeans.org/cddl-gplv2.html
+or nbbuild/licenses/CDDL-GPL-2-CP. See the License for the
+specific language governing permissions and limitations under the
+License.  When distributing the software, include this License Header
+Notice in each file and include the License file at
+nbbuild/licenses/CDDL-GPL-2-CP.  Sun designates this
+particular file as subject to the "Classpath" exception as provided
+by Sun in the GPL Version 2 section of the License file that
+accompanied this code. If applicable, add the following below the
+License Header, with the fields enclosed by brackets [] replaced by
+your own identifying information:
+"Portions Copyrighted [year] [name of copyright owner]"
+
+Contributor(s):
+
+The Original Software is NetBeans. The Initial Developer of the Original
+Software is Sun Microsystems, Inc. Portions Copyright 1997-2006 Sun
+Microsystems, Inc. All Rights Reserved.
+
+If you wish your version of this file to be governed by only the CDDL
+or only the GPL Version 2, indicate your decision by adding
+"[Contributor] elects to include this software in this distribution
+under the [CDDL or GPL Version 2] license." If you do not indicate a
+single choice of license, a recipient has the option to distribute
+your version of this file under either the CDDL, the GPL Version 2 or
+to extend the choice of license to its licensees as provided above.
+However, if you add GPL Version 2 code and therefore, elected the GPL
+Version 2 license, then the option applies only if the new code is
+made subject to such option by the copyright holder.
+-->
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<filesystem>
+    
+    <folder name="Loaders">
+        <folder name="text">
+            <folder name="x-scala">
+                <folder name="Actions">
+                    <file name="scala-project-separator-1.instance">
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr name="position" intvalue="530"/>
+                        <attr name="misplaced.action.allowed" boolvalue="true"/>
+                    </file>
+                    <file name="RunFile.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ScalaProjectModule.run"/>
+                        <attr name="position" intvalue="550"/>
+                        <attr name="misplaced.action.allowed" boolvalue="true"/>
+                    </file>
+                    <file name="DebugFile.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ScalaProjectModule.debug"/>
+                        <attr name="position" intvalue="560"/>
+                        <attr name="misplaced.action.allowed" boolvalue="true"/>
+                    </file>
+                    <file name="DebugTestFile.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ScalaProjectModule.debugTest"/>
+                        <attr name="position" intvalue="570"/>
+                        <attr name="misplaced.action.allowed" boolvalue="true"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+    
+    <folder name="Templates">
+        <folder name="Project">
+
+            <folder name="Scala">
+                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.project.ui.wizards.Bundle"/>
+                <attr name="instantiatingWizardURL" urlvalue="nbresloc:/org/netbeans/modules/scala/project/ui/resources/desktop.html"/>
+
+                <attr name="position" intvalue="730"/>
+                <file name="emptyScala.xml">
+                    <attr name="position" intvalue="100"/>
+                    <attr name="template" boolvalue="true"/>
+                    <attr name="instantiatingIterator" newvalue="org.netbeans.modules.scala.project.ui.wizards.NewJ2SEProjectWizardIterator"/>
+                    <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.project.ui.wizards.Bundle"/>
+                    <attr name="SystemFileSystem.icon" urlvalue="nbresloc:/org/netbeans/modules/scala/project/ui/resources/scalaProject.png"/>
+                    <attr name="instantiatingWizardURL" urlvalue="nbresloc:/org/netbeans/modules/scala/project/ui/resources/emptyProject.html"/>
+                </file>
+        
+                
+
+                <file name="emptyScalalibrary.xml">
+                    <attr name="position" intvalue="200"/>
+                    <attr name="template" boolvalue="true"/>
+                    <attr name="instantiatingIterator" methodvalue="org.netbeans.modules.scala.project.ui.wizards.NewJ2SEProjectWizardIterator.library"/>
+                    <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.project.ui.wizards.Bundle"/>
+                    <attr name="SystemFileSystem.icon" urlvalue="nbresloc:/org/netbeans/modules/scala/project/ui/resources/scalaProject.png"/>
+                    <attr name="instantiatingWizardURL" urlvalue="nbresloc:/org/netbeans/modules/scala/project/ui/resources/emptyLibrary.html"/>
+                </file>                
+
+                
+
+                <file name="existingScala.xml">
+                    <attr name="position" intvalue="300"/>
+                    <attr name="template" boolvalue="true"/>
+                    <attr name="templateWizardIterator" methodvalue="org.netbeans.modules.scala.project.ui.wizards.NewJ2SEProjectWizardIterator.existing"/>
+                    <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.project.ui.wizards.Bundle"/>
+                    <attr name="SystemFileSystem.icon" urlvalue="nbresloc:/org/netbeans/modules/scala/project/ui/resources/scalaProject.png"/>
+                    <attr name="instantiatingWizardURL" urlvalue="nbresloc:/org/netbeans/modules/scala/project/ui/resources/existingProject.html"/>
+                </file>
+
+            </folder>
+        </folder>
+    </folder>
+
+    <!--
+    <folder name="org-netbeans-api-project-libraries">
+        <folder name="Libraries">
+            <file name="CopyLibs.xml" url="CopyLibs.xml"/>
+        </folder>
+    </folder>
+    -->
+    <folder name="Projects">
+        <folder name="org-netbeans-modules-scala-project">
+            <folder name="Customizer">
+                <file name="Sources.instance">
+                    <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ui.customizer.J2SECompositePanelProvider.createSources"/>
+                    <attr name="position" intvalue="100"/>
+                </file>
+                <file name="Libraries.instance">
+                    <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ui.customizer.J2SECompositePanelProvider.createLibraries"/>
+                    <attr name="position" intvalue="200"/>
+                </file>
+                <folder name="BuildCategory">
+                    <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.project.ui.customizer.Bundle"/>
+                    <attr name="position" intvalue="300"/>
+                    <file name="Build.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ui.customizer.J2SECompositePanelProvider.createBuild"/>
+                        <attr name="position" intvalue="100"/>
+                    </file>
+                    <file name="Jar.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ui.customizer.J2SECompositePanelProvider.createJar"/>
+                        <attr name="position" intvalue="200"/>
+                    </file>
+                    <file name="Javadoc.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ui.customizer.J2SECompositePanelProvider.createJavadoc"/>
+                        <attr name="position" intvalue="300"/>
+                    </file>
+                </folder>
+                <file name="Run.instance">
+                    <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ui.customizer.J2SECompositePanelProvider.createRun"/>
+                    <attr name="position" intvalue="400"/>
+                </file>
+                <folder name="Application">
+                    <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.project.ui.customizer.Bundle"/>
+                    <attr name="position" intvalue="500"/>
+                    <file name="Self.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ui.customizer.J2SECompositePanelProvider.createApplication"/>
+                        <attr name="position" intvalue="0"/>
+                    </file>
+                </folder>
+                <file name="Formatting.instance">
+                    <attr name="instanceOf" stringvalue="org.netbeans.spi.project.ui.support.ProjectCustomizer$CompositeCategoryProvider"/>
+                    <attr name="instanceCreate" methodvalue="org.netbeans.modules.editor.indent.project.api.Customizers.createFormattingCategoryProvider"/>
+                    <attr name="allowedMimeTypes" stringvalue="text/x-scala"/>
+                    <attr name="position" intvalue="1000"/>
+                </file>
+
+            </folder>
+
+            <!-- register JavaType source node factory here, since this factory class can be shared by other project, it won't be registered by @NodeFactory.Registration -->
+            <folder name="Nodes">
+                <file name="org-netbeans-modules-java-api-common-project-ui-JavaSourceNodeFactory.instance">
+                    <attr name="position" intvalue="200"/>
+                </file>
+            </folder>
+
+            <folder name="Lookup"/>
+            
+        </folder>
+    </folder>
+</filesystem>
