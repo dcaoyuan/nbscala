@@ -51,6 +51,8 @@
         <libs.scala.version>2.9</libs.scala.version>
         <libs.xtc.version>1.15</libs.xtc.version>
         <languages.execution.version>0.11</languages.execution.version>
+        <scala.debugger.version>0.13</scala.debugger.version>
+        <scala.debugger.projects.version>0.17</scala.debugger.projects.version>
         <scala.core.version>0.4.0</scala.core.version>
         <scala.editor.version>0.4.0</scala.editor.version>
         <scala.console.version>0.11</scala.console.version>
@@ -227,6 +229,8 @@
         <module>scala.core</module>
         <module>scala.editor</module>
         <module>scala.console</module>
+        <module>scala.debugger.projects</module>
+        <module>scala.debugger</module>
     </modules>
 
 </project>
