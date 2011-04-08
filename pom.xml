@@ -46,6 +46,12 @@
         <scala.version>2.8.1</scala.version>
         <netbeans.version>RELEASE70-BETA2</netbeans.version>
         <deploy.version>snapshots</deploy.version>
+        
+        <!-- modules version -->
+        <libs.scala.version>2.9</libs.scala.version>
+        <libs.xtc.version>1.15</libs.xtc.version>
+        <languages.execution.version>0.11</languages.execution.version>
+        <scala.core.version>0.4.0</scala.core.version>
     </properties>
 
     <repositories>

@@ -8,10 +8,10 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>xtc</artifactId>
+    <artifactId>libs.xtc</artifactId>
     <packaging>nbm</packaging>
-    <version>1.15</version>
-    <name>xtc</name>
+    <version>${libs.xtc.version}</version>
+    <name>libs.xtc</name>
 
     <build>
         <plugins>

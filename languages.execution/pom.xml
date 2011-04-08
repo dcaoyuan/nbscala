@@ -10,7 +10,7 @@
 
     <artifactId>org-netbeans-modules-languages-execution</artifactId>
     <packaging>nbm</packaging>
-    <version>0.11</version>
+    <version>${languages.execution.version}</version>
     <name>org-netbeans-modules-languages-execution</name>
 
     <dependencies>
