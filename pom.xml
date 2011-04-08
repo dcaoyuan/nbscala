@@ -59,6 +59,7 @@
         <scala.platform.version>0.12</scala.platform.version>
         <scala.stdplatform.version>0.12</scala.stdplatform.version>
         <scala.project.version>1.5</scala.project.version>
+        <scala.refactoring.version>0.5</scala.refactoring.version>
     </properties>
 
     <repositories>
@@ -237,6 +238,7 @@
         <module>scala.platform</module>
         <module>scala.stdplatform</module>
         <module>scala.project</module>
+        <module>scala.refactoring</module>
     </modules>
 
 </project>
