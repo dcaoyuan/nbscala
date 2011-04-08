@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Display-Category: Scala
+AutoUpdate-Show-In-Client: true
+OpenIDE-Module-Localizing-Bundle: org/netbeans/modules/scala/console/resources/Bundle.properties
+OpenIDE-Module-Layer: org/netbeans/modules/scala/console/resources/layer.xml
+

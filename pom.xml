@@ -53,6 +53,7 @@
         <languages.execution.version>0.11</languages.execution.version>
         <scala.core.version>0.4.0</scala.core.version>
         <scala.editor.version>0.4.0</scala.editor.version>
+        <scala.console.version>0.11</scala.console.version>
     </properties>
 
     <repositories>
@@ -225,6 +226,7 @@
         <module>languages.execution</module>
         <module>scala.core</module>
         <module>scala.editor</module>
+        <module>scala.console</module>
     </modules>
 
 </project>

@@ -9,9 +9,9 @@
     </parent>
 
     <artifactId>org-netbeans-libs-xtc</artifactId>
-    <packaging>nbm</packaging>
     <version>${libs.xtc.version}</version>
     <name>org-netbeans-libs-xtc</name>
+    <packaging>nbm</packaging>
 
     <build>
         <plugins>
