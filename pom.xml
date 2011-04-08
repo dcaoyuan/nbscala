@@ -8,7 +8,7 @@
     * Project description
     *
     **************************************************************************************************************** -->
-    <groupId>org.netbeans</groupId>
+    <groupId>org.netbeans.modules</groupId>
     <artifactId>nbscala</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
