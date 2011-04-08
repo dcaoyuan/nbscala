@@ -1,0 +1,270 @@
+/*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ * 
+ * Copyright 1997-2007 Sun Microsystems, Inc. All rights reserved.
+ * 
+ * The contents of this file are subject to the terms of either the GNU
+ * General Public License Version 2 only ("GPL") or the Common
+ * Development and Distribution License("CDDL") (collectively, the
+ * "License"). You may not use this file except in compliance with the
+ * License. You can obtain a copy of the License at
+ * http://www.netbeans.org/cddl-gplv2.html
+ * or nbbuild/licenses/CDDL-GPL-2-CP. See the License for the
+ * specific language governing permissions and limitations under the
+ * License.  When distributing the software, include this License Header
+ * Notice in each file and include the License file at
+ * nbbuild/licenses/CDDL-GPL-2-CP.  Sun designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Sun in the GPL Version 2 section of the License file that
+ * accompanied this code. If applicable, add the following below the
+ * License Header, with the fields enclosed by brackets [] replaced by
+ * your own identifying information:
+ * "Portions Copyrighted [year] [name of copyright owner]"
+ * 
+ * If you wish your version of this file to be governed by only the CDDL
+ * or only the GPL Version 2, indicate your decision by adding
+ * "[Contributor] elects to include this software in this distribution
+ * under the [CDDL or GPL Version 2] license." If you do not indicate a
+ * single choice of license, a recipient has the option to distribute
+ * your version of this file under either the CDDL, the GPL Version 2 or
+ * to extend the choice of license to its licensees as provided above.
+ * However, if you add GPL Version 2 code and therefore, elected the GPL
+ * Version 2 license, then the option applies only if the new code is
+ * made subject to such option by the copyright holder.
+ * 
+ * Contributor(s):
+ * 
+ * Portions Copyrighted 2008 Sun Microsystems, Inc.
+ */
+
+/*
+ * Definition of Scala lexical tokens.
+ * 
+ * @author Caoyuan Deng
+ */
+module org.netbeans.modules.scala.core.rats.Keyword;
+
+import org.netbeans.modules.scala.core.rats.Identifier;
+import org.netbeans.modules.scala.core.rats.Spacing;
+
+body {
+  static {
+    add(SCALA_KEYWORDS, new String[] {
+      "abstract",
+      "case",
+      "catch", 
+      "class", 
+      "def", 
+      "do", 
+      "else", 
+      "extends", 
+      "false", 
+      "final", 
+      "finally", 
+      "for", 
+      "forSome", 
+      "if", 
+      "implicit", 
+      "import", 
+      "lazy", 
+      "match", 
+      "new", 
+      "null", 
+      "object", 
+      "override", 
+      "package", 
+      "private", 
+      "protected", 
+      "requires", 
+      "return", 
+      "sealed",
+      "super",
+      "this",
+      "throw", 
+      "trait", 
+      "try", 
+      "true", 
+      "type", 
+      "val", 
+      "var", 
+      "while", 
+      "with", 
+      "yield", 
+      "_", 
+      ":", 
+      "=", 
+      "=>", 
+      "\u21D2",
+      "<-",
+      "\u2190",
+      "<:",
+      "<%",
+      ">:",
+      "#",
+      "@" 
+    });
+  }
+}
+
+option setOfString(SCALA_KEYWORDS);
+
+// ----- Keywords
+
+generic ThisKey  = "this" :key ;
+generic SuperKey = "super":key ;
+generic WildKey  = "_"    :key;
+
+/*
+ * The tokens that can terminate a statement are: literals, identifiers and the following
+ * delimiters and reserved words (means only following tokens cannot consumer following newline)
+ *   this null true false return type <xmlstart> _ 
+ *   ) ] }
+ * 
+ * The tokens that can begin a statement are all Scala tokens except the following delimiters
+ * and reserved words (means only following tokens can consumer preceding n+):
+ *   catch else extends finally forSome match requires with yield # _ = => <- <: <% >: : 
+ *   , . ; [ ) ] }
+ */
+String key =
+  SKIP_N "catch"    :keyword SKIP_TILL_N
+/ SKIP_N "else"     :keyword SKIP_TILL_N
+/ SKIP_N "extends"  :keyword SKIP_TILL_N
+/ SKIP_N "finally"  :keyword SKIP_TILL_N
+/ SKIP_N "forSome"  :keyword SKIP_TILL_N
+/ SKIP_N "match"    :keyword SKIP_TILL_N
+/ SKIP_N "requires" :keyword SKIP_TILL_N
+/ SKIP_N "with"     :keyword SKIP_TILL_N
+/ SKIP_N "yield"    :keyword SKIP_TILL_N
+/ SKIP_N "=>"       :keyword SKIP_TILL_N
+/ SKIP_N "\u21D2"   :keyword SKIP_TILL_N
+/ SKIP_N "<-"       :keyword SKIP_TILL_N
+/ SKIP_N "\u2190"   :keyword SKIP_TILL_N
+/ SKIP_N "<:"       :keyword SKIP_TILL_N
+/ SKIP_N "<%"       :keyword SKIP_TILL_N
+/ SKIP_N ">:"       :keyword SKIP_TILL_N
+/ SKIP_N "#"        :keyword SKIP_TILL_N
+/ SKIP_N "="        :keyword SKIP_TILL_N
+/ SKIP_N ":"        :keyword SKIP_TILL_N
+/ SKIP   "this"     :keyword 
+/ SKIP   "null"     :keyword 
+/ SKIP   "true"     :keyword 
+/ SKIP   "false"    :keyword 
+/ SKIP   "return"   :keyword 
+/ SKIP   "type"     :keyword 
+/ SKIP   "_"        :keyword 
+/ SKIP               keyword SKIP_TILL_N
+;
+
+generic Keyword =
+  "abstract"  :keyword @Abstract
+/ "case"      :keyword @Case
+/ "catch"     :keyword @Catch
+/ "class"     :keyword @Class
+/ "def"       :keyword @Def
+/ "do"        :keyword @Do
+/ "else"      :keyword @Else
+/ "extends"   :keyword @Extends
+/ "false"     :keyword @False
+/ "final"     :keyword @Final
+/ "finally"   :keyword @Finally
+/ "for"       :keyword @For
+/ "forSome"   :keyword @ForSome
+/ "if"        :keyword @If
+/ "implicit"  :keyword @Implicit
+/ "import"    :keyword @Import
+/ "lazy"      :keyword @Lazy
+/ "match"     :keyword @Match
+/ "new"       :keyword @New
+/ "null"      :keyword @Null
+/ "object"    :keyword @Object
+/ "override"  :keyword @Override
+/ "package"   :keyword @Package
+/ "private"   :keyword @Private
+/ "protected" :keyword @Protected
+/ "requires"  :keyword @Requires
+/ "return"    :keyword @Return
+/ "sealed"    :keyword @Sealed
+/ "super"     :keyword @Super
+/ "this"      :keyword @This
+/ "throw"     :keyword @Throw
+/ "trait"     :keyword @Trait
+/ "try"       :keyword @Try
+/ "true"      :keyword @True
+/ "type"      :keyword @Type
+/ "val"       :keyword @Val
+/ "var"       :keyword @Var
+/ "while"     :keyword @While
+/ "with"      :keyword @With
+/ "yield"     :keyword @Yield
+/ "_"         :keyword @Wild
+/ "=>"        :keyword @RArrow
+/ "\u21D2"    :keyword @RArrow
+/ "<-"        :keyword @LArrow
+/ "\u2190"    :keyword @LArrow
+/ "<:"        :keyword @UBound
+/ "<%"        :keyword @VBound
+/ ">:"        :keyword @LBound
+/ "="         :keyword @Eq
+/ ":"         :keyword @Colon
+/ "#"         :keyword @Pan
+/ "@"         :keyword @At 
+;
+
+
+String keyword =
+  !( ['] )
+  ( "abstract"  !( idrest )
+  / "case"      !( idrest )
+  / "catch"     !( idrest )
+  / "class"     !( idrest )
+  / "def"       !( idrest )
+  / "do"        !( idrest )
+  / "else"      !( idrest )
+  / "extends"   !( idrest )
+  / "false"     !( idrest )
+  / "final"     !( idrest )
+  / "finally"   !( idrest )
+  / "for"       !( idrest )
+  / "forSome"   !( idrest )
+  / "if"        !( idrest )
+  / "implicit"  !( idrest )
+  / "import"    !( idrest )
+  / "lazy"      !( idrest )
+  / "match"     !( idrest )
+  / "new"       !( idrest )
+  / "null"      !( idrest )
+  / "object"    !( idrest )
+  / "override"  !( idrest )
+  / "package"   !( idrest )
+  / "private"   !( idrest )
+  / "protected" !( idrest )
+  / "requires"  !( idrest )
+  / "return"    !( idrest )
+  / "sealed"    !( idrest )
+  / "super"     !( idrest )
+  / "this"      !( idrest )
+  / "throw"     !( idrest )
+  / "trait"     !( idrest )
+  / "try"       !( idrest )
+  / "true"      !( idrest )
+  / "type"      !( idrest )
+  / "val"       !( idrest )
+  / "var"       !( idrest )
+  / "while"     !( idrest )
+  / "with"      !( idrest )
+  / "yield"     !( idrest )
+  / "_"         !( idrest )
+  / "=>"        !( opchar )
+  / "\u21D2"    !( opchar )
+  / "<-"        !( opchar )
+  / "\u2190"    !( opchar )
+  / "<:"        !( opchar )
+  / "<%"        !( opchar )
+  / ">:"        !( opchar )
+  / "="         !( opchar )
+  / ":"         !( opchar )
+  / "#"         !( opchar )
+  / "@"         !( opchar )
+  )
+;
+

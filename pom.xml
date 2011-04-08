@@ -171,7 +171,7 @@
                         <jvmArgs>
                             <jvmArg>-Xms64m</jvmArg>
                             <jvmArg>-Xmx512m</jvmArg>
-                            <jvmArg>-Xss64m</jvmArg> <!-- Avoid StackOverFlowError -->
+                            <jvmArg>-Xss64m</jvmArg> <!-- avoid StackOverFlowError -->
                         </jvmArgs>
                         <scalaVersion>${scala.version}</scalaVersion>
                         <args>
@@ -206,7 +206,7 @@
                 <configuration>
                     <descriptor>src/main/nbm/module.xml</descriptor>
                     <cluster>scala</cluster>
-                    <netbeansInstallation>${nb.installation}</netbeansInstallation>
+                    <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'run-ide' find the an executable nb -->
                 </configuration>
             </plugin>
         </plugins>
@@ -222,6 +222,7 @@
         <module>libs.scala</module>
         <module>libs.xtc</module>
         <module>languages.execution</module>
+        <module>scala.core</module>
     </modules>
 
 </project>
