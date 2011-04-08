@@ -8,20 +8,30 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>org-netbeans-modules-scala-core</artifactId>
-    <version>${scala.core.version}</version>
-    <name>org-netbeans-modules-scala-core</name>
+    <artifactId>org-netbeans-modules-scala-editor</artifactId>
+    <version>${scala.editor.version}</version>
+    <name>org-netbeans-modules-scala-editor</name>
     <packaging>nbm</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-api-java-classpath</artifactId>    
+            <artifactId>org-jdesktop-layout</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-java-classpath</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-libs-javacapi</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-libs-lucene</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
@@ -37,6 +47,21 @@
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-editor</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-editor-bracesmatching</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-editor-indent</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-editor-indent-project</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
@@ -87,6 +112,11 @@
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-lexer</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-options-api</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
@@ -164,13 +194,18 @@
             <artifactId>org-openide-windows</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
-        
-        <!-- transitive dependencies (scala compiler needs explicit deeply dependent classes) -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-options-editor</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        
+        <!-- transitive dependencies (scala compiler needs explicit deeply dependent classes) -->
         
         <!-- subproject dependencies -->
         <dependency>
@@ -182,6 +217,11 @@
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-libs-xtc</artifactId>
             <version>${libs.xtc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-scala-core</artifactId>
+            <version>${scala.core.version}</version>
         </dependency>
         
     </dependencies>
@@ -202,13 +242,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publicPackages>
-                        <publicPackage>org.netbeans.api.language.util.lex</publicPackage>
-                        <publicPackage>org.netbeans.api.language.util.ast</publicPackage>
-                        <publicPackage>org.netbeans.api.language.util.text</publicPackage>
-                        <publicPackage>org.netbeans.modules.scala.core</publicPackage>
-                        <publicPackage>org.netbeans.modules.scala.core.ast</publicPackage>
-                        <publicPackage>org.netbeans.modules.scala.core.lexer</publicPackage>
-                        <publicPackage>org.netbeans.modules.scala.core.interactive</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

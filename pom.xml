@@ -52,6 +52,7 @@
         <libs.xtc.version>1.15</libs.xtc.version>
         <languages.execution.version>0.11</languages.execution.version>
         <scala.core.version>0.4.0</scala.core.version>
+        <scala.editor.version>0.4.0</scala.editor.version>
     </properties>
 
     <repositories>
@@ -206,7 +207,7 @@
                 <configuration>
                     <descriptor>src/main/nbm/module.xml</descriptor>
                     <cluster>scala</cluster>
-                    <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'run-ide' find the an executable nb -->
+                    <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'run-ide' find an executable nb -->
                 </configuration>
             </plugin>
         </plugins>
@@ -223,6 +224,7 @@
         <module>libs.xtc</module>
         <module>languages.execution</module>
         <module>scala.core</module>
+        <module>scala.editor</module>
     </modules>
 
 </project>

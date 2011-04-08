@@ -9,9 +9,9 @@
     </parent>
 
     <artifactId>org-netbeans-modules-languages-execution</artifactId>
-    <packaging>nbm</packaging>
     <version>${languages.execution.version}</version>
     <name>org-netbeans-modules-languages-execution</name>
+    <packaging>nbm</packaging>
 
     <dependencies>
         <dependency>

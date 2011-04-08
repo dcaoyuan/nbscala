@@ -8,10 +8,10 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>libs.xtc</artifactId>
+    <artifactId>org-netbeans-libs-xtc</artifactId>
     <packaging>nbm</packaging>
     <version>${libs.xtc.version}</version>
-    <name>libs.xtc</name>
+    <name>org-netbeans-libs-xtc</name>
 
     <build>
         <plugins>

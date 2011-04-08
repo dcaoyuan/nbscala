@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE settings PUBLIC "-//NetBeans//DTD Session settings 1.0//EN" "http://www.netbeans.org/dtds/sessionsettings-1_0.dtd">
+<settings version="1.0">
+    <module name="org.netbeans.modules.languages"/>
+    <instanceof class="java.io.Externalizable"/>
+    <instanceof class="org.openide.util.SharedClassObject"/>
+    <instanceof class="java.beans.beancontext.BeanContextProxy"/>
+    <instanceof class="java.io.Serializable"/>
+    <instanceof class="org.openide.options.SystemOption"/>
+    <instanceof class="org.netbeans.modules.editor.options.OptionSupport"/>
+    <instanceof class="org.netbeans.modules.editor.options.BaseOptions"/>
+    <instance class="org.netbeans.modules.languages.dataobject.LanguagesOptions" method="create"/>
+</settings>

@@ -10,8 +10,8 @@
 
     <artifactId>org-netbeans-libs-scala</artifactId>
     <version>${libs.scala.version}</version>
-    <packaging>nbm</packaging>
     <name>org-netbeans-libs-scala</name>
+    <packaging>nbm</packaging>
 
     <dependencies>
         <dependency>
