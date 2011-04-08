@@ -6,9 +6,9 @@ NetBeans Plugin for Scala
 * Maven 2.x (If you are using NetBeans 7.0, should change maven home to point to a 2.x version via [Options] -> [Miscellianeous] -> [Maven]) 
 * NetBeans 7.0
 
-# Setting nb.home propertity for maven
+# Setting nb.installation property for maven
 
-You should set 'nb.installtion' propertiy in your maven setting.xml (.m2/setting.xml) to point to an existed NetBeans installation home, for example:
+You should set 'nb.installtion' property in your maven setting.xml (.m2/setting.xml) to point to an existed NetBeans installation home, for example:
 
     <profiles>
         <profile>
