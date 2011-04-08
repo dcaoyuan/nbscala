@@ -200,7 +200,7 @@
                 <configuration>
                     <descriptor>src/main/nbm/module.xml</descriptor>
                     <cluster>scala</cluster>
-<!--                    <netbeansInstallation>${user.home}/myapps/netbeans-7</netbeansInstallation>-->
+                    <netbeansInstallation>${nb.home}</netbeansInstallation>
                 </configuration>
             </plugin>
         </plugins>
