@@ -56,6 +56,7 @@
         <scala.core.version>0.4.0</scala.core.version>
         <scala.editor.version>0.4.0</scala.editor.version>
         <scala.console.version>0.11</scala.console.version>
+        <scala.platform.version>0.12</scala.platform.version>
     </properties>
 
     <repositories>
@@ -231,6 +232,7 @@
         <module>scala.console</module>
         <module>scala.debugger.projects</module>
         <module>scala.debugger</module>
+        <module>scala.platform</module>
     </modules>
 
 </project>
