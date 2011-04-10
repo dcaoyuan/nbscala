@@ -117,7 +117,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publicPackages>
-                        <publicPackage>org-netbeans-modules-scala.stdplatform</publicPackage>
+                        <publicPackage>org.netbeans.modules.scala.stdplatform</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>
