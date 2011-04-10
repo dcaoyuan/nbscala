@@ -10,12 +10,11 @@
         <dependency>
             <id>org.netbeans.modules:org-netbeans-modules-parsing-lucene</id>
             <type>impl</type>
-            <explicitValue>org.netbeans.modules.parsing.lucene = 1</explicitValue>
+            <explicitValue>org.netbeans.modules.parsing.lucene = 201103280000</explicitValue>
         </dependency>
         <dependency>
             <id>org.netbeans.modules:org-netbeans-modules-java-preprocessorbridge</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.java.preprocessorbridge = 1</explicitValue>
+            <type>impl</type>
         </dependency>
     </dependencies> 
 </nbm>

@@ -9,13 +9,11 @@
     <dependencies>
         <dependency>
             <id>org.netbeans.modules:org-netbeans-modules-java-preprocessorbridge</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.java.preprocessorbridge = 1</explicitValue>
+            <type>impl</type>
         </dependency>
         <dependency>
             <id>org.netbeans.api:org-netbeans-modules-parsing-api</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.parsing.api = 6</explicitValue>
+            <type>impl</type>
         </dependency>
     </dependencies> 
 </nbm>
