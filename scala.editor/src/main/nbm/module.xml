@@ -8,34 +8,14 @@
     <!-- to resolve the references to friend modules or private classes -->
     <dependencies>
         <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-editor-settings-storage</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.editor.settings.storage = 1</explicitValue>
-        </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-options-keymap</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.options.keymap = 1</explicitValue>
-        </dependency>
-        <dependency>
-            <id>org.netbeans.api:org-netbeans-modules-parsing-api</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.parsing.api = 6</explicitValue>
-        </dependency>
-        <dependency>
             <id>org.netbeans.modules:org-netbeans-modules-parsing-lucene</id>
             <type>spec</type>
             <explicitValue>org.netbeans.modules.parsing.lucene = 1</explicitValue>
         </dependency>
         <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-masterfs</id>
+            <id>org.netbeans.api:org-netbeans-modules-parsing-api</id>
             <type>spec</type>
-            <explicitValue>org.netbeans.modules.masterfs = 1</explicitValue>
-        </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-libs-jna</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.libs.jna = 1</explicitValue>
+            <explicitValue>org.netbeans.modules.parsing.api = 6</explicitValue>
         </dependency>
         <dependency>
             <id>org.netbeans.api:org-netbeans-modules-csl-api</id>
