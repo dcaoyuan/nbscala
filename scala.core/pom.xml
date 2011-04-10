@@ -165,11 +165,12 @@
             <version>${netbeans.version}</version>
         </dependency>
         
-        <!-- scalac transitive dependencies (scalac will check class dependencies deeply) -->
+        <!-- scalac transitive dependencies (scalac will check class dependencies deeply): <scope>provided</scope> -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
             <version>${netbeans.version}</version>
+            <scope>provided</scope>
         </dependency>
         
        <!-- subproject dependencies -->
