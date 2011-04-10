@@ -180,7 +180,7 @@
             <version>${netbeans.version}</version>
         </dependency>
 
-        <!-- transitive dependencies (scalac will check class dependencies deeply) -->
+        <!-- scalac transitive dependencies (scalac will check class dependencies deeply) -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-parsing-lucene</artifactId>

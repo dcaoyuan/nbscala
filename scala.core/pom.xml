@@ -165,14 +165,14 @@
             <version>${netbeans.version}</version>
         </dependency>
         
-        <!-- transitive dependencies (scalac will check class dependencies deeply) -->
+        <!-- scalac transitive dependencies (scalac will check class dependencies deeply) -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
         
-        <!-- subproject dependencies -->
+       <!-- subproject dependencies -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-libs-scala</artifactId>
@@ -207,8 +207,10 @@
                         <publicPackage>org.netbeans.api.language.util.text</publicPackage>
                         <publicPackage>org.netbeans.modules.scala.core</publicPackage>
                         <publicPackage>org.netbeans.modules.scala.core.ast</publicPackage>
+                        <publicPackage>org.netbeans.modules.scala.core.element</publicPackage>
                         <publicPackage>org.netbeans.modules.scala.core.lexer</publicPackage>
                         <publicPackage>org.netbeans.modules.scala.core.interactive</publicPackage>
+                        <publicPackage>org.netbeans.modules.scala.core.rats</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

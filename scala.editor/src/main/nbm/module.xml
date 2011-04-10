@@ -42,10 +42,5 @@
             <type>spec</type>
             <explicitValue>org.netbeans.modules.csl.api = 1</explicitValue>
         </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-scala-core</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.scala.core = 1</explicitValue>
-        </dependency>
     </dependencies> 
 </nbm>

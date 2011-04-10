@@ -9,8 +9,8 @@
     <dependencies>
         <dependency>
             <id>org.netbeans.modules:org-netbeans-modules-parsing-lucene</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.parsing.lucene = 1</explicitValue>
+            <type>impl</type>
+<!--            <explicitValue>org.netbeans.modules.parsing.lucene = 1</explicitValue>-->
         </dependency>
         <dependency>
             <id>org.netbeans.modules:org-netbeans-modules-masterfs</id>
@@ -26,11 +26,6 @@
             <id>org.netbeans.modules:org-netbeans-modules-java-preprocessorbridge</id>
             <type>spec</type>
             <explicitValue>org.netbeans.modules.java.preprocessorbridge = 1</explicitValue>
-        </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-scala-core</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.scala.core = 1</explicitValue>
         </dependency>
     </dependencies> 
 </nbm>
