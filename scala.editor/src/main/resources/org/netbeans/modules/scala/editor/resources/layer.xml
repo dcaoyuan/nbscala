@@ -46,7 +46,7 @@
                 <folder name="BracesMatchers">
                     <file name="org-netbeans-modules-scala-editor-ScalaBracesMatcherFactory.instance">
                         <attr name="position" intvalue="0"/>
-                   </file>
+                    </file>
                 </folder>
 
                 <folder name="Preferences">
@@ -111,9 +111,9 @@
                 </folder>
                 
                 <!-- tell the parsing API that scala files should be handled by the java indexer -->
-                <!--file name="JavaIndexer.shadow">
+                <file name="JavaIndexer.shadow">
                     <attr name="originalFile" stringvalue="Editors/text/x-java/JavaIndexer.instance"/>
-                </file-->
+                </file>
                 
                 <folder name="Popup">
                     <file name="org-netbeans-modules-scala-editor-ui-actions-ResetGlobalAction.shadow">
@@ -166,11 +166,11 @@
             <folder name="Formatting">
                 <folder name="text">
                     <folder name="x-scala">
-                      <file name="Indents.instance">
-                          <attr name="instanceOf" stringvalue="org.netbeans.modules.options.editor.spi.PreferencesCustomizer$Factory"/>
-                          <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.editor.options.FmtTabsIndents.getController"/>
-                          <attr name="position" intvalue="100"/>
-                      </file>
+                        <file name="Indents.instance">
+                            <attr name="instanceOf" stringvalue="org.netbeans.modules.options.editor.spi.PreferencesCustomizer$Factory"/>
+                            <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.editor.options.FmtTabsIndents.getController"/>
+                            <attr name="position" intvalue="100"/>
+                        </file>
 
                     </folder>
                 </folder>

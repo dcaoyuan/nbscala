@@ -88,7 +88,7 @@ import scala.tools.nsc.symtab.Flags
  * @Note: don't use full class name `classOf[org.netbeans.modules.java.preprocessorbridge.spi.VirtualSourceProvider]`, here
  * instead, should use `classOf[VirtualSourceProvider]`, otherwise, lookup cannot find it. Why? don't know ...
  */
-//@org.openide.util.lookup.ServiceProvider(service = classOf[VirtualSourceProvider])
+@org.openide.util.lookup.ServiceProvider(service = classOf[VirtualSourceProvider])
 class ScalaVirtualSourceProvider extends VirtualSourceProvider {
   import ScalaVirtualSourceProvider._
 
