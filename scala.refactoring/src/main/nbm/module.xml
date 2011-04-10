@@ -10,17 +10,7 @@
         <dependency>
             <id>org.netbeans.modules:org-netbeans-modules-parsing-lucene</id>
             <type>impl</type>
-<!--            <explicitValue>org.netbeans.modules.parsing.lucene = 1</explicitValue>-->
-        </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-masterfs</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.masterfs = 1</explicitValue>
-        </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-libs-jna</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.libs.jna = 1</explicitValue>
+            <explicitValue>org.netbeans.modules.parsing.lucene = 1</explicitValue>
         </dependency>
         <dependency>
             <id>org.netbeans.modules:org-netbeans-modules-java-preprocessorbridge</id>

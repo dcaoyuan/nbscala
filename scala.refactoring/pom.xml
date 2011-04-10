@@ -187,6 +187,20 @@
             <version>${netbeans.version}</version>
         </dependency>
         
+        <!-- maven transitive dependencies -->
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-masterfs</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-jna</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- subproject dependencies -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
@@ -217,13 +231,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publicPackages>
-                        <publicPackage>org-netbeans-api-language.util.lex</publicPackage>
-                        <publicPackage>org-netbeans-api-language.util.ast</publicPackage>
-                        <publicPackage>org-netbeans-api-language.util.text</publicPackage>
-                        <publicPackage>org-netbeans-modules-scala.core</publicPackage>
-                        <publicPackage>org-netbeans-modules-scala.core.ast</publicPackage>
-                        <publicPackage>org-netbeans-modules-scala.core.lexer</publicPackage>
-                        <publicPackage>org-netbeans-modules-scala.core.interactive</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>
