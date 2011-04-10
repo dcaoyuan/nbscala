@@ -4,29 +4,4 @@
     <codeNameBase>org.netbeans.modules.scala.project/1</codeNameBase>
     <licenseName>CDDL-GPLV2</licenseName>
     <licenseFile>license.txt</licenseFile>
-    
-    <!-- to resolve the references to friend modules or private classes -->
-    <dependencies>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-junit</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.junit = 1</explicitValue>
-        </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-java-preprocessorbridge</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.java.preprocessorbridge = 1</explicitValue>
-        </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-gototest</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.gototest = 1</explicitValue>
-        </dependency>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-gsf-testrunner</id>
-            <type>spec</type>
-            <explicitValue>org.netbeans.modules.gsf.testrunner = 1</explicitValue>
-        </dependency>
-        
-    </dependencies>
 </nbm>

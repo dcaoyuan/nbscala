@@ -180,7 +180,32 @@
             <version>${netbeans.version}</version>
         </dependency>
 
-
+        <!-- maven transitive dependencies -->
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-junit</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-gototest</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-gsf-testrunner</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        
         <!-- subproject dependencies -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
