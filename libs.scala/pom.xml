@@ -65,7 +65,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
-                <extensions>true</extensions>
                 <configuration>
                     <publicPackages>
                         <publicPackage>ch.epfl.lamp.compiler.msil</publicPackage>
