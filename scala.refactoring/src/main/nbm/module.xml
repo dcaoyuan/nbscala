@@ -4,12 +4,4 @@
     <codeNameBase>org.netbeans.modules.scala.refactoring/1</codeNameBase>
     <licenseName>CDDL-GPLV2</licenseName>
     <licenseFile>license.txt</licenseFile>
-    
-    <!-- to resolve the references to friend modules or private classes -->
-    <dependencies>
-        <dependency>
-            <id>org.netbeans.modules:org-netbeans-modules-java-preprocessorbridge</id>
-            <type>impl</type>
-        </dependency>
-    </dependencies> 
 </nbm>

@@ -187,6 +187,12 @@
             <version>${netbeans.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>provided</scope>
+        </dependency>
         
         <!-- maven transitive dependencies: <scope>runtime</scope> -->
         <dependency>
