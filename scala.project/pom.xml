@@ -241,7 +241,7 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
-                        <publicPackage>org-netbeans-modules-scala.project.api</publicPackage>
+                        <publicPackage>org.netbeans.modules.scala.project.api</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>
