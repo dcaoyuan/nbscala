@@ -1,244 +1,129 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- ***************************************************************************************************************
-    *
-    * Project description
-    *
-    **************************************************************************************************************** -->
-    <groupId>org.netbeans.modules</groupId>
-    <artifactId>nbscala</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
-    <name>nbscala</name>
-    <url>http://blogtrader.net</url>
-    <description>NetBeans Plugins for Scala</description>
-    <organization>
-        <name>NetBeans</name>
-        <url>http://netbeans.org</url>
-    </organization>
-    
-    <developers>
-        <developer>
-            <id>dcaoyuan</id>
-            <name>Caoyuan Deng</name>
-            <email>dcaoyuan [at] gmail.com</email>
-            <url>http://blogtrader.net</url>
-            <timezone>+8</timezone>
-            <roles>
-                <role>BDFL</role>
-            </roles>
-        </developer>
-    </developers>
+    <parent>
+        <groupId>org.netbeans.modules</groupId>
+        <artifactId>nbscala</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
 
-    <licenses>
-        <license>
-            <name>CDDL-GPLV2</name>
-            <url>http://netbeans.org/cddl-gplv2.html</url>
-        </license>
-    </licenses>
+    <artifactId>org-netbeans-modules-scala-stdplatform</artifactId>
+    <version>${scala.stdplatform.version}</version>
+    <name>org-netbeans-modules-scala-stdplatform</name>
+    <packaging>nbm</packaging>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
-        <scala.version>2.8.1</scala.version>
-        <netbeans.version>RELEASE70-BETA2</netbeans.version>
-        <deploy.version>snapshots</deploy.version>
-        
-        <!-- module versions -->
-        <libs.scala.version>2.9</libs.scala.version>
-        <libs.xtc.version>1.15</libs.xtc.version>
-        <languages.execution.version>0.11</languages.execution.version>
-        <scala.debugger.version>0.13</scala.debugger.version>
-        <scala.debugger.projects.version>0.17</scala.debugger.projects.version>
-        <scala.core.version>0.4.0</scala.core.version>
-        <scala.editor.version>0.4.0</scala.editor.version>
-        <scala.console.version>0.11</scala.console.version>
-        <scala.platform.version>0.12</scala.platform.version>
-        <scala.stdplatform.version>0.12</scala.stdplatform.version>
-        <scala.project.version>1.5</scala.project.version>
-        <scala.refactoring.version>0.5</scala.refactoring.version>
-    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-java</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-java-classpath</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-progress</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-classfile</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-java-platform</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-project-ant</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-project-libraries</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-projectapi</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-awt</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-dialogs</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-filesystems</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-loaders</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-modules</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-nodes</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-lookup</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
 
-    <repositories>
-        <repository>
-            <id>netbeans</id>
-            <name>NetBeans Platform Maven Repository</name>
-            <url>http://bits.netbeans.org/maven2/</url>
-        </repository>
-    </repositories>
 
-    <!-- ***************************************************************************************************************
-    *
-    *
-    *
-    **************************************************************************************************************** -->
+        <!-- subproject dependencies -->
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-scala-platform</artifactId>
+            <version>${scala.platform.version}</version>
+        </dependency>
+
+    </dependencies>
+
     <build>
-        <!-- ***********************************************************************************************************
-        *
-        * We want reproducible builds, so all Maven plugins have explicit version numbers.
-        *
-        ************************************************************************************************************ -->
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.0.2</version>
-                    <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.5</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.2-beta-2</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.4.2</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.2</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-pmd-plugin</artifactId>
-                    <version>2.3</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>2.2</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <version>1.3</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>1.2.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.0-beta-8</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>2.3.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>cobertura-maven-plugin</artifactId>
-                    <version>2.2</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>findbugs-maven-plugin</artifactId>
-                    <version>2.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>1.3</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>maven-bundle-plugin</artifactId>
-                    <version>1.4.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.scala-tools</groupId>
-                    <artifactId>maven-scala-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <phase>process-resources</phase> <!-- to support mix java/scala -->
-                            <goals>
-                                <goal>add-source</goal> <!-- to support mix java/scala -->
-                                <goal>compile</goal>
-                                <goal>testCompile</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <jvmArgs>
-                            <jvmArg>-Xms64m</jvmArg>
-                            <jvmArg>-Xmx512m</jvmArg>
-                            <jvmArg>-Xss64m</jvmArg> <!-- to avoid StackOverFlowError -->
-                        </jvmArgs>
-                        <scalaVersion>${scala.version}</scalaVersion>
-                        <args>
-                            <arg>-target:jvm-1.5</arg>
-                            <arg>-make:transitivenocp</arg>
-                            <arg>-dependencyfile</arg>
-                            <arg>${project.build.directory}/.scala_dependencies</arg>
-                        </args>
-                    </configuration>
-                </plugin>
-
-            </plugins>
-        </pluginManagement>
-
-        <!-- ***********************************************************************************************************
-        *
-        *
-        *
-        ************************************************************************************************************ -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <useDefaultManifestFile>true</useDefaultManifestFile> <!-- to have the jar plugin pickup the nbm generated manifest -->
-                </configuration>
+                <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <descriptor>src/main/nbm/module.xml</descriptor>
-                    <cluster>scala</cluster>
-                    <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'run-ide' find an executable nb, set it on your maven setting.xml -->
+                    <publicPackages>
+                        <publicPackage>org-netbeans-modules-scala.stdplatform</publicPackage>
+                    </publicPackages>
                 </configuration>
             </plugin>
         </plugins>
-
     </build>
 
-    <!-- ***************************************************************************************************************
-    *
-    * Project modules
-    *
-    **************************************************************************************************************** -->
-    <modules>
-        <module>libs.scala</module>
-        <module>libs.xtc</module>
-        <module>languages.execution</module>
-        <module>scala.core</module>
-        <module>scala.editor</module>
-        <module>scala.console</module>
-        <module>scala.debugger.projects</module>
-        <module>scala.debugger</module>
-        <module>scala.platform</module>
-        <module>scala.stdplatform</module>
-        <module>scala.project</module>
-        <module>scala.refactoring</module>
-    </modules>
-
 </project>
+
+
