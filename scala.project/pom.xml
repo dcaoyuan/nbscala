@@ -180,7 +180,7 @@
             <version>${netbeans.version}</version>
         </dependency>
 
-        <!-- maven transitive dependencies -->
+        <!-- maven transitive dependencies: <scope>runtime</scope> -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-junit</artifactId>
