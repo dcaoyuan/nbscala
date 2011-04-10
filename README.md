@@ -23,3 +23,14 @@ You should set 'nb.installtion' property in your maven setting.xml (.m2/setting.
         <activeProfile>nb-installation</activeProfile>
     </activeProfiles>
 
+# Build all nbms
+
+    cd nbscala
+    mvn clean install
+
+# Generate auto-update site:
+    cd nbscala
+    mvn nbm:autoupdate
+
+the nbms and update site can be found at nbscala/target/netbeans_site
+
