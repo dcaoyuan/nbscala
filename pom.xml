@@ -229,7 +229,6 @@
     <modules>
         <module>libs.scala</module>
         <module>libs.xtc</module>
-        <module>languages.execution</module>
         <module>scala.core</module>
         <module>scala.editor</module>
         <module>scala.console</module>
