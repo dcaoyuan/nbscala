@@ -15,12 +15,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.netbeans</groupId>
+            <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.netbeans</groupId>
+            <groupId>org.scala-lang</groupId>
             <artifactId>scala-compiler</artifactId>
             <version>${scala.version}</version>
         </dependency>
@@ -40,7 +40,7 @@
                         <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
                         <configuration>
                             <file>${project.basedir}/lib/scala-library.jar</file>
-                            <groupId>org.netbeans</groupId>
+                            <groupId>org.scala-lang</groupId>
                             <artifactId>scala-library</artifactId>
                             <version>${scala.version}</version>
                             <packaging>jar</packaging>
@@ -54,7 +54,7 @@
                         <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
                         <configuration>
                             <file>${project.basedir}/lib/scala-compiler.jar</file>
-                            <groupId>org.netbeans</groupId>
+                            <groupId>org.scala-lang</groupId>
                             <artifactId>scala-compiler</artifactId>
                             <version>${scala.version}</version>
                             <packaging>jar</packaging>
