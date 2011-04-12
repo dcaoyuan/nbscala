@@ -8,7 +8,7 @@ NetBeans Plugin for Scala
 
 # Setting nb.installation property for maven
 
-You should set 'nb.installtion' property in your maven setting.xml (.m2/setting.xml) to point to an existed NetBeans installation home, for example:
+You should set 'nb.installtion' property in your maven settings.xml (.m2/settings.xml) to point to an existed NetBeans installation home, for example:
 
     <profiles>
         <profile>
