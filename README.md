@@ -25,6 +25,8 @@ You should set 'nb.installtion' property in your maven settings.xml (.m2/setting
 
 # Build all nbms
 
+Note: If you are using NetBeans 7.0 and build this project in NetBeans, you should change maven home to point to a 2.x version via [Options] -> [Miscellianeous] -> [Maven]
+
     cd nbscala
     mvn clean install
 
