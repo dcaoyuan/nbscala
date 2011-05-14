@@ -623,14 +623,12 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
     val pos = rangePos(pResult.srcFile, lexOffset, lexOffset, lexOffset)
 
     global.cancelSemantic(pos.source)
+    // * it seems CompleteHandle will always be called before other csl features (semantic, structure etc)
+    // * that's good. But then, we may need to reload source first:
+    global.resetUnitOf(pos.source)
+    
     val resp = new Response[List[Member]]
     try {
-      // * it seems CompleteHandle will always be called before other csl features (semantic, structure etc)
-      // * that's good. But then, we may need to reload source first:
-      val tmpResp = new Response[Unit]
-      global.askReload(List(pos.source), tmpResp)
-      tmpResp.get
-
       global.askScopeCompletion(pos, resp)
       resp.get match {
         case Left(members) =>
@@ -653,9 +651,7 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
       global.cancelSemantic(pos.source)
       // * it seems CompleteHandle will always be called before other csl features (semantic, structure etc)
       // * that's good. But then, we may need to reload source first:
-      val tmpResp = new Response[Unit]
-      global.askReload(List(pos.source), tmpResp)
-      tmpResp.get
+      global.resetUnitOf(pos.source)
       
       val resp = new Response[List[Member]]
       global.askTypeCompletion(pos, resp)

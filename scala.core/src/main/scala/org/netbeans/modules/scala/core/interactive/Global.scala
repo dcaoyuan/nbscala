@@ -20,6 +20,21 @@ import scala.tools.nsc.ast._
 class Global(_settings: Settings, _reporter: Reporter, projectName: String = "")
 extends scala.tools.nsc.interactive.Global(_settings, _reporter, projectName) {
   
+  // @see scala.tools.nsc.interactive.Global.reset(unit: RichCompilationUnit)
+  def resetUnitOf(source: SourceFile) {
+    onUnitOf(source){unit =>
+      unit.depends.clear()
+      unit.defined.clear()
+      unit.synthetics.clear()
+      unit.toCheck.clear()
+      unit.targetPos = NoPosition
+      unit.contexts.clear()
+      unit.problems.clear()
+      unit.body = EmptyTree
+      unit.status = NotLoaded
+    }
+  }
+
   final def recoveredType(tree: Tree): Option[Type] = {
     def findViaGet(atree: Tree) = qualToRecoveredType.get(atree) match {
       case None => qualToRecoveredType find {

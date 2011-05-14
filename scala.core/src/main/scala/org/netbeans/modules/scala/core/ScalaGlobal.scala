@@ -682,15 +682,15 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter) extends Global(_sett
     scheduler postWorkItem AskSemanticItem(source, response, th)
   }
 
-  private def getSemanticRoot(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) {
-    respond(response)(semanticRoot(source, th))
-  }
-
   private def semanticRoot(source: SourceFile, th: TokenHierarchy[_]): ScalaRootScope = {
     val start = System.currentTimeMillis
-    val root = scalaAstVisitor(unitOf(source), th)
-    log1.info("Visit took " + (System.currentTimeMillis - start) + "ms")
-    root
+    getUnitOf(source) match {
+      case Some(unit) => 
+        val root = scalaAstVisitor(unit, th)
+        log1.info("Visit took " + (System.currentTimeMillis - start) + "ms")
+        root
+      case None => ScalaRootScope.EMPTY
+    }
   }
 
   def cancelSemantic(source: SourceFile) {
