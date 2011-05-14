@@ -600,13 +600,13 @@ object ScalaGlobal {
   }
 }
 
-class ScalaGlobal(_settings: Settings, _reporter: Reporter) extends Global(_settings, _reporter)
-                                                               with ScalaItems
-                                                               with ScalaDfns
-                                                               with ScalaRefs
-                                                               with ScalaElements
-                                                               with JavaElements
-                                                               with ScalaUtils {
+class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String = "") extends Global(_settings, _reporter, projectName)
+                                                                                         with ScalaItems
+                                                                                         with ScalaDfns
+                                                                                         with ScalaRefs
+                                                                                         with ScalaElements
+                                                                                         with JavaElements
+                                                                                         with ScalaUtils {
   import ScalaGlobal._
 
   override def onlyPresentation = true
