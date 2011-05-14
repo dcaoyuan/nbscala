@@ -625,7 +625,13 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
     global.cancelSemantic(pos.source)
     val resp = new Response[List[Member]]
     try {
-      global.askScopeCompletion(pos, true, resp)
+      // * it seems CompleteHandle will always be called before other csl features (semantic, structure etc)
+      // * that's good. But then, we may need to reload source first:
+      val tmpResp = new Response[Unit]
+      global.askReload(List(pos.source), tmpResp)
+      tmpResp.get
+
+      global.askScopeCompletion(pos, resp)
       resp.get match {
         case Left(members) =>
           for (ScopeMember(sym, tpe, accessible, viaImport) <- members
@@ -644,11 +650,15 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
       val endOffset = offset + baseToken.length - 1
       val pos = rangePos(pResult.srcFile, offset, offset, endOffset)
 
+      global.cancelSemantic(pos.source)
       // * it seems CompleteHandle will always be called before other csl features (semantic, structure etc)
       // * that's good. But then, we may need to reload source first:
-      global.cancelSemantic(pos.source)
+      val tmpResp = new Response[Unit]
+      global.askReload(List(pos.source), tmpResp)
+      tmpResp.get
+      
       val resp = new Response[List[Member]]
-      global.askTypeCompletion(pos, true, resp)
+      global.askTypeCompletion(pos, resp)
       resp.get match {
         case Left(members) =>
           for (TypeMember(sym, tpe, accessible, inherited, viaView) <- members
@@ -666,36 +676,6 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
 
     // always return true ?
     true
-  }
-
-  @deprecated("For reference only")
-  def completeScopeImplicits(item: AstItem, proposals: java.util.List[CompletionProposal]): Boolean = {
-    val sym = item.symbol.asInstanceOf[Symbol]
-
-    // * use explict assigned `resultType` first
-    val resType = item.resultType match {
-      case null => getResultType(sym)
-      case x => x.asInstanceOf[Type]
-    }
-
-    if (resType == null) {
-      return false
-    }
-
-    val pos = new OffsetPosition(pResult.srcFile, item.idOffset(th))
-    try {
-      for (ScopeMember(sym, tpe, accessible, viaImport) <- global.scopeMembers(pos, true)
-           if sym.hasFlag(Flags.IMPLICIT) && tpe.paramTypes.size == 1 && tpe.paramTypes.head == resType;
-           member <- tpe.resultType.members 
-           if accessible && startsWith(member.nameString, prefix) && !member.isConstructor
-      ) {
-        createSymbolProposal(member) foreach {proposal =>
-          proposal.getElement.asInstanceOf[ScalaElement].isImplicit = true
-          proposals.add(proposal)
-        }
-      }
-      true
-    } catch {case ex => ScalaGlobal.resetLate(global, ex); false}
   }
 
   private def createSymbolProposal(sym: Symbol): Option[CompletionProposal] = {

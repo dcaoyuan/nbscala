@@ -386,7 +386,7 @@ object ScalaGlobal {
 
     val sources = ProjectUtils.getSources(project)
     val scalaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_SCALA)
-    val javaSgs  = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_JAVA)
+    val javaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_JAVA)
 
     logger.info((scalaSgs map (_.getRootFolder)).mkString("project's src group[ScalaType] dir: [", ", ", "]"))
     logger.info((javaSgs  map (_.getRootFolder)).mkString("project's src group[JavaType]  dir: [", ", ", "]"))
@@ -609,15 +609,20 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter) extends Global(_sett
                                                                with ScalaUtils {
   import ScalaGlobal._
 
+  override def onlyPresentation = true
+
+  override def logError(msg: String, t: Throwable): Unit = {}
+
+  private val log1 = Logger.getLogger(this.getClass.getName)
+  
   // * Inner object inside a class is not singleton, so it's safe for each instance of ScalaGlobal,
   // * but, is it thread safe? http://lampsvn.epfl.ch/trac/scala/ticket/1591
   private object scalaAstVisitor extends {
     val global: ScalaGlobal.this.type = ScalaGlobal.this
   } with ScalaAstVisitor
 
-  override def onlyPresentation = true
-
-  override def logError(msg: String, t: Throwable): Unit = {}
+  private var workingSource: Option[SourceFile] = None
+  private var semanticCancelled = false
 
   def askForReLoad(srcFos: List[FileObject]) : Unit = {
     val srcFiles = srcFos map {fo => getSourceFile(new PlainFile(FileUtil.toFile(fo)))}
@@ -639,12 +644,23 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter) extends Global(_sett
     }
   }
 
-  def askForSemantic(srcFile: SourceFile, forceReload: Boolean, th: TokenHierarchy[_]): ScalaRootScope = {
+  def askForSemantic(source: SourceFile, forceReload: Boolean, th: TokenHierarchy[_]): ScalaRootScope = {
+    workingSource = Some(source)
+    semanticCancelled = false
+
     qualToRecoveredType = Map()
 
     val resp = new Response[ScalaRootScope]
     try {
-      askSemantic(srcFile, forceReload, resp, th)
+      if (semanticCancelled) return ScalaRootScope.EMPTY
+      val typeResp = new Response[Tree]
+      askType(source, forceReload, typeResp)
+
+      if (semanticCancelled) return ScalaRootScope.EMPTY
+      typeResp.get
+
+      if (semanticCancelled) return ScalaRootScope.EMPTY
+      askSemantic(source, resp, th)
     } catch {
       case ex: AssertionError =>
         /**
@@ -657,46 +673,33 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter) extends Global(_sett
       case ex: Throwable => // just ignore all ex
     }
 
-    resp.get.left.toOption getOrElse ScalaRootScope.EMPTY
+    val res = resp.get.left.toOption getOrElse ScalaRootScope.EMPTY
+    workingSource = None
+    res
   }
 
-  def askSemantic(source: SourceFile, forceReload: Boolean, result: Response[ScalaRootScope], th: TokenHierarchy[_]) =
-    scheduler postWorkItem new WorkItem(List(source)) {
-      def apply() = getSemanticRoot(source, forceReload, result, th)
-      override def toString = "semantic"
-    }
-
-  def getSemanticRoot(source : SourceFile, forceReload: Boolean, result: Response[ScalaRootScope], th: TokenHierarchy[_]) {
-    respond(result)(semanticRoot(source, forceReload, th))
+  private def askSemantic(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) = {
+    scheduler postWorkItem AskSemanticItem(source, response, th)
   }
 
-  private var semanticCancelled = false
-  def semanticRoot(source: SourceFile, forceReload: Boolean, th: TokenHierarchy[_]): ScalaRootScope = {
-    semanticCancelled = false
-    val unit = unitOf(source)
-    val sources = List(source)
-    if (unit.status == NotLoaded || forceReload) reloadSources(sources)
-    moveToFront(sources)
+  private def getSemanticRoot(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) {
+    respond(response)(semanticRoot(source, th))
+  }
 
-    if (semanticCancelled) return ScalaRootScope.EMPTY
-
-    currentTyperRun.typedTree(unitOf(source))
-
-    if (semanticCancelled) return ScalaRootScope.EMPTY
-
+  private def semanticRoot(source: SourceFile, th: TokenHierarchy[_]): ScalaRootScope = {
     val start = System.currentTimeMillis
     val root = scalaAstVisitor(unitOf(source), th)
-    GlobalLog.info("Visit took " + (System.currentTimeMillis - start) + "ms")
+    log1.info("Visit took " + (System.currentTimeMillis - start) + "ms")
     root
   }
 
   def cancelSemantic(source: SourceFile) {
-    currentAction match {
-      case workItem: WorkItem if workItem.toString.startsWith("semantic") =>
-        val fileA = workItem.sources.head.file.file
+    workingSource match {
+      case Some(x) =>
+        val fileA = x.file.file
         val fileB = source.file.file
         if (fileA != null && fileB != null && fileA.getAbsolutePath == fileB.getAbsolutePath) {
-          GlobalLog.info("CancelSemantic " + fileA.getName)
+          log1.info("Cancel semantic " + fileA.getName)
           semanticCancelled = true
           scalaAstVisitor.cancel
         }
@@ -772,5 +775,9 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter) extends Global(_sett
     } getOrElse ScalaRootScope.EMPTY
   }
 
-
+  case class AskSemanticItem(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) extends WorkItem {
+    def apply() = respond(response)(semanticRoot(source, th))
+    override def toString = "semantic "+source
+  }
+  
 }

@@ -1679,7 +1679,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
   private def dumpTokens(doc: BaseDocument, dot: Int) {
     val ts = ScalaLexUtil.getTokenSequence(doc, dot) match {
       case Some(x) => x
-      case None => return false
+      case None => return
     }
 
     println("Dumping tokens for dot=" + dot)

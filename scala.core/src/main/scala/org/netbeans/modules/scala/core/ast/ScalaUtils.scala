@@ -291,8 +291,8 @@ trait ScalaUtils {self: ScalaGlobal =>
           fm.appendText("AntiPolyType")
         case TypeVar(_, _) => tpe.safeToString
           // a type variable
-        case DeBruijnIndex(level, index) => 
-          fm.appendText("DeBruijnIndex")
+        //case DeBruijnIndex(level, index) => 
+          //fm.appendText("DeBruijnIndex")
         case _ => 
           fm.appendText(tpe.getClass.getSimpleName)
       }
@@ -460,8 +460,8 @@ trait ScalaUtils {self: ScalaGlobal =>
         case TypeVar(_, _) => 
           fm.appendText(tpe.safeToString)
           // a type variable
-        case DeBruijnIndex(level, index) =>
-          fm.appendText("DeBruijnIndex")
+        //case DeBruijnIndex(level, index) =>
+          //fm.appendText("DeBruijnIndex")
         case _ =>
           fm.appendText(tpe.safeToString)
       }
@@ -587,8 +587,8 @@ trait ScalaUtils {self: ScalaGlobal =>
         case TypeVar(_, _) =>
           sb append (tpe.safeToString)
           // a type variable
-        case DeBruijnIndex(level, index) =>
-          sb append ("DeBruijnIndex")
+        //case DeBruijnIndex(level, index) =>
+          //sb append ("DeBruijnIndex")
         case _ =>
           sb append (tpe.safeToString)
       }

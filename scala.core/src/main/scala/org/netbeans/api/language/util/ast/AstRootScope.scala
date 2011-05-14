@@ -79,7 +79,7 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
   /**
    * each idToken may correspond to more then one AstItem
    */
-  protected def put(idToken: Token[TokenId], item: AstItem): Boolean = {
+  protected[ast] def put(idToken: Token[TokenId], item: AstItem): Boolean = {
     val items = _idTokenToItems.getOrElse(idToken, Nil)
     if (items exists {_.symbol == item.symbol}) {
       if (item.resultType != null) {
