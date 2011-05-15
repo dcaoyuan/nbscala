@@ -47,25 +47,46 @@ import org.netbeans.api.project.{FileOwnerQuery, Project, ProjectUtils}
 import org.netbeans.spi.java.queries.BinaryForSourceQueryImplementation
 import org.openide.filesystems.{FileChangeAdapter, FileEvent, FileObject, FileRenameEvent,
                                 FileStateInvalidException, FileUtil, JarFileSystem, FileChangeListener}
-import org.openide.util.{Exceptions, RequestProcessor, Utilities}
+import org.openide.util.{Exceptions, RequestProcessor}
 
 import org.netbeans.modules.scala.core.ast.{ScalaItems, ScalaDfns, ScalaRefs, ScalaRootScope, ScalaAstVisitor, ScalaUtils}
 import org.netbeans.modules.scala.core.element.{ScalaElements, JavaElements}
 
-import scala.collection.mutable.{ArrayBuffer, LinkedHashMap, WeakHashMap}
-
-import scala.tools.nsc.{Settings}
+import scala.collection.mutable.{ArrayBuffer, WeakHashMap}
 
 import org.netbeans.modules.scala.core.interactive.Global
+import scala.tools.nsc.Settings
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.PlainFile
-import scala.tools.nsc.reporters.{Reporter}
+import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{Position, SourceFile}
 
 /**
  *
  * @author Caoyuan Deng
  */
+case class ScalaError(pos: Position, msg: String, severity: org.netbeans.modules.csl.api.Severity, force: Boolean)
+class ErrorReporter extends Reporter {
+  var errors: List[ScalaError] = Nil
+  
+  override def reset {
+    super.reset
+    errors = Nil
+  }
+  
+  def info0(pos: Position, msg: String, severity: Severity, force: Boolean) {
+    val sev = severity match {
+      case INFO => null
+      case WARNING => org.netbeans.modules.csl.api.Severity.WARNING
+      case ERROR => org.netbeans.modules.csl.api.Severity.ERROR
+      case _ => null
+    }
+    if (sev != null) {
+      errors ::= ScalaError(pos, msg, sev, force)
+    }
+  }
+}
+
 object ScalaGlobal {
 
   private val logger = Logger.getLogger(this.getClass.getName)
@@ -107,8 +128,6 @@ object ScalaGlobal {
   private var globalToListeners = Map[ScalaGlobal, List[FileChangeListener]]()
   private var globalForStdLib: Option[ScalaGlobal] = None
   private var toResetGlobals = Map[ScalaGlobal, Project]()
-
-  val dummyReporter = new Reporter {def info0(pos: Position, msg: String, severity: Severity, force: Boolean) {}}
 
   case class NormalReason(msg: String) extends Throwable(msg)
   object userRequest extends NormalReason("User's action")
@@ -339,7 +358,10 @@ object ScalaGlobal {
 
     // ----- now, the new global
 
-    val global = new ScalaGlobal(settings, dummyReporter)
+    // Setter of Global.reporter is useless due to interative.Global's direct reference
+    // to the constructor's param reporter, so we have to make sure only one reporter
+    // is assigned to Global (during create new instance)
+    val global = new ScalaGlobal(settings, new ErrorReporter)
     globals(idx) = global
 
     // * listen to compCp's change
@@ -365,7 +387,6 @@ object ScalaGlobal {
         srcCp.getRoots foreach {x => findAllSourcesOf("text/x-scala", x, scalaSrcs)}
 
         // * the reporter should be set, otherwise, no java source is resolved, maybe throws exception already.
-        global.reporter = dummyReporter
         global askForReLoad (javaSrcs ++= scalaSrcs).toList
       }
     }
@@ -522,7 +543,6 @@ object ScalaGlobal {
     override def fileDataCreated(fe: FileEvent): Unit = {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
-        global.reporter = dummyReporter
         global askForReLoad List(fo)
       }
     }
@@ -530,7 +550,6 @@ object ScalaGlobal {
     override def fileChanged(fe: FileEvent): Unit = {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
-        global.reporter = dummyReporter
         global askForReLoad List(fo)
       }
     }
@@ -538,7 +557,6 @@ object ScalaGlobal {
     override def fileRenamed(fe: FileRenameEvent): Unit = {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
-        global.reporter = dummyReporter
         global askForReLoad List(fo)
       }
     }
@@ -609,7 +627,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
                                                                                          with ScalaUtils {
   import ScalaGlobal._
 
-  override def onlyPresentation = true
+  override def forInteractive = true
 
   override def logError(msg: String, t: Throwable): Unit = {}
 
@@ -624,7 +642,16 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   private var workingSource: Option[SourceFile] = None
   private var semanticCancelled = false
 
-  def askForReLoad(srcFos: List[FileObject]) : Unit = {
+  private def resetReporter {
+    this.reporter match {
+      case x: ErrorReporter => x.reset
+      case _ =>
+    }
+  }
+  
+  def askForReLoad(srcFos: List[FileObject]) {
+    resetReporter
+    
     val srcFiles = srcFos map {fo => getSourceFile(new PlainFile(FileUtil.toFile(fo)))}
 
     try {
@@ -645,12 +672,23 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   }
 
   def askForSemantic(source: SourceFile, forceReload: Boolean, th: TokenHierarchy[_]): ScalaRootScope = {
+    getUnitOf(source) match {
+      case Some(unit) if unit.source ne source => 
+        //removeUnitOf(unit.source)
+        //val tmpResp = new Response[Unit]
+        //askReload(List(source), tmpResp)
+        //tmpResp.get
+      case _ =>
+    }
+    
+    resetReporter
+    
     workingSource = Some(source)
     semanticCancelled = false
 
     qualToRecoveredType = Map()
 
-    val resp = new Response[ScalaRootScope]
+    val response = new Response[ScalaRootScope]
     try {
       if (semanticCancelled) return ScalaRootScope.EMPTY
       val typeResp = new Response[Tree]
@@ -660,7 +698,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
       typeResp.get
 
       if (semanticCancelled) return ScalaRootScope.EMPTY
-      askSemantic(source, resp, th)
+      askSemantic(source, response, th)
     } catch {
       case ex: AssertionError =>
         /**
@@ -673,7 +711,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
       case ex: Throwable => // just ignore all ex
     }
 
-    val res = resp.get.left.toOption getOrElse ScalaRootScope.EMPTY
+    val res = response.get.left.toOption getOrElse ScalaRootScope.EMPTY
     workingSource = None
     res
   }
@@ -682,6 +720,10 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     scheduler postWorkItem AskSemanticItem(source, response, th)
   }
 
+  private def getSemantic(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) {
+    respond(response)(semanticRoot(source, th))
+  }
+  
   private def semanticRoot(source: SourceFile, th: TokenHierarchy[_]): ScalaRootScope = {
     val start = System.currentTimeMillis
     getUnitOf(source) match {
@@ -710,7 +752,9 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   // ----- Code that has been deprecated, for reference only
   
   /** batch complie */
-  def compileSourcesForPresentation(srcFiles: List[FileObject]): Unit = {
+  def compileSourcesForPresentation(srcFiles: List[FileObject]) {
+    resetReporter
+    
     settings.stop.value = Nil
     settings.stop.tryToSetColon(List(superAccessors.phaseName))
     try {
@@ -739,6 +783,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
   // * @Note the following setting exlcudes 'stopPhase' itself
   def compileSource(srcFile: SourceFile, stopPhaseName: String, th: TokenHierarchy[_]): ScalaRootScope = synchronized {
+    resetReporter
+    
     settings.stop.value = Nil
     settings.stop.tryToSetColon(List(stopPhaseName))
     qualToRecoveredType = Map()
@@ -776,7 +822,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   }
 
   case class AskSemanticItem(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) extends WorkItem {
-    def apply() = respond(response)(semanticRoot(source, th))
+    def apply() = getSemantic(source, response, th)
     override def toString = "semantic "+source
   }
   

@@ -95,7 +95,7 @@ object ScalaHome {
     //System.out.println("comp:" + sb);
     settings.classpath.value = sb.toString
 
-    val global = new ScalaGlobal(settings, ScalaGlobal.dummyReporter) {
+    val global = new ScalaGlobal(settings, new ErrorReporter) {
       override def onlyPresentation = true
     }
 
