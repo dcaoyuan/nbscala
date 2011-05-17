@@ -115,11 +115,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
 
 
     // we'll find item by offset of item's idToken, so, use caretPosition directly
-    val blankRange = pResult.sanitizedRange
-    val items = if (!blankRange.containsInclusive(astOffset)) {
-      rootScope.findItemsAt(th, caretPosition)
-    } else Nil
-
+    val items = rootScope.findItemsAt(th, caretPosition)
 
     // JRuby sometimes gives me some "weird" sections. For example,
     // if you have

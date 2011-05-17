@@ -200,11 +200,6 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
 
       var offset = astOffset
 
-      val sanitizedRange = pr.sanitizedRange
-      if (sanitizedRange != OffsetRange.NONE && sanitizedRange.containsInclusive(offset)) {
-        offset = sanitizedRange.getStart
-      }
-
       ts.move(lexOffset)
       if (!ts.moveNext && !ts.movePrevious) {
         return completionResult
@@ -250,11 +245,6 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       /* val root = pr.rootScope
        if (root != ScalaRootScope.EMPTY) {
        var offset = astOffset
-
-       val sanitizedRange = pr.sanitizedRange
-       if (sanitizedRange != OffsetRange.NONE && sanitizedRange.containsInclusive(offset)) {
-       offset = sanitizedRange.getStart
-       }
 
        completer.root = root
 

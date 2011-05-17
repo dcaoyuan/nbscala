@@ -57,7 +57,6 @@ import org.netbeans.modules.scala.core.ScalaSourceUtil
 import org.netbeans.modules.scala.core.ScalaSymbolResolver
 import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
 import org.netbeans.modules.scala.core.ScalaGlobal
-import org.netbeans.modules.scala.core.ScalaParser.Sanitize
 import org.netbeans.modules.scala.core.rats.ParserScala
 
 import scala.concurrent.SyncVar
@@ -482,16 +481,6 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
         astOffset - (lexOffset - newLexOffset)
       } else astOffset
 
-      val range = pResult.sanitizedRange
-      if (range != OffsetRange.NONE && range.containsInclusive(astOffset1)) {
-        if (astOffset1 != range.getStart) {
-          astOffset1 = range.getStart - 1
-          if (astOffset1 < 0) {
-            astOffset1 = 0
-          }
-        }
-      }
-
       val ts = ScalaLexUtil.getTokenSequence(th, lexOffset).getOrElse(return false)
       ts.move(lexOffset)
       if (!ts.moveNext && !ts.movePrevious) {
@@ -536,16 +525,6 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
       //                }
       //            }
 
-      var haveSanitizedComma = (pResult.getSanitized == Sanitize.EDITED_DOT ||
-                                pResult.getSanitized == Sanitize.ERROR_DOT)
-      if (haveSanitizedComma) {
-        // We only care about removed commas since that
-        // affects the parameter count
-        if (pResult.sanitizedContents.indexOf(',') == -1) {
-          haveSanitizedComma = false
-        }
-      }
-
       if (call == null) {
         // Find the call in around the caret. Beware of
         // input sanitization which could have completely
@@ -565,24 +544,6 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
         //                    }
         //
         //                }
-      }
-
-      if (index != -1 && haveSanitizedComma && call != null) {
-        //                if (call.nodeId == NodeTypes.FCALLNODE) {
-        //                    an = ((FCallNode)call).getArgsNode();
-        //                } else if (call.nodeId == NodeTypes.CALLNODE) {
-        //                    an = ((CallNode)call).getArgsNode();
-        //                }
-        //                if (an != null && index < an.childNodes().size() &&
-        //                        ((Node)an.childNodes().get(index)).nodeId == NodeTypes.HASHNODE) {
-        //                    // We should stay within the hashnode, so counteract the
-        //                    // index++ which follows this if-block
-        //                    index--;
-        //                }
-
-        // Adjust the index to account for our removed
-        // comma
-        index += 1
       }
 
       if (call == null || index == -1) {
