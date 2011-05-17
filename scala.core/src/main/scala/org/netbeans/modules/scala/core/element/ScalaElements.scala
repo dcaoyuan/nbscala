@@ -215,30 +215,30 @@ trait ScalaElements {self: ScalaGlobal =>
       }
     }
 
-    private def load: Unit = {
+    private def load {
       if (isLoaded) return
 
       if (isJava) {
         javaElement = JavaSourceUtil.getJavaElement(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), symbol)
       } else {
         val fo = getFileObject 
-        assert(fo != null)
-        val srcFile = ScalaSourceFile.sourceFileOf(fo)
-        try {
-          /**
-           * @Note by compiling the related source file, this symbol will
-           * be automatically loaded next time, but the position/sourcefile
-           * info is not updated for this symbol yet. But we can find the
-           * position via the AST Tree, or use a tree visitor to update
-           * all symbols Position
-           */
-          val root = askForSemantic(srcFile, true)
-          root.findDfnMatched(symbol) match {
-            case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
-            case None =>
-          }
-        } catch {case ex: BadLocationException => Exceptions.printStackTrace(ex)}
-                
+        if (fo != null) {
+          val srcFile = ScalaSourceFile.sourceFileOf(fo)
+          try {
+            /**
+             * @Note by compiling the related source file, this symbol will
+             * be automatically loaded next time, but the position/sourcefile
+             * info is not updated for this symbol yet. But we can find the
+             * position via the AST Tree, or use a tree visitor to update
+             * all symbols Position
+             */
+            val root = askForSemantic(srcFile, true)
+            root.findDfnMatched(symbol) match {
+              case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
+              case None =>
+            }
+          } catch {case ex: BadLocationException => Exceptions.printStackTrace(ex)}
+        }  
       }
 
       loaded = true
