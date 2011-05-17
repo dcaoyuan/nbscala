@@ -43,7 +43,7 @@ package org.netbeans.modules.scala.core
 import javax.swing.text.BadLocationException
 import org.netbeans.editor.BaseDocument
 import org.netbeans.editor.Utilities
-import org.netbeans.modules.csl.api.{Error, OffsetRange}
+import org.netbeans.modules.csl.api.Error
 import org.netbeans.modules.csl.spi.DefaultError
 import org.netbeans.modules.csl.spi.ParserResult
 import org.netbeans.modules.parsing.api.Snapshot
@@ -61,17 +61,6 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     println("==== unreleased parser results: ")
     for ((k, v) <- ScalaParserResult.unreleasedResults) println(v)
   }
-
-  var sanitizedRange = OffsetRange.NONE
-  /**
-   * Return whether the source code for the parse result was "cleaned"
-   * or "sanitized" (modified to reduce chance of parser errors) or not.
-   * This method returns OffsetRange.NONE if the source was not sanitized,
-   * otherwise returns the actual sanitized range.
-   */
-  var sanitizedContents: String = _
-  var commentsAdded: Boolean = _
-  private var sanitized: ScalaParser.Sanitize = _
 
   private var _root: ScalaRootScope = _
   @volatile var loaded = false
@@ -151,22 +140,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     global.compileSourceForDebug(srcFile)
   }
 
-  /**
-   * Set the range of source that was sanitized, if any.
-   */
-  def setSanitized(sanitized: ScalaParser.Sanitize, sanitizedRange: OffsetRange, sanitizedContents: String) {
-    this.sanitized = sanitized
-    this.sanitizedRange = sanitizedRange
-    this.sanitizedContents = sanitizedContents
-  }
-
-  def getSanitized: ScalaParser.Sanitize = {
-    sanitized
-  }
-
-  override def toString = {
-    "ParserResult(file=" + snapshot.getSource.getFileObject
-  }
+  override def toString = "ParserResult(file=" + snapshot.getSource.getFileObject
 }
 
 object ScalaParserResult {

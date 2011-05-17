@@ -39,11 +39,10 @@
 
 package org.netbeans.modules.scala.core.element
 
-import java.io.{File, IOException}
+import java.io.IOException
 import javax.lang.model.element.Element
 import javax.swing.Icon
 import javax.swing.text.BadLocationException
-import org.netbeans.api.lexer.TokenHierarchy
 import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.csl.api.{ElementHandle, ElementKind, Modifier, OffsetRange, HtmlFormatter}
 import org.netbeans.modules.csl.api.UiUtils
@@ -52,8 +51,6 @@ import org.netbeans.modules.scala.core.ScalaSourceFile
 import org.openide.filesystems.{FileObject}
 import org.openide.util.Exceptions
 
-import scala.tools.nsc.io.{PlainFile, VirtualFile}
-import scala.tools.nsc.util.BatchSourceFile
 import scala.tools.nsc.symtab.{Flags}
 
 import org.netbeans.api.language.util.ast.{AstElementHandle}
