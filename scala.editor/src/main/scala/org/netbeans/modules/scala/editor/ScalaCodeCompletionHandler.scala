@@ -43,7 +43,7 @@ import javax.swing.text.{BadLocationException, JTextComponent}
 import org.netbeans.editor.{BaseDocument, Utilities}
 import org.netbeans.modules.csl.api.CodeCompletionHandler.QueryType
 import org.netbeans.modules.csl.api.{CodeCompletionContext, CodeCompletionHandler, CodeCompletionResult, CompletionProposal,
-                                     ElementHandle, OffsetRange, ParameterInfo}
+                                     ElementHandle, ParameterInfo}
 import org.netbeans.modules.csl.spi.{DefaultCompletionResult, ParserResult}
 import org.netbeans.modules.parsing.spi.indexing.support.QuerySupport
 import org.openide.util.{Exceptions, NbBundle}
@@ -51,9 +51,7 @@ import org.openide.util.{Exceptions, NbBundle}
 import org.netbeans.api.language.util.ast.AstElementHandle
 import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ScalaSourceUtil
-import org.netbeans.modules.scala.core.ast.ScalaRootScope
 import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
-import scala.tools.nsc.symtab.Flags
 
 /**
  * Code completion handler for JavaScript
@@ -113,25 +111,25 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   import ScalaCodeCompletionHandler._
 
   override def complete(context: CodeCompletionContext): CodeCompletionResult = {
-    // * skip processing other queryType: DOCUMENTATION_QUERY_TYPE, TOOLTIP_QUERY_TYPE etc
+    // skip processing other queryType: DOCUMENTATION_QUERY_TYPE, TOOLTIP_QUERY_TYPE etc
     context.getQueryType match {
       case QueryType.ALL_COMPLETION | QueryType.COMPLETION => // go on
       case _ => return CodeCompletionResult.NONE
     }
     
-    val pr = context.getParserResult.asInstanceOf[ScalaParserResult]
+    val pResult = context.getParserResult.asInstanceOf[ScalaParserResult]
     val lexOffset = context.getCaretOffset
     val prefix = context.getPrefix match {
       case null => ""
       case x => x
     }
 
-    val doc = pr.getSnapshot.getSource.getDocument(true) match {
+    val doc = pResult.getSnapshot.getSource.getDocument(true) match {
       case null => return CodeCompletionResult.NONE
       case x => x.asInstanceOf[BaseDocument]
     }
 
-    val astOffset = ScalaLexUtil.getAstOffset(pr, lexOffset) match {
+    val astOffset = ScalaLexUtil.getAstOffset(pResult, lexOffset) match {
       case -1 => return CodeCompletionResult.NONE
       case x => x
     }
@@ -139,26 +137,20 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     val proposals = new java.util.ArrayList[CompletionProposal]
     val completionResult = new DefaultCompletionResult(proposals, false)
 
-    // * Read-lock due to Token hierarchy use
-    //doc.readLock
+    // Read-lock due to Token hierarchy use
+    doc.readLock
     try {
-      val th = pr.getSnapshot.getTokenHierarchy
+      val th = pResult.getSnapshot.getTokenHierarchy
 
-      val global = pr.global
-      import global._
-
-      val completer = new ScalaCodeCompleter(global)
+      val completer = new ScalaCodeCompleter(pResult)
       completer.completionResult = completionResult
       completer.caseSensitive = context.isCaseSensitive
       completer.queryType = context.getQueryType
-      completer.pResult = pr
       completer.lexOffset = lexOffset
       completer.astOffset = astOffset
       completer.doc = doc
       completer.prefix = prefix
       completer.kind = QuerySupport.Kind.PREFIX
-      completer.th = th
-      completer.fileObject = pr.getSnapshot.getSource.getFileObject
       completer.anchor = lexOffset - prefix.length
       //completer.index = ScalaIndex.get(info.getSnapshot().getSource().getFileObject());
 
@@ -312,7 +304,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       completer.completeKeywords(proposals)
 
     } finally {
-      //doc.readUnlock
+      doc.readUnlock
     }
 
     completionResult

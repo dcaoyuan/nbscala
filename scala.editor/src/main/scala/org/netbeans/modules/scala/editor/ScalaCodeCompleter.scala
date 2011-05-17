@@ -38,20 +38,18 @@
  */
 package org.netbeans.modules.scala.editor
 
-import javax.lang.model.element.{ExecutableElement}
-import javax.swing.text.{BadLocationException}
+import javax.lang.model.element.ExecutableElement
+import javax.swing.text.BadLocationException
 import org.netbeans.api.java.source.ClassIndex
 import org.netbeans.api.java.source.ClassIndex.NameKind
 import org.netbeans.api.lexer.{Token, TokenHierarchy, TokenId, TokenSequence}
 import org.netbeans.editor.{BaseDocument, Utilities}
 import org.netbeans.modules.csl.api.CodeCompletionHandler.QueryType
-import org.netbeans.modules.csl.api.{CodeCompletionHandler, CompletionProposal, OffsetRange}
+import org.netbeans.modules.csl.api.{CodeCompletionHandler, CompletionProposal}
 import org.netbeans.modules.csl.spi.{DefaultCompletionResult, ParserResult}
 import org.netbeans.modules.parsing.spi.indexing.support.QuerySupport
-import org.openide.filesystems.FileObject
-import org.openide.util.{Exceptions}
+import org.openide.util.Exceptions
 
-import org.netbeans.api.language.util.ast.{AstItem}
 import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ScalaSourceUtil
 import org.netbeans.modules.scala.core.ScalaSymbolResolver
@@ -59,13 +57,11 @@ import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
 import org.netbeans.modules.scala.core.ScalaGlobal
 import org.netbeans.modules.scala.core.rats.ParserScala
 
-import scala.concurrent.SyncVar
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.OffsetPosition
 
 /**
+ *
  * @author Caoyuan Deng
- * 
  */
 object ScalaCodeCompleter {
   // Dbl-space lines to keep formatter from collapsing pairs into a block
@@ -169,9 +165,11 @@ object ScalaCodeCompleter {
   var callMethod: ExecutableElement = _
 }
 
-class ScalaCodeCompleter(val global: ScalaGlobal) {
-  import ScalaCodeCompleter._
-
+import ScalaCodeCompleter._
+class ScalaCodeCompleter(val pResult: ScalaParserResult) {
+  val global = pResult.global
+  val th = pResult.getSnapshot.getTokenHierarchy
+  
   import global._
 
   private object completionProposals extends {
@@ -184,18 +182,23 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
     val global = ScalaCodeCompleter.this.global
   } with ScalaSymbolResolver
 
+  /**
+   * It seems CompleteHandle will always be called before other csl features (semantic, structure etc)
+   * that's good. But then, we may need to do semantic analysis first 
+   */
+  private def needSemantice {
+    pResult.rootScope // force to load lazy val rootScope
+  }
+  
   var caseSensitive: Boolean = _
   var completionResult: DefaultCompletionResult = _
-  var th: TokenHierarchy[_] = _
   var anchor: Int = _
   var lexOffset: Int = _
   var astOffset: Int = _
   var doc: BaseDocument = _
   var prefix: String = _
   var kind: QuerySupport.Kind = _
-  var pResult: ScalaParserResult = _
   var queryType: QueryType = _
-  var fileObject: FileObject = _
   var fqn: String = _
   //var index: ScalaIndex = _
 
@@ -281,7 +284,7 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
   }
 
 
-  def completeKeywords(proposals: java.util.List[CompletionProposal]): Unit = {
+  def completeKeywords(proposals: java.util.List[CompletionProposal]) {
     // No keywords possible in the RHS of a call (except for "this"?)
     //        if (request.call.getLhs() != null) {
     //            return;
@@ -461,6 +464,8 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
                                   anchorOffsetHolder: Array[Int],
                                   alternativesHolder: Array[Set[Function]]): Boolean = {
     try {
+      needSemantice
+      
       val pResult = info.asInstanceOf[ScalaParserResult]
       val root = pResult.rootScope
 
@@ -578,16 +583,10 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
     true
   }
 
-  def completeLocals(proposals: java.util.List[CompletionProposal]): Unit = {
-    val root = pResult.rootScope
+  def completeLocals(proposals: java.util.List[CompletionProposal]) {
+    needSemantice
 
     val pos = rangePos(pResult.srcFile, lexOffset, lexOffset, lexOffset)
-
-    global.cancelSemantic(pos.source)
-    // * it seems CompleteHandle will always be called before other csl features (semantic, structure etc)
-    // * that's good. But then, we may need to reload source first:
-    global.resetUnitOf(pos.source)
-    
     val resp = new Response[List[Member]]
     try {
       global.askScopeCompletion(pos, resp)
@@ -604,17 +603,13 @@ class ScalaCodeCompleter(val global: ScalaGlobal) {
   }
 
   def completeSymbolMembers(baseToken: Token[TokenId], proposals: java.util.List[CompletionProposal]): Boolean = {
+    needSemantice
+    
+    val offset = baseToken.offset(th)
+    val endOffset = offset + baseToken.length - 1
+    val pos = rangePos(pResult.srcFile, offset, offset, endOffset)
+    val resp = new Response[List[Member]]
     try {
-      val offset = baseToken.offset(th)
-      val endOffset = offset + baseToken.length - 1
-      val pos = rangePos(pResult.srcFile, offset, offset, endOffset)
-
-      global.cancelSemantic(pos.source)
-      // * it seems CompleteHandle will always be called before other csl features (semantic, structure etc)
-      // * that's good. But then, we may need to reload source first:
-      global.resetUnitOf(pos.source)
-      
-      val resp = new Response[List[Member]]
       global.askTypeCompletion(pos, resp)
       resp.get match {
         case Left(members) =>
