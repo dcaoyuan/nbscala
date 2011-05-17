@@ -40,9 +40,9 @@
  */
 package org.netbeans.modules.scala.core
 
-import javax.swing.text.BadLocationException
-import org.netbeans.editor.BaseDocument
-import org.netbeans.editor.Utilities
+//import javax.swing.text.BadLocationException
+//import org.netbeans.editor.BaseDocument
+//import org.netbeans.editor.Utilities
 import org.netbeans.modules.csl.api.Error
 import org.netbeans.modules.csl.spi.DefaultError
 import org.netbeans.modules.csl.spi.ParserResult
@@ -72,21 +72,21 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
           case scalaErrors =>
             val errs = new java.util.ArrayList[Error]
             val fo = snapshot.getSource.getFileObject
-            val doc = snapshot.getSource.getDocument(true).asInstanceOf[BaseDocument]
+            //val doc = snapshot.getSource.getDocument(true).asInstanceOf[BaseDocument]
             for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
               // * It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
               if (srcFile.file eq pos.source.file) {
                 val offset = pos.startOrPoint
-
-                var end = try {
-                  Utilities.getRowLastNonWhite(doc, offset) + 1 // * @Note row should plus 1 to equal NetBeans' doc offset
-                } catch {
-                  case ex: BadLocationException => -1
-                }
-
-                if (end != -1 && end <= offset) {
-                  end += 1
-                }
+                val end = pos.endOrPoint
+//                var end = try {
+//                  Utilities.getRowLastNonWhite(doc, offset) + 1 // * @Note row should plus 1 to equal NetBeans' doc offset
+//                } catch {
+//                  case ex: BadLocationException => -1
+//                }
+//
+//                if (end != -1 && end <= offset) {
+//                  end += 1
+//                }
 
                 val isLineError = (end == -1)
                 val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fo, offset, end, isLineError, severity)
