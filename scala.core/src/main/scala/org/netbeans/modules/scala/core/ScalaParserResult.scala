@@ -40,7 +40,6 @@
  */
 package org.netbeans.modules.scala.core
 
-import java.io.File
 import javax.swing.text.BadLocationException
 import org.netbeans.editor.BaseDocument
 import org.netbeans.editor.Utilities
@@ -49,16 +48,13 @@ import org.netbeans.modules.csl.spi.DefaultError
 import org.netbeans.modules.csl.spi.ParserResult
 import org.netbeans.modules.parsing.api.Snapshot
 import org.netbeans.modules.scala.core.ast.ScalaRootScope
-import org.openide.filesystems.FileUtil
 import scala.collection.mutable.WeakHashMap
-import scala.tools.nsc.io.{PlainFile, VirtualFile}
-import scala.tools.nsc.util.{BatchSourceFile, SourceFile}
 
 /**
  *
  * @author Caoyuan Deng
  */
-class ScalaParserResult(snapshot: Snapshot, parser: ScalaParser) extends ParserResult(snapshot) {
+class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
 
   if (ScalaParserResult.debug) {
     ScalaParserResult.unreleasedResults.put(this, snapshot.getSource.getFileObject.getPath)
@@ -80,8 +76,47 @@ class ScalaParserResult(snapshot: Snapshot, parser: ScalaParser) extends ParserR
   private var _root: ScalaRootScope = _
   @volatile var loaded = false
 
+  private lazy val errors: java.util.List[Error] = {
+    global.reporter match {
+      case x: ErrorReporter => x.errors match {
+          case Nil => java.util.Collections.emptyList[Error]
+          case scalaErrors =>
+            val errs = new java.util.ArrayList[Error]
+            val fo = snapshot.getSource.getFileObject
+            val doc = snapshot.getSource.getDocument(true).asInstanceOf[BaseDocument]
+            for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
+              // * It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
+              if (srcFile.file eq pos.source.file) {
+                val offset = pos.startOrPoint
 
-  override protected def invalidate: Unit = {
+                var end = try {
+                  Utilities.getRowLastNonWhite(doc, offset) + 1 // * @Note row should plus 1 to equal NetBeans' doc offset
+                } catch {
+                  case ex: BadLocationException => -1
+                }
+
+                if (end != -1 && end <= offset) {
+                  end += 1
+                }
+
+                val isLineError = (end == -1)
+                val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fo, offset, end, isLineError, severity)
+                //println(msg + " (" + offset + ")")
+
+                errs.add(error)
+                //error.setParameters(Array(offset, msg))                
+              } else {
+                println("Not same SourceFile")
+              }
+
+            }          
+            errs
+        }
+      case _ => java.util.Collections.emptyList[Error]
+    }
+  }
+
+  override protected def invalidate {
     // XXX: what exactly should we do here?
   }
 
@@ -94,88 +129,32 @@ class ScalaParserResult(snapshot: Snapshot, parser: ScalaParser) extends ParserR
    * other editor behavior, or, the performance of complier is not the bottleneck
    * any more, I'll add it back.
    */
-  override def getDiagnostics: java.util.List[_ <: Error] = {
-    global.reporter match {
-      case x: ErrorReporter => x.errors match {
-          case Nil => java.util.Collections.emptyList[Error]
-          case scalaErrors =>
-            var errors: java.util.List[Error] = new java.util.ArrayList[Error]
-            val fo = snapshot.getSource.getFileObject
-            val doc = snapshot.getSource.getDocument(true).asInstanceOf[BaseDocument]
-            // * It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
-            for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
-              println(pos.source.file)
-              println(srcFile.file)
-              if (srcFile.file eq pos.source.file) {
-                println("Yes")
-              }
-              val offset = pos.startOrPoint
+  override def getDiagnostics: java.util.List[_ <: Error] = errors
 
-              var end = try {
-                Utilities.getRowLastNonWhite(doc, offset) + 1 // * @Note row should plus 1 to equal NetBeans' doc offset
-              } catch {
-                case ex: BadLocationException => -1
-              }
-
-              if (end != -1 && end <= offset) {
-                end += 1
-              }
-
-              val isLineError = (end == -1)
-              val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fo, offset, end, isLineError, severity)
-              //println(msg + " (" + offset + ")")
-
-              errors.add(error)
-              //error.setParameters(Array(offset, msg))
-            }          
-            errors
-        }
-      case _ => java.util.Collections.emptyList[Error]
-    }
-  }
-
-  lazy val srcFile: SourceFile = {
-    val fo = snapshot.getSource.getFileObject
-    val file = if (fo != null) FileUtil.toFile(fo) else null
-    val af = if (file != null) new PlainFile(file) else new VirtualFile("<current>", "")
-    new BatchSourceFile(af, snapshot.getText.toString.toCharArray)
-  }
-
-  lazy val global: ScalaGlobal = {
-    ScalaGlobal.getGlobal(snapshot.getSource.getFileObject)
-  }
+  lazy val srcFile = ScalaSourceFile.sourceFileOf(snapshot.getSource.getFileObject)
+  lazy val global = ScalaGlobal.getGlobal(snapshot.getSource.getFileObject)
 
   def rootScope: ScalaRootScope = {
-    if (loaded) {
-      return _root
-    } else {
-      val th = snapshot.getTokenHierarchy
-      // @Note it's more safe to force reload here, since a partial typed tree may cause unpredicted error :
-      _root = global.askForSemantic(srcFile, true, th)
-      loaded = true
-      _root
+    if (!loaded) {
+      srcFile.snapshot = snapshot
+      // @Note it's safer to force reload here, since a partial typed tree may cause unpredicted error :
+      _root = global.askForSemantic(srcFile, true)
+      loaded = true      
     }
+    _root
   }
 
   lazy val rootScopeForDebug: ScalaRootScope = {
-    val fo = getSnapshot.getSource.getFileObject
-    val file: File = if (fo != null) FileUtil.toFile(fo) else null
-    // We should use absolutionPath here for real file, otherwise, symbol.sourcefile.path won't be abs path
-    //val filePath = if (file != null) file.getAbsolutePath):  "<current>";
-    val th = getSnapshot.getTokenHierarchy
-
+    srcFile.snapshot = snapshot
+    val fo = srcFile.fileObject
     val global = ScalaGlobal.getGlobal(fo, true)
-
-    val af = if (file != null) new PlainFile(file) else new VirtualFile("<current>", "")
-    val srcFile = new BatchSourceFile(af, getSnapshot.getText.toString.toCharArray)
-    //rootScopeForDebug = Some(global.askForDebug(srcFile, th))
-    global.compileSourceForDebug(srcFile, th)
+    global.compileSourceForDebug(srcFile)
   }
 
   /**
    * Set the range of source that was sanitized, if any.
    */
-  def setSanitized(sanitized: ScalaParser.Sanitize, sanitizedRange: OffsetRange, sanitizedContents: String): Unit = {
+  def setSanitized(sanitized: ScalaParser.Sanitize, sanitizedRange: OffsetRange, sanitizedContents: String) {
     this.sanitized = sanitized
     this.sanitizedRange = sanitizedRange
     this.sanitizedContents = sanitizedContents
@@ -188,8 +167,6 @@ class ScalaParserResult(snapshot: Snapshot, parser: ScalaParser) extends ParserR
   override def toString = {
     "ParserResult(file=" + snapshot.getSource.getFileObject
   }
-
-
 }
 
 object ScalaParserResult {

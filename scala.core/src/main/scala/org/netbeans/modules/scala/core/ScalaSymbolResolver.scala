@@ -52,8 +52,6 @@ import scala.tools.nsc.util.{Position}
 
 abstract class ScalaSymbolResolver {
   
-  private val dummyReport = new Reporter {def info0(pos: Position, msg: String, severity: Severity, force: Boolean) {}}
-
   val global: ScalaGlobal
   import global._
 
@@ -66,10 +64,10 @@ abstract class ScalaSymbolResolver {
     sb.append(fqn).append(".") // should put a `.` at the end to create a Select tree and corresponding selectTypeErrors
     sb.append("}")
 
-    val srcFile = new BatchSourceFile(new VirtualFile("<NetBeansErrorRecover.scala>", ""), sb)
+    // @todo
+    val srcFile = ScalaSourceFile.sourceFileOf(null)
     val th = TokenHierarchy.create(sb.toString, ScalaTokenId.language)
-    global.reporter = dummyReport
-    val rootScope = global.askForSemantic(srcFile, true, th)
+    val rootScope = global.askForSemantic(srcFile, true)
     
     val lastDot = fqn.lastIndexOf('.')
     val lastPart = if (lastDot == -1) fqn else fqn.substring(lastDot + 1, fqn.length)

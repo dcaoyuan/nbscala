@@ -42,7 +42,6 @@ import java.io.{File, IOException}
 import java.net.{MalformedURLException, URISyntaxException, URL}
 import java.util.logging.{Logger, Level}
 import org.netbeans.api.java.classpath.ClassPath
-import org.netbeans.api.lexer.{TokenHierarchy}
 import org.netbeans.api.project.{FileOwnerQuery, Project, ProjectUtils}
 import org.netbeans.spi.java.queries.BinaryForSourceQueryImplementation
 import org.openide.filesystems.{FileChangeAdapter, FileEvent, FileObject, FileRenameEvent,
@@ -51,13 +50,11 @@ import org.openide.util.{Exceptions, RequestProcessor}
 
 import org.netbeans.modules.scala.core.ast.{ScalaItems, ScalaDfns, ScalaRefs, ScalaRootScope, ScalaAstVisitor, ScalaUtils}
 import org.netbeans.modules.scala.core.element.{ScalaElements, JavaElements}
+import org.netbeans.modules.scala.core.interactive.Global
 
 import scala.collection.mutable.{ArrayBuffer, WeakHashMap}
-
-import org.netbeans.modules.scala.core.interactive.Global
 import scala.tools.nsc.Settings
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.io.PlainFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{Position, SourceFile}
 
@@ -652,7 +649,11 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   def askForReLoad(srcFos: List[FileObject]) {
     resetReporter
     
-    val srcFiles = srcFos map {fo => getSourceFile(new PlainFile(FileUtil.toFile(fo)))}
+    val srcFiles = srcFos map {fo =>
+      val sourceFile = ScalaSourceFile.sourceFileOf(fo)
+      sourceFile.refreshSnapshot
+      sourceFile
+    }
 
     try {
       val resp = new Response[Unit]
@@ -671,7 +672,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
 
-  def askForSemantic(source: SourceFile, forceReload: Boolean, th: TokenHierarchy[_]): ScalaRootScope = {
+  def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = {
     getUnitOf(source) match {
       case Some(unit) if unit.source ne source => 
         //removeUnitOf(unit.source)
@@ -698,7 +699,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
       typeResp.get
 
       if (semanticCancelled) return ScalaRootScope.EMPTY
-      askSemantic(source, response, th)
+      askSemantic(source, response)
     } catch {
       case ex: AssertionError =>
         /**
@@ -716,19 +717,19 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     res
   }
 
-  private def askSemantic(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) = {
-    scheduler postWorkItem AskSemanticItem(source, response, th)
+  private def askSemantic(source: ScalaSourceFile, response: Response[ScalaRootScope]) = {
+    scheduler postWorkItem AskSemanticItem(source, response)
   }
 
-  private def getSemantic(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) {
-    respond(response)(semanticRoot(source, th))
+  private def getSemantic(source: ScalaSourceFile, response: Response[ScalaRootScope]) {
+    respond(response)(semanticRoot(source))
   }
   
-  private def semanticRoot(source: SourceFile, th: TokenHierarchy[_]): ScalaRootScope = {
+  private def semanticRoot(source: ScalaSourceFile): ScalaRootScope = {
     val start = System.currentTimeMillis
     getUnitOf(source) match {
       case Some(unit) => 
-        val root = scalaAstVisitor(unit, th)
+        val root = scalaAstVisitor(unit, source.tokenHierarchy)
         log1.info("Visit took " + (System.currentTimeMillis - start) + "ms")
         root
       case None => ScalaRootScope.EMPTY
@@ -772,17 +773,17 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
 
-  def compileSourceForPresentation(srcFile: SourceFile, th: TokenHierarchy[_]): ScalaRootScope = {
-    compileSource(srcFile, superAccessors.phaseName, th)
+  def compileSourceForPresentation(srcFile: ScalaSourceFile): ScalaRootScope = {
+    compileSource(srcFile, superAccessors.phaseName)
   }
 
   // * @Note Should pass phase "lambdalift" to get anonfun's class symbol built
-  def compileSourceForDebug(srcFile: SourceFile, th: TokenHierarchy[_]): ScalaRootScope = {
-    compileSource(srcFile, constructors.phaseName, th)
+  def compileSourceForDebug(srcFile: ScalaSourceFile): ScalaRootScope = {
+    compileSource(srcFile, constructors.phaseName)
   }
 
   // * @Note the following setting exlcudes 'stopPhase' itself
-  def compileSource(srcFile: SourceFile, stopPhaseName: String, th: TokenHierarchy[_]): ScalaRootScope = synchronized {
+  def compileSource(srcFile: ScalaSourceFile, stopPhaseName: String): ScalaRootScope = synchronized {
     resetReporter
     
     settings.stop.value = Nil
@@ -817,13 +818,13 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
           })
       }
 
-      scalaAstVisitor(unit, th)
+      scalaAstVisitor(unit, srcFile.tokenHierarchy)
     } getOrElse ScalaRootScope.EMPTY
   }
 
-  case class AskSemanticItem(source: SourceFile, response: Response[ScalaRootScope], th: TokenHierarchy[_]) extends WorkItem {
-    def apply() = getSemantic(source, response, th)
-    override def toString = "semantic "+source
+  case class AskSemanticItem(source: ScalaSourceFile, response: Response[ScalaRootScope]) extends WorkItem {
+    def apply() = getSemantic(source, response)
+    override def toString = "semantic " + source
   }
   
 }

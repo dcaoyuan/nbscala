@@ -48,6 +48,7 @@ import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.csl.api.{ElementHandle, ElementKind, Modifier, OffsetRange, HtmlFormatter}
 import org.netbeans.modules.csl.api.UiUtils
 import org.netbeans.modules.csl.spi.{GsfUtilities, ParserResult}
+import org.netbeans.modules.scala.core.ScalaSourceFile
 import org.openide.filesystems.{FileObject}
 import org.openide.util.Exceptions
 
@@ -223,34 +224,24 @@ trait ScalaElements {self: ScalaGlobal =>
       if (isJava) {
         javaElement = JavaSourceUtil.getJavaElement(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), symbol)
       } else {
-        getDoc foreach {srcDoc =>
-          assert(path != null)
-          try {
-            val text = srcDoc.getChars(0, srcDoc.getLength)
-            val f = new File(path)
-            val af = if (f != null) new PlainFile(f) else new VirtualFile("<current>", "")
-            val srcFile = new BatchSourceFile(af, text)
-
-            val th = TokenHierarchy.get(srcDoc)
-            if (th == null) {
-              return
-            }
-
-            /**
-             * @Note by compiling the related source file, this symbol will
-             * be automatically loaded next time, but the position/sourcefile
-             * info is not updated for this symbol yet. But we can find the
-             * position via the AST Tree, or use a tree visitor to update
-             * all symbols Position
-             */
-            val root = askForSemantic(srcFile, true, th)
-            root.findDfnMatched(symbol) match {
-              case Some(x) => offset = x.idOffset(th)
-              case None =>
-            }
-          } catch {case ex: BadLocationException => Exceptions.printStackTrace(ex)}
+        val fo = getFileObject 
+        assert(fo != null)
+        val srcFile = ScalaSourceFile.sourceFileOf(fo)
+        try {
+          /**
+           * @Note by compiling the related source file, this symbol will
+           * be automatically loaded next time, but the position/sourcefile
+           * info is not updated for this symbol yet. But we can find the
+           * position via the AST Tree, or use a tree visitor to update
+           * all symbols Position
+           */
+          val root = askForSemantic(srcFile, true)
+          root.findDfnMatched(symbol) match {
+            case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
+            case None =>
+          }
+        } catch {case ex: BadLocationException => Exceptions.printStackTrace(ex)}
                 
-        }
       }
 
       loaded = true
