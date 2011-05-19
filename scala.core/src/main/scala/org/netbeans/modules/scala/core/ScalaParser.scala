@@ -57,6 +57,7 @@ class ScalaParser extends Parser {
 
   private val logger = Logger.getLogger(this.getClass.getName)
 
+  private var prevSnapshot: Snapshot = _
   private var parserResult: ScalaParserResult = _
 
   @throws(classOf[ParseException])
@@ -71,9 +72,15 @@ class ScalaParser extends Parser {
 
   @throws(classOf[ParseException])
   override def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent): Unit = {
-    logger.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
-    //  will lazily do true parsing in ScalaParserResult
-    parserResult = new ScalaParserResult(snapshot)
+    // The SourceModificationEvent seems set sourceModified=true even when switch editor windows, 
+    // so try to avoid redundant parsing by comparing the content
+    // logger.info("event=" + event + ", prev parserResult=" + parserResult)
+    if (prevSnapshot == null || (snapshot.getText != prevSnapshot.getText)) {
+      logger.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
+      prevSnapshot = snapshot
+      //  will lazily do true parsing in ScalaParserResult  
+      parserResult = new ScalaParserResult(snapshot)
+    }
   }
 
   private def isIndexUpToDate(fo: FileObject): Boolean = {

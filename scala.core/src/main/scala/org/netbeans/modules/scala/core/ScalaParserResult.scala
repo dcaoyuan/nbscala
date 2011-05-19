@@ -100,10 +100,10 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
                 errs.add(error)
                 //error.setParameters(Array(offset, msg))                
               } else {
-                println("Not same SourceFile")
+                println("Not same SourceFile: " + pos.source.file)
               }
 
-            }          
+            }
             errs
         }
       case _ => java.util.Collections.emptyList[Error]
@@ -148,7 +148,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     isInSemantic = false
   }
 
-  override def toString = "ParserResult(file=" + this.fileObject + ")"
+  override def toString = "ParserResult(file=" + this.fileObject.getNameExt + ")"
 }
 
 object ScalaParserResult {
