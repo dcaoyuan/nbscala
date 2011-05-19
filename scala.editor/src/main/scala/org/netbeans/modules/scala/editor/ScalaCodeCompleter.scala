@@ -57,8 +57,6 @@ import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
 import org.netbeans.modules.scala.core.ScalaGlobal
 import org.netbeans.modules.scala.core.rats.ParserScala
 
-import scala.tools.nsc.symtab.Flags
-
 /**
  *
  * @author Caoyuan Deng
@@ -585,10 +583,12 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
       global.askScopeCompletion(pos, resp)
       resp.get match {
         case Left(members) =>
-          for (ScopeMember(sym, tpe, accessible, viaImport) <- members) {
+          for (ScopeMember(sym, tpe, accessible, viaImport) <- members
+               if startsWith(sym.nameString, prefix) && !sym.isConstructor
+          ) {
             // @TODO bypass bug in Global.Members.add method, which drops setter/getter and only keeps privated variable/value
             val isAccessible = accessible || (sym.isVariable || sym.isValue)
-            if (isAccessible && startsWith(sym.nameString, prefix) && !sym.isConstructor) {
+            if (isAccessible) {
               createSymbolProposal(sym) foreach {proposals add _}
             }
           }
@@ -610,10 +610,12 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
       global.askTypeCompletion(pos, resp)
       resp.get match {
         case Left(members) =>
-          for (TypeMember(sym, tpe, accessible, inherited, viaView) <- members) {
+          for (TypeMember(sym, tpe, accessible, inherited, viaView) <- members 
+               if startsWith(sym.nameString, prefix) && !sym.isConstructor
+          ) {
             // @TODO bypass bug in Global.Members.add method, which drops setter/getter and only keeps privated variable/value
             val isAccessible = accessible || (sym.isVariable || sym.isValue)
-            if (isAccessible && startsWith(sym.nameString, prefix) && !sym.isConstructor) {
+            if (isAccessible) {
               createSymbolProposal(sym) foreach {proposal =>
                 proposal.getElement.asInstanceOf[ScalaElement].isInherited = inherited
                 proposal.getElement.asInstanceOf[ScalaElement].isImplicit = (viaView != NoSymbol)
