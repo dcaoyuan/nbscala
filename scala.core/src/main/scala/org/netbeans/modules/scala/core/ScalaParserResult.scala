@@ -62,8 +62,14 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     for ((k, v) <- ScalaParserResult.unreleasedResults) println(v)
   }
 
-  private var _root: ScalaRootScope = _
-  @volatile var loaded = false
+  private val fileObject = snapshot.getSource.getFileObject
+  val srcFile = ScalaSourceFile.sourceFileOf(fileObject)
+  val global = ScalaGlobal.getGlobal(fileObject)
+  // when a new ScalaParserResult is created, we need to reset the content(snapshot) and unit of srcFile
+  srcFile.snapshot = snapshot
+  global.resetUnitOf(srcFile)
+
+  @volatile private var isInSemantic = false
 
   private lazy val errors: java.util.List[Error] = {
     global.reporter match {
@@ -71,7 +77,6 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
           case Nil => java.util.Collections.emptyList[Error]
           case scalaErrors =>
             val errs = new java.util.ArrayList[Error]
-            val fo = snapshot.getSource.getFileObject
             //val doc = snapshot.getSource.getDocument(true).asInstanceOf[BaseDocument]
             for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
               // * It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
@@ -89,7 +94,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
 //                }
 
                 val isLineError = (end == -1)
-                val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fo, offset, end, isLineError, severity)
+                val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fileObject, offset, end, isLineError, severity)
                 //println(msg + " (" + offset + ")")
 
                 errs.add(error)
@@ -120,27 +125,26 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
    */
   override def getDiagnostics: java.util.List[_ <: Error] = errors
 
-  lazy val srcFile = ScalaSourceFile.sourceFileOf(snapshot.getSource.getFileObject)
-  lazy val global = ScalaGlobal.getGlobal(snapshot.getSource.getFileObject)
-
-  def rootScope: ScalaRootScope = {
-    if (!loaded) {
-      srcFile.snapshot = snapshot
-      // @Note it's safer to force reload here, since a partial typed tree may cause unpredicted error :
-      _root = global.askForSemantic(srcFile, true)
-      loaded = true      
-    }
-    _root
+  lazy val rootScope: ScalaRootScope = {
+    isInSemantic = true
+    val root = global.askForSemantic(srcFile, false)
+    isInSemantic = false
+    root
   }
 
   lazy val rootScopeForDebug: ScalaRootScope = {
-    srcFile.snapshot = snapshot
-    val fo = srcFile.fileObject
-    val global = ScalaGlobal.getGlobal(fo, true)
+    val global = ScalaGlobal.getGlobal(fileObject, true)
     global.compileSourceForDebug(srcFile)
   }
+  
+  def cancelSemantic {
+    if (isInSemantic) {
+      global.cancelSemantic(srcFile)
+    }
+    isInSemantic = false
+  }
 
-  override def toString = "ParserResult(file=" + snapshot.getSource.getFileObject
+  override def toString = "ParserResult(file=" + this.fileObject + ")"
 }
 
 object ScalaParserResult {

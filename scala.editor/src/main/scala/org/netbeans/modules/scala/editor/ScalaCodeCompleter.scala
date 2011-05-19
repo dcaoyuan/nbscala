@@ -62,6 +62,10 @@ import scala.tools.nsc.symtab.Flags
 /**
  *
  * @author Caoyuan Deng
+ * 
+ * It seems CompleteHandle will always be called before other csl features (semantic, structure etc)
+ * that's good. But then, we may need to make sure the prResult had been reset first and 
+ * go to semantic analysis when root is required.
  */
 object ScalaCodeCompleter {
   // Dbl-space lines to keep formatter from collapsing pairs into a block
@@ -182,14 +186,6 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
     val global = ScalaCodeCompleter.this.global
   } with ScalaSymbolResolver
 
-  /**
-   * It seems CompleteHandle will always be called before other csl features (semantic, structure etc)
-   * that's good. But then, we may need to do semantic analysis first 
-   */
-  private def needSemantice {
-    pResult.rootScope // force to load lazy val rootScope
-  }
-  
   var caseSensitive: Boolean = _
   var completionResult: DefaultCompletionResult = _
   var anchor: Int = _
@@ -464,8 +460,6 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
                                   anchorOffsetHolder: Array[Int],
                                   alternativesHolder: Array[Set[Function]]): Boolean = {
     try {
-      needSemantice
-      
       val pResult = info.asInstanceOf[ScalaParserResult]
       val root = pResult.rootScope
 
@@ -584,8 +578,6 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
   }
 
   def completeLocals(proposals: java.util.List[CompletionProposal]) {
-    needSemantice
-
     val pos = rangePos(pResult.srcFile, lexOffset, lexOffset, lexOffset)
     val resp = new Response[List[Member]]
     try {
@@ -603,8 +595,6 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
   }
 
   def completeSymbolMembers(baseToken: Token[TokenId], proposals: java.util.List[CompletionProposal]): Boolean = {
-    needSemantice
-    
     val offset = baseToken.offset(th)
     val endOffset = offset + baseToken.length - 1
     val pos = rangePos(pResult.srcFile, offset, offset, endOffset)

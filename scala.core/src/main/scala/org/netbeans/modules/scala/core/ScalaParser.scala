@@ -47,6 +47,7 @@ import org.netbeans.modules.parsing.api.{Snapshot, Task}
 import org.netbeans.modules.parsing.impl.indexing.TimeStamps
 import org.netbeans.modules.parsing.spi.{ParseException, Parser, ParserFactory, SourceModificationEvent}
 import org.openide.filesystems.{FileObject, FileUtil}
+
 /**
  * 
  * @author Caoyuan Deng
@@ -56,26 +57,23 @@ class ScalaParser extends Parser {
 
   private val logger = Logger.getLogger(this.getClass.getName)
 
-  private var lastResult: ScalaParserResult = _
+  private var parserResult: ScalaParserResult = _
 
   @throws(classOf[ParseException])
   override def getResult(task: Task): Parser.Result = {
-    assert(lastResult != null, "getResult() called prior parse()") //NOI18N
-    lastResult
+    assert(parserResult != null, "getResult() called prior parse()") //NOI18N
+    parserResult
   }
 
   override def cancel {
-    if (lastResult != null && !lastResult.loaded) {
-      lastResult.global.cancelSemantic(lastResult.srcFile)
-      lastResult.loaded = false
-    }
+    if (parserResult != null) parserResult.cancelSemantic
   }
 
   @throws(classOf[ParseException])
   override def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent): Unit = {
     logger.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
     //  will lazily do true parsing in ScalaParserResult
-    lastResult = new ScalaParserResult(snapshot)
+    parserResult = new ScalaParserResult(snapshot)
   }
 
   private def isIndexUpToDate(fo: FileObject): Boolean = {

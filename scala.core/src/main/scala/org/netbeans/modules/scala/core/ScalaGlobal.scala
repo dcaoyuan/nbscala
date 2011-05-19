@@ -673,15 +673,6 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   }
 
   def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = {
-    getUnitOf(source) match {
-      case Some(unit) if unit.source ne source => 
-        //removeUnitOf(unit.source)
-        //val tmpResp = new Response[Unit]
-        //askReload(List(source), tmpResp)
-        //tmpResp.get
-      case _ =>
-    }
-    
     resetReporter
     
     workingSource = Some(source)

@@ -36,6 +36,7 @@ extends scala.tools.nsc.interactive.Global(_settings, _reporter, projectName) {
   }
 
   final def recoveredType(tree: Tree): Option[Type] = {
+    println("Try to get recoveredType of: " + tree)
     def findViaGet(atree: Tree) = qualToRecoveredType.get(atree) match {
       case None => qualToRecoveredType find {
           case (Select(qual, _), _) => qual == atree
