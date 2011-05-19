@@ -85,7 +85,7 @@ class ScalaParser extends Parser {
       }
     }
     
-    return false
+    false
   }
 
   override def addChangeListener(changeListener: ChangeListener): Unit = {

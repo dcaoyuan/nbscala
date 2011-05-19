@@ -567,7 +567,6 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
 
       if (anchorOffset == -1) {
         anchorOffset = call.idToken.offset(th) // TODO - compute
-
       }
       anchorOffsetHolder(0) = anchorOffset
     } catch {
@@ -578,23 +577,29 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
   }
 
   def completeLocals(proposals: java.util.List[CompletionProposal]) {
+    //pResult.toTyped
+    
     val pos = rangePos(pResult.srcFile, lexOffset, lexOffset, lexOffset)
     val resp = new Response[List[Member]]
     try {
       global.askScopeCompletion(pos, resp)
       resp.get match {
         case Left(members) =>
-          for (ScopeMember(sym, tpe, accessible, viaImport) <- members
-               if accessible && startsWith(sym.nameString, prefix) && !sym.isConstructor
-          ) {
-            createSymbolProposal(sym) foreach {proposals add _}
+          for (ScopeMember(sym, tpe, accessible, viaImport) <- members) {
+            if (accessible && startsWith(sym.nameString, prefix) && !sym.isConstructor) {
+              createSymbolProposal(sym) foreach {proposals add _}
+            }
           }
-        case Right(thr) => ScalaGlobal.resetLate(global, thr)
+        case Right(ex) => ScalaGlobal.resetLate(global, ex)
       }
-    } catch {case ex => ScalaGlobal.resetLate(global, ex)} // there is: scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
+    } catch {
+      case ex => ScalaGlobal.resetLate(global, ex) // there is: scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
+    } 
   }
 
   def completeSymbolMembers(baseToken: Token[TokenId], proposals: java.util.List[CompletionProposal]): Boolean = {
+    //pResult.toTyped
+    
     val offset = baseToken.offset(th)
     val endOffset = offset + baseToken.length - 1
     val pos = rangePos(pResult.srcFile, offset, offset, endOffset)
@@ -603,18 +608,20 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
       global.askTypeCompletion(pos, resp)
       resp.get match {
         case Left(members) =>
-          for (TypeMember(sym, tpe, accessible, inherited, viaView) <- members
-               if accessible && startsWith(sym.nameString, prefix) && !sym.isConstructor
-          ) {
-            createSymbolProposal(sym) foreach {proposal =>
-              proposal.getElement.asInstanceOf[ScalaElement].isInherited = inherited
-              proposal.getElement.asInstanceOf[ScalaElement].isImplicit = (viaView != NoSymbol)
-              proposals.add(proposal)
+          for (TypeMember(sym, tpe, accessible, inherited, viaView) <- members) {
+            if (accessible && startsWith(sym.nameString, prefix) && !sym.isConstructor) {
+              createSymbolProposal(sym) foreach {proposal =>
+                proposal.getElement.asInstanceOf[ScalaElement].isInherited = inherited
+                proposal.getElement.asInstanceOf[ScalaElement].isImplicit = (viaView != NoSymbol)
+                proposals.add(proposal)
+              }
             }
           }
-        case Right(ex) => {ScalaGlobal.resetLate(global, ex)}
+        case Right(ex) => ScalaGlobal.resetLate(global, ex)
       }
-    } catch {case ex => ScalaGlobal.resetLate(global, ex)}
+    } catch {
+      case ex => ScalaGlobal.resetLate(global, ex)
+    }
 
     // always return true ?
     true

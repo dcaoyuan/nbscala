@@ -65,7 +65,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   private val fileObject = snapshot.getSource.getFileObject
   val srcFile = ScalaSourceFile.sourceFileOf(fileObject)
   val global = ScalaGlobal.getGlobal(fileObject)
-  // when a new ScalaParserResult is created, we need to reset the content(snapshot) and unit of srcFile
+  // when a new ScalaParserResult is created, we need to reset the content(via snapshot) and unit of srcFile
   srcFile.snapshot = snapshot
   global.resetUnitOf(srcFile)
 
@@ -125,6 +125,10 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
    */
   override def getDiagnostics: java.util.List[_ <: Error] = errors
 
+  def toTyped {
+    global.askForType(srcFile, false)
+  }
+  
   lazy val rootScope: ScalaRootScope = {
     isInSemantic = true
     val root = global.askForSemantic(srcFile, false)

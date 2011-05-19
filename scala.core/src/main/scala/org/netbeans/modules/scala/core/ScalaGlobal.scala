@@ -672,6 +672,24 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
 
+  def askForType(source: ScalaSourceFile, forceReload: Boolean) {
+    try {
+      val typeResp = new Response[Tree]
+      askType(source, forceReload, typeResp)
+      typeResp.get
+    } catch {
+      case ex: AssertionError =>
+        /**
+         * @Note: avoid scala nsc's assert error. Since global's
+         * symbol table may have been broken, we have to reset ScalaGlobal
+         * to clean this global
+         */
+        ScalaGlobal.resetLate(this, ex)
+      case ex: java.lang.Error => // avoid scala nsc's Error error
+      case ex: Throwable => // just ignore all ex
+    }
+  }
+  
   def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = {
     resetReporter
     
