@@ -586,16 +586,14 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
           for (ScopeMember(sym, tpe, accessible, viaImport) <- members
                if startsWith(sym.nameString, prefix) && !sym.isConstructor
           ) {
-            // @TODO bypass bug in Global.Members.add method, which drops setter/getter and only keeps privated variable/value
-            val isAccessible = accessible || (sym.isVariable || sym.isValue)
-            if (isAccessible) {
+            if (accessible) {
               createSymbolProposal(sym) foreach {proposals add _}
             }
           }
         case Right(ex) => ScalaGlobal.resetLate(global, ex)
       }
     } catch {
-      case ex => ScalaGlobal.resetLate(global, ex) // there is scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
+      case ex => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
     } 
   }
 
@@ -613,9 +611,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
           for (TypeMember(sym, tpe, accessible, inherited, viaView) <- members 
                if startsWith(sym.nameString, prefix) && !sym.isConstructor
           ) {
-            // @TODO bypass bug in Global.Members.add method, which drops setter/getter and only keeps privated variable/value
-            val isAccessible = accessible || (sym.isVariable || sym.isValue)
-            if (isAccessible) {
+            if (accessible) {
               createSymbolProposal(sym) foreach {proposal =>
                 proposal.getElement.asInstanceOf[ScalaElement].isInherited = inherited
                 proposal.getElement.asInstanceOf[ScalaElement].isImplicit = (viaView != NoSymbol)
