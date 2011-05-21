@@ -308,10 +308,16 @@ object ScalaGlobal {
     settings.classpath.value = compCpStr
     logger.info("project's classpath: " + settings.classpath.value)
 
-    // * should set extdirs to empty, otherwise all jars under scala.home/lib will be added
-    // * which brings unwanted scala runtime (scala runtime should be set in compCpStr).
-    // * @see scala.tools.nsc.Settings#extdirsDefault
+    // Should set extdirs to empty, otherwise all jars under scala.home/lib will be added
+    // which brings unwanted scala runtime (scala runtime should be set in compCpStr).
+    // @see scala.tools.nsc.Settings#extdirsDefault
     settings.extdirs.value = ""
+    
+    // Should explictly set the pluginsDir, otherwise the default will be set to scala.home/misc
+    // which may bring uncompitable verions of scala's runtime call
+    // @see scala.tools.util.PathResolver.Defaults
+    settings.pluginsDir.value = ""
+    settings.plugin.value = Nil
 
     // ----- set sourcepath, outpath
     
