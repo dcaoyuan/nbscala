@@ -69,39 +69,18 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   val global = ScalaGlobal.getGlobal(fileObject)
   // when a new ScalaParserResult is created, we need to reset the content(via snapshot) and unit of srcFile
   srcFile.snapshot = snapshot
-  global.resetUnitOf(srcFile)
+  reset
 
   @volatile private var isInSemantic = false
   private var _root: ScalaRootScope = _
+  private var _errors: java.util.List[Error] = _
 
-  private lazy val errors: java.util.List[Error] = {
-    global.reporter match {
-      case x: ErrorReporter => x.errors match {
-          case Nil => java.util.Collections.emptyList[Error]
-          case scalaErrors =>
-            val errs = new java.util.ArrayList[Error]
-            for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
-              // * It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
-              if (srcFile.file eq pos.source.file) {
-                val offset = pos.startOrPoint
-                val end = pos.endOrPoint
-
-                val isLineError = (end == -1)
-                val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fileObject, offset, end, isLineError, severity)
-                //error.setParameters(Array(offset, msg))                
-
-                errs.add(error)
-              } else {
-                //println("Not same SourceFile: " + pos.source.file)
-              }
-
-            }
-            errs
-        }
-      case _ => java.util.Collections.emptyList[Error]
-    }
+  private def reset {
+    global.resetUnitOf(srcFile)
+    _root = null
+    _errors = null
   }
-
+  
   /**
    * Utility method to get the raw end in doc, reserved here for reference
    */
@@ -118,7 +97,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   }
   
   override protected def invalidate {
-    // XXX: what exactly should we do here?
+    // do nothing, so we can maintain the parsed result by ourselves
   }
 
   /** @todo since only call rootScope will cause actual parsing, those parsing task
@@ -130,8 +109,37 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
    * other editor behavior, or, the performance of complier is not the bottleneck
    * any more, I'll add it back.
    */
-  override def getDiagnostics: java.util.List[_ <: Error] = errors
+  override def getDiagnostics: java.util.List[_ <: Error] = {
+    if (_errors == null) {
+      _errors = global.reporter match {
+        case x: ErrorReporter => x.errors match {
+            case Nil => java.util.Collections.emptyList[Error]
+            case scalaErrors =>
+              val errs = new java.util.ArrayList[Error]
+              for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
+                // It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
+                if (srcFile.file eq pos.source.file) {
+                  val offset = pos.startOrPoint
+                  val end = pos.endOrPoint
 
+                  val isLineError = (end == -1)
+                  val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fileObject, offset, end, isLineError, severity)
+                  //error.setParameters(Array(offset, msg))                
+
+                  errs.add(error)
+                } else {
+                  //println("Not same SourceFile: " + pos.source.file)
+                }
+
+              }
+              errs
+          }
+        case _ => java.util.Collections.emptyList[Error]
+      }
+    }
+    _errors
+  }
+  
   def toTyped {
     global.askForType(srcFile, false)
   }
@@ -154,9 +162,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
       global.cancelSemantic(srcFile)
     } else false
     
-    if (willCancel) {
-      _root = null
-    }
+    if (willCancel) reset
     
     isInSemantic = false
     willCancel

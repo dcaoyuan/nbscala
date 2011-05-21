@@ -288,8 +288,8 @@ object ScalaGlobal {
       settings.verbose.value = false
     }
 
-    var bootCp = ClassPath.getClassPath(fo, ClassPath.BOOT)
-    var compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
+    val bootCp = ClassPath.getClassPath(fo, ClassPath.BOOT)
+    val compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
     val srcCp  = ClassPath.getClassPath(fo, ClassPath.SOURCE)
 
     val inStdLib =
@@ -329,12 +329,12 @@ object ScalaGlobal {
     for ((src, out) <- if (forTest) resource.testSrcOutDirsPath else resource.srcOutDirsPath) {
       srcPaths ::= src
 
-      // * we only need one out path
+      // we only need one out path
       if (outPath == "") {
         outPath = out
 
-        // * Had out path dir been deleted? (a clean task etc), if so, create it, since scalac
-        // * can't parse anything correctly without an exist out dir (sounds a bit strange)
+        // Did out path dir be deleted? (a clean task etc), if so, create it, since scalac
+        // can't parse anything correctly without an exist out dir (sounds a bit strange)
         try {
           val file = new File(outPath)
           if (!file.exists) file.mkdirs
@@ -342,7 +342,7 @@ object ScalaGlobal {
       }
     }
 
-    // * @Note: do not add src path to global for test, since the corresponding build/classes has been added to compCp
+    // @Note: do not add src path to global for test, since the corresponding build/classes has been added to compCp
 
     settings.sourcepath.tryToSet(srcPaths.reverse)
     settings.outdir.value = outPath
@@ -355,7 +355,7 @@ object ScalaGlobal {
       logger.info("Project's srcCp is null !")
     }
     
-    // * @Note: settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?
+    // @Note: settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?
     /*_
      for ((src, out) <- if (forTest) dirs.scalaTestSrcOutDirs else dirs.scalaSrcOutDirs) {
      settings.outputDirs.add(src, out)
@@ -378,21 +378,21 @@ object ScalaGlobal {
     }
    
     if (!forDebug) {
-      // * we have to do following step to get mixed java sources visible to scala sources
+      // we have to do following step to get mixed java sources visible to scala sources
       if (srcCp != null) {
         val srcCpListener = new SrcCpListener(global, srcCp)
         globalToListeners += (global -> (srcCpListener :: globalToListeners.getOrElse(global, Nil)))
         project.getProjectDirectory.getFileSystem.addFileChangeListener(srcCpListener)
 
-        // * should push java srcs before scala srcs
+        // should push java srcs before scala srcs
         val javaSrcs = new ArrayBuffer[FileObject]
         srcCp.getRoots foreach {x => findAllSourcesOf("text/x-java", x, javaSrcs)}
 
         val scalaSrcs = new ArrayBuffer[FileObject]
-        // * push scala src files to get classes that with different name from file name to be recognized properly
+        // push scala src files to get classes that with different name from file name to be recognized properly
         srcCp.getRoots foreach {x => findAllSourcesOf("text/x-scala", x, scalaSrcs)}
 
-        // * the reporter should be set, otherwise, no java source is resolved, maybe throws exception already.
+        // the reporter should be set, otherwise, no java source is resolved, maybe throws exception already.
         global askForReLoad (javaSrcs ++= scalaSrcs).toList
       }
     }
@@ -445,7 +445,7 @@ object ScalaGlobal {
   private def findOutDir(project: Project, srcRoot: FileObject): FileObject = {
     val srcRootUrl: URL =
       try {
-        // * make sure the url is in same form of BinaryForSourceQueryImplementation
+        // make sure the url is in same form of BinaryForSourceQueryImplementation
         FileUtil.toFile(srcRoot).toURI.toURL
       } catch {case ex: MalformedURLException => Exceptions.printStackTrace(ex); null}
 
@@ -497,7 +497,7 @@ object ScalaGlobal {
       }
     }
 
-    // * global requires an exist out path, so we have to create a tmp folder
+    // global requires an exist out path, so we have to create a tmp folder
     if (out == null) {
       val projectDir = project.getProjectDirectory
       if (projectDir != null && projectDir.isFolder) {
@@ -641,8 +641,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
   private val log1 = Logger.getLogger(this.getClass.getName)
   
-  // * Inner object inside a class is not singleton, so it's safe for each instance of ScalaGlobal,
-  // * but, is it thread safe? http://lampsvn.epfl.ch/trac/scala/ticket/1591
+  // Inner object inside a class is not singleton, so it's safe for each instance of ScalaGlobal,
+  // but, is it thread safe? http://lampsvn.epfl.ch/trac/scala/ticket/1591
   private object scalaAstVisitor extends {
     val global: ScalaGlobal.this.type = ScalaGlobal.this
   } with ScalaAstVisitor

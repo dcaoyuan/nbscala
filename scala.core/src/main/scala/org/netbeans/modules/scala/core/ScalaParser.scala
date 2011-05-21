@@ -66,10 +66,14 @@ class ScalaParser extends Parser {
     _result
   }
 
+  override def cancel {
+    if (_result != null) _result.cancelSemantic
+  }
+  
   /**
    * It seems that after calling on this cancel method, there may not be followed call on parse() ?
    */
-  override def cancel(reason: Parser.CancelReason, event: SourceModificationEvent) {
+  /* override */ def cancel_todo(reason: Parser.CancelReason, event: SourceModificationEvent) {
     reason match {
       case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => 
         log.fine("Get cancel request from event: " + event.getModifiedSource + ", sourceChanged=" + event.sourceChanged)
@@ -87,12 +91,12 @@ class ScalaParser extends Parser {
     // The SourceModificationEvent seems set sourceModified=true even when switch between editor windows, 
     // so try to avoid redundant parsing by checking if the content is acutally modified
     log.fine("Request to parse " + event.getModifiedSource.getFileObject.getNameExt + ", prev parserResult=" + _result)
-    //if (_result == null || (snapshot.getText != _snapshot.getText)) {
-    log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
-    _snapshot = snapshot
-    //  will lazily do true parsing in ScalaParserResult
-    _result = new ScalaParserResult(snapshot)
-    //}
+    if (_result == null || (snapshot.getText != _snapshot.getText)) {
+      log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
+      _snapshot = snapshot
+      //  will lazily do true parsing in ScalaParserResult
+      _result = new ScalaParserResult(snapshot)
+    }
   }
 
   private def isIndexUpToDate(fo: FileObject): Boolean = {
