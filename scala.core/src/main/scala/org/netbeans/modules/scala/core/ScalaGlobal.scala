@@ -414,8 +414,8 @@ object ScalaGlobal {
     val scalaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_SCALA)
     val javaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_JAVA)
 
-    logger.info((scalaSgs map (_.getRootFolder)).mkString("project's src group[ScalaType] dir: [", ", ", "]"))
-    logger.info((javaSgs  map (_.getRootFolder)).mkString("project's src group[JavaType]  dir: [", ", ", "]"))
+    logger.fine((scalaSgs map (_.getRootFolder)).mkString("project's src group[ScalaType] dir: [", ", ", "]"))
+    logger.fine((javaSgs  map (_.getRootFolder)).mkString("project's src group[JavaType]  dir: [", ", ", "]"))
 
     List(scalaSgs, javaSgs) foreach {
       case Array(srcSg) =>
@@ -645,7 +645,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   } with ScalaAstVisitor
 
   private var workingSource: Option[SourceFile] = None
-  private var semanticCancelled = false
+  private var isCancelingSemantic = false
 
   private def resetReporter {
     this.reporter match {
@@ -702,20 +702,20 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     resetReporter
     
     workingSource = Some(source)
-    semanticCancelled = false
+    isCancelingSemantic = false
 
     qualToRecoveredType = Map()
 
     val response = new Response[ScalaRootScope]
     try {
-      if (semanticCancelled) return ScalaRootScope.EMPTY
+      if (isCancelingSemantic) return ScalaRootScope.EMPTY
       val typeResp = new Response[Tree]
       askType(source, forceReload, typeResp)
 
-      if (semanticCancelled) return ScalaRootScope.EMPTY
+      if (isCancelingSemantic) return ScalaRootScope.EMPTY
       typeResp.get
 
-      if (semanticCancelled) return ScalaRootScope.EMPTY
+      if (isCancelingSemantic) return ScalaRootScope.EMPTY
       askSemantic(source, response)
     } catch {
       case ex: AssertionError =>
@@ -747,23 +747,27 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     getUnitOf(source) match {
       case Some(unit) => 
         val root = scalaAstVisitor(unit, source.tokenHierarchy)
-        log1.info("Visit took " + (System.currentTimeMillis - start) + "ms")
+        log1.info("Visited " + source.file.file.getName + " in " + (System.currentTimeMillis - start) + "ms")
         root
       case None => ScalaRootScope.EMPTY
     }
   }
 
-  def cancelSemantic(source: SourceFile) {
+  /**
+   * @return will cancel
+   */
+  def cancelSemantic(source: SourceFile): Boolean = {
     workingSource match {
       case Some(x) =>
         val fileA = x.file.file
         val fileB = source.file.file
         if (fileA != null && fileB != null && fileA.getAbsolutePath == fileB.getAbsolutePath) {
           log1.info("Cancel semantic " + fileA.getName)
-          semanticCancelled = true
+          isCancelingSemantic = true
           scalaAstVisitor.cancel
-        }
-      case _ =>
+          true
+        } else false
+      case _ => false
     }
   }
 

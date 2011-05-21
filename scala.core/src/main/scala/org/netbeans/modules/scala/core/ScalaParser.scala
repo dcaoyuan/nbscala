@@ -55,35 +55,44 @@ import org.openide.filesystems.{FileObject, FileUtil}
 class ScalaParser extends Parser {
   import ScalaParser._
 
-  private val logger = Logger.getLogger(this.getClass.getName)
+  private val log = Logger.getLogger(this.getClass.getName)
 
-  private var prevSnapshot: Snapshot = _
-  private var parserResult: ScalaParserResult = _
+  private var _snapshot: Snapshot = _
+  private var _result: ScalaParserResult = _
 
   @throws(classOf[ParseException])
   override def getResult(task: Task): Parser.Result = {
-    assert(parserResult != null, "getResult() called prior parse()") //NOI18N
-    parserResult
+    assert(_result != null, "getResult() called prior parse() or parse() returned a null result") //NOI18N
+    _result
   }
 
-  override def cancel(reason: Parser.CancelReason, event: SourceModificationEvent)  {
+  /**
+   * It seems that after calling on this cancel method, there may not be followed call on parse() ?
+   */
+  override def cancel(reason: Parser.CancelReason, event: SourceModificationEvent) {
     reason match {
-      case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => if (parserResult != null) parserResult.cancelSemantic
+      case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => 
+        log.fine("Get cancel request from event: " + event.getModifiedSource + ", sourceChanged=" + event.sourceChanged)
+        // We'll cancelSemantic only when the event is saying sourceChanged, since only in this case, we can expect a
+        // followed parse(..) call. There are other cases that won't be followed with a call on parse(..)
+        if (event.sourceChanged && _result != null) {
+          _result.cancelSemantic
+        }
       case _ =>
     }
   }
 
   @throws(classOf[ParseException])
   override def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent): Unit = {
-    // The SourceModificationEvent seems set sourceModified=true even when switch editor windows, 
-    // so try to avoid redundant parsing by comparing the content
-    // logger.info("event=" + event + ", prev parserResult=" + parserResult)
-    if (prevSnapshot == null || (snapshot.getText != prevSnapshot.getText)) {
-      logger.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
-      prevSnapshot = snapshot
-      //  will lazily do true parsing in ScalaParserResult  
-      parserResult = new ScalaParserResult(snapshot)
-    }
+    // The SourceModificationEvent seems set sourceModified=true even when switch between editor windows, 
+    // so try to avoid redundant parsing by checking if the content is acutally modified
+    log.fine("Request to parse " + event.getModifiedSource.getFileObject.getNameExt + ", prev parserResult=" + _result)
+    //if (_result == null || (snapshot.getText != _snapshot.getText)) {
+    log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
+    _snapshot = snapshot
+    //  will lazily do true parsing in ScalaParserResult
+    _result = new ScalaParserResult(snapshot)
+    //}
   }
 
   private def isIndexUpToDate(fo: FileObject): Boolean = {

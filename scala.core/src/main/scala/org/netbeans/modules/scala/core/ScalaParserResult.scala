@@ -40,6 +40,7 @@
  */
 package org.netbeans.modules.scala.core
 
+import java.util.logging.Logger
 import javax.swing.text.BadLocationException
 import org.netbeans.editor.BaseDocument
 import org.netbeans.editor.Utilities
@@ -55,11 +56,12 @@ import scala.collection.mutable.WeakHashMap
  * @author Caoyuan Deng
  */
 class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
+  private val log = Logger.getLogger(this.getClass.getName)
 
   if (ScalaParserResult.debug) {
     ScalaParserResult.unreleasedResults.put(this, snapshot.getSource.getFileObject.getPath)
-    println("==== unreleased parser results: ")
-    for ((k, v) <- ScalaParserResult.unreleasedResults) println(v)
+    log.info("==== unreleased parser results: ")
+    for ((k, v) <- ScalaParserResult.unreleasedResults) log.info(v)
   }
 
   private val fileObject = snapshot.getSource.getFileObject
@@ -134,13 +136,30 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     global.askForType(srcFile, false)
   }
   
+  def toSemanticed {
+    _root = global.askForSemantic(srcFile, false)
+  }
+  
   def rootScope: ScalaRootScope = {
     if (_root == null) {
       isInSemantic = true
-      _root = global.askForSemantic(srcFile, false)
+      toSemanticed
       isInSemantic = false
     }
     _root
+  }
+
+  def cancelSemantic: Boolean = {
+    val willCancel = if (isInSemantic) {
+      global.cancelSemantic(srcFile)
+    } else false
+    
+    if (willCancel) {
+      _root = null
+    }
+    
+    isInSemantic = false
+    willCancel
   }
 
   lazy val rootScopeForDebug: ScalaRootScope = {
@@ -148,14 +167,6 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     global.compileSourceForDebug(srcFile)
   }
   
-  def cancelSemantic {
-    if (isInSemantic) {
-      global.cancelSemantic(srcFile)
-      _root = null
-    }
-    isInSemantic = false
-  }
-
   override def toString = "ParserResult(file=" + this.fileObject.getNameExt + ")"
 }
 

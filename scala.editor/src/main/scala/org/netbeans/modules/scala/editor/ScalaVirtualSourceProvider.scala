@@ -92,7 +92,9 @@ import scala.tools.nsc.symtab.Flags
 class ScalaVirtualSourceProvider extends VirtualSourceProvider {
   import ScalaVirtualSourceProvider._
 
-  Log.info(this.getClass.getSimpleName + " is created")
+  private val log2 = Logger.getLogger(this.getClass.getName)
+
+  log2.info(this.getClass.getSimpleName + " is created")
 
   /** @Todo
    * The only reason to implement JavaSourceProvider is to get a none-null JavaSource#forFileObject,
@@ -128,13 +130,14 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
     while (itr.hasNext) {
       val file = itr.next
       val fo = FileUtil.toFileObject(file)
-      // * JavaIndexer tends to reindex all dependent (via VirtualSources calculating) files
-      // * when dependee source file is modified, it's not neccessary for VirtualSource in my opinion,
-      // * so, filter them here:
+      // JavaIndexer tends to reindex all dependent (via VirtualSources calculating) files
+      // when dependee source file is modified, it's not neccessary for VirtualSource in my opinion,
+      // so, filter them here:
       val isUpToDate = timeStamps.checkAndStoreTimestamp(fo, FileUtil.getRelativePath(root, fo))
       if (!isUpToDate) {
-        Log.info("Translating " + fo.getNameExt)
+        val t0 = System.currentTimeMillis
         translate(file, sourceRoot, result)
+        log2.info("Translated " + fo.getNameExt + " in " + (System.currentTimeMillis - t0) + "ms")
       }
     }
   }
@@ -713,7 +716,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
       if (info == null) return None
       try {
         Some(jsig2(true, Nil, info))
-      } catch {case ex: UnknownSig => Log.warning(sym + " has UnknownSig"); None}
+      } catch {case ex: UnknownSig => log2.warning(sym + " has UnknownSig"); None}
     }
 
     class UnknownSig extends Exception
@@ -789,8 +792,6 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
 }
 
 object ScalaVirtualSourceProvider {
-  val Log = Logger.getLogger(classOf[ScalaVirtualSourceProvider].getName)
-
   private def returnStrOfType(tpe: String) = tpe match {
     case "scala.runtime.BoxedUnit" => "return;"
     case "scala.Unit" => "return;"
