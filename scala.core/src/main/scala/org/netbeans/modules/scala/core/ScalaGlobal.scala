@@ -316,8 +316,8 @@ object ScalaGlobal {
     // Should explictly set the pluginsDir, otherwise the default will be set to scala.home/misc
     // which may bring uncompitable verions of scala's runtime call
     // @see scala.tools.util.PathResolver.Defaults
-    settings.pluginsDir.value = ""
-    settings.plugin.value = Nil
+    //settings.pluginsDir.value = ""
+    //settings.plugin.value = Nil
 
     // ----- set sourcepath, outpath
     

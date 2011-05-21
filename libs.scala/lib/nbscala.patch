@@ -49,15 +49,26 @@ Index: src/compiler/scala/tools/nsc/interactive/Global.scala
 ===================================================================
 --- src/compiler/scala/tools/nsc/interactive/Global.scala	(revision 24954)
 +++ src/compiler/scala/tools/nsc/interactive/Global.scala	(working copy)
-@@ -734,9 +734,9 @@
+@@ -734,9 +734,7 @@
        (!implicitlyAdded || m.implicitlyAdded)
      
      def add(sym: Symbol, pre: Type, implicitlyAdded: Boolean)(toMember: (Symbol, Type) => M) {
 -      if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
-+      /* if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
-         add(sym.accessed, pre, implicitlyAdded)(toMember)
+-        add(sym.accessed, pre, implicitlyAdded)(toMember)
 -      } else if (!sym.name.decode.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
-+      } else  */if (!sym.name.decode.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
++      if (!sym.name.decode.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
          val symtpe = pre.memberType(sym) onTypeError ErrorType
          matching(sym, symtpe, this(sym.name)) match {
            case Some(m) =>
+@@ -840,9 +838,9 @@
+       case null => pre
+       case _ => tree.tpe
+     }
+-
++    
+     //print("add members")
+-    for (sym <- ownerTpe.members)
++    for (sym <- ownerTpe.resultType.members)
+       addTypeMember(sym, pre, sym.owner != ownerTpe.typeSymbol, NoSymbol)
+     members.allMembers #:: {
+       //print("\nadd pimped")
