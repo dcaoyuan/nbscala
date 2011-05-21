@@ -260,6 +260,9 @@ trait ScalaUtils {self: ScalaGlobal =>
           fm.appendText(": ")
           htmlTypeName(result, fm)
           // (paramtypes)result
+        case NullaryMethodType(result) =>
+          fm.appendText(": ")
+          htmlTypeName(result, fm)
         case PolyType(tparams, result) =>
           if (!tparams.isEmpty) {
             fm.appendText("[")
@@ -428,6 +431,9 @@ trait ScalaUtils {self: ScalaGlobal =>
           fm.appendText(": ")
           htmlTypeInfo(result, fm)
           // (paramtypes)result
+        case NullaryMethodType(result) =>
+          fm.appendText(": ")
+          htmlTypeInfo(result, fm)
         case PolyType(tparams, result) =>
           if (!tparams.isEmpty) {
             fm.appendText("[")

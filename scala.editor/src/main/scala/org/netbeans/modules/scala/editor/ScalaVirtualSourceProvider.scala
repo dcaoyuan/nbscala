@@ -681,7 +681,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
             def paramsSig(params: List[Symbol]) = {
               var i = 0
               params map {x =>
-                var name = x.nameString
+                var name = x.name + ""
                 name = if (name.length > 0) name else "a" + i
                 i += 1
                 jsig(x.tpe) + " " + name
@@ -691,6 +691,9 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
             (if (sym.isConstructor) "" else if (restpe.typeSymbol == UnitClass) "void" else jsig(restpe)) + " " +
             sym.name + paramsSig(params)
 
+          case NullaryMethodType(restpe) =>
+            sym.name + ""
+            
           case RefinedType(parents, decls) if (!parents.isEmpty) =>
             jsig(parents.head)
 

@@ -223,6 +223,7 @@ abstract class ScalaCompletionProposals {
               }
               fm.appendHtml(")") // NOI18N
             }
+          case NullaryMethodType(resultType) =>
           case _ =>
         }
       } catch {case ex => ScalaGlobal.resetLate(completer.global, ex)}
@@ -234,6 +235,7 @@ abstract class ScalaCompletionProposals {
       try {
         sym.tpe match {
           case MethodType(params, resultType) => params map (_.nameString)
+          case NullaryMethodType(resultType) => Nil
           case _ => Nil
         }
       } catch {case ex => ScalaGlobal.resetLate(completer.global, ex); Nil}
