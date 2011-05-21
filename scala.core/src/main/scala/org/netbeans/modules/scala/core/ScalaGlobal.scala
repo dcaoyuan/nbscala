@@ -388,6 +388,8 @@ object ScalaGlobal {
       }
     }
 
+    logger.info("project's global.settings: " + global.settings)
+    
     global
   }
 

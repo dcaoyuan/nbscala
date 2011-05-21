@@ -66,8 +66,11 @@ class ScalaParser extends Parser {
     parserResult
   }
 
-  override def cancel {
-    if (parserResult != null) parserResult.cancelSemantic
+  override def cancel(reason: Parser.CancelReason, event: SourceModificationEvent)  {
+    reason match {
+      case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => if (parserResult != null) parserResult.cancelSemantic
+      case _ =>
+    }
   }
 
   @throws(classOf[ParseException])
