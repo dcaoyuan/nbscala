@@ -46,6 +46,7 @@ import org.netbeans.api.project.{FileOwnerQuery, Project, ProjectUtils}
 import org.netbeans.spi.java.queries.BinaryForSourceQueryImplementation
 import org.openide.filesystems.{FileChangeAdapter, FileEvent, FileObject, FileRenameEvent,
                                 FileStateInvalidException, FileUtil, JarFileSystem, FileChangeListener}
+import org.openide.modules.InstalledFileLocator
 import org.openide.util.{Exceptions, RequestProcessor}
 
 import org.netbeans.modules.scala.core.ast.{ScalaItems, ScalaDfns, ScalaRefs, ScalaRootScope, ScalaAstVisitor, ScalaUtils}
@@ -226,7 +227,7 @@ object ScalaGlobal {
 
     None
   }
-
+  
   private def isForTest(resource: DirResource, fo: FileObject) = {
     // * is this `fo` under test source?
     resource.testToOut exists {case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo)}
@@ -302,11 +303,11 @@ object ScalaGlobal {
     
     val bootCpStr = toClassPathString(project, bootCp)
     settings.bootclasspath.value = bootCpStr
-    logger.info("project's bootclasspath: " + settings.bootclasspath.value)
+    logger.info("Project's bootclasspath: " + settings.bootclasspath.value)
 
     val compCpStr = toClassPathString(project, compCp)
     settings.classpath.value = compCpStr
-    logger.info("project's classpath: " + settings.classpath.value)
+    logger.info("Project's classpath: " + settings.classpath.value)
 
     // Should set extdirs to empty, otherwise all jars under scala.home/lib will be added
     // which brings unwanted scala runtime (scala runtime should be set in compCpStr).
@@ -316,8 +317,10 @@ object ScalaGlobal {
     // Should explictly set the pluginsDir, otherwise the default will be set to scala.home/misc
     // which may bring uncompitable verions of scala's runtime call
     // @see scala.tools.util.PathResolver.Defaults
-    //settings.pluginsDir.value = ""
-    //settings.plugin.value = Nil
+    val pluginJarsDir = InstalledFileLocator.getDefault.locate("modules/ext/org.scala-lang.plugins", "org.netbeans.libs.scala", false)
+    logger.info("Bundled plugin jars dir is: " + pluginJarsDir)
+    settings.pluginsDir.value = if (pluginJarsDir ne null) pluginJarsDir.getAbsolutePath else ""
+    settings.plugin.value = Nil
 
     // ----- set sourcepath, outpath
     
@@ -344,12 +347,12 @@ object ScalaGlobal {
     settings.sourcepath.tryToSet(srcPaths.reverse)
     settings.outdir.value = outPath
 
-    logger.info("project's source paths set for global: " + srcPaths)
-    logger.info("project's output paths set for global: " + outPath)
+    logger.info("Project's source paths set for global: " + srcPaths)
+    logger.info("Project's output paths set for global: " + outPath)
     if (srcCp != null){
-      logger.info(srcCp.getRoots.mkString("project's srcCp: [", ", ", "]"))
+      logger.info(srcCp.getRoots.map(_.getPath).mkString("Project's srcCp: [", ", ", "]"))
     } else {
-      logger.info("project's srcCp is null !")
+      logger.info("Project's srcCp is null !")
     }
     
     // * @Note: settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?
@@ -394,7 +397,7 @@ object ScalaGlobal {
       }
     }
 
-    logger.info("project's global.settings: " + global.settings)
+    logger.info("Project's global.settings: " + global.settings)
     
     global
   }
@@ -414,8 +417,8 @@ object ScalaGlobal {
     val scalaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_SCALA)
     val javaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_JAVA)
 
-    logger.fine((scalaSgs map (_.getRootFolder)).mkString("project's src group[ScalaType] dir: [", ", ", "]"))
-    logger.fine((javaSgs  map (_.getRootFolder)).mkString("project's src group[JavaType]  dir: [", ", ", "]"))
+    logger.fine((scalaSgs map (_.getRootFolder.getPath)).mkString("Project's src group[ScalaType] dir: [", ", ", "]"))
+    logger.fine((javaSgs  map (_.getRootFolder.getPath)).mkString("Project's src group[JavaType]  dir: [", ", ", "]"))
 
     List(scalaSgs, javaSgs) foreach {
       case Array(srcSg) =>

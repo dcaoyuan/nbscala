@@ -24,6 +24,12 @@
             <artifactId>scala-compiler</artifactId>
             <version>${scala.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.scala-lang.plugins</groupId>
+            <artifactId>continuations</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -56,6 +62,20 @@
                             <file>${project.basedir}/lib/scala-compiler.jar</file>
                             <groupId>org.scala-lang</groupId>
                             <artifactId>scala-compiler</artifactId>
+                            <version>${scala.version}</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>install-continuations</id>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+                        <configuration>
+                            <file>${project.basedir}/lib/continuations.jar</file>
+                            <groupId>org.scala-lang.plugins</groupId>
+                            <artifactId>continuations</artifactId>
                             <version>${scala.version}</version>
                             <packaging>jar</packaging>
                         </configuration>

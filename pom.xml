@@ -210,6 +210,13 @@
                             <arg>-dependencyfile</arg>
                             <arg>${project.build.directory}/.scala_dependencies</arg>
                         </args>
+                        <compilerPlugins>
+                            <complierPlugin>
+                                <groupId>org.scala-lang.plugins</groupId>
+                                <artifactId>continuations</artifactId>
+                                <version>${scala.version}</version>
+                            </complierPlugin>
+                        </compilerPlugins>
                     </configuration>
                 </plugin>
 
