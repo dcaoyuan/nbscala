@@ -97,7 +97,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   }
   
   override protected def invalidate {
-    // do nothing, so we can maintain the parsed result by ourselves
+    // do nothing, so we can maintain the status of parsed result by ourselves
   }
 
   /** @todo since only call rootScope will cause actual parsing, those parsing task
@@ -110,7 +110,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
    * any more, I'll add it back.
    */
   override def getDiagnostics: java.util.List[_ <: Error] = {
-    if (_errors == null) {
+    if (_errors eq null) {
       _errors = global.reporter match {
         case x: ErrorReporter => x.errors match {
             case Nil => java.util.Collections.emptyList[Error]
@@ -145,11 +145,17 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   }
   
   def toSemanticed {
+    // although the unit has been ahead to typed phase during autocompletion, the 
+    // typed trees may not be correct for semantic analysis, it's better to reset 
+    // the unit to get the best error report.
+    // An example is that when try completing on x. and then press esc, the error won't
+    // be reported if do not call reset here 
+    reset
     _root = global.askForSemantic(srcFile, false)
   }
   
   def rootScope: ScalaRootScope = {
-    if (_root == null) {
+    if ((_root eq null) || (_root eq ScalaRootScope.EMPTY)) {
       isInSemantic = true
       toSemanticed
       isInSemantic = false

@@ -87,7 +87,7 @@ class ScalaParser extends Parser {
   }
 
   @throws(classOf[ParseException])
-  override def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent): Unit = {
+  override def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent) {
     // The SourceModificationEvent seems set sourceModified=true even when switch between editor windows, 
     // so try to avoid redundant parsing by checking if the content is acutally modified
     log.fine("Request to parse " + event.getModifiedSource.getFileObject.getNameExt + ", prev parserResult=" + _result)
