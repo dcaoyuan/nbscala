@@ -70,6 +70,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   global.resetUnitOf(srcFile)
 
   @volatile private var isInSemantic = false
+  private var _root: ScalaRootScope = _
 
   private lazy val errors: java.util.List[Error] = {
     global.reporter match {
@@ -133,11 +134,13 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     global.askForType(srcFile, false)
   }
   
-  lazy val rootScope: ScalaRootScope = {
-    isInSemantic = true
-    val root = global.askForSemantic(srcFile, false)
-    isInSemantic = false
-    root
+  def rootScope: ScalaRootScope = {
+    if (_root == null) {
+      isInSemantic = true
+      _root = global.askForSemantic(srcFile, false)
+      isInSemantic = false
+    }
+    _root
   }
 
   lazy val rootScopeForDebug: ScalaRootScope = {
@@ -148,6 +151,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   def cancelSemantic {
     if (isInSemantic) {
       global.cancelSemantic(srcFile)
+      _root = null
     }
     isInSemantic = false
   }
