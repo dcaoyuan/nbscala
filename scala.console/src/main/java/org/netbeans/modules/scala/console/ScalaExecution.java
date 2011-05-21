@@ -214,7 +214,7 @@ public class ScalaExecution {
              * Also, from Scala-2.7.1, jline is used for scala shell, we should 
              * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
              */
-            //argvList.add("-Djline.terminal=jline.UnsupportedTerminal"); //NOI18N
+            argvList.add("-Djline.terminal=scala.tools.jline.UnsupportedTerminal"); //NOI18N
             
             // TODO - turn off verifier?
 
