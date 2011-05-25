@@ -91,7 +91,8 @@
         <font style="bold"/>
     </fontcolor>
     <fontcolor name="mod-method"/>
-    <fontcolor name="mod-interface" underline="000000"/> <!-- implicit method Ref -->
+    <fontcolor name="mod-interface" default="comment"/> <!-- implicit method Ref -->
+    <!--fontcolor name="mod-interface" underline="000000"/--> <!-- implicit method Ref -->
 
     <fontcolor name="mod-field" foreColor="009B00"/> <!-- val -->
     <fontcolor name="mod-local-variable" foreColor="CC0000"/> <!-- var -->

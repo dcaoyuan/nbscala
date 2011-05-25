@@ -52,7 +52,9 @@
    <fontcolor name="mod-global" foreColor="228b22">  <!-- for Object Ref 717ab3, 7777cc -->
       <font style="italic" />
    </fontcolor>
-   <fontcolor name="mod-interface" foreColor="0000ff" underline="0000ff"/> <!-- for implicit method Ref -->
+   comment
+   <fontcolor name="mod-interface" default="comment"/> <!-- for implicit method Ref -->
+   <!--fontcolor name="mod-interface" foreColor="0000ff" underline="0000ff"/--> <!-- for implicit method Ref -->
    <fontcolor name="mod-annotation-type" />
    <fontcolor name="mod-enum" />
    <fontcolor name="mod-deprecated" strikeThrough="404040" />
