@@ -66,19 +66,16 @@ class ScalaParser extends Parser {
     _result
   }
 
-  override def cancel {
-    if (_result != null) _result.cancelSemantic
-  }
+//  override def cancel {
+//    if (_result != null) _result.cancelSemantic
+//  }
   
-  /**
-   * It seems that after calling on this cancel method, there may not be followed call on parse() ?
-   */
-  /* override */ def cancel_todo(reason: Parser.CancelReason, event: SourceModificationEvent) {
+  override def cancel(reason: Parser.CancelReason, event: SourceModificationEvent) {
     reason match {
       case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => 
         log.fine("Get cancel request from event: " + event.getModifiedSource + ", sourceChanged=" + event.sourceChanged)
         // We'll cancelSemantic only when the event is saying sourceChanged, since only in this case, we can expect a
-        // followed parse(..) call. There are other cases that won't be followed with a call on parse(..)
+        // follow up parse(..) call. There are other cases there won't be a sfollow up parse(..) call.
         if (event.sourceChanged && _result != null) {
           _result.cancelSemantic
         }
@@ -91,7 +88,7 @@ class ScalaParser extends Parser {
     // The SourceModificationEvent seems set sourceModified=true even when switch between editor windows, 
     // so try to avoid redundant parsing by checking if the content is acutally modified
     log.fine("Request to parse " + event.getModifiedSource.getFileObject.getNameExt + ", prev parserResult=" + _result)
-    if (_result == null || (snapshot.getText != _snapshot.getText)) {
+    if (_result == null || snapshot.getText != _snapshot.getText) {
       log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
       _snapshot = snapshot
       //  will lazily do true parsing in ScalaParserResult
@@ -111,11 +108,11 @@ class ScalaParser extends Parser {
     false
   }
 
-  override def addChangeListener(changeListener: ChangeListener): Unit = {
+  override def addChangeListener(changeListener: ChangeListener) {
     // no-op, we don't support state changes
   }
 
-  override def removeChangeListener(changeListener: ChangeListener): Unit = {
+  override def removeChangeListener(changeListener: ChangeListener) {
     // no-op, we don't support state changes
   }
 

@@ -72,14 +72,16 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   reset
 
   @volatile private var isInSemantic = false
-  private var _root: ScalaRootScope = _
+  @volatile private var _root: ScalaRootScope = ScalaRootScope.EMPTY
   private var _errors: java.util.List[Error] = _
 
   private def reset {
     global.resetUnitOf(srcFile)
-    _root = null
+    _root = ScalaRootScope.EMPTY
     _errors = null
   }
+
+  private def isInvalid = _root eq ScalaRootScope.EMPTY
   
   /**
    * Utility method to get the raw end in doc, reserved here for reference
@@ -145,8 +147,8 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   }
   
   def toSemanticed {
-    // although the unit has been ahead to typed phase during autocompletion, the 
-    // typed trees may not be correct for semantic analysis, it's better to reset 
+    // although the unit may have been ahead to typed phase during autocompletion, 
+    // the typed trees may not be correct for semantic analysis, it's better to reset 
     // the unit to get the best error report.
     // An example is that when try completing on x. and then press esc, the error won't
     // be reported if do not call reset here 
@@ -155,7 +157,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   }
   
   def rootScope: ScalaRootScope = {
-    if ((_root eq null) || (_root eq ScalaRootScope.EMPTY)) {
+    if (isInvalid) {
       isInSemantic = true
       toSemanticed
       isInSemantic = false
@@ -167,7 +169,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     val willCancel = if (isInSemantic) {
       global.cancelSemantic(srcFile)
     } else false
-    
+
     if (willCancel) reset
     
     isInSemantic = false
