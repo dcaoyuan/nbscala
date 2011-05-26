@@ -39,13 +39,15 @@
 
 package org.netbeans.modules.scala.editor
 
+import java.util.logging.Logger
 import org.netbeans.api.lexer.{TokenHierarchy}
 import org.netbeans.modules.csl.api.{ElementKind, ColoringAttributes, OffsetRange, SemanticAnalyzer}
 import org.netbeans.modules.parsing.spi.{Scheduler, SchedulerEvent}
 import org.netbeans.modules.scala.core.ScalaGlobal
 import org.netbeans.modules.scala.core.ScalaParserResult
-import org.netbeans.modules.scala.core.ast.{ScalaRootScope}
-import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
+import org.netbeans.modules.scala.core.ast.ScalaRootScope
+import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
+import org.netbeans.modules.scala.core.lexer.ScalaTokenId
 
 import scala.tools.nsc.symtab.Flags
 
@@ -55,15 +57,22 @@ import scala.tools.nsc.symtab.Flags
  */
 class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
+  private val log = Logger.getLogger(this.getClass.getName)
+  
   private var cancelled: Boolean = _
   private var semanticHighlights: java.util.Map[OffsetRange, java.util.Set[ColoringAttributes]] = _
 
-  protected final def isCancelled: Boolean = synchronized {
+  final protected def isCancelled: Boolean = synchronized {
     cancelled
   }
 
-  protected final def resume: Unit = synchronized {
+  final protected def resume: Unit = synchronized {
     cancelled = false
+  }
+
+  override def cancel: Unit = synchronized {
+    log.info("Cancel in Hightlighting")
+    cancelled = true
   }
 
   override def getHighlights: java.util.Map[OffsetRange, java.util.Set[ColoringAttributes]] = {
@@ -76,12 +85,8 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
     Scheduler.EDITOR_SENSITIVE_TASK_SCHEDULER
   }
 
-  override def cancel: Unit = {
-    cancelled = true
-  }
-
   @throws(classOf[Exception])
-  override def run(pr: ScalaParserResult, event: SchedulerEvent): Unit = {
+  override def run(pr: ScalaParserResult, event: SchedulerEvent) {
     resume
 
     if (isCancelled) return
@@ -116,9 +121,15 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
   private def visitItems(global: ScalaGlobal, th: TokenHierarchy[_], root: ScalaRootScope,
                          highlights: java.util.Map[OffsetRange, java.util.Set[ColoringAttributes]]
-  ): Unit = {
+  ) {
 
     import global._
+
+    def isSinletonType(sym: Symbol) = try {
+      sym.tpe.resultType.isInstanceOf[SingletonType]
+    } catch {
+      case _ => false
+    }
 
     for ((idToken, items) <- root.idTokenToItems;
          item = ScalaUtil.importantItem(items);
@@ -192,15 +203,12 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
               } 
               
             case ref: ScalaRef =>
-              def isSinletonType = try {
-                sym.tpe.resultType.isInstanceOf[SingletonType]
-              } catch {case _ => false}
               
               if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter || sym.isConstructor) {
 
                 coloringSet.add(ColoringAttributes.CLASS)
 
-              } else if (sym.isModule && !sym.hasFlag(Flags.PACKAGE) || isSinletonType) {
+              } else if (sym.isModule && !sym.hasFlag(Flags.PACKAGE) || isSinletonType(sym)) {
 
                 coloringSet.add(ColoringAttributes.CLASS)
                 coloringSet.add(ColoringAttributes.GLOBAL)
@@ -239,7 +247,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
               } else if (sym.isMethod && ref.getKind == ElementKind.RULE) { // implicit call
 
-                coloringSet.add(ColoringAttributes.INTERFACE)
+                coloringSet.add(ColoringAttributes.CUSTOM1)
 
               } else if (sym.isMethod) {
 
@@ -247,7 +255,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
               } else if (sym.hasFlag(Flags.IMPLICIT)) {
 
-                coloringSet.add(ColoringAttributes.INTERFACE)
+                coloringSet.add(ColoringAttributes.CUSTOM1)
 
               } else if (sym.hasFlag(Flags.MUTABLE)) {
 
@@ -261,8 +269,8 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
           }
 
           if (sym.isDeprecated) coloringSet.add(ColoringAttributes.DEPRECATED)
-          if (sym.hasFlag(Flags.LAZY)) coloringSet.add(ColoringAttributes.INTERFACE)
-          if (sym.hasFlag(Flags.BYNAMEPARAM)) coloringSet.add(ColoringAttributes.INTERFACE)
+          if (sym.hasFlag(Flags.LAZY)) coloringSet.add(ColoringAttributes.CUSTOM2)
+          if (sym.hasFlag(Flags.BYNAMEPARAM)) coloringSet.add(ColoringAttributes.CUSTOM1)
 
           if (!coloringSet.isEmpty) highlights.put(hiRange, coloringSet)
 
