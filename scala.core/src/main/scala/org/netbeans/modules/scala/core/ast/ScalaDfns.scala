@@ -90,10 +90,10 @@ trait ScalaDfns {self: ScalaGlobal =>
         //                return true;
         //            }
         if (ref.symbol == symbol) true else {
-          symbol match {
+          /*symbol match {
             case me: TermSymbol => me.referenced == ref.symbol
             case _ => false
-          }
+          }*/ false
         }
       } else false
     }
