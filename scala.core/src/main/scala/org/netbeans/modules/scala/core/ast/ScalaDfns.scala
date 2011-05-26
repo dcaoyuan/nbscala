@@ -44,6 +44,7 @@ import org.openide.filesystems.FileObject
 
 import org.netbeans.api.language.util.ast.{AstDfn, AstRef, AstScope}
 import org.netbeans.modules.scala.core.{ScalaGlobal, ScalaMimeResolver, ScalaSourceUtil}
+import scala.tools.nsc.symtab.Symbols
 
 /**
  * Scala AstDfn special functions, which will be enabled in ScalaGlobal
@@ -88,7 +89,12 @@ trait ScalaDfns {self: ScalaGlobal =>
         //            if ((symbol.value.isClass || getSymbol().isModule()) && ref.isSameNameAsEnclClass()) {
         //                return true;
         //            }
-        ref.symbol == symbol
+        if (ref.symbol == symbol) true else {
+          symbol match {
+            case me: TermSymbol => me.referenced == ref.symbol
+            case _ => false
+          }
+        }
       } else false
     }
 
