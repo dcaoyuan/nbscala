@@ -57,7 +57,6 @@ class ScalaParser extends Parser {
 
   private val log = Logger.getLogger(this.getClass.getName)
 
-  private var _snapshot: Snapshot = _
   private var _result: ScalaParserResult = _
 
   @throws(classOf[ParseException])
@@ -86,14 +85,14 @@ class ScalaParser extends Parser {
   @throws(classOf[ParseException])
   override def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent) {
     // The SourceModificationEvent seems set sourceModified=true even when switch between editor windows, 
-    // so try to avoid redundant parsing by checking if the content is acutally modified
+    // so one solution is try to avoid redundant parsing by checking if the content is acutally modified,
+    // but we cannot rely on that, since other source may have been changed and cause the current file must
+    // refect to this change to make sure if the reference to that file is still correct, i.e. we need re-parsing
+    // it anyway.
     log.fine("Request to parse " + event.getModifiedSource.getFileObject.getNameExt + ", prev parserResult=" + _result)
-    if (_result == null || snapshot.getText != _snapshot.getText) {
-      log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
-      _snapshot = snapshot
-      //  will lazily do true parsing in ScalaParserResult
-      _result = new ScalaParserResult(snapshot)
-    }
+    log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
+    //  will lazily do true parsing in ScalaParserResult
+    _result = new ScalaParserResult(snapshot)
   }
 
   private def isIndexUpToDate(fo: FileObject): Boolean = {
