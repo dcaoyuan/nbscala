@@ -80,7 +80,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     cancelled = true
   }
 
-  override def run(pResult: ScalaParserResult, event: SchedulerEvent): Unit = {
+  override def run(pResult: ScalaParserResult, event: SchedulerEvent) {
     resume
 
     if (isCancelled) {
@@ -129,14 +129,12 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     // rather than give a parse error on obj, it marks the whole region from
     // . to the end of Scanf as a CallNode, which is a weird highlight.
     // We don't want occurrences highlights that span lines.
-    for (item <- items;
-         idToken = item.idToken
-    ) {
-      val doc = pResult.getSnapshot.getSource.getDocument(true).asInstanceOf[BaseDocument]
-      if (doc == null) {
-        // Document was just closed
-        return
+    for (item <- items; idToken = item.idToken if !ScalaLexUtil.isWs(idToken.id)) {
+      val doc = pResult.getSnapshot.getSource.getDocument(true) match {
+        case x: BaseDocument => x
+        case _ => return // null, document was just closed
       }
+
       //doc.readLock
       try {
         val length = doc.getLength
@@ -204,14 +202,13 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
       }
     }
 
-    for (item <- items) {
-      val occurrences = rootScope.findOccurrences(item)
-      for (x <- occurrences;
-           name = x.getName if name != "this" && name != "super";
-           idToken = x.idToken
-      ) {
-        highlights.put(ScalaLexUtil.getRangeOfToken(th, idToken), ColoringAttributes.MARK_OCCURRENCES)
-      }
+    for (item <- items;
+         idTokenItem = item.idToken if !ScalaLexUtil.isWs(idTokenItem.id);
+         occurrence <- rootScope.findOccurrences(item);
+         name = occurrence.getName if name != "this" && name != "super";
+         idToken = occurrence.idToken; if !ScalaLexUtil.isWs(idToken.id)
+    ) {
+      highlights.put(ScalaLexUtil.getRangeOfToken(th, idToken), ColoringAttributes.MARK_OCCURRENCES)
     }
 
     if (isCancelled) {
