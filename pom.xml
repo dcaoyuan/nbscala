@@ -255,14 +255,6 @@
                     <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'nbm:run-ide' find the installation of the local netbeans -->
                     <additionalArguments>${run.arguments}</additionalArguments> <!-- to have the goal 'nbm:run-ide' under debug mode -->
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>debug-ide</id>
-                        <goals>
-                            <goal>run-ide</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
         
