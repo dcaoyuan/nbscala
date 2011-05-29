@@ -36,3 +36,14 @@ Note: If you are using NetBeans 7.0 and build this project in NetBeans, you shou
 
 the nbms and update site can be found at nbscala/target/netbeans_site
 
+# Run/Debug ide:
+    cd nbscala
+    mvn nbm:cluster
+
+To run:
+    mvn nbm:run-ide
+
+To debug:
+    mvn nbm:run-ide -Pdebug-ide
+
+   
