@@ -48,4 +48,6 @@ To debug:
 
     mvn nbm:run-ide -Pdebug-ide
 
-   
+# Download built package
+
+    http://sourceforge.net/projects/erlybird/files/nb-scala/
