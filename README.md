@@ -41,9 +41,13 @@ the nbms and update site can be found at nbscala/target/netbeans_site
     mvn nbm:cluster
 
 To run:
+
     mvn nbm:run-ide
 
 To debug:
+
     mvn nbm:run-ide -Pdebug-ide
 
-   
+# Download built package
+
+    http://sourceforge.net/projects/erlybird/files/nb-scala/
