@@ -71,8 +71,8 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
   }
 
   override def cancel: Unit = synchronized {
-    log.info("Cancel in Hightlighting")
-    cancelled = true
+    log.info("Try to cancel in Hightlighting, but we ignore it, @todo")
+    //cancelled = true
   }
 
   override def getHighlights: java.util.Map[OffsetRange, java.util.Set[ColoringAttributes]] = {
