@@ -1,6 +1,6 @@
 Index: src/compiler/scala/tools/nsc/Global.scala
 ===================================================================
---- src/compiler/scala/tools/nsc/Global.scala	(revision 24954)
+--- src/compiler/scala/tools/nsc/Global.scala	(revision 25485)
 +++ src/compiler/scala/tools/nsc/Global.scala	(working copy)
 @@ -57,6 +57,7 @@
    def rootLoader: LazyType = platform.rootLoader
@@ -12,9 +12,9 @@ Index: src/compiler/scala/tools/nsc/Global.scala
    object gen extends {
 Index: src/compiler/scala/tools/nsc/typechecker/Namers.scala
 ===================================================================
---- src/compiler/scala/tools/nsc/typechecker/Namers.scala	(revision 24954)
+--- src/compiler/scala/tools/nsc/typechecker/Namers.scala	(revision 25485)
 +++ src/compiler/scala/tools/nsc/typechecker/Namers.scala	(working copy)
-@@ -1247,8 +1247,12 @@
+@@ -1256,8 +1256,12 @@
                          typeSig(tree)
                          return
                        }
@@ -31,9 +31,9 @@ Index: src/compiler/scala/tools/nsc/typechecker/Namers.scala
                          isValidSelector(from stripEnd "$")(notMember)
 Index: src/compiler/scala/tools/nsc/typechecker/Typers.scala
 ===================================================================
---- src/compiler/scala/tools/nsc/typechecker/Typers.scala	(revision 24954)
+--- src/compiler/scala/tools/nsc/typechecker/Typers.scala	(revision 25485)
 +++ src/compiler/scala/tools/nsc/typechecker/Typers.scala	(working copy)
-@@ -3564,6 +3564,11 @@
+@@ -3591,6 +3591,11 @@
            }
            
            def makeErrorTree = {
@@ -47,7 +47,7 @@ Index: src/compiler/scala/tools/nsc/typechecker/Typers.scala
                case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
 Index: src/compiler/scala/tools/nsc/interactive/Global.scala
 ===================================================================
---- src/compiler/scala/tools/nsc/interactive/Global.scala	(revision 24954)
+--- src/compiler/scala/tools/nsc/interactive/Global.scala	(revision 25485)
 +++ src/compiler/scala/tools/nsc/interactive/Global.scala	(working copy)
 @@ -734,9 +734,7 @@
        (!implicitlyAdded || m.implicitlyAdded)
