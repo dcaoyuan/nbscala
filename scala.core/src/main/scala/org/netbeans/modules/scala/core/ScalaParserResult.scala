@@ -153,7 +153,7 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     // An example is that when try completing on x. and then press esc, the error won't
     // be reported if do not call reset here 
     reset
-    _root = global.askForSemantic(srcFile, false)
+    _root = global.askForSemanticSync(srcFile, false)
   }
   
   def rootScope: ScalaRootScope = {

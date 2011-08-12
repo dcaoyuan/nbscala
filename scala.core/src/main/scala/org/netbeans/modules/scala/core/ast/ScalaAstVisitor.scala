@@ -78,12 +78,7 @@ abstract class ScalaAstVisitor {
   private var srcFile: SourceFile = _
   private var docLength: Int = _
 
-  private var cancelled = false
-
-  def cancel {cancelled = true}
-
-  def apply(unit: CompilationUnit, th: TokenHierarchy[_]): ScalaRootScope = {
-    this.cancelled = false
+  def visit(unit: CompilationUnit, th: TokenHierarchy[_]): ScalaRootScope = {
     this.th = th
     this.srcFile = unit.source
     this.docLength = srcFile.content.length
@@ -128,7 +123,7 @@ abstract class ScalaAstVisitor {
     }
 
     private def traverse(tree: Tree): Unit = {
-      if (cancelled) return
+      if (global.isCancelingSemantic) return
       if (!visited.add(tree)) return // has visited
 
       tree match {
@@ -690,8 +685,8 @@ abstract class ScalaAstVisitor {
       assert(false, "Should not happen!")
     }
 
-    var token = findIdTokenForward(ts, name, offset, endOffset)
-
+    val token = findIdTokenForward(ts, name, offset, endOffset)
+    
     token match {
       case Some(x) if x.isFlyweight => Some(ts.offsetToken)
       case x => x
@@ -729,7 +724,7 @@ abstract class ScalaAstVisitor {
       assert(false, "Should not happen!")
     }
 
-    var token = tree match {
+    val token = tree match {
       case _: This => ScalaLexUtil.findNext(ts, ScalaTokenId.This)
       case _: Super => ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
       case _ if name == "this" => ScalaLexUtil.findNext(ts, ScalaTokenId.This)
