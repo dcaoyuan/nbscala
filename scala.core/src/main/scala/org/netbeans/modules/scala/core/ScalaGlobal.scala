@@ -64,24 +64,24 @@ import scala.tools.nsc.util.{Position, SourceFile}
  * @author Caoyuan Deng
  */
 case class ScalaError(pos: Position, msg: String, severity: org.netbeans.modules.csl.api.Severity, force: Boolean)
-class ErrorReporter extends Reporter {
-  var errors: List[ScalaError] = Nil
-  
+case class ErrorReporter(var errors: List[ScalaError] = Nil) extends Reporter {
   override def reset {
     super.reset
     errors = Nil
   }
   
   def info0(pos: Position, msg: String, severity: Severity, force: Boolean) {
-    val sev = severity match {
-      case INFO => null
-      case WARNING => org.netbeans.modules.csl.api.Severity.WARNING
-      case ERROR => org.netbeans.modules.csl.api.Severity.ERROR
-      case _ => null
-    }
+    val sev = toCslSeverity(severity)
     if (sev != null) {
       errors ::= ScalaError(pos, msg, sev, force)
     }
+  }
+  
+  private def toCslSeverity(severity: Severity) = severity match {
+    case INFO => org.netbeans.modules.csl.api.Severity.INFO
+    case WARNING => org.netbeans.modules.csl.api.Severity.WARNING
+    case ERROR => org.netbeans.modules.csl.api.Severity.ERROR
+    case _ => null
   }
 }
 
@@ -625,7 +625,7 @@ object ScalaGlobal {
     // Setter of Global.reporter is useless due to interative.Global's direct reference
     // to the constructor's param reporter, so we have to make sure only one reporter
     // is assigned to Global (during create new instance)
-    val global = new ScalaGlobal(settings, new ErrorReporter)
+    val global = new ScalaGlobal(settings, ErrorReporter())
     globals(idx) = global
 
     // * listen to compCp's change

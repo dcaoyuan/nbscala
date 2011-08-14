@@ -87,6 +87,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
   @throws(classOf[Exception])
   override def run(pr: ScalaParserResult, event: SchedulerEvent) {
+    log.info("ScalaSemanticAnalyzer run.")
     resume
 
     if (isCancelled) return
@@ -125,7 +126,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
     import global._
 
-    def isSinletonType(sym: Symbol) = try {
+    def isSingletonType(sym: Symbol) = try {
       sym.tpe.resultType.isInstanceOf[SingletonType]
     } catch {
       case _ => false
@@ -208,7 +209,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
                 coloringSet.add(ColoringAttributes.CLASS)
 
-              } else if (sym.isModule && !sym.hasFlag(Flags.PACKAGE) || isSinletonType(sym)) {
+              } else if (sym.isModule && !sym.hasFlag(Flags.PACKAGE) || isSingletonType(sym)) {
 
                 coloringSet.add(ColoringAttributes.CLASS)
                 coloringSet.add(ColoringAttributes.GLOBAL)

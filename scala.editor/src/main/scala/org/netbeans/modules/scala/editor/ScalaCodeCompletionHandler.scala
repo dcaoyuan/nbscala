@@ -110,7 +110,7 @@ object ScalaCodeCompletionHandler {
 class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFormatters {
   import ScalaCodeCompletionHandler._
 
-  override def complete(context: CodeCompletionContext): CodeCompletionResult = {
+  override def complete(context: CodeCompletionContext): CodeCompletionResult = {  
     // skip processing other queryType: DOCUMENTATION_QUERY_TYPE, TOOLTIP_QUERY_TYPE etc
     context.getQueryType match {
       case QueryType.ALL_COMPLETION | QueryType.COMPLETION => // go on
@@ -118,6 +118,11 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     }
     
     val pResult = context.getParserResult.asInstanceOf[ScalaParserResult]
+    
+    def needSemantice() = {
+      pResult.rootScope // call lazy val rootScope
+    }
+
     val lexOffset = context.getCaretOffset
     val prefix = context.getPrefix match {
       case null => ""
@@ -207,6 +212,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
         }) match {
         case Some((qual, selector)) =>
           completer.prefix = selector
+          needSemantice()
           completer.completeSymbolMembers(qual, proposals)
           return completionResult
         case None =>
@@ -223,6 +229,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
             completer.prefix = if (select != null) select.text.toString else ""
             // * it should be expecting call proposals, so just return right
             // * now to avoid keyword local vars proposals
+            needSemantice()
             if (completer.completeSymbolMembers(if (dot != null) dot else base, proposals)) {
               return completionResult
             }
@@ -296,6 +303,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
        }
        } */
 
+      needSemantice()
       if (completer.completeNew(proposals)) {
         return completionResult
       }

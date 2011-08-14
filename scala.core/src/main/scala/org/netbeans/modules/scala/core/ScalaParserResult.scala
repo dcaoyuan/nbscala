@@ -55,26 +55,17 @@ import scala.collection.mutable.WeakHashMap
  *
  * @author Caoyuan Deng
  */
-class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
-  private val log = Logger.getLogger(this.getClass.getName)
-
-  if (ScalaParserResult.debug) {
-    ScalaParserResult.unreleasedResults.put(this, snapshot.getSource.getFileObject.getPath)
-    log.info("==== unreleased parser results: ")
-    for ((k, v) <- ScalaParserResult.unreleasedResults) log.info(v)
-  }
-
+class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapshot) {
   private val fileObject = snapshot.getSource.getFileObject
   val srcFile = ScalaSourceFile.sourceFileOf(fileObject)
   val global = ScalaGlobal.getGlobal(fileObject)
-  // when a new ScalaParserResult is created, we need to reset the content(via snapshot) and unit of srcFile
   srcFile.snapshot = snapshot
-  reset
 
   @volatile private var isInSemantic = false
   @volatile private var _root: ScalaRootScope = ScalaRootScope.EMPTY
   private var _errors: java.util.List[Error] = _
 
+  /** reset the _root and unit of srcFile */
   private def reset {
     global.resetUnitOf(srcFile)
     _root = ScalaRootScope.EMPTY
@@ -114,28 +105,25 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
   override def getDiagnostics: java.util.List[_ <: Error] = {
     if (_errors eq null) {
       _errors = global.reporter match {
-        case x: ErrorReporter => x.errors match {
-            case Nil => java.util.Collections.emptyList[Error]
-            case scalaErrors =>
-              val errs = new java.util.ArrayList[Error]
-              for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
-                // It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
-                if (srcFile.file eq pos.source.file) {
-                  val offset = pos.startOrPoint
-                  val end = pos.endOrPoint
+        case ErrorReporter(Nil) => java.util.Collections.emptyList[Error]
+        case ErrorReporter(scalaErrors) =>
+          val errs = new java.util.ArrayList[Error]
+          for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
+            // It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
+            if (srcFile.file eq pos.source.file) {
+              val offset = pos.startOrPoint
+              val end = pos.endOrPoint
 
-                  val isLineError = (end == -1)
-                  val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fileObject, offset, end, isLineError, severity)
-                  //error.setParameters(Array(offset, msg))                
+              val isLineError = (end == -1)
+              val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fileObject, offset, end, isLineError, severity)
+              //error.setParameters(Array(offset, msg))                
 
-                  errs.add(error)
-                } else {
-                  //println("Not same SourceFile: " + pos.source.file)
-                }
-
-              }
-              errs
+              errs.add(error)
+            } else {
+              //println("Not same SourceFile: " + pos.source.file)
+            }
           }
+          errs
         case _ => java.util.Collections.emptyList[Error]
       }
     }
@@ -156,24 +144,27 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
     _root = global.askForSemanticSync(srcFile, false)
   }
   
-  def rootScope: ScalaRootScope = {
+  def cancelSemantic: Boolean = {
+    val willCancel = if (isInSemantic) {
+      global.cancelSemantic(srcFile)
+    } else false
+    
+    if (willCancel) reset
+    
+    isInSemantic = false
+    willCancel
+  }
+
+  /**
+   * If toSemanticed procedure is canceled, a new ScalaParserResult will be created, so it's safe to use 'val' instead of 'def' here.
+   */
+  lazy val rootScope: ScalaRootScope = {
     if (isInvalid) {
       isInSemantic = true
       toSemanticed
       isInSemantic = false
     }
     _root
-  }
-
-  def cancelSemantic: Boolean = {
-    val willCancel = if (isInSemantic) {
-      global.cancelSemantic(srcFile)
-    } else false
-
-    if (willCancel) reset
-    
-    isInSemantic = false
-    willCancel
   }
 
   lazy val rootScopeForDebug: ScalaRootScope = {
@@ -185,8 +176,20 @@ class ScalaParserResult(snapshot: Snapshot) extends ParserResult(snapshot) {
 }
 
 object ScalaParserResult {
+  private val log = Logger.getLogger(this.getClass.getName)
+
   // ----- for debug
   private val debug = false
   private val unreleasedResults = new WeakHashMap[ScalaParserResult, String]
+  
+  def apply(snapshot: Snapshot) = {
+    val pr = new ScalaParserResult(snapshot)
+    if (debug) {
+      unreleasedResults.put(pr, snapshot.getSource.getFileObject.getPath)
+      log.info("==== unreleased parser results: ")
+      for ((k, v) <- ScalaParserResult.unreleasedResults) log.info(k.toString)
+    }
+    pr
+  }
 }
 

@@ -1,14 +1,7 @@
 package org.netbeans.modules.scala.core.interactive
+
 import scala.tools.nsc._
-
-import java.io.{ PrintWriter, StringWriter }
-
-import java.util.logging.Logger
-import scala.collection.mutable.{LinkedHashMap, SynchronizedMap}
-import scala.concurrent.SyncVar
-import scala.util.control.ControlThrowable
-import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.util.{SourceFile, Position, RangePosition, OffsetPosition, NoPosition}
+import scala.tools.nsc.util.SourceFile
 import scala.tools.nsc.reporters._
 import scala.tools.nsc.symtab._
 import scala.tools.nsc.ast._

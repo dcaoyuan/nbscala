@@ -65,11 +65,15 @@ class ScalaParser extends Parser {
     _result
   }
 
-//  override def cancel {
-//    if (_result != null) _result.cancelSemantic
-//  }
+  override def cancel {
+    if (_result != null) _result.cancelSemantic
+  }
   
-  override def cancel(reason: Parser.CancelReason, event: SourceModificationEvent) {
+  /**
+   * @todo I still can't make sure the difference between cancel() and cancel(reason: Parser.CancelReason, event: SourceModificationEvent),
+   * but it seems cancel works as what I expected.
+   */
+  /* override */ def cancel_todo(reason: Parser.CancelReason, event: SourceModificationEvent) {
     reason match {
       case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => 
         log.fine("Get cancel request from event: " + event.getModifiedSource + ", sourceChanged=" + event.sourceChanged)
@@ -92,7 +96,7 @@ class ScalaParser extends Parser {
     log.fine("Request to parse " + event.getModifiedSource.getFileObject.getNameExt + ", prev parserResult=" + _result)
     log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
     //  will lazily do true parsing in ScalaParserResult
-    _result = new ScalaParserResult(snapshot)
+    _result = ScalaParserResult(snapshot)
   }
 
   private def isIndexUpToDate(fo: FileObject): Boolean = {
