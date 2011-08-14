@@ -4,8 +4,7 @@ target
 *.iws
 *.log
 *.bak
+*.swp
 *~
 .DS_Store
 nohup.out
-
-
