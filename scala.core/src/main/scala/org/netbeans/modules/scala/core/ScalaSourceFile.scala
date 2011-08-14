@@ -65,7 +65,7 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
   }
   
   def tokenHierarchy: TokenHierarchy[_] = snapshot.getTokenHierarchy
-  def content =  _snapshot.getText.toString.toCharArray
+  def content = _snapshot.getText.toString.toCharArray
   
   override def equals(that : Any) = that match {
     case that : BatchSourceFile => file.path == that.file.path && start == that.start
@@ -104,18 +104,23 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
 
   def lineToOffset(index : Int): Int = lineIndices(index)
 
-  private var lastLine = 0
-
   /** Convert offset to line in this source file
    *  Lines are numbered from 0
    */
   def offsetToLine(offset: Int): Int = {
+    var lastLine = 0
     val lines = lineIndices
-    def findLine(lo: Int, hi: Int, mid: Int): Int =
-      if (offset < lines(mid)) findLine(lo, mid - 1, (lo + mid - 1) / 2)
-    else if (offset >= lines(mid + 1)) findLine(mid + 1, hi, (mid + 1 + hi) / 2)
-    else mid
-    lastLine = findLine(0, lines.length, lastLine)
+    def findLine(lo: Int, hi: Int): Int = {
+      val mid = (lo + hi) / 2
+      if (lo < hi) {
+        if (offset < lines(mid)) findLine(lo, mid)
+        else if (offset > lines(mid)) findLine(mid + 1, hi)
+        else mid
+      } else if (lo == hi) {
+        mid 
+      } else mid
+    }
+    lastLine = findLine(0, lines.length - 1) // use (lines.length - 1) instead of lines.length here
     lastLine
   }
 }

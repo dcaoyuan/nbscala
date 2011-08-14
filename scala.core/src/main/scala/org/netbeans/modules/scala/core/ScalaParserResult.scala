@@ -67,7 +67,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
 
   /** reset the _root and unit of srcFile */
   private def reset {
-    global.resetUnitOf(srcFile)
+    //global.resetUnitOf(srcFile)
     _root = ScalaRootScope.EMPTY
     _errors = null
   }
@@ -131,7 +131,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
   }
   
   def toTyped {
-    global.askForType(srcFile, false)
+    global.askForType(srcFile, true)
   }
   
   def toSemanticed {
@@ -141,7 +141,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     // An example is that when try completing on x. and then press esc, the error won't
     // be reported if do not call reset here 
     reset
-    _root = global.askForSemanticSync(srcFile, false)
+    _root = global.askForSemanticSync(srcFile, true)
   }
   
   def cancelSemantic: Boolean = {
