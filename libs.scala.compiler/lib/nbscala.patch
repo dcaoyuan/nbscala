@@ -1,0 +1,74 @@
+Index: src/compiler/scala/tools/nsc/Global.scala
+===================================================================
+--- src/compiler/scala/tools/nsc/Global.scala	(revision 24954)
++++ src/compiler/scala/tools/nsc/Global.scala	(working copy)
+@@ -57,6 +57,7 @@
+   def rootLoader: LazyType = platform.rootLoader
+ 
+   // sub-components --------------------------------------------------
++  var qualToRecoveredType: Map[Tree, Type] = Map()
+ 
+   /** Generate ASTs */
+   object gen extends {
+Index: src/compiler/scala/tools/nsc/typechecker/Namers.scala
+===================================================================
+--- src/compiler/scala/tools/nsc/typechecker/Namers.scala	(revision 24954)
++++ src/compiler/scala/tools/nsc/typechecker/Namers.scala	(working copy)
+@@ -1247,8 +1247,12 @@
+                         typeSig(tree)
+                         return
+                       }
+-                      
+-                      def notMember = context.error(tree.pos, from.decode + " is not a member of " + expr)
++
++                      def notMember = {
++                        global.qualToRecoveredType += (tree -> base)
++                        global.qualToRecoveredType += (expr -> base)
++                        context.error(tree.pos, from.decode + " is not a member of " + expr)
++                      }
+                       // for Java code importing Scala objects
+                       if (from endsWith nme.raw.DOLLAR)
+                         isValidSelector(from stripEnd "$")(notMember)
+Index: src/compiler/scala/tools/nsc/typechecker/Typers.scala
+===================================================================
+--- src/compiler/scala/tools/nsc/typechecker/Typers.scala	(revision 24954)
++++ src/compiler/scala/tools/nsc/typechecker/Typers.scala	(working copy)
+@@ -3564,6 +3564,11 @@
+           }
+           
+           def makeErrorTree = {
++            if (!qual.tpe.widen.isErroneous) {
++              global.qualToRecoveredType += (tree -> qual.tpe.widen)
++              global.qualToRecoveredType += (qual -> qual.tpe.widen)
++            }
++
+             val tree1 = tree match {
+               case Select(_, _) => treeCopy.Select(tree, qual, name)
+               case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
+Index: src/compiler/scala/tools/nsc/interactive/Global.scala
+===================================================================
+--- src/compiler/scala/tools/nsc/interactive/Global.scala	(revision 24954)
++++ src/compiler/scala/tools/nsc/interactive/Global.scala	(working copy)
+@@ -734,9 +734,7 @@
+       (!implicitlyAdded || m.implicitlyAdded)
+     
+     def add(sym: Symbol, pre: Type, implicitlyAdded: Boolean)(toMember: (Symbol, Type) => M) {
+-      if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
+-        add(sym.accessed, pre, implicitlyAdded)(toMember)
+-      } else if (!sym.name.decode.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
++      if (!sym.name.decode.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
+         val symtpe = pre.memberType(sym) onTypeError ErrorType
+         matching(sym, symtpe, this(sym.name)) match {
+           case Some(m) =>
+@@ -840,9 +838,9 @@
+       case null => pre
+       case _ => tree.tpe
+     }
+-
++    
+     //print("add members")
+-    for (sym <- ownerTpe.members)
++    for (sym <- ownerTpe.resultType.members)
+       addTypeMember(sym, pre, sym.owner != ownerTpe.typeSymbol, NoSymbol)
+     members.allMembers #:: {
+       //print("\nadd pimped")
