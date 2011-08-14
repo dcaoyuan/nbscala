@@ -44,7 +44,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
         <scala.version>2.9.0.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
-        <netbeans.version> RELEASE70</netbeans.version>
+        <netbeans.version> RELEASE701</netbeans.version>
         <deploy.version>snapshots</deploy.version>
         
         <!-- module versions -->
