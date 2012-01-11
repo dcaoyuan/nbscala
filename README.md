@@ -3,7 +3,7 @@ NetBeans Plugin for Scala
 
 # Requirement:
 * Java 1.6+
-* Maven 2.x (If you are using NetBeans 7.0, should change maven home to point to a 2.x version via [Options] -> [Miscellianeous] -> [Maven]) 
+* Maven 2.x/3.x 
 * NetBeans 7.0
 
 # Setting nb.installation property for maven
@@ -24,8 +24,6 @@ You should set 'nb.installation' property in your maven settings.xml (.m2/settin
     </activeProfiles>
 
 # Build all nbms
-
-Note: If you are using NetBeans 7.0 and build this project in NetBeans, you should change maven home to point to a 2.x version via [Options] -> [Miscellianeous] -> [Maven]
 
     cd nbscala
     mvn clean install
