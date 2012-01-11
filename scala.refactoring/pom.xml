@@ -211,7 +211,17 @@
         <!-- subproject dependencies -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scala</artifactId>
+            <artifactId>org-netbeans-libs-scala-library</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scala-compiler</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scala-continuations</artifactId>
             <version>${libs.scala.version}</version>
         </dependency>
         <dependency>
@@ -235,6 +245,8 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
+                <version>3.5</version>
+                <extensions>true</extensions>
                 <configuration>
                     <publicPackages>
                     </publicPackages>
