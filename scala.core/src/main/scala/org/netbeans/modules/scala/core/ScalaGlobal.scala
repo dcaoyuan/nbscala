@@ -72,7 +72,7 @@ case class ErrorReporter(var errors: List[ScalaError] = Nil) extends Reporter {
   
   def info0(pos: Position, msg: String, severity: Severity, force: Boolean) {
     val sev = toCslSeverity(severity)
-    if (sev != null) {
+    if (sev != null && msg != "this code must be compiled with the Scala continuations plugin enabled") {
       errors ::= ScalaError(pos, msg, sev, force)
     }
   }
