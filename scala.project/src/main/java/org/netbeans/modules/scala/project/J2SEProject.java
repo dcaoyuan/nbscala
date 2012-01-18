@@ -559,7 +559,8 @@ public final class J2SEProject implements Project, AntProjectListener {
             //the updater is active only on the opened projects
             mainClassUpdater = new MainClassUpdater(J2SEProject.this, eval, updateHelper,
                     cpProvider.getProjectClassPaths(ClassPath.SOURCE)[0], J2SEProjectProperties.MAIN_CLASS);
-
+            mainClassUpdater.start();
+            
             // Make it easier to run headless builds on the same machine at least.
             try {
                 getProjectDirectory().getFileSystem().runAtomicAction(new FileSystem.AtomicAction() {
@@ -695,7 +696,7 @@ public final class J2SEProject implements Project, AntProjectListener {
             //GlobalPathRegistry.getDefault().unregister(ClassPath.COMPILE, cpProvider.getProjectClassPaths(ClassPath.COMPILE));
             //GlobalPathRegistry.getDefault().unregister(ClassPath.SOURCE, cpProvider.getProjectClassPaths(ClassPath.SOURCE));
             if (mainClassUpdater != null) {
-                mainClassUpdater.unregister();
+                mainClassUpdater.stop();
                 mainClassUpdater = null;
             }
         }

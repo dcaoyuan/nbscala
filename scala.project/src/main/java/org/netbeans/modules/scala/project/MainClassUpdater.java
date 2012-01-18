@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.lang.model.element.TypeElement;
 import javax.swing.SwingUtilities;
 import org.netbeans.api.java.classpath.ClassPath;
@@ -84,16 +85,24 @@ import org.netbeans.modules.scala.core.ast.ScalaRootScope;
  */
 public class MainClassUpdater extends FileChangeAdapter implements PropertyChangeListener {
 
+    private static final int NEW = 0;
+    private static final int STARTED = NEW + 1;
+    private static final int FINISHED = STARTED + 1;
     private static final RequestProcessor RP = new RequestProcessor("main-class-updater", 1);       //NOI18N
     private final Project project;
     private final PropertyEvaluator eval;
     private final UpdateHelper helper;
     private final ClassPath sourcePath;
     private final String mainClassPropName;
+    private final AtomicInteger state;
+    //@GuardedBy("this")
     private FileObject current;
+    //@GuardedBy("this")
     private FileChangeListener listener;
 
-    /** Creates a new instance of MainClassUpdater */
+    /**
+     * Creates a new instance of MainClassUpdater
+     */
     public MainClassUpdater(final Project project, final PropertyEvaluator eval,
             final UpdateHelper helper, final ClassPath sourcePath, final String mainClassPropName) {
         assert project != null;
@@ -106,14 +115,40 @@ public class MainClassUpdater extends FileChangeAdapter implements PropertyChang
         this.helper = helper;
         this.sourcePath = sourcePath;
         this.mainClassPropName = mainClassPropName;
-        this.eval.addPropertyChangeListener(this);
-        this.addFileChangeListener();
+        this.state = new AtomicInteger(NEW);
     }
 
-    public synchronized void unregister() {
-        if (current != null && listener != null) {
-            current.removeFileChangeListener(listener);
-        }
+    void start() {
+        RP.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                if (state.compareAndSet(NEW, STARTED)) {
+                    eval.addPropertyChangeListener(MainClassUpdater.this);
+                    addFileChangeListener();
+                } else {
+                    throw new IllegalStateException("Current State: " + state.get());   //NOI18N
+                }
+            }
+        });
+    }
+
+    void stop() {
+        RP.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                if (state.compareAndSet(STARTED, FINISHED)) {
+                    synchronized (MainClassUpdater.this) {
+                        if (current != null && listener != null) {
+                            current.removeFileChangeListener(listener);
+                        }
+                    }
+                } else {
+                    throw new IllegalStateException("Current State: " + state.get());   //NOI18N
+                }
+            }
+        });
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
@@ -197,9 +232,9 @@ public class MainClassUpdater extends FileChangeAdapter implements PropertyChang
             try {
                 FileObject[] roots = sourcePath.getRoots();
                 if (roots.length > 0) {
-                    /** 
-                     * @TODO ugly hacking to find mainClass's fo, this hacking 
-                     * requirs main class name is in the same name .scala file 
+                    /**
+                     * @TODO ugly hacking to find mainClass's fo, this hacking
+                     * requirs main class name is in the same name .scala file
                      */
                     String[] paths = mainClassName.split("\\.");
                     StringBuilder sb = new StringBuilder();
@@ -260,7 +295,8 @@ public class MainClassUpdater extends FileChangeAdapter implements PropertyChang
                                 synchronized (MainClassUpdater.this) {
                                     current = sourceFo;
                                     listener = WeakListeners.create(FileChangeListener.class, MainClassUpdater.this, current);
-                                    if (current != null && sourcePath.contains(current)) {
+                                    if (current
+                                            != null && sourcePath.contains(current)) {
                                         current.addFileChangeListener(listener);
                                     }
                                 }
