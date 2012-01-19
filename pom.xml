@@ -59,14 +59,14 @@
         <libs.xtc.version>1.15</libs.xtc.version>
         <languages.execution.version>0.11</languages.execution.version>
         <scala.debugger.version>0.13</scala.debugger.version>
-        <scala.debugger.projects.version>0.17</scala.debugger.projects.version>
+        <scala.debugger.projects.version>0.18</scala.debugger.projects.version>
         <scala.core.version>0.4.0</scala.core.version>
         <scala.editor.version>0.4.0</scala.editor.version>
         <scala.console.version>0.11</scala.console.version>
         <scala.platform.version>0.12</scala.platform.version>
         <scala.stdplatform.version>0.12</scala.stdplatform.version>
         <scala.project.version>1.5</scala.project.version>
-        <scala.refactoring.version>0.5</scala.refactoring.version>
+        <scala.refactoring.version>0.6</scala.refactoring.version>
     </properties>
 
     <repositories>
