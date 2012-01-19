@@ -40,6 +40,8 @@ package org.netbeans.modules.scala.editor;
 
 import java.util.Set;
 import org.netbeans.api.lexer.Language;
+import org.netbeans.core.spi.multiview.MultiViewElement;
+import org.netbeans.core.spi.multiview.text.MultiViewEditorElement;
 import org.netbeans.modules.csl.api.CodeCompletionHandler;
 import org.netbeans.modules.csl.api.DeclarationFinder;
 import org.netbeans.modules.csl.api.Formatter;
@@ -50,139 +52,155 @@ import org.netbeans.modules.csl.api.OccurrencesFinder;
 import org.netbeans.modules.csl.api.SemanticAnalyzer;
 import org.netbeans.modules.csl.api.StructureScanner;
 import org.netbeans.modules.csl.spi.DefaultLanguageConfig;
+import org.netbeans.modules.csl.spi.LanguageRegistration;
+import org.netbeans.modules.parsing.spi.indexing.PathRecognizerRegistration;
 import org.netbeans.modules.parsing.spi.Parser;
 import org.netbeans.modules.scala.core.ScalaParser;
 import org.netbeans.modules.scala.core.lexer.ScalaTokenId;
 import org.netbeans.modules.scala.hints.ScalaHintsProvider;
+import org.openide.util.Lookup;
+import org.openide.windows.TopComponent;
 
 /**
  * Language/lexing configuration for Scala
  *
  *
- * @Note: Since NetBeans 6.9, csl uses LanguageRegistration, and process source files to auto-generate layer,
- *        What I have to do is either use manually register all relative instance in layer.xml or write it in Java.
- *        @see org.netbeans.modules.csl.core.LanguageRegistrationProcessor
- * @see https://netbeans.org/bugzilla/show_bug.cgi?id=169991
- * What LanguageRegistrationProcessor created is under build/classes/META-INF/generated-layer.xml
- * 
+ * @Note: Since NetBeans 6.9, csl uses LanguageRegistration, and process source
+ * files to auto-generate layer, What I have to do is either use manually
+ * register all relative instance in layer.xml or write it in Java.
+ *
+ * @see org.netbeans.modules.csl.core.LanguageRegistrationProcessor
+ * @see https://netbeans.org/bugzilla/show_bug.cgi?id=169991 What
+ * LanguageRegistrationProcessor created is under
+ * build/classes/META-INF/generated-layer.xml
+ *
  * @author Caoyuan Deng
  */
-@org.netbeans.modules.csl.spi.LanguageRegistration(mimeType = {"text/x-scala"})
-@org.netbeans.modules.parsing.spi.indexing.PathRecognizerRegistration(mimeTypes = {"text/x-scala"},
-sourcePathIds = {"scala/classpath/source"},
-libraryPathIds = {"scala/classpath/boot"},
-binaryLibraryPathIds = {})
+@LanguageRegistration(mimeType = "text/x-scala", useMultiview = true)
+@PathRecognizerRegistration(mimeTypes = "text/x-scala", sourcePathIds = "scala/classpath/source", libraryPathIds = "scala/classpath/boot", binaryLibraryPathIds = {})
 public class ScalaLanguage extends DefaultLanguageConfig {
 
-  public static String BOOT = "scala/classpath/boot";
-  public static String COMPILE = "scala/classpath/compile";
-  public static String EXECUTE = "scala/classpath/execute";
-  public static String SOURCE = "scala/classpath/source";
+    public static String BOOT = "scala/classpath/boot";
+    public static String COMPILE = "scala/classpath/compile";
+    public static String EXECUTE = "scala/classpath/execute";
+    public static String SOURCE = "scala/classpath/source";
 
-  public ScalaLanguage() {
-  }
+    @MultiViewElement.Registration(displayName = "#LBL_ScalaEditorTab",
+    iconBase = "org/netbeans/modules/scala/editor/resources/scala16x16.png",
+    persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED,
+    preferredID = "scala.source",
+    mimeType = "text/x-scala",
+    position = 1)
+    
+    public static MultiViewEditorElement createMultiViewEditorElement(Lookup context) {
+        return new MultiViewEditorElement(context);
+    }
 
-  public Language getLexerLanguage() {
-    return ScalaTokenId.language();
-  }
+    public ScalaLanguage() {
+    }
 
-  @Override
-  public String getLineCommentPrefix() {
-    return "//"; // NOI18N
-  }
+    public Language getLexerLanguage() {
+        return ScalaTokenId.language();
+    }
 
-  @Override
-  public String getDisplayName() {
-    return "Scala"; // NOI18N
-  }
+    @Override
+    public String getLineCommentPrefix() {
+        return "//"; // NOI18N
+    }
 
-  @Override
-  public String getPreferredExtension() {
-    return "scala"; // NOI18N
-  }
+    @Override
+    public String getDisplayName() {
+        return "Scala"; // NOI18N
+    }
 
-  /**
-   * @see org.netbeans.modules.scala.platform.ScalaPlatformClassPathProvider and ModuleInstall
-   */
-  @Override
-  public Set<String> getLibraryPathIds() {
-    return java.util.Collections.singleton(BOOT);
-  }
+    @Override
+    public String getPreferredExtension() {
+        return "scala"; // NOI18N
+    }
 
-  @Override
-  public Set<String> getSourcePathIds() {
-    return java.util.Collections.singleton(SOURCE);
-  }
+    /**
+     * @see org.netbeans.modules.scala.platform.ScalaPlatformClassPathProvider
+     * and ModuleInstall
+     */
+    @Override
+    public Set<String> getLibraryPathIds() {
+        return java.util.Collections.singleton(BOOT);
+    }
 
-  @Override
-  public Parser getParser() {
-    return new ScalaParser();
-  }
+    @Override
+    public Set<String> getSourcePathIds() {
+        return java.util.Collections.singleton(SOURCE);
+    }
 
-  @Override
-  public SemanticAnalyzer getSemanticAnalyzer() {
-    return new ScalaSemanticAnalyzer();
-  }
+    @Override
+    public Parser getParser() {
+        return new ScalaParser();
+    }
 
-  @Override
-  public boolean hasOccurrencesFinder() {
-    return true;
-  }
+    @Override
+    public SemanticAnalyzer getSemanticAnalyzer() {
+        return new ScalaSemanticAnalyzer();
+    }
 
-  @Override
-  public OccurrencesFinder getOccurrencesFinder() {
-    return new ScalaOccurrencesFinder();
-  }
+    @Override
+    public boolean hasOccurrencesFinder() {
+        return true;
+    }
 
-  @Override
-  public boolean hasStructureScanner() {
-    return true;
-  }
+    @Override
+    public OccurrencesFinder getOccurrencesFinder() {
+        return new ScalaOccurrencesFinder();
+    }
 
-  @Override
-  public StructureScanner getStructureScanner() {
-    return new ScalaStructureAnalyzer();
-  }
+    @Override
+    public boolean hasStructureScanner() {
+        return true;
+    }
 
-  @Override
-  public DeclarationFinder getDeclarationFinder() {
-    return new ScalaDeclarationFinder();
-  }
+    @Override
+    public StructureScanner getStructureScanner() {
+        return new ScalaStructureAnalyzer();
+    }
 
-  @Override
-  public InstantRenamer getInstantRenamer() {
-    return new ScalaInstantRenamer();
-  }
+    @Override
+    public DeclarationFinder getDeclarationFinder() {
+        return new ScalaDeclarationFinder();
+    }
 
-  @Override
-  public CodeCompletionHandler getCompletionHandler() {
-    return new ScalaCodeCompletionHandler();
-  }
+    @Override
+    public InstantRenamer getInstantRenamer() {
+        return new ScalaInstantRenamer();
+    }
 
-  @Override
-  public KeystrokeHandler getKeystrokeHandler() {
-    return new ScalaKeystrokeHandler();
-  }
+    @Override
+    public CodeCompletionHandler getCompletionHandler() {
+        return new ScalaCodeCompletionHandler();
+    }
 
-  @Override
-  public boolean hasFormatter() {
-    return true;
-  }
+    @Override
+    public KeystrokeHandler getKeystrokeHandler() {
+        return new ScalaKeystrokeHandler();
+    }
 
-  @Override
-  public Formatter getFormatter() {
-    return new ScalaFormatter();
-  }
+    @Override
+    public boolean hasFormatter() {
+        return true;
+    }
 
-  @Override
-  public boolean hasHintsProvider() {
-    return true;
-  }
+    @Override
+    public Formatter getFormatter() {
+        return new ScalaFormatter();
+    }
 
-  // hintsProvider is registered in layer.xml under "csl-hints" folder
-  @Override
-  public HintsProvider getHintsProvider() {
-    return new ScalaHintsProvider();
-  }
-  //@Override def getIndexerFactory = new ScalaIndexer.Factory
+    @Override
+    public boolean hasHintsProvider() {
+        return true;
+    }
+
+    // hintsProvider is registered in layer.xml under "csl-hints" folder
+    @Override
+    public HintsProvider getHintsProvider() {
+        return new ScalaHintsProvider();
+    }
+    //@Override def getIndexerFactory = new ScalaIndexer.Factory
 }

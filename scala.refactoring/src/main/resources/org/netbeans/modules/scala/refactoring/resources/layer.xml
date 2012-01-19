@@ -36,7 +36,7 @@
                         <attr name="position" intvalue="1230"/>
                     </file>
                     <file name="RefactoringWhereUsed.shadow">
-                        <attr name="originalFile" stringvalue="Actions/Refactoring/RefactoringWhereUsed.instance"/>
+                        <attr name="originalFile" stringvalue="Actions/Refactoring/org-netbeans-modules-refactoring-api-ui-WhereUsedAction.instance"/>
                         <attr name="position" intvalue="1210"/>
                     </file>
                     

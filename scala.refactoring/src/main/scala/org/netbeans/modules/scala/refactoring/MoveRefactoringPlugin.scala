@@ -372,7 +372,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
         }
 
     }
-    val prob = null//createAndAddElements(a, task, elements, refactoring)
+    val prob: Problem = null//createAndAddElements(a, task, elements, refactoring)
     fireProgressListenerStop
     if (prob != null) prob else chainProblems(p, t.getProblem)
   }
