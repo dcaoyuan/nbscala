@@ -4,11 +4,11 @@ NetBeans Plugin for Scala
 # Requirement:
 * Java 1.6+
 * Maven 2.x/3.x 
-* NetBeans 7.0
+* NetBeans 7.1
 
 # Setting nb.installation property for maven
 
-You should set 'nb.installation' property in your maven settings.xml (.m2/settings.xml) to point to an existed NetBeans installation home, for example:
+You should set 'nb.installation' property in your maven settings.xml (.m2/settings.xml) to point to new copy of your installed NetBeans (and delete the 'nbscala' directory if existed), for example:
 
     <profiles>
         <profile>
