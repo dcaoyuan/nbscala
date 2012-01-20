@@ -8,13 +8,13 @@ NetBeans Plugin for Scala
 
 # Setting nb.installation property for maven
 
-You should set 'nb.installation' property in your maven settings.xml (.m2/settings.xml) to point to new copy of your installed NetBeans (and delete the 'nbscala' directory if existed), for example:
+Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:run-ide' goal), check if there is a directory 'nbscala' under this copy, if yes, delete it. Then set 'nb.installation' property in your maven settings.xml (.m2/settings.xml) to point to this copy:
 
     <profiles>
         <profile>
             <id>nb-installation</id>
             <properties>
-                <nb.installation>${user.home}/myapps/netbeans-7</nb.installation>
+                <nb.installation>${user.home}/myapps/netbeans-copy</nb.installation>
              </properties>
         </profile>
     </profiles>
