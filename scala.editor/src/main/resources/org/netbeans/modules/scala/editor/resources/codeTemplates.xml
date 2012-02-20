@@ -19,6 +19,23 @@
   <codetemplate abbreviation="sy">
     <code>synchronized </code>
   </codetemplate>
+  <codetemplate abbreviation="ob">
+      <code>object </code>
+  </codetemplate>
+  <codetemplate abbreviation="cl">
+      <code>class </code>
+  </codetemplate>
+  <codetemplate abbreviation="tr">
+      <code>trait </code>
+  </codetemplate>
+  <codetemplate abbreviation="st">
+      <code>String</code>
+  </codetemplate>
+
+
+  <codetemplate abbreviation="ar">
+      <code><![CDATA[Array[${cursor}]]]></code>
+  </codetemplate>
 
   <codetemplate abbreviation="th">
     <code>
