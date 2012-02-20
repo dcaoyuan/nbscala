@@ -215,6 +215,51 @@
             </properties>
         </profile>
 
+        <profile>
+            <!-- The following code includes tools.jar for JDKs on Windows, Linux and Solaris (it is already included in the runtime for Mac OS X and some free JDKs). -->
+            <!-- @see http://maven.apache.org/general.html#tools-jar-dependency -->
+            <id>default-tools.jar</id>
+            <activation>
+                <property>
+                    <name>java.vendor</name>
+                    <value>Sun Microsystems Inc.</value>
+                </property>
+            </activation>
+            
+            <dependencies>
+                <dependency>
+                    <groupId>com.sun</groupId>
+                    <artifactId>tools</artifactId>
+                    <version>1.4.2</version>
+                    <scope>system</scope>
+                </dependency>
+            </dependencies>
+            
+            <build>
+                <plugins> 
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>install-tools-jar</id>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <phase>process-resources</phase> <!-- use process-resources phase to force re-installation -->
+                                <configuration>
+                                    <file>${java.home}/../lib/tools.jar</file>
+                                    <groupId>com.sun</groupId>
+                                    <artifactId>tools</artifactId>
+                                    <version>1.4.2</version>
+                                    <packaging>jar</packaging>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins> 
+            </build>
+        </profile>
     </profiles>
 
     <modules>
