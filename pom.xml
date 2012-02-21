@@ -231,7 +231,6 @@
                     <groupId>com.sun</groupId>
                     <artifactId>tools</artifactId>
                     <version>1.4.2</version>
-                    <scope>system</scope>
                 </dependency>
             </dependencies>
             
