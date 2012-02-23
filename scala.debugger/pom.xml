@@ -100,6 +100,14 @@
             <version>${netbeans.version}</version>
         </dependency>
 
+        <!-- scalac transitive dependencies (scalac will check class dependencies deeply): <scope>provided</scope> -->
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency> <!-- to avoid transitive dependencies on following jars that are brought in by log4j-1.2.15 -->
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -163,7 +171,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
-                <version>3.5</version>
                 <extensions>true</extensions>
                 <configuration>
                     <publicPackages>
