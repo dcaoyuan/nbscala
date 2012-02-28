@@ -107,6 +107,18 @@
             <version>${netbeans.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-debugger-jpda-ui</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-libs-javacapi</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency> <!-- to avoid transitive dependencies on following jars that are brought in by log4j-1.2.15 -->
             <groupId>log4j</groupId>
