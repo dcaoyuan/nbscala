@@ -90,6 +90,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <!-- ***************************************************************************************************************
     *
     *
@@ -173,11 +174,39 @@
                         <useDefaultManifestFile>true</useDefaultManifestFile>
                     </configuration>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.3.1</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
 
     <profiles>
+        <profile>
+            <!-- The following code includes tools.jar for JDKs on Windows, Linux and Solaris (it is already included in the runtime for Mac OS X and some free JDKs). -->
+            <!-- @see http://maven.apache.org/general.html#tools-jar-dependency -->
+            <id>dependency-of-default-tools-jar</id>
+            <activation>
+                <property>
+                    <name>java.vendor</name>
+                    <value>Sun Microsystems Inc.</value>
+                </property>
+            </activation>
+            
+            <dependencies>
+                <dependency>
+                    <groupId>com.sun</groupId>
+                    <artifactId>tools</artifactId>
+                    <version>1.4.2</version>
+                    <scope>system</scope>
+                    <systemPath>${java.home}/../lib/tools.jar</systemPath>
+                </dependency>
+            </dependencies>
+        </profile>
+        
         <profile>
             <id>updatesite</id>
             <build>
@@ -214,51 +243,6 @@
                 <run.arguments>-J-Xdebug -J-Xnoagent -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000</run.arguments>
             </properties>
         </profile>
-
-        <profile>
-            <!-- The following code includes tools.jar for JDKs on Windows, Linux and Solaris (it is already included in the runtime for Mac OS X and some free JDKs). -->
-            <!-- @see http://maven.apache.org/general.html#tools-jar-dependency -->
-            <id>default-tools.jar</id>
-            <activation>
-                <property>
-                    <name>java.vendor</name>
-                    <value>Sun Microsystems Inc.</value>
-                </property>
-            </activation>
-            
-            <dependencies>
-                <dependency>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                    <version>1.4.2</version>
-                </dependency>
-            </dependencies>
-            
-            <build>
-                <plugins> 
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-install-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>install-tools-jar</id>
-                                <goals>
-                                    <goal>install-file</goal>
-                                </goals>
-                                <phase>process-resources</phase> <!-- use process-resources phase to force re-installation -->
-                                <configuration>
-                                    <file>${java.home}/../lib/tools.jar</file>
-                                    <groupId>com.sun</groupId>
-                                    <artifactId>tools</artifactId>
-                                    <version>1.4.2</version>
-                                    <packaging>jar</packaging>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins> 
-            </build>
-        </profile>
     </profiles>
 
     <modules>
@@ -275,6 +259,8 @@
         <module>scala.stdplatform</module>
         <module>scala.project</module>
         <module>scala.refactoring</module>
+
+        <module>libs.local</module>
     </modules>
 
 </project>

@@ -15,6 +15,13 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>nbscala-libs-local</artifactId>
+            <version>${libs.scala.version}</version>
+            <type>pom</type>
+        </dependency>
+
+        <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
@@ -23,26 +30,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>install-scala-library</id>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
-                        <configuration>
-                            <file>${project.basedir}/lib/scala-library.jar</file>
-                            <groupId>org.scala-lang</groupId>
-                            <artifactId>scala-library</artifactId>
-                            <version>${scala.version}</version>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
