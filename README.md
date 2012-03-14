@@ -38,16 +38,15 @@ Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:r
 
     <profiles>
         <profile>
-            <id>nb-installation</id>
+            <id>netbeans</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
-                <nb.installation>${user.home}/myapps/netbeans-copy</nb.installation>
-             </properties>
+                <nb.installation>${user.home}/myapps/netbeans-71</nb.installation>
+            </properties>
         </profile>
     </profiles>
-
-    <activeProfiles>
-        <activeProfile>nb-installation</activeProfile>
-    </activeProfiles>
 
 ### Build all nbms
 
