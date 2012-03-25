@@ -48,10 +48,11 @@
     </licenses>
 
     <properties>
+        <netbeans.hint.jdkPlatform>JDK_1.6</netbeans.hint.jdkPlatform>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
         <scala.version>2.9.0.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
-        <netbeans.version> RELEASE71</netbeans.version>
+        <netbeans.version>RELEASE71</netbeans.version>
         <deploy.version>snapshots</deploy.version>
         
         <!-- module versions -->
@@ -151,7 +152,7 @@
                         </jvmArgs>
                         <args>
                             <arg>-target:jvm-1.5</arg>
-                            <arg>-make:transitivenocp</arg>
+                            <arg>-deprecation</arg>
                             <arg>-dependencyfile</arg>
                             <arg>${project.build.directory}/.scala_dependencies</arg>
                         </args>
@@ -259,7 +260,6 @@
         <module>scala.stdplatform</module>
         <module>scala.project</module>
         <module>scala.refactoring</module>
-
         <module>libs.local</module>
     </modules>
 
