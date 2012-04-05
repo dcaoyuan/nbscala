@@ -38,17 +38,12 @@
  * Version 2 license, then the option applies only if the new code is
  * made subject to such option by the copyright holder.
  */
+package org.netbeans.modules.scala.console.readline
 
-package org.netbeans.modules.scala.console.readline;
+import scala.collection.mutable.ArrayBuffer
 
-import java.util.*;
+trait Completor {
 
-/**
- *  A Completor is the mechanism by which tab-completion candidates
- *  will be resolved.
- *
- *  @author Caoyuan Deng
- */
-public interface Completor {
-    int complete(String buffer, int cursor, List candidates);
+  def complete(buffer:String, cursor:Int, candidates:ArrayBuffer[String] ):Int
+  
 }
