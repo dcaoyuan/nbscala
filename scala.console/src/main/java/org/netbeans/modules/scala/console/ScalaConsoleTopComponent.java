@@ -47,39 +47,23 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.Reader;
-import javax.swing.BorderFactory;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
-import javax.swing.SwingUtilities;
+import java.io.*;
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
-import java.io.Serializable;
-import java.util.List;
-import javax.swing.UIManager;
 import javax.swing.text.Caret;
-import org.netbeans.api.project.Project;
-import org.netbeans.api.project.ui.OpenProjects;
 import org.netbeans.api.extexecution.ExecutionDescriptor;
 import org.netbeans.api.extexecution.ExecutionService;
 import org.netbeans.api.extexecution.ExternalProcessBuilder;
+import org.netbeans.api.project.Project;
+import org.netbeans.api.project.ui.OpenProjects;
 import org.netbeans.modules.scala.console.readline.TextAreaReadline;
 import org.openide.ErrorManager;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
-import org.openide.windows.OutputListener;
-import org.openide.windows.OutputWriter;
-import org.openide.windows.TopComponent;
-import org.openide.windows.WindowManager;
 import org.openide.util.Utilities;
-import org.openide.windows.InputOutput;
+import org.openide.windows.*;
 
 /**
  *
@@ -301,13 +285,14 @@ final class ScalaConsoleTopComponent extends TopComponent {
             return;
         }
         String cmdName = file.getName();
-        List<String> scalaArgs = ScalaExecution.getScalaArgs(scalaHome, cmdName);
-        ExternalProcessBuilder builder = new ExternalProcessBuilder(scalaArgs.get(0));
-
-
-        for (int index = 1; index < scalaArgs.size(); index++) {
-            builder = builder.addArgument(scalaArgs.get(index));
+        String[] scalaArgs = ScalaExecution.getScalaArgs(scalaHome, cmdName);
+        ExternalProcessBuilder builder = null;
+        
+        for (String arg : scalaArgs) {
+            if (builder == null) builder = new ExternalProcessBuilder(arg);
+            else builder = builder.addArgument(arg);
         }
+
         builder = builder.addEnvironmentVariable("JAVA_HOME", ScalaExecution.getJavaHome())
                 .addEnvironmentVariable("SCALA_HOME", ScalaExecution.getScalaHome());
         builder = builder.workingDirectory(pwd);
@@ -318,10 +303,12 @@ final class ScalaConsoleTopComponent extends TopComponent {
 
         execDescriptor = execDescriptor.postExecution(new Runnable() {
 
+            @Override
             public void run() {
                 finished = true;
                 textPane.setEditable(false);
                 SwingUtilities.invokeLater(new Runnable() {
+                    @Override
                     public void run() {
                         ScalaConsoleTopComponent.this.close();
                         ScalaConsoleTopComponent.this.removeAll();

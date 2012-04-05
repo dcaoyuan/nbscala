@@ -10,7 +10,7 @@ NetBeans Plugin for Scala
 3. Project Details
 
 ## Common Informations
-This is a plugin of the Netbeans Platform for the [scala language](http://http://www.scala-lang.org/). It targets version 2.9.x. No local installation of scala is needed, everything is wrapped in the plugin. It enables syntax checking, syntax highlighting, auto-completion, pretty formatter, occurrences mark, brace matching, indentation, code folding, function navigator, go to declaration, project management and a shell console. It's is specially useful if you are maven user.
+This is a plugin of the Netbeans Platform for the [scala language](http://http://www.scala-lang.org/). It targets version 2.9.x. In case of a maven scala project, no local installation of scala is needed. It enables syntax checking, syntax highlighting, auto-completion, pretty formatter, occurrences mark, brace matching, indentation, code folding, function navigator, go to declaration, project management and a shell console. It's is specially useful if you are maven user.
 
 ### Where to start ?
 The project central point is [https://github.com/dcaoyuan/nbscala](). There are some over places, where the project was hosted before, but they are abandoned now.
