@@ -160,6 +160,7 @@ public class J2SEPlatformImpl extends ScalaPlatform {
     /**
      * @return  a descriptive, human-readable name of the platform
      */
+    @Override
     public String getDisplayName() {
         return displayName;
     }
@@ -204,6 +205,7 @@ public class J2SEPlatformImpl extends ScalaPlatform {
     }
 
 
+    @Override
     public ClassPath getBootstrapLibraries() {
         synchronized (this) {
             ClassPath cp = (bootstrap == null ? null : bootstrap.get());
@@ -225,6 +227,7 @@ public class J2SEPlatformImpl extends ScalaPlatform {
      * out of it.
      * @return  ClassPath that represents contents of system property java.class.path.
      */
+    @Override
     public ClassPath getStandardLibraries() {
         synchronized (this) {
             ClassPath cp = (standardLibs == null ? null : standardLibs.get());
@@ -242,6 +245,7 @@ public class J2SEPlatformImpl extends ScalaPlatform {
      * where the Platform is installed. Typically it returns one folder, but
      * in some cases there can be more of them.
      */
+    @Override
     public final Collection<FileObject> getInstallFolders() {
         Collection<FileObject> result = new ArrayList<FileObject> ();
         for (Iterator<URL> it = this.installFolders.iterator(); it.hasNext();) {
@@ -255,6 +259,7 @@ public class J2SEPlatformImpl extends ScalaPlatform {
     }
 
 
+    @Override
     public final FileObject findTool(final String toolName) {
         String archFolder = getProperties().get(PLAT_PROP_ARCH_FOLDER);        
         FileObject tool = null;
@@ -272,6 +277,7 @@ public class J2SEPlatformImpl extends ScalaPlatform {
      * Returns the location of the source of platform
      * @return List&lt;URL&gt;
      */
+    @Override
     public final ClassPath getSourceFolders () {
         return this.sources;
     }
@@ -286,6 +292,7 @@ public class J2SEPlatformImpl extends ScalaPlatform {
      * Returns the location of the Javadoc for this platform
      * @return FileObject
      */
+    @Override
     public final List<URL> getJavadocFolders () {
         return this.javadoc;
     }
@@ -303,11 +310,13 @@ public class J2SEPlatformImpl extends ScalaPlatform {
         this.firePropertyChange(PROP_JAVADOC_FOLDER, null, null);
     }
 
+    @Override
     public String getVendor() {
         String s = getSystemProperties().get("java.vm.vendor"); // NOI18N
         return s == null ? "" : s; // NOI18N
     }
 
+    @Override
     public Specification getSpecification() {
         if (spec == null) {
             spec = new Specification (PLATFORM_J2SE, Util.getSpecificationVersion(this)); //NOI18N
