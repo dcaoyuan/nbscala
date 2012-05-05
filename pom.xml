@@ -80,6 +80,12 @@
             <id>netbeans</id>
             <name>NetBeans Platform Maven Repository</name>
             <url>http://bits.netbeans.org/maven2/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
   
