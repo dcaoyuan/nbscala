@@ -115,7 +115,7 @@ class ScalaHintsProvider() extends HintsProvider {
         cancelled = false
         val parserResult = context.parserResult;
         if (parserResult != null) {
-            val errors = JavaConversions.asBuffer(parserResult.getDiagnostics);
+            val errors = JavaConversions.asScalaBuffer(parserResult.getDiagnostics);
             if (errors != null && !errors.isEmpty) {
                 val errHints  = manager.getErrors.asInstanceOf[ju.Map[String, ju.List[ScalaErrorRule]]]
 
@@ -141,7 +141,7 @@ class ScalaHintsProvider() extends HintsProvider {
         if (rules != null) {
            var added = List[Hint]()
            val applicableRules = for {
-               rule <- JavaConversions.asBuffer(rules.asInstanceOf[ju.List[ScalaErrorRule]])
+               rule <- JavaConversions.asScalaBuffer(rules.asInstanceOf[ju.List[ScalaErrorRule]])
                if rule.appliesTo(context)
            } yield rule
            for (rule <- applicableRules) {
