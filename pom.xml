@@ -51,12 +51,12 @@
         <netbeans.hint.jdkPlatform>JDK_1.6</netbeans.hint.jdkPlatform>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
-        <scala.version>2.9.0.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
+        <scala.version>2.9.2.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
         <netbeans.version>RELEASE71</netbeans.version>
         <deploy.version>snapshots</deploy.version>
         
         <!-- module versions -->
-        <libs.scala.version>2.9</libs.scala.version>
+        <libs.scala.version>2.9.2</libs.scala.version>
         <libs.xtc.version>1.15</libs.xtc.version>
         <languages.execution.version>0.11</languages.execution.version>
         <scala.debugger.version>0.13</scala.debugger.version>
