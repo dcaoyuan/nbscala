@@ -40,9 +40,6 @@ package org.netbeans.modules.scala.editor
 
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.IOException
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.util.logging.Logger
 import org.netbeans.modules.csl.api.ElementKind
 import org.netbeans.modules.java.preprocessorbridge.spi.VirtualSourceProvider
@@ -252,55 +249,43 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
 
     @throws(classOf[FileNotFoundException])
     def genClass(pkgName: String, clzName: String, syms: Array[Symbol]): CharSequence = {
-      val sw = new StringWriter
-      val pw = new PrintWriter(sw)
+      val javaCode = new StringBuilder(1024)
 
       try {
-        if (pkgName.length > 0) {
-          pw.print("package ")
-          pw.print(pkgName)
-          pw.println(";")
+        if (!pkgName.isEmpty) {
+          javaCode ++= "package" ++= pkgName ++= ";\n"
         }
 
         val sym = syms match {
-          case Array(null, null, t) => // trait
+          //syms takes the form of (class, object, trait)
+          case Array(null, null, traitSym) => // trait
             isTrait = true
-            pw.print(modifiers(t))
-            pw.print("interface ")
-
-            t
-          case Array(null, o, null) => // single object
+            javaCode ++= modifiers(traitSym) ++= "interface "
+            traitSym
+          case Array(null, objSym, null) => // single object
             isObject = true
-            pw.print(modifiers(o))
-            pw.print("final class ")
-
-            o
-          case Array(c, null, null) => // single class
-            pw.print(modifiers(c))
-            pw.print("class ")
-
-            c
-          case Array(c, o, null) => // companion object + class
+            javaCode ++= modifiers(objSym) ++= "final class "
+            objSym
+          case Array(classSym, null, null) => // single class
+            javaCode ++= modifiers(classSym) ++= "class "
+            classSym
+          case Array(classSym, objSym, null) => // companion object + class
             isCompanion = true
-            pw.print(modifiers(c))
-            pw.print("class ")
-
-            c
-          case Array(_, o, t) => // companion object + trait ?
+            javaCode ++= modifiers(classSym) ++= "class "
+            classSym
+          case Array(_, obj, traitSym) => // companion object + trait ?
             isTrait = true
-            pw.print(modifiers(t))
-            pw.print("interface ")
-
-            t
+            javaCode ++= modifiers(traitSym) ++= "interface "
+            traitSym
         }
 
         // * we get clzName, do not try javaSig, which contains package string
         // * and may be binary name, for example, an object's name will be "object$"
-        pw.print(clzName)
+        javaCode ++= clzName
 
         val tpe = tryTpe(sym)
         javaSig(sym, tpe) match {
-          case Some(sig) => pw.print(getGenericPart(sig))
+          case Some(sig) => javaCode ++= getGenericPart(sig)
           case None =>
         }
 
@@ -314,12 +299,12 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
 
         var extended = false
         if (!isTrait && superQName.length > 0) {
-          pw.print(" extends ")
+          javaCode ++= " extends "
           extended = true
 
           javaSig(superClass, superClass.tpe) match {
-            case Some(sig) => pw.print(sig)
-            case None => pw.print(encodeQName(superQName))
+            case Some(sig) => javaCode ++= sig
+            case None => javaCode ++= encodeQName(superQName)
           }
         }
 
@@ -338,84 +323,76 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                 if (base.isTrait) {
                   if (isTrait) {
                     if (!extended) {
-                      pw.print(" extends ")
+                      javaCode ++= " extends "
                       extended = true
                     } else {
-                      pw.print(", ")
+                      javaCode ++= ", "
                     }
                   } else {
                     if (!implemented) {
-                      pw.print(" implements ")
+                      javaCode ++= " implements "
                       implemented = true
                     } else {
-                      pw.print(", ")
+                      javaCode ++= ", "
                     }
                   }
                   
-                  pw.print(encodeQName(baseQName))
+                  javaCode ++= encodeQName(baseQName)
                 } else { // base is class
                   if (isTrait) {
                     // * shound not happen or error of "interface extends a class", ignore it
                   } else {
                     if (!extended) {
-                      pw.print(" extends ")
+                      javaCode ++= " extends "
                       extended = true
                     } else {
-                      pw.print(", ")
+                      javaCode ++= ", "
                     }
 
                     javaSig(base, base.tpe) match {
-                      case Some(sig) => pw.print(sig)
-                      case None => pw.print(encodeQName(baseQName))
+                      case Some(sig) => javaCode ++= sig
+                      case None => javaCode ++= encodeQName(baseQName)
                     }
                   }
                 }
             }
           }
 
-          pw.println(" {")
+          javaCode ++= " {\n"
 
           if (isCompanion) {
-            genMemebers(pw, sym, tpe, false, false)
+            genMemebers(javaCode, sym, tpe, false, false)
 
             val oSym = syms(1)
             val oTpe = tryTpe(oSym)
             
             if (oTpe != null) {
-              genMemebers(pw, oSym, oTpe, true, false)
+              genMemebers(javaCode, oSym, oTpe, true, false)
             }
 
           } else {
-            genMemebers(pw, sym, tpe, isObject, isTrait)
+            genMemebers(javaCode, sym, tpe, isObject, isTrait)
           }
 
           if (!isTrait) {
-            pw.println(dollarTagMethod) // should implement scala.ScalaObject
+            javaCode ++= dollarTagMethod ++= "\n" // should implement scala.ScalaObject
           }
 
-          pw.println("}")
+          javaCode ++= "}\n"
         } else {
-          pw.println(" {")
+          javaCode ++= " {\n"
 
           if (!isTrait) {
-            pw.println(dollarTagMethod) // should implement scala.ScalaObject
+            javaCode ++= dollarTagMethod ++= "\n" // should implement scala.ScalaObject
           }
 
-          pw.println("}")
+          javaCode ++= "}\n"
         }
-      } finally {
-        try {
-          pw.close
-        } catch {case ex: Exception =>}
-        
-        try {
-          sw.close
-        } catch {case ex: IOException =>}
       }
 
       //Log.log(Level.INFO, "Java stub: {0}", sw)
 
-      sw.toString
+      javaCode.toString
     }
 
     private def tryTpe(sym: Symbol): Type = {
@@ -428,7 +405,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
       tpe != null && (tpe.members exists (_ hasFlag Flags.DEFERRED))
     }
 
-    private def genMemebers(pw: PrintWriter, sym: Symbol, tpe: Type, isObject: Boolean, isTrait: Boolean) {
+    private def genMemebers(javaCode: StringBuilder, sym: Symbol, tpe: Type, isObject: Boolean, isTrait: Boolean) {
       for (m <- tpe.members if !m.hasFlag(Flags.PRIVATE)) {
         val mTpe = try {
           m.tpe
@@ -441,11 +418,9 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
               // @todo
             case _ if m.isConstructor =>
               if (!isTrait && !isObject) {
-                pw.print(modifiers(m))
-                pw.print(encodeName(sym.nameString))
+                javaCode ++= modifiers(m) ++= encodeName(sym.nameString)
                 // * parameters
-                pw.print(params(mTpe.params))
-                pw.println(" {}")
+                javaCode ++= params(mTpe.params) ++= " {}\n"
               }
             case _ if m.isMethod =>
               val mResTpe = try {
@@ -455,8 +430,8 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
               if (mResTpe != null && mSName != "$init$" && mSName != "synchronized") {
                 val mResSym = mResTpe.typeSymbol
                 
-                pw.print(modifiers(m))
-                if (isObject && !isTrait) pw.print("static final ")
+                javaCode ++= modifiers(m)
+                if (isObject && !isTrait) javaCode ++= "static final "
 
                 val mResQName = javaSig(mResSym, mResTpe) match {
                   case Some(sig) => sig
@@ -465,45 +440,35 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
 
                 javaSig(m, mTpe) match {
                   case Some(sig) =>
-                    pw.print(sig)
+                    javaCode ++= sig
                   case None =>
                     // method return type
-                    pw.print(mResQName)
-                    pw.print(" ")
-
+                    javaCode ++= mResQName ++= " "
                     // method name
-                    pw.print(encodeName(mSName))
-
+                    javaCode ++= encodeName(mSName)
                     // method parameters
-                    pw.print(params(mTpe.params))
-                    pw.print(" ")
+                    javaCode ++= params(mTpe.params) ++= " "
                 }
 
                 // method body or ";"
                 if (!isTrait && !m.hasFlag(Flags.DEFERRED)) {
-                  pw.print("{")
-                  pw.print(returnStrOfType(mResQName))
-                  pw.println("}")
+                  javaCode ++= "{" ++= returnStrOfType(mResQName) ++= "}\n"
                 } else {
-                  pw.println(";")
+                  javaCode ++= ";\n"
                 }
               }
             case _ if m.isVariable =>
               // do nothing
             case _ if m.isValue =>
               if (!isTrait) {
-                pw.print(modifiers(m))
-                pw.print(" ")
+                javaCode ++= modifiers(m) ++= " "
                 val mResTpe = mTpe.resultType
                 val mResSym = mResTpe.typeSymbol
                 val mResQName = javaSig(mResSym, mResTpe) match {
                   case Some(sig) => sig
                   case None => encodeType(mResSym.fullName)
                 }
-                pw.print(mResQName)
-                pw.print(" ")
-                pw.print(mSName)
-                pw.println(";")
+                javaCode ++= mResQName ++= " " ++= mSName ++= ";\n"
               }
             case _ =>
           }
@@ -514,6 +479,11 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
 
     private val dollarTagMethod = "public int $tag() throws java.rmi.RemoteException {return 0;}"
 
+    /**
+     * Creates a string of java modifiers from the Symbol, followed by a space.
+     * e.g. public, protected, or private and possibly abstract
+     * 
+     */
     private def modifiers(sym: Symbol): String = {
       val sb = new StringBuilder
       if (sym hasFlag Flags.PRIVATE) {
