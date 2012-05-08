@@ -256,143 +256,141 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
     def genClass(pkgName: String, clzName: String, syms: Array[Symbol]): CharSequence = {
       val javaCode = new StringBuilder(1024)
 
-      try {
-        if (!pkgName.isEmpty) {
-          javaCode ++= "package" ++= pkgName ++= ";\n"
+      if (!pkgName.isEmpty) {
+        javaCode ++= "package" ++= pkgName ++= ";\n"
+      }
+
+      val sym = syms match {
+        //syms takes the form of (class, object, trait)
+        case Array(null, null, traitSym) => // trait
+          isTrait = true
+          javaCode ++= modifiers(traitSym) ++= "interface "
+          traitSym
+        case Array(null, objSym, null) => // single object
+          isObject = true
+          javaCode ++= modifiers(objSym) ++= "final class "
+          objSym
+        case Array(classSym, null, null) => // single class
+          javaCode ++= modifiers(classSym) ++= "class "
+          classSym
+        case Array(classSym, objSym, null) => // companion object + class
+          isCompanion = true
+          javaCode ++= modifiers(classSym) ++= "class "
+          classSym
+        case Array(_, obj, traitSym) => // companion object + trait ?
+          isTrait = true
+          javaCode ++= modifiers(traitSym) ++= "interface "
+          traitSym
+      }
+
+      // * we get clzName, do not try javaSig, which contains package string
+      // * and may be binary name, for example, an object's name will be "object$"
+      javaCode ++= clzName
+
+      val tpe = tryTpe(sym)
+      javaSig(sym, tpe) match {
+        case Some(sig) => javaCode ++= getGenericPart(sig)
+        case None =>
+      }
+
+      val qName = sym.fullName
+
+      val superClass = sym.superClass
+      val superQName = superClass match {
+        case null => ""
+        case x => x.fullName
+      }
+
+      var extended = false
+      if (!isTrait && superQName.length > 0) {
+        javaCode ++= " extends "
+        extended = true
+
+        javaSig(superClass, superClass.tpe) match {
+          case Some(sig) => javaCode ++= sig
+          case None => javaCode ++= encodeQName(superQName)
         }
-
-        val sym = syms match {
-          //syms takes the form of (class, object, trait)
-          case Array(null, null, traitSym) => // trait
-            isTrait = true
-            javaCode ++= modifiers(traitSym) ++= "interface "
-            traitSym
-          case Array(null, objSym, null) => // single object
-            isObject = true
-            javaCode ++= modifiers(objSym) ++= "final class "
-            objSym
-          case Array(classSym, null, null) => // single class
-            javaCode ++= modifiers(classSym) ++= "class "
-            classSym
-          case Array(classSym, objSym, null) => // companion object + class
-            isCompanion = true
-            javaCode ++= modifiers(classSym) ++= "class "
-            classSym
-          case Array(_, obj, traitSym) => // companion object + trait ?
-            isTrait = true
-            javaCode ++= modifiers(traitSym) ++= "interface "
-            traitSym
-        }
-
-        // * we get clzName, do not try javaSig, which contains package string
-        // * and may be binary name, for example, an object's name will be "object$"
-        javaCode ++= clzName
-
-        val tpe = tryTpe(sym)
-        javaSig(sym, tpe) match {
-          case Some(sig) => javaCode ++= getGenericPart(sig)
-          case None =>
-        }
-
-        val qName = sym.fullName
-
-        val superClass = sym.superClass
-        val superQName = superClass match {
-          case null => ""
-          case x => x.fullName
-        }
-
-        var extended = false
-        if (!isTrait && superQName.length > 0) {
-          javaCode ++= " extends "
-          extended = true
-
-          javaSig(superClass, superClass.tpe) match {
-            case Some(sig) => javaCode ++= sig
-            case None => javaCode ++= encodeQName(superQName)
-          }
-        }
+      }
 
 
-        if (tpe != null) {
-          val itr = tpe.baseClasses.tail.iterator // head is always `java.lang.Object`?
-          var implemented = false
-          while (itr.hasNext) {
-            val base = itr.next
-            base.fullName  match {
-              case `superQName` =>
-              case `qName` =>
-              case "java.lang.Object" =>
-              case "scala.Any" =>  // javaSig of "scala.Any" will be "java.lang.Object"
-              case baseQName =>
-                if (base.isTrait) {
-                  if (isTrait) {
-                    if (!extended) {
-                      javaCode ++= " extends "
-                      extended = true
-                    } else {
-                      javaCode ++= ", "
-                    }
+      if (tpe != null) {
+        val itr = tpe.baseClasses.tail.iterator // head is always `java.lang.Object`?
+        var implemented = false
+        while (itr.hasNext) {
+          val base = itr.next
+          base.fullName  match {
+            case `superQName` =>
+            case `qName` =>
+            case "java.lang.Object" =>
+            case "scala.Any" =>  // javaSig of "scala.Any" will be "java.lang.Object"
+            case baseQName =>
+              if (base.isTrait) {
+                if (isTrait) {
+                  if (!extended) {
+                    javaCode ++= " extends "
+                    extended = true
                   } else {
-                    if (!implemented) {
-                      javaCode ++= " implements "
-                      implemented = true
-                    } else {
-                      javaCode ++= ", "
-                    }
+                    javaCode ++= ", "
                   }
-                  
-                  javaCode ++= encodeQName(baseQName)
-                } else { // base is class
-                  if (isTrait) {
-                    // * shound not happen or error of "interface extends a class", ignore it
+                } else {
+                  if (!implemented) {
+                    javaCode ++= " implements "
+                    implemented = true
                   } else {
-                    if (!extended) {
-                      javaCode ++= " extends "
-                      extended = true
-                    } else {
-                      javaCode ++= ", "
-                    }
-
-                    javaSig(base, base.tpe) match {
-                      case Some(sig) => javaCode ++= sig
-                      case None => javaCode ++= encodeQName(baseQName)
-                    }
+                    javaCode ++= ", "
                   }
                 }
-            }
+
+                javaCode ++= encodeQName(baseQName)
+              } else { // base is class
+                if (isTrait) {
+                  // * shound not happen or error of "interface extends a class", ignore it
+                } else {
+                  if (!extended) {
+                    javaCode ++= " extends "
+                    extended = true
+                  } else {
+                    javaCode ++= ", "
+                  }
+
+                  javaSig(base, base.tpe) match {
+                    case Some(sig) => javaCode ++= sig
+                    case None => javaCode ++= encodeQName(baseQName)
+                  }
+                }
+              }
           }
-
-          javaCode ++= " {\n"
-
-          if (isCompanion) {
-            javaCode ++= genMemebers(sym, tpe, IS_NOT_OBJECT, IS_NOT_TRAIT)
-
-            val oSym = syms(1)
-            val oTpe = tryTpe(oSym)
-            
-            if (oTpe != null) {
-              javaCode ++= genMemebers(oSym, oTpe, IS_OBJECT, IS_NOT_TRAIT)
-            }
-
-          } else {
-            javaCode ++= genMemebers(sym, tpe, isObject, isTrait)
-          }
-
-          if (!isTrait) {
-            javaCode ++= dollarTagMethod ++= "\n" // should implement scala.ScalaObject
-          }
-
-          javaCode ++= "}\n"
-        } else {
-          javaCode ++= " {\n"
-
-          if (!isTrait) {
-            javaCode ++= dollarTagMethod ++= "\n" // should implement scala.ScalaObject
-          }
-
-          javaCode ++= "}\n"
         }
+
+        javaCode ++= " {\n"
+
+        if (isCompanion) {
+          javaCode ++= genMemebers(sym, tpe, IS_NOT_OBJECT, IS_NOT_TRAIT)
+
+          val oSym = syms(1)
+          val oTpe = tryTpe(oSym)
+
+          if (oTpe != null) {
+            javaCode ++= genMemebers(oSym, oTpe, IS_OBJECT, IS_NOT_TRAIT)
+          }
+
+        } else {
+          javaCode ++= genMemebers(sym, tpe, isObject, isTrait)
+        }
+
+        if (!isTrait) {
+          javaCode ++= dollarTagMethod ++= "\n" // should implement scala.ScalaObject
+        }
+
+        javaCode ++= "}\n"
+      } else {
+        javaCode ++= " {\n"
+
+        if (!isTrait) {
+          javaCode ++= dollarTagMethod ++= "\n" // should implement scala.ScalaObject
+        }
+
+        javaCode ++= "}\n"
       }
 
       //Log.log(Level.INFO, "Java stub: {0}", sw)
