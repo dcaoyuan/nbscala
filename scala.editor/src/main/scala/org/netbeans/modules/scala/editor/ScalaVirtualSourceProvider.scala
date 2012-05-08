@@ -242,6 +242,11 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
     val global: ScalaGlobal
     import global._
     import definitions._
+    
+    /** Contants for readability */
+    private final val IS_OBJECT = true;
+    private final val IS_NOT_OBJECT = false;
+    private final val IS_NOT_TRAIT = false;
 
     private var isTrait = false
     private var isObject = false
@@ -361,17 +366,17 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
           javaCode ++= " {\n"
 
           if (isCompanion) {
-            genMemebers(javaCode, sym, tpe, false, false)
+            javaCode ++= genMemebers(sym, tpe, IS_NOT_OBJECT, IS_NOT_TRAIT)
 
             val oSym = syms(1)
             val oTpe = tryTpe(oSym)
             
             if (oTpe != null) {
-              genMemebers(javaCode, oSym, oTpe, true, false)
+              javaCode ++= genMemebers(oSym, oTpe, IS_OBJECT, IS_NOT_TRAIT)
             }
 
           } else {
-            genMemebers(javaCode, sym, tpe, isObject, isTrait)
+            javaCode ++= genMemebers(sym, tpe, isObject, isTrait)
           }
 
           if (!isTrait) {
@@ -401,11 +406,15 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
       } catch {case _ => null}
     }
 
+    /**
+     * Returns true if the type is not null and an of its members have the deferred flag.
+     */
     private def isAbstractClass(tpe: Type): Boolean = {
       tpe != null && (tpe.members exists (_ hasFlag Flags.DEFERRED))
     }
 
-    private def genMemebers(javaCode: StringBuilder, sym: Symbol, tpe: Type, isObject: Boolean, isTrait: Boolean) {
+    private def genMemebers(sym: Symbol, tpe: Type, isObject: Boolean, isTrait: Boolean): String = {
+      val javaCode = new StringBuilder
       for (m <- tpe.members if !m.hasFlag(Flags.PRIVATE)) {
         val mTpe = try {
           m.tpe
@@ -474,7 +483,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
           }
         }
       }
-
+      return javaCode.toString
     }
 
     private val dollarTagMethod = "public int $tag() throws java.rmi.RemoteException {return 0;}"
