@@ -237,6 +237,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
     } catch {case ex: ParseException => Exceptions.printStackTrace(ex)}
   }
 
+  //TODO: pull this out into its own class
   private abstract class JavaStubGenerator {
     val global: ScalaGlobal
     import global._
@@ -364,17 +365,19 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
         javaCode ++= " {\n"
 
         if (isCompanion) {
-          javaCode ++= genJavaMembers(sym, tpe, IS_NOT_OBJECT, IS_NOT_TRAIT)
+          javaCode ++= new JavaMemberStubGenerator(IS_NOT_OBJECT, IS_NOT_TRAIT).
+                       genJavaMembers(sym, tpe)
 
           val oSym = syms(1)
           val oTpe = tryTpe(oSym)
 
           if (oTpe != null) {
-            javaCode ++= genJavaMembers(oSym, oTpe, IS_OBJECT, IS_NOT_TRAIT)
+            javaCode ++= new JavaMemberStubGenerator(IS_OBJECT, IS_NOT_TRAIT).
+                         genJavaMembers(oSym, oTpe)
           }
-
         } else {
-          javaCode ++= genJavaMembers(sym, tpe, isObject, isTrait)
+          javaCode ++= new JavaMemberStubGenerator(isObject, isTrait).
+                       genJavaMembers(sym, tpe)
         }
 
         if (!isTrait) {
@@ -410,96 +413,108 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
       tpe != null && (tpe.members exists (_ hasFlag Flags.DEFERRED))
     }
 
-    private def genJavaMembers(sym: Symbol, tpe: Type, isObject: Boolean, isTrait: Boolean): String = {
-      val javaCode = new StringBuilder
-      for (member <- tpe.members if !member.hasFlag(Flags.PRIVATE)) {
-        val memberType = try {
-          member.tpe
-        } catch {case ex => ScalaGlobal.resetLate(global, ex); null}
-        javaCode ++= genJavaMember(sym, member, memberType)
-      }
-      return javaCode.toString
-    }
-
-    private def genJavaMember(sym: Symbol, member: Symbol, memberType: Type): String = {
-      if (memberType == null || ScalaUtil.isInherited(sym, member)) {
-        return ""
-      }
+    private case class JavaMemberStubGenerator(isObject: Boolean, isTrait: Boolean) {
       
-      member match {
-        case _ if member.isTrait || member.isClass || member.isModule =>
-          return "" // @todo
-        case _ if member.isConstructor =>
-          return genJavaConstructor(sym, member, memberType)
-        case _ if member.isMethod =>
-          return genJavaMethod(member, memberType)
-        case _ if member.isVariable =>
-          return "" // do nothing
-        case _ if member.isValue =>
-          return genJavaValue(member, memberType)
-        case _ =>
+      /** 
+       * Generates java code for all non-private members of a Type
+       *  
+       * @param sym - The Symbol representing the trait, class, or object for which
+       *   to generate code
+       * @param tpe - The resolved object type of the symbol, from which to collect
+       *   non-private members
+       */
+      def genJavaMembers(sym: Symbol, tpe: Type): String = {
+        val javaCode = new StringBuilder
+        for (member <- tpe.members if !member.hasFlag(Flags.PRIVATE)) {
+          val memberType = try {
+            member.tpe
+          } catch {case ex => ScalaGlobal.resetLate(global, ex); null}
+          javaCode ++= genJavaMember(sym, member, memberType)
+        }
+        return javaCode.toString
+      }
+
+      private def genJavaMember(sym: Symbol, member: Symbol, memberType: Type): String = {
+        if (memberType == null || ScalaUtil.isInherited(sym, member)) {
           return ""
-      }
-    }
+        }
 
-    private def genJavaConstructor(sym: Symbol, member: Symbol, memberType: Type): String = {
-      if (isTrait || isObject) {
-        return ""
+        member match {
+          case _ if member.isTrait || member.isClass || member.isModule =>
+            return "" // @todo
+          case _ if member.isConstructor =>
+            return genJavaConstructor(sym, member, memberType)
+          case _ if member.isMethod =>
+            return genJavaMethod(member, memberType)
+          case _ if member.isVariable =>
+            return "" // do nothing
+          case _ if member.isValue =>
+            return genJavaValue(member, memberType)
+          case _ =>
+            return ""
+        }
       }
-      return modifiers(member) + encodeName(sym.nameString) + params(memberType.params) + " {}\n"
-    }
-    
-    private def genJavaValue(member: Symbol, memberType: Type): String = {
-      if (isTrait) { // Should this go in the calling code instead?
-        return ""
-      }
-      val mResTpe = memberType.resultType
-      val mResSym = mResTpe.typeSymbol
-      val mResQName = javaSig(mResSym, mResTpe) match {
-        case Some(sig) => sig
-        case None => encodeType(mResSym.fullName)
-      }
-      return modifiers(member) + " " + mResQName + " " + member.nameString + ";\n"
-    }
 
-    private def genJavaMethod(member: Symbol, memberType: Type): String = {
-      val javaCode = new StringBuilder
-      val mSName = member.nameString
-      val mResTpe = try {
-        memberType.resultType
-      } catch {case ex => ScalaGlobal.resetLate(global, ex); null}
+      private def genJavaConstructor(sym: Symbol, member: Symbol, memberType: Type): String = {
+        if (isTrait || isObject) {
+          return ""
+        }
+        return modifiers(member) + encodeName(sym.nameString) + params(memberType.params) + " {}\n"
+      }
 
-      if (mResTpe != null && mSName != "$init$" && mSName != "synchronized") {
+      private def genJavaValue(member: Symbol, memberType: Type): String = {
+        if (isTrait) { // Should this go in the calling code instead?
+          return ""
+        }
+        val mResTpe = memberType.resultType
         val mResSym = mResTpe.typeSymbol
-        
-        javaCode ++= modifiers(member)
-        if (isObject && !isTrait) javaCode ++= "static final "
-
         val mResQName = javaSig(mResSym, mResTpe) match {
           case Some(sig) => sig
           case None => encodeType(mResSym.fullName)
         }
-
-        javaSig(member, memberType) match {
-          case Some(sig) =>
-            javaCode ++= sig
-          case None =>
-            // method return type
-            javaCode ++= mResQName ++= " "
-            // method name
-            javaCode ++= encodeName(mSName)
-            // method parameters
-            javaCode ++= params(memberType.params) ++= " "
-        }
-
-        // method body or ";"
-        if (!isTrait && !member.hasFlag(Flags.DEFERRED)) {
-          javaCode ++= "{" ++= returnStrOfType(mResQName) ++= "}\n"
-        } else {
-          javaCode ++= ";\n"
-        }
+        return modifiers(member) + " " + mResQName + " " + member.nameString + ";\n"
       }
-      return javaCode.toString
+
+      //TODO: Refactor this down to a smaller method
+      private def genJavaMethod(member: Symbol, memberType: Type): String = {
+        val javaCode = new StringBuilder
+        val mSName = member.nameString
+        val mResTpe = try {
+          memberType.resultType
+        } catch {case ex => ScalaGlobal.resetLate(global, ex); null}
+
+        if (mResTpe != null && mSName != "$init$" && mSName != "synchronized") {
+          val mResSym = mResTpe.typeSymbol
+
+          javaCode ++= modifiers(member)
+          if (isObject && !isTrait) javaCode ++= "static final "
+
+          val mResQName = javaSig(mResSym, mResTpe) match {
+            case Some(sig) => sig
+            case None => encodeType(mResSym.fullName)
+          }
+
+          javaSig(member, memberType) match {
+            case Some(sig) =>
+              javaCode ++= sig
+            case None =>
+              // method return type
+              javaCode ++= mResQName ++= " "
+              // method name
+              javaCode ++= encodeName(mSName)
+              // method parameters
+              javaCode ++= params(memberType.params) ++= " "
+          }
+
+          // method body or ";"
+          if (!isTrait && !member.hasFlag(Flags.DEFERRED)) {
+            javaCode ++= "{" ++= returnStrOfType(mResQName) ++= "}\n"
+          } else {
+            javaCode ++= ";\n"
+          }
+        }
+        return javaCode.toString
+      }
     }
     
     private val dollarTagMethod = "public int $tag() throws java.rmi.RemoteException {return 0;}"
