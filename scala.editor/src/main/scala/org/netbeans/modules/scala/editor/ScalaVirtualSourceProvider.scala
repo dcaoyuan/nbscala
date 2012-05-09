@@ -56,10 +56,11 @@ import org.netbeans.api.language.util.ast.{AstScope}
 import org.netbeans.modules.scala.core.ScalaGlobal
 import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ast.ScalaDfns
-import scala.collection.mutable.ArrayBuffer
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
+import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 import scala.tools.nsc.symtab.Flags
 
@@ -123,9 +124,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
     val root = FileUtil.toFileObject(sourceRoot)
     val timeStamps = TimeStamps.forRoot(root.getURL, false)
 
-    val itr = files.iterator
-    while (itr.hasNext) {
-      val file = itr.next
+    for (file <- iterableAsScalaIterable(files)) {
       val fo = FileUtil.toFileObject(file)
       // JavaIndexer tends to reindex all dependent (via VirtualSources calculating) files
       // when dependee source file is modified, it's not neccessary for VirtualSource in my opinion,
@@ -134,7 +133,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
       if (!isUpToDate) {
         val t0 = System.currentTimeMillis
         translate(file, sourceRoot, result)
-        log2.info("Translated " + fo.getNameExt + " in " + (System.currentTimeMillis - t0) + "ms")
+        log2.info("Translated %s in %dms.".format(fo.getNameExt, System.currentTimeMillis - t0))
       }
     }
   }
