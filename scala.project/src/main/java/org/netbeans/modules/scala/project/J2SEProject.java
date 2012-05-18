@@ -52,6 +52,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.xml.parsers.DocumentBuilder;
@@ -60,10 +61,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.netbeans.api.java.classpath.ClassPath;
 import org.netbeans.api.java.classpath.GlobalPathRegistry;
 import org.netbeans.api.java.project.JavaProjectConstants;
-import org.netbeans.api.project.Project;
-import org.netbeans.api.project.ProjectInformation;
-import org.netbeans.api.project.ProjectManager;
-import org.netbeans.api.project.SourceGroup;
+import org.netbeans.api.project.*;
 import org.netbeans.api.project.ant.AntArtifact;
 import org.netbeans.api.project.ant.AntBuildExtender;
 import org.netbeans.modules.java.api.common.SourceRoots;
@@ -168,11 +166,11 @@ public final class J2SEProject implements Project, AntProjectListener {
         final J2SEActionProvider actionProvider = new J2SEActionProvider(this, this.updateHelper);
         lookup = createLookup(aux, actionProvider);
         actionProvider.startFSListener();
-        helper.addAntProjectListener(this);
     }
 
     private ClassPathModifier.Callback createClassPathModifierCallback() {
         return new ClassPathModifier.Callback() {
+            @Override
             public String getClassPathProperty(SourceGroup sg, String type) {
                 assert sg != null : "SourceGroup cannot be null";  //NOI18N
                 assert type != null : "Type cannot be null";  //NOI18N
@@ -183,6 +181,7 @@ public final class J2SEProject implements Project, AntProjectListener {
                 return classPathProperty[0];
             }
 
+            @Override
             public String getElementName(String classpathProperty) {
                 return null;
             }
@@ -193,6 +192,7 @@ public final class J2SEProject implements Project, AntProjectListener {
      * Returns the project directory
      * @return the directory the project is located in
      */
+    @Override
     public FileObject getProjectDirectory() {
         return helper.getProjectDirectory();
     }
@@ -211,15 +211,18 @@ public final class J2SEProject implements Project, AntProjectListener {
         PropertyEvaluator baseEval2 = PropertyUtils.sequentialPropertyEvaluator(
                 helper.getStockPropertyPreprovider(),
                 helper.getPropertyProvider(AntProjectHelper.PRIVATE_PROPERTIES_PATH));
+        ConfigPropertyProvider configPropertyProvider1 = new ConfigPropertyProvider(baseEval1, "nbproject/private/configs", helper); // NOI18N
+        baseEval1.addPropertyChangeListener(configPropertyProvider1);
+        ConfigPropertyProvider configPropertyProvider2 = new ConfigPropertyProvider(baseEval1, "nbproject/configs", helper); // NOI18N
+        baseEval1.addPropertyChangeListener(configPropertyProvider2);
         return PropertyUtils.sequentialPropertyEvaluator(
                 helper.getStockPropertyPreprovider(),
                 helper.getPropertyProvider(J2SEConfigurationProvider.CONFIG_PROPS_PATH),
-                new ConfigPropertyProvider(baseEval1, "nbproject/private/configs", helper), // NOI18N
+                configPropertyProvider1,
                 helper.getPropertyProvider(AntProjectHelper.PRIVATE_PROPERTIES_PATH),
                 helper.getProjectLibrariesPropertyProvider(),
-                PropertyUtils.userPropertiesProvider(baseEval2,
-                "user.properties.file", FileUtil.toFile(getProjectDirectory())), // NOI18N
-                new ConfigPropertyProvider(baseEval1, "nbproject/configs", helper), // NOI18N
+                PropertyUtils.userPropertiesProvider(baseEval2, "user.properties.file", FileUtil.toFile(getProjectDirectory())), // NOI18N
+                configPropertyProvider2,
                 helper.getPropertyProvider(AntProjectHelper.PROJECT_PROPERTIES_PATH));
     }
 
@@ -234,9 +237,9 @@ public final class J2SEProject implements Project, AntProjectListener {
             this.baseEval = baseEval;
             this.prefix = prefix;
             this.helper = helper;
-            baseEval.addPropertyChangeListener(this);
         }
 
+        @Override
         public void propertyChange(PropertyChangeEvent ev) {
             if (J2SEConfigurationProvider.PROP_CONFIG.equals(ev.getPropertyName())) {
                 setDelegate(computeDelegate(baseEval, prefix, helper));
@@ -265,6 +268,7 @@ public final class J2SEProject implements Project, AntProjectListener {
         return this.updateHelper;
     }
 
+    @Override
     public Lookup getLookup() {
         return lookup;
     }
@@ -333,15 +337,17 @@ public final class J2SEProject implements Project, AntProjectListener {
         return this.cpMod;
     }
 
+    @Override
     public void configurationXmlChanged(AntProjectEvent ev) {
         if (ev.getPath().equals(AntProjectHelper.PROJECT_XML_PATH)) {
             // Could be various kinds of changes, but name & displayName might have changed.
-            Info info = (Info) getLookup().lookup(ProjectInformation.class);
+            Info info = (Info) ProjectUtils.getInformation(this);
             info.firePropertyChange(ProjectInformation.PROP_NAME);
             info.firePropertyChange(ProjectInformation.PROP_DISPLAY_NAME);
         }
     }
 
+    @Override
     public void propertiesChanged(AntProjectEvent ev) {
         // currently ignored (probably better to listen to evaluator() if you need to)
     }
@@ -380,6 +386,7 @@ public final class J2SEProject implements Project, AntProjectListener {
     public void setName(final String name) {
         ProjectManager.mutex().writeAccess(new Mutex.Action<Void>() {
 
+            @Override
             public Void run() {
                 Element data = helper.getPrimaryConfigurationData(true);
                 // XXX replace by XMLUtil when that has findElement, findText, etc.
@@ -419,10 +426,12 @@ public final class J2SEProject implements Project, AntProjectListener {
             }
         }
 
+        @Override
         public String getName() {
             return PropertyUtils.getUsablePropertyName(getDisplayName());
         }
 
+        @Override
         public String getDisplayName() {
             synchronized (pcs) {
                 if (cachedName != null) {
@@ -434,6 +443,7 @@ public final class J2SEProject implements Project, AntProjectListener {
             }
             String dn = ProjectManager.mutex().readAccess(new Mutex.Action<String>() {
 
+                @Override
                 public String run() {
                     Element data = updateHelper.getPrimaryConfigurationData(true);
                     // XXX replace by XMLUtil when that has findElement, findText, etc.
@@ -453,18 +463,22 @@ public final class J2SEProject implements Project, AntProjectListener {
             return dn;
         }
 
+        @Override
         public Icon getIcon() {
             return J2SE_PROJECT_ICON;
         }
 
+        @Override
         public Project getProject() {
             return J2SEProject.this;
         }
 
+        @Override
         public void addPropertyChangeListener(PropertyChangeListener listener) {
             pcs.addPropertyChangeListener(listener);
         }
 
+        @Override
         public void removePropertyChangeListener(PropertyChangeListener listener) {
             pcs.removePropertyChangeListener(listener);
         }
@@ -475,6 +489,7 @@ public final class J2SEProject implements Project, AntProjectListener {
         ProjectXmlSavedHookImpl() {
         }
 
+        @Override
         protected void projectXmlSaved() throws IOException {
             //May be called by {@link AuxiliaryConfiguration#putConfigurationFragment}
             //which didn't affect the j2seproject 
@@ -504,6 +519,7 @@ public final class J2SEProject implements Project, AntProjectListener {
 
         private ClassPath coreLibsCp;
 
+        @Override
         protected void projectOpened() {
             // Check up on build scripts.
             try {
@@ -565,9 +581,11 @@ public final class J2SEProject implements Project, AntProjectListener {
             try {
                 getProjectDirectory().getFileSystem().runAtomicAction(new FileSystem.AtomicAction() {
 
+                    @Override
                     public void run() throws IOException {
                         ProjectManager.mutex().writeAccess(new Mutex.Action<Void>() {
 
+                            @Override
                             public Void run() {
                                 EditableProperties ep = updateHelper.getProperties(AntProjectHelper.PRIVATE_PROPERTIES_PATH);
                                 File buildProperties = new File(System.getProperty("netbeans.user"), "build.properties"); // NOI18N
@@ -645,14 +663,17 @@ public final class J2SEProject implements Project, AntProjectListener {
                     Charset c = Charset.forName(prop);
                 } catch (IllegalCharsetNameException e) {
                     //Broken property, log & ignore
-                    LOG.warning("Illegal charset: " + prop + " in project: " + FileUtil.getFileDisplayName(getProjectDirectory())); //NOI18N
+                    LOG.log(Level.WARNING, "Illegal charset: {0} in project: {1}", new Object[]{prop,
+                                                                                                FileUtil.getFileDisplayName(getProjectDirectory())}); //NOI18N
                 } catch (UnsupportedCharsetException e) {
                     //todo: Needs UI notification like broken references.
-                    LOG.warning("Unsupported charset: " + prop + " in project: " + FileUtil.getFileDisplayName(getProjectDirectory())); //NOI18N
+                    LOG.log(Level.WARNING, "Unsupported charset: {0} in project: {1}", new Object[]{prop,
+                                                                                                    FileUtil.getFileDisplayName(getProjectDirectory())}); //NOI18N
                 }
             }
         }
 
+        @Override
         protected void projectClosed() {
             // just do if the whole project was not deleted...
             if (getProjectDirectory().isValid()) {
@@ -708,6 +729,7 @@ public final class J2SEProject implements Project, AntProjectListener {
      */
     private final class AntArtifactProviderImpl implements AntArtifactProvider {
 
+        @Override
         public AntArtifact[] getBuildArtifacts() {
             return new AntArtifact[]{
                         helper.createSimpleAntArtifact(JavaProjectConstants.ARTIFACT_TYPE_JAR, "dist.jar", evaluator(), "jar", "clean"), // NOI18N
@@ -775,6 +797,7 @@ public final class J2SEProject implements Project, AntProjectListener {
 
         };
 
+        @Override
         public String[] getRecommendedTypes() {
 
             EditableProperties ep = helper.getProperties(AntProjectHelper.PROJECT_PROPERTIES_PATH);
@@ -783,6 +806,7 @@ public final class J2SEProject implements Project, AntProjectListener {
             return isLibrary ? LIBRARY_TYPES : APPLICATION_TYPES;
         }
 
+        @Override
         public String[] getPrivilegedTemplates() {
             return PRIVILEGED_NAMES;
         }
@@ -796,6 +820,7 @@ public final class J2SEProject implements Project, AntProjectListener {
             evaluator = eval;
         }
 
+        @Override
         public PropertyEvaluator evaluator() {
             return evaluator;
         }
@@ -804,6 +829,7 @@ public final class J2SEProject implements Project, AntProjectListener {
     private class J2SEExtenderImplementation implements AntBuildExtenderImplementation {
         //add targets here as required by the external plugins..
 
+        @Override
         public List<String> getExtensibleTargets() {
             String[] targets = new String[]{
                 "-do-init", "-init-check", "-post-clean", "jar", "-pre-pre-compile", "-do-compile", "-do-compile-single" //NOI18N
@@ -812,6 +838,7 @@ public final class J2SEProject implements Project, AntProjectListener {
             return Arrays.asList(targets);
         }
 
+        @Override
         public Project getOwningProject() {
             return J2SEProject.this;
         }

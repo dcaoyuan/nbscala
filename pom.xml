@@ -51,12 +51,12 @@
         <netbeans.hint.jdkPlatform>JDK_1.6</netbeans.hint.jdkPlatform>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
-        <scala.version>2.9.0.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
+        <scala.version>2.9.2.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
         <netbeans.version>RELEASE71</netbeans.version>
         <deploy.version>snapshots</deploy.version>
         
         <!-- module versions -->
-        <libs.scala.version>2.9</libs.scala.version>
+        <libs.scala.version>2.9.2</libs.scala.version>
         <libs.xtc.version>1.15</libs.xtc.version>
         <languages.execution.version>0.11</languages.execution.version>
         <scala.debugger.version>0.13</scala.debugger.version>
@@ -80,6 +80,12 @@
             <id>netbeans</id>
             <name>NetBeans Platform Maven Repository</name>
             <url>http://bits.netbeans.org/maven2/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
   
@@ -105,6 +111,7 @@
         ************************************************************************************************************ -->
         <pluginManagement>
             <plugins>
+                <!-- Plugins required for creating and packaging a NetBeans module -->
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
@@ -117,18 +124,30 @@
                         <additionalArguments>${run.arguments}</additionalArguments> <!-- to have the goal 'nbm:run-ide' under debug mode -->
                     </configuration>
                 </plugin>
-                
                 <plugin>
-                    <!-- NetBeans 6.9+ requires JDK 6 -->
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.3.1</version>
+                    <configuration>                        
+                        <!-- to have the jar plugin pickup the nbm generated manifest -->
+                        <useDefaultManifestFile>true</useDefaultManifestFile>
+                    </configuration>
+                </plugin>
+                <!-- End of plugins for nbm -->
+
+                <!-- Java Compiler plugin -->
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>2.3.2</version>
                     <configuration>
+                        <!-- NetBeans 6.9+ requires JDK 6 -->
                         <source>1.6</source>
                         <target>1.6</target>
                     </configuration>
                 </plugin>
                 
+                <!-- Scala plugin for compiling and running Scala -->
                 <plugin>                    
                     <groupId>org.scala-tools</groupId>
                     <artifactId>maven-scala-plugin</artifactId>
@@ -166,21 +185,13 @@
                     </configuration>
                 </plugin>  
                 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.3.1</version>
-                    <configuration>                        
-                        <!-- to have the jar plugin pickup the nbm generated manifest -->
-                        <useDefaultManifestFile>true</useDefaultManifestFile>
-                    </configuration>
-                </plugin>
-
+                <!-- Adds artifacts to the local maven repository -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-install-plugin</artifactId>
                     <version>2.3.1</version>
                 </plugin>
+                
             </plugins>
         </pluginManagement>
     </build>
