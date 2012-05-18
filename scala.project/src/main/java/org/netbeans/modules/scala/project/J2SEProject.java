@@ -166,7 +166,6 @@ public final class J2SEProject implements Project, AntProjectListener {
         final J2SEActionProvider actionProvider = new J2SEActionProvider(this, this.updateHelper);
         lookup = createLookup(aux, actionProvider);
         actionProvider.startFSListener();
-        helper.addAntProjectListener(this);
     }
 
     private ClassPathModifier.Callback createClassPathModifierCallback() {
@@ -212,15 +211,18 @@ public final class J2SEProject implements Project, AntProjectListener {
         PropertyEvaluator baseEval2 = PropertyUtils.sequentialPropertyEvaluator(
                 helper.getStockPropertyPreprovider(),
                 helper.getPropertyProvider(AntProjectHelper.PRIVATE_PROPERTIES_PATH));
+        ConfigPropertyProvider configPropertyProvider1 = new ConfigPropertyProvider(baseEval1, "nbproject/private/configs", helper); // NOI18N
+        baseEval1.addPropertyChangeListener(configPropertyProvider1);
+        ConfigPropertyProvider configPropertyProvider2 = new ConfigPropertyProvider(baseEval1, "nbproject/configs", helper); // NOI18N
+        baseEval1.addPropertyChangeListener(configPropertyProvider2);
         return PropertyUtils.sequentialPropertyEvaluator(
                 helper.getStockPropertyPreprovider(),
                 helper.getPropertyProvider(J2SEConfigurationProvider.CONFIG_PROPS_PATH),
-                new ConfigPropertyProvider(baseEval1, "nbproject/private/configs", helper), // NOI18N
+                configPropertyProvider1,
                 helper.getPropertyProvider(AntProjectHelper.PRIVATE_PROPERTIES_PATH),
                 helper.getProjectLibrariesPropertyProvider(),
-                PropertyUtils.userPropertiesProvider(baseEval2,
-                "user.properties.file", FileUtil.toFile(getProjectDirectory())), // NOI18N
-                new ConfigPropertyProvider(baseEval1, "nbproject/configs", helper), // NOI18N
+                PropertyUtils.userPropertiesProvider(baseEval2, "user.properties.file", FileUtil.toFile(getProjectDirectory())), // NOI18N
+                configPropertyProvider2,
                 helper.getPropertyProvider(AntProjectHelper.PROJECT_PROPERTIES_PATH));
     }
 
@@ -235,7 +237,6 @@ public final class J2SEProject implements Project, AntProjectListener {
             this.baseEval = baseEval;
             this.prefix = prefix;
             this.helper = helper;
-            baseEval.addPropertyChangeListener(this);
         }
 
         @Override
@@ -340,7 +341,7 @@ public final class J2SEProject implements Project, AntProjectListener {
     public void configurationXmlChanged(AntProjectEvent ev) {
         if (ev.getPath().equals(AntProjectHelper.PROJECT_XML_PATH)) {
             // Could be various kinds of changes, but name & displayName might have changed.
-            Info info = (Info) getLookup().lookup(ProjectInformation.class);
+            Info info = (Info) ProjectUtils.getInformation(this);
             info.firePropertyChange(ProjectInformation.PROP_NAME);
             info.firePropertyChange(ProjectInformation.PROP_DISPLAY_NAME);
         }
