@@ -75,7 +75,7 @@ class ScalaFileWizardIterator extends WizardDescriptor.InstantiatingIterator[Wiz
         val groupList = getScalaSourceGroups(sources)
         val groups = groupList.toArray
         if (groups.length == 0) {
-            Array(Templates.createSimpleTargetChooser(project, sources.getSourceGroups(Sources.TYPE_GENERIC)))
+            Array(Templates.buildSimpleTargetChooser(project, sources.getSourceGroups(Sources.TYPE_GENERIC)).create)
         } else {
             Array(JavaTemplates.createPackageChooser(project, groups))
         }

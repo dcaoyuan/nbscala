@@ -99,6 +99,7 @@ public class ScalaLanguage extends DefaultLanguageConfig {
     public ScalaLanguage() {
     }
 
+    @Override
     public Language getLexerLanguage() {
         return ScalaTokenId.language();
     }
