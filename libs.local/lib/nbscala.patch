@@ -1,57 +1,31 @@
-Index: src/compiler/scala/tools/nsc/Global.scala
-===================================================================
---- src/compiler/scala/tools/nsc/Global.scala	(revision 24954)
-+++ src/compiler/scala/tools/nsc/Global.scala	(working copy)
-@@ -57,6 +57,7 @@
-   def rootLoader: LazyType = platform.rootLoader
+---
+ src/compiler/scala/tools/nsc/Global.scala          |    3 +++
+ .../scala/tools/nsc/interactive/Global.scala       |    6 ++----
+ .../scala/tools/nsc/typechecker/Namers.scala       |    6 +++++-
+ .../scala/tools/nsc/typechecker/Typers.scala       |    4 ++++
+ 4 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/src/compiler/scala/tools/nsc/Global.scala b/src/compiler/scala/tools/nsc/Global.scala
+index 4f56a95..22e4058 100644
+--- a/src/compiler/scala/tools/nsc/Global.scala
++++ b/src/compiler/scala/tools/nsc/Global.scala
+@@ -119,6 +119,9 @@ class Global(var settings: Settings, var reporter: Reporter) extends SymbolTable
  
-   // sub-components --------------------------------------------------
-+  var qualToRecoveredType: Map[Tree, Type] = Map()
+   val nodeToString = nodePrinters.nodeToString
+   val treeBrowser = treeBrowsers.create()
++  
++  /** Tracks errors related to qualifiers */
++  var qualToRecoveredType: mutable.HashMap[Tree, Type]
  
-   /** Generate ASTs */
-   object gen extends {
-Index: src/compiler/scala/tools/nsc/typechecker/Namers.scala
-===================================================================
---- src/compiler/scala/tools/nsc/typechecker/Namers.scala	(revision 24954)
-+++ src/compiler/scala/tools/nsc/typechecker/Namers.scala	(working copy)
-@@ -1247,8 +1247,12 @@
-                         typeSig(tree)
-                         return
-                       }
--                      
--                      def notMember = context.error(tree.pos, from.decode + " is not a member of " + expr)
-+
-+                      def notMember = {
-+                        global.qualToRecoveredType += (tree -> base)
-+                        global.qualToRecoveredType += (expr -> base)
-+                        context.error(tree.pos, from.decode + " is not a member of " + expr)
-+                      }
-                       // for Java code importing Scala objects
-                       if (from endsWith nme.raw.DOLLAR)
-                         isValidSelector(from stripEnd "$")(notMember)
-Index: src/compiler/scala/tools/nsc/typechecker/Typers.scala
-===================================================================
---- src/compiler/scala/tools/nsc/typechecker/Typers.scala	(revision 24954)
-+++ src/compiler/scala/tools/nsc/typechecker/Typers.scala	(working copy)
-@@ -3564,6 +3564,11 @@
-           }
-           
-           def makeErrorTree = {
-+            if (!qual.tpe.widen.isErroneous) {
-+              global.qualToRecoveredType += (tree -> qual.tpe.widen)
-+              global.qualToRecoveredType += (qual -> qual.tpe.widen)
-+            }
-+
-             val tree1 = tree match {
-               case Select(_, _) => treeCopy.Select(tree, qual, name)
-               case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
-Index: src/compiler/scala/tools/nsc/interactive/Global.scala
-===================================================================
---- src/compiler/scala/tools/nsc/interactive/Global.scala	(revision 24954)
-+++ src/compiler/scala/tools/nsc/interactive/Global.scala	(working copy)
-@@ -734,9 +734,7 @@
+   // ------------ Hooks for interactive mode-------------------------
+ 
+diff --git a/src/compiler/scala/tools/nsc/interactive/Global.scala b/src/compiler/scala/tools/nsc/interactive/Global.scala
+index 797c4d2..2bdbc9c 100644
+--- a/src/compiler/scala/tools/nsc/interactive/Global.scala
++++ b/src/compiler/scala/tools/nsc/interactive/Global.scala
+@@ -827,9 +827,7 @@ class Global(settings: Settings, reporter: Reporter, projectName: String = "")
        (!implicitlyAdded || m.implicitlyAdded)
-     
+ 
      def add(sym: Symbol, pre: Type, implicitlyAdded: Boolean)(toMember: (Symbol, Type) => M) {
 -      if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
 -        add(sym.accessed, pre, implicitlyAdded)(toMember)
@@ -60,15 +34,47 @@ Index: src/compiler/scala/tools/nsc/interactive/Global.scala
          val symtpe = pre.memberType(sym) onTypeError ErrorType
          matching(sym, symtpe, this(sym.name)) match {
            case Some(m) =>
-@@ -840,9 +838,9 @@
-       case null => pre
-       case _ => tree.tpe
+@@ -949,7 +947,7 @@ class Global(settings: Settings, reporter: Reporter, projectName: String = "")
      }
--
-+    
+ 
      //print("add members")
 -    for (sym <- ownerTpe.members)
 +    for (sym <- ownerTpe.resultType.members)
        addTypeMember(sym, pre, sym.owner != ownerTpe.typeSymbol, NoSymbol)
      members.allMembers #:: {
        //print("\nadd pimped")
+diff --git a/src/compiler/scala/tools/nsc/typechecker/Namers.scala b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
+index fddf115..2926b3e 100644
+--- a/src/compiler/scala/tools/nsc/typechecker/Namers.scala
++++ b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
+@@ -1257,7 +1257,11 @@ trait Namers { self: Analyzer =>
+                         return
+                       }
+ 
+-                      def notMember = context.error(tree.pos, from.decode + " is not a member of " + expr)
++                    def notMember = {
++                      global.qualToRecoveredType += (tree -> base)
++                      global.qualToRecoveredType += (expr -> base)
++                      context.error(tree.pos, from.decode + " is not a member of " + expr)
++                    }
+                       // for Java code importing Scala objects
+                       if (from endsWith nme.raw.DOLLAR)
+                         isValidSelector(from stripEnd "$")(notMember)
+diff --git a/src/compiler/scala/tools/nsc/typechecker/Typers.scala b/src/compiler/scala/tools/nsc/typechecker/Typers.scala
+index b1b5601..a232916 100644
+--- a/src/compiler/scala/tools/nsc/typechecker/Typers.scala
++++ b/src/compiler/scala/tools/nsc/typechecker/Typers.scala
+@@ -3593,6 +3593,10 @@ trait Typers extends Modes {
+           }
+ 
+           def makeErrorTree = {
++			if (!qual.tpe.widen.isErroneous) {
++              global.qualToRecoveredType += (tree -> qual.tpe.widen)
++              global.qualToRecoveredType += (qual -> qual.tpe.widen)
++            }
+             val tree1 = tree match {
+               case Select(_, _) => treeCopy.Select(tree, qual, name)
+               case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
+-- 
+1.7.9.msysgit.0
+
