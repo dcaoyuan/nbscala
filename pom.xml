@@ -52,7 +52,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
         <scala.version>2.9.2.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
-        <netbeans.version>RELEASE71</netbeans.version>
+        <netbeans.version>RELEASE72</netbeans.version>
         <deploy.version>snapshots</deploy.version>
         
         <!-- module versions -->
@@ -272,6 +272,7 @@
         <module>scala.project</module>
         <module>scala.refactoring</module>
         <module>libs.local</module>
+        <module>scala-maven</module>
     </modules>
 
 </project>
