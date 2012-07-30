@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Localizing-Bundle: org/netbeans/modules/scala/maven/Bundle.properties
+OpenIDE-Module-Install: org/netbeans/modules/scala/maven/ModInstall.class
