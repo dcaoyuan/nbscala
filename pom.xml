@@ -267,12 +267,12 @@
         <module>scala.console</module>
         <module>scala.debugger.projects</module>
         <module>scala.debugger</module>
+        <module>scala.maven</module>
         <module>scala.platform</module>
         <module>scala.stdplatform</module>
         <module>scala.project</module>
         <module>scala.refactoring</module>
         <module>libs.local</module>
-        <module>scala-maven</module>
     </modules>
 
 </project>
