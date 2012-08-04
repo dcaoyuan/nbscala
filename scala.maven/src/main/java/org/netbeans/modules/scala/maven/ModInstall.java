@@ -46,16 +46,19 @@ public class ModInstall extends ModuleInstall {
             meth = moduleSystem.getClass().getMethod("getManager", new Class[0]); //NOI18N
             Object mm = meth.invoke(moduleSystem, new Object[0]);
             Method moduleMeth = mm.getClass().getMethod("get", new Class[] {String.class}); //NOI18N
-            Object persistence = moduleMeth.invoke(mm, "org.netbeans.modules.maven"); //NOI18N
-            if (persistence != null) {
-                Field frField = persistence.getClass().getSuperclass().getDeclaredField("friendNames"); //NOI18N
+            Object mavenModule = moduleMeth.invoke(mm, "org.netbeans.modules.maven"); //NOI18N
+            if (mavenModule != null) {
+                Method dataMethod = mavenModule.getClass().getSuperclass().getDeclaredMethod("data");
+                dataMethod.setAccessible(true);
+                Object data = dataMethod.invoke(mavenModule);
+                Field frField = data.getClass().getSuperclass().getDeclaredField("friendNames");
                 frField.setAccessible(true);
-                Set friends = (Set)frField.get(persistence);
+                Set friends = (Set)frField.get(data);
                 friends.add("org.netbeans.modules.scala.maven"); //NOI18N
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            new IllegalStateException("Cannot fix dependencies for org.netbeans.modules.scala.maven."); //NOI18N
+            throw new IllegalStateException("Cannot fix dependencies for org.netbeans.modules.scala.maven."); //NOI18N
         }
     }
     
