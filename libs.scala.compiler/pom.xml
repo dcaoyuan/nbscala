@@ -16,13 +16,6 @@
     <dependencies>
         <dependency>
             <groupId>org.netbeans.modules</groupId>
-            <artifactId>nbscala-libs-local</artifactId>
-            <version>${libs.scala.version}</version>
-            <type>pom</type>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-libs-scala-library</artifactId>
             <version>${libs.scala.version}</version>
         </dependency>

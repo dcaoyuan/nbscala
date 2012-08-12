@@ -3,11 +3,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- ***************************************************************************************************************
-    *
-    * Project description
-    *
-    **************************************************************************************************************** -->
     <groupId>org.netbeans.modules</groupId>
     <artifactId>nbscala</artifactId>
     <version>1.0-SNAPSHOT</version>
@@ -38,6 +33,12 @@
             <url>http://nbguru.blogspot.com</url>
             <timezone>+2</timezone>
         </developer>        
+        <developer>
+            <id>og0815</id>
+            <name>Oliver Guenther</name>
+            <email>oliver.guenther [at] gg-net.de</email>
+            <timezone>+2</timezone>
+        </developer>        
     </developers>
 
     <licenses>
@@ -53,6 +54,7 @@
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
         <scala.version>2.9.2.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
         <netbeans.version>RELEASE72</netbeans.version>
+        <brandingToken>nbscala</brandingToken>
         <deploy.version>snapshots</deploy.version>
         
         <!-- module versions -->
@@ -71,11 +73,6 @@
     </properties>
 
     <repositories>
-        <!--
-        Repository hosting NetBeans modules, especially APIs.
-        Versions are based on IDE releases, e.g.: RELEASE691
-        To create your own repository, use: nbm:populate-repository
-        -->
         <repository>
             <id>netbeans</id>
             <name>NetBeans Platform Maven Repository</name>
@@ -93,41 +90,32 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.2</version>
+            <version>4.10</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
-    <!-- ***************************************************************************************************************
-    *
-    *
-    *
-    **************************************************************************************************************** -->
     <build>
-        <!-- ***********************************************************************************************************
-        *
-        * We want reproducible builds, so all Maven plugins have explicit version numbers.
-        *
-        ************************************************************************************************************ -->
         <pluginManagement>
             <plugins>
                 <!-- Plugins required for creating and packaging a NetBeans module -->
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
-                    <version>3.5</version>
+                    <version>3.7</version>
+                    <extensions>true</extensions>
                     <configuration>
-                        <cluster>nbscala</cluster>                        
+                        <brandingToken>${brandingToken}</brandingToken>
+                        <cluster>${brandingToken}</cluster>
                         <forcedVersion>${netbeans.version}</forcedVersion>
                         <netbeansInstallDirectory>${nb.installation}</netbeansInstallDirectory> <!-- to have the goal 'nbm:populate-repository' find the installation and populating the local repository with them, set it on your maven settings.xml -->
                         <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'nbm:run-ide' find the installation of the local netbeans -->
-                        <additionalArguments>${run.arguments}</additionalArguments> <!-- to have the goal 'nbm:run-ide' under debug mode -->
                     </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.3.1</version>
+                    <version>2.4</version>
                     <configuration>                        
                         <!-- to have the jar plugin pickup the nbm generated manifest -->
                         <useDefaultManifestFile>true</useDefaultManifestFile>
@@ -139,7 +127,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.3.2</version>
+                    <version>2.5.1</version>
                     <configuration>
                         <!-- NetBeans 6.9+ requires JDK 6 -->
                         <source>1.6</source>
@@ -149,9 +137,9 @@
                 
                 <!-- Scala plugin for compiling and running Scala -->
                 <plugin>                    
-                    <groupId>org.scala-tools</groupId>
-                    <artifactId>maven-scala-plugin</artifactId>
-                    <version>2.15.2</version>  
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <version>3.0.2</version>
                     <executions>  
                         <execution>
                             <phase>process-resources</phase> <!-- to support mix java/scala -->
@@ -273,6 +261,7 @@
         <module>scala.project</module>
         <module>scala.refactoring</module>
         <module>libs.local</module>
+        <module>scala.app</module>
     </modules>
 
 </project>

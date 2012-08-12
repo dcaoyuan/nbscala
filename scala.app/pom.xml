@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.netbeans.modules</groupId>
+        <artifactId>nbscala</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>org-netbeans-application-scala</artifactId>
+    <packaging>nbm-application</packaging>
+
+    <name>org-netbeans-application-scala</name>
+    <description>An application project, which contains all clusters for an full
+        netbeans ide. All maven based projects cannot be used due to 
+        http://netbeans.org/bugzilla/show_bug.cgi?id=216738 . Also JUnit is missing due to
+        conflicts with the NBUnit tests.
+    </description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <netbeans.run.params.ide>-J-Xmx1G -J-XX:MaxPermSize=512m</netbeans.run.params.ide>
+        <netbeans.run.params>${netbeans.run.params.ide}</netbeans.run.params>
+        <all.clusters>${project.build.directory}/${brandingToken}</all.clusters>
+    </properties>
+
+    <dependencies>     
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-scala-continuations</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-scala-compiler</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-scala-library</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-xtc</artifactId>
+            <version>${libs.xtc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-console</artifactId>
+            <version>${languages.execution.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-core</artifactId>
+            <version>${scala.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-project</artifactId>
+            <version>${scala.project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-platform</artifactId>
+            <version>${scala.platform.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-stdplatform</artifactId>
+            <version>${scala.stdplatform.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-editor</artifactId>
+            <version>${scala.editor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-debugger</artifactId>
+            <version>${scala.debugger.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-debugger-projects</artifactId>
+            <version>${scala.debugger.projects.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-refactoring</artifactId>
+            <version>${scala.refactoring.version}</version>
+        </dependency>
+
+<!-- Can't test the maven component. See http://netbeans.org/bugzilla/show_bug.cgi?id=216738 -->       
+<!--        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-maven</artifactId>
+            <version>${project.version}</version>
+        </dependency>-->
+        
+        <!-- The clusters platform, java, ide and nb represent a full fuctioning Netbeans IDE -->       
+        <dependency>
+            <groupId>org.netbeans.cluster</groupId>
+            <artifactId>platform</artifactId>
+            <version>${netbeans.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.cluster</groupId>
+            <artifactId>java</artifactId>
+            <version>${netbeans.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.cluster</groupId>
+            <artifactId>nb</artifactId>
+            <version>${netbeans.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.cluster</groupId>
+            <artifactId>ide</artifactId>
+            <version>${netbeans.version}</version>
+            <type>pom</type>
+        </dependency>
+        
+        <!-- nbjunit and jelltools are needed for ui tests -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-nbjunit</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-jellytools-platform</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-jellytools-ide</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <cluster>${brandingToken}</cluster>
+                    <useOSGiDependencies>true</useOSGiDependencies>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.10</version>
+                <configuration>
+                    <!-- Under MS Windows the application freezes without theese -->
+                    <argLine>-Xms128M -Xmx1G -XX:MaxPermSize=512M</argLine>
+                    <systemPropertyVariables>
+                        <!-- Permits NbModuleSuite to be run in integration-test phase: -->
+                        <all.clusters>${all.clusters}</all.clusters>
+                        <branding.token>${brandingToken}</branding.token>
+                        <!-- Relative locations of sample projects to be used in the testphase -->
+                        <sample-scala-maven>${project.basedir}/samples/sample-scala-maven.zip</sample-scala-maven>
+                        <sample-scala-java-maven>${project.basedir}/samples/sample-scala-java-maven.zip</sample-scala-java-maven>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>deployment</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>nbm-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>extra</id>
+                                <goals>
+                                    <goal>autoupdate</goal>
+                                    <goal>webstart-app</goal>
+                                    <goal>build-installers</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
