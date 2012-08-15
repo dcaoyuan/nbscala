@@ -19,6 +19,14 @@
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
         </dependency>
+        <!-- needed to ensure, the libs are deployed in the repostiory before anything else -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>nbscala-libs-local</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
