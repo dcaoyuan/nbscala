@@ -103,10 +103,7 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
                     <version>3.7</version>
-<<<<<<< HEAD
-=======
                     <extensions>true</extensions>
->>>>>>> d41c19f8d239c9efd2e9abd97b2a8b7f6b4d43b2
                     <configuration>
                         <brandingToken>${brandingToken}</brandingToken>
                         <cluster>${brandingToken}</cluster>
