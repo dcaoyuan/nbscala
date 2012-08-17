@@ -51,7 +51,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
         <scala.version>2.9.0.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
-        <netbeans.version> RELEASE71</netbeans.version>
+        <netbeans.version> RELEASE72</netbeans.version>
         <deploy.version>snapshots</deploy.version>
         
         <!-- module versions -->
@@ -107,7 +107,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
-                    <version>3.5</version>
+                    <version>3.7</version>
                     <configuration>
                         <cluster>nbscala</cluster>                        
                         <forcedVersion>${netbeans.version}</forcedVersion>
