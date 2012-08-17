@@ -49,7 +49,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import org.netbeans.editor.AnnotationDesc;
-import org.netbeans.editor.Annotations;
 import org.netbeans.editor.BaseDocument;
 import org.netbeans.editor.ImplementationProvider;
 import org.netbeans.editor.JumpList;
@@ -141,7 +140,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
             
         if (annotation(0) == null) return false
             
-        JumpList.checkAddEntry(comp, currentPosition)
+        JumpList.addEntry(comp, currentPosition)
             
         annotation(0).mouseClicked(comp, p(0))
             

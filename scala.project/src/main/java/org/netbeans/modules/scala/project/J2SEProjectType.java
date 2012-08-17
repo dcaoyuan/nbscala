@@ -62,18 +62,24 @@ public final class J2SEProjectType implements AntBasedProjectType {
     /** Do nothing, just a service. */
     public J2SEProjectType() {}
     
+    @Override
     public String getType() {
         return TYPE;
     }
     
+    @Override
     public Project createProject(AntProjectHelper helper) throws IOException {
-        return new J2SEProject(helper);
+        J2SEProject j2SEProject = new J2SEProject(helper);
+        helper.addAntProjectListener(j2SEProject);
+        return j2SEProject;
     }
 
+    @Override
     public String getPrimaryConfigurationDataElementName(boolean shared) {
         return shared ? PROJECT_CONFIGURATION_NAME : PRIVATE_CONFIGURATION_NAME;
     }
     
+    @Override
     public String getPrimaryConfigurationDataElementNamespace(boolean shared) {
         return shared ? PROJECT_CONFIGURATION_NAMESPACE : PRIVATE_CONFIGURATION_NAMESPACE;
     }

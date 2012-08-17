@@ -10,29 +10,37 @@ NetBeans Plugin for Scala
 3. Project Details
 
 ## Common Informations
-This is a plugin of the Netbeans Platform for the [scala language](http://http://www.scala-lang.org/). It targets version 2.9.x. No local installation of scala is needed, everything is wrapped in the plugin. It enables syntax checking, syntax highlighting, auto-completion, pretty formatter, occurrences mark, brace matching, indentation, code folding, function navigator, go to declaration, project management and a shell console. It's is specially useful if you are maven user.
+This is a plugin of the Netbeans Platform for the [scala language](http://http://www.scala-lang.org/). It targets version 2.9.x. In the case of a maven scala project, no local installation of scala is needed. It enables syntax checking, syntax highlighting, auto-completion, pretty formatter, occurrences mark, brace matching, indentation, code folding, function navigator, go to declaration, project management and a shell console. It's is specially useful if you are a maven user.
 
 ### Where to start ?
-The project central point is [https://github.com/dcaoyuan/nbscala](). There are some over places, where the project was hosted before, but they are abandoned now.
+The project central point is [https://github.com/dcaoyuan/nbscala](). There are some other places, where the project was hosted before, but they are abandoned now.
 
 ### Community
-Well, till now this is mostly a one man project. Some patches were supplied by different people. But I'm still convinced, that it will gather a community soon. For questions and bug reports use the [issue tracker](https://github.com/dcaoyuan/nbscala/issues). If interested in joining the project you can write me directly or send patches/pull requests.
+Until recently, this has mostly been a one man project. Some patches were supplied by different people, but I'm still convinced that it will gather a community soon. For questions and bug reports use the [issue tracker](https://github.com/dcaoyuan/nbscala/issues). If interested in joining the project, you can write me directly or send patches/pull requests.
 
 ### Snapshot Builds
-Snapshot builds can be found here [http://sourceforge.net/projects/erlybird](). I'm using sourceforge because of their supply of higher bandwidth.
+Snapshot builds can be found here [http://sourceforge.net/projects/erlybird](http://sourceforge.net/projects/erlybird). I'm using sourceforge because of their supply of higher bandwidth.
 
 ### Installation
-Make sure you don't have an old version installed. (Check your netbeans installation if there exists a directory 'nbscala'. If yes delete it)
-Download the latest release at sourceforge. Extract all files into a directory. Start Netbeans. Select Tools -> Plugins -> Downloaded -> Add Plugins ... . Select all extracted files. Accept the licence and the installation of unsigned plugins. 
+Make sure you don't have an old version installed. (Check your netbeans installation for a 'nbscala' directory: if it exists, delete it.)
+
+1. Download the latest release at sourceforge.
+2. Extract all files into a directory.
+3. Start Netbeans.
+4. Select Tools -> Plugins -> Downloaded -> Add Plugins...
+5. Select all extracted files.
+6. Accept the licence and the installation of unsigned plugins. 
 
 ## Build Instructions
+Cause of the smale group of people involved in the project we only supply updates for the latest netbeans version (7.2 at the moment).
 
 ### Requirement:
-* Java 1.6 (Java 1.7 not supported yet)
+* Java 1.6 (Java 1.7 is not supported yet)
 * Maven 2.x/3.x 
-* NetBeans 7.1
+* NetBeans 7.2
 
 ### Setting nb.installation property for maven
+Hint: This is going to be removed in the future. There is allready a nbm-application based subproject which can be used to run all modules of the plugin. See the scala.app/pom.xml for more information, what is still missing.
 
 Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:run-ide' goal), check if there is a directory 'nbscala' under this copy, if yes, delete it. Then set 'nb.installation' property in your maven settings.xml (.m2/settings.xml) to point to this copy:
 

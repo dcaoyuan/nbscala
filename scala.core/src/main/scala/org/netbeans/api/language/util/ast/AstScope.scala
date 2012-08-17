@@ -219,7 +219,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
     None
   }
 
-  @deprecated("use AstRootScope#findOccurrences")
+  @deprecated(message="use AstRootScope#findOccurrences", since="1.0")
   def findOccurrences(item: AstItem): Seq[AstItem] = {
     var dfn: Option[AstDfn] = item match {
       case x: AstDfn => Some(x)
@@ -240,7 +240,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
     }
   }
 
-  @deprecated("For reference only, use AstRootScope#findDfnOf")
+  @deprecated("For reference only, use AstRootScope#findDfnOf", since="1.0")
   def findDfnOf_(item: AstItem): Option[AstDfn] = {
     item match {
       case dfn: AstDfn => Some(dfn)

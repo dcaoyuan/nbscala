@@ -231,7 +231,7 @@
         </dependency>
 
         <!-- maven transitive dependencies: <scope>runtime</scope> -->
-        <dependency>
+<!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-editor-settings-storage</artifactId>
             <version>${netbeans.version}</version>
@@ -254,7 +254,7 @@
             <artifactId>org-netbeans-libs-jna</artifactId>
             <version>${netbeans.version}</version>
             <scope>runtime</scope>
-        </dependency>
+        </dependency>-->
 
         <!-- subproject dependencies -->
         <dependency>
@@ -292,8 +292,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>                    
-                <groupId>org.scala-tools</groupId>
-                <artifactId>maven-scala-plugin</artifactId>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

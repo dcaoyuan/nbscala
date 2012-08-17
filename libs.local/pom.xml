@@ -13,7 +13,9 @@
     <packaging>pom</packaging>
     <version>${libs.scala.version}</version>
     <name>Scala Support for NetBeans - Local libs</name>
-    <description>Install local jars ie. scala runtime jars to local repository</description>
+    <description>Install local jars ie. scala runtime jars to local repository. 
+    The contain the original libraries with some patch
+    TODO: Patch description.</description>
 
     <build>
         <plugins>

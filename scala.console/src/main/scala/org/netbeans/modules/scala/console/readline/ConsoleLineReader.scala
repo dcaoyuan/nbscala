@@ -39,21 +39,17 @@
  * made subject to such option by the copyright holder.
  */
 
-package org.netbeans.modules.scala.console.readline;
+package org.netbeans.modules.scala.console.readline
 
-import java.util.List;
+import scala.collection.mutable.ArrayBuffer
 
-/**
- * 
- * @author Caoyuan Deng
- * 
- */
-public class ConsoleLineReader {
-    private static Completor currentCompletor;
-    private static History history;
-    private static boolean created;
+object ConsoleLineReader {
+
+   var currentCompletor:Completor = null
+   var history:History = null;
+   var created:Boolean = false;
     
-    public static void createConsoleLineReader() {
+    def createConsoleLineReader() {
         if (! created) {
             history = new History();
             currentCompletor = null;
@@ -61,28 +57,28 @@ public class ConsoleLineReader {
         }
     }
     
-    protected static void initReadline() {
+    protected def initReadline() {
         if (currentCompletor == null)
             currentCompletor = new DefaultFileNameCompletor();
     }
     
-    public static History getHistory() {
+    def getHistory():History = {
         return history;
     }
     
-    public static void setCompletor(Completor completor) {
+    def setCompletor(completor:Completor) = {
         currentCompletor = completor;
     }
     
-    public static Completor getCompletor() {
+    def getCompletor():Completor = {
         return currentCompletor;
     }
     
     // Fix FileNameCompletor to work mid-line
-    public static class DefaultFileNameCompletor extends FileNameCompletor {
-        public int complete(String buffer, int cursor, List candidates) {
-            buffer = buffer.substring(0, cursor);
-            int index = buffer.lastIndexOf(" ");
+    class DefaultFileNameCompletor extends FileNameCompletor {
+        override def complete(inBuffer:String, cursor:Int, candidates:ArrayBuffer[String]):Int = {
+            var buffer = inBuffer.substring(0, cursor);
+            val index = buffer.lastIndexOf(" ");
             if (index != -1) buffer = buffer.substring(index + 1);
             return index + 1 + super.complete(buffer, cursor, candidates);
         }
