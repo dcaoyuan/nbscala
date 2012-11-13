@@ -39,6 +39,10 @@ Cause of the smale group of people involved in the project we only supply update
 * Maven 2.x/3.x 
 * NetBeans 7.2
 
+### Branchs:
+* master -- tracking Scala 2.10.x currently
+* 2.9.x  -- for Scala 2.9.x
+
 ### Setting nb.installation property for maven
 Hint: This is going to be removed in the future. There is allready a nbm-application based subproject which can be used to run all modules of the plugin. See the scala.app/pom.xml for more information, what is still missing.
 
