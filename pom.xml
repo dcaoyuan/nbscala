@@ -159,7 +159,7 @@
                             <jvmArg>-Xss64m</jvmArg> <!-- to avoid StackOverFlowError -->
                         </jvmArgs>
                         <args>
-                            <arg>-target:jvm-1.5</arg>
+                            <arg>-target:jvm-1.6</arg>
                             <arg>-deprecation</arg>
                             <arg>-dependencyfile</arg>
                             <arg>${project.build.directory}/.scala_dependencies</arg>
@@ -285,7 +285,7 @@
         <module>scala.stdplatform</module>
         <module>scala.project</module>
         <module>scala.refactoring</module>
-        <module>scala.app</module>
+        <module>scala.kit</module>
     </modules>
 
 </project>
