@@ -43,6 +43,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-scala-reflect</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-libs-xtc</artifactId>
             <version>${libs.xtc.version}</version>
         </dependency>
