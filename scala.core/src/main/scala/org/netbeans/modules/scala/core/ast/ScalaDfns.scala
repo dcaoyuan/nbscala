@@ -44,7 +44,7 @@ import org.openide.filesystems.FileObject
 
 import org.netbeans.api.language.util.ast.{AstDfn, AstRef, AstScope}
 import org.netbeans.modules.scala.core.{ScalaGlobal, ScalaMimeResolver, ScalaSourceUtil}
-import scala.tools.nsc.symtab.Symbols
+import scala.reflect.internal.Symbols
 
 /**
  * Scala AstDfn special functions, which will be enabled in ScalaGlobal

@@ -49,7 +49,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.swing.DefaultListCellRenderer;
+import org.netbeans.modules.scala.editor.ui.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -68,7 +68,7 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private var jLabel1: javax.swing.JLabel = _
-  private var jList1: javax.swing.JList = _
+  private var jList1: javax.swing.JList/*[ElementDescription]*/ = _
   private var jScrollPane1: javax.swing.JScrollPane = _
   // End of variables declaration//GEN-END:variables
 
@@ -158,8 +158,8 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
     PopupUtil.hidePopup
   }
     
-  private def createListModel: ListModel = {
-    val dlm = new DefaultListModel
+  private def createListModel: ListModel/*[ElementDescription]*/ = {
+    val dlm = new DefaultListModel/*[ElementDescription]*/
         
     for (el <- declarations) {
       dlm.addElement(el)
@@ -168,9 +168,9 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
     dlm
   }
     
-  private class RendererImpl extends DefaultListCellRenderer {
-    override def getListCellRendererComponent(list: JList,
-                                     value: Object,
+  private class RendererImpl extends DefaultListCellRenderer[ElementDescription] {
+    override def getListCellRendererComponent(list: JList/*[_ <: ElementDescription]*/,
+                                     value: AnyRef/*ElementDescription*/,
                                      index: Int,
                                      isSelected: Boolean,
                                      cellHasFocus: Boolean): Component = {

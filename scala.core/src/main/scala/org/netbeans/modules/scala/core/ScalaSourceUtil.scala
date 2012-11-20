@@ -57,10 +57,10 @@ import org.netbeans.modules.scala.core.ast.{ScalaDfns}
 import org.netbeans.modules.scala.core.element.{JavaElements}
 import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import scala.tools.nsc.symtab.{Flags, Symbols}
-import scala.collection.mutable.ArrayBuffer
+import scala.reflect.internal.{Flags, Symbols}
 
 /**
  *

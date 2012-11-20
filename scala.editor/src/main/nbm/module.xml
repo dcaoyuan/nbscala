@@ -15,5 +15,14 @@
             <id>org.netbeans.api:org-netbeans-modules-csl-api</id>
             <type>impl</type>
         </dependency>
+        <dependency>
+            <id>org.netbeans.modules:org-netbeans-modules-editor-settings-storage</id>
+            <type>impl</type>
+        </dependency>
+        <dependency>
+            <id>org.netbeans.modules:org-netbeans-modules-options-keymap</id>
+            <type>impl</type>
+        </dependency>
+
     </dependencies> 
 </nbm>

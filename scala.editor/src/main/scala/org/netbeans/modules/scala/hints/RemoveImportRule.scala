@@ -242,7 +242,7 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
    //        println("defs size=" + defs.size)
    //        println("scope= " + scope.bindingDfn.getOrElse("xxx"));
    for (d <- scope.refs) {
-   val sym = d.symbol.asInstanceOf[scala.tools.nsc.symtab.Symbols#Symbol]
+   val sym = d.symbol.asInstanceOf[scala.reflect.internal.Symbols#Symbol]
    //            println("symbol=" + sym)
    if (sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule) {
    buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
@@ -272,7 +272,7 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
 
    }
    for (d <- scope.dfns) {
-   val sym = d.symbol.asInstanceOf[scala.tools.nsc.symtab.Symbols#Symbol]
+   val sym = d.symbol.asInstanceOf[scala.reflect.internal.Symbols#Symbol]
    //            println("symbol2=" + sym)
    if (sym.isValueParameter) {
    buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
@@ -304,7 +304,7 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
    */
 
   //debug method
-  private def printSymbolDetails(prefix : String, s : scala.tools.nsc.symtab.Symbols#Symbol) : Unit = {
+  private def printSymbolDetails(prefix : String, s : scala.reflect.internal.Symbols#Symbol) : Unit = {
     println(prefix + "=" + s)
     println("    fullname=" + s.fullName)
   }

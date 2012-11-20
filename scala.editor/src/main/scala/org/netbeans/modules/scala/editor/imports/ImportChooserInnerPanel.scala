@@ -70,7 +70,7 @@ import org.openide.util.NbBundle;
  * @author  Matthias Schmidt collectified it.
  */
 class ImportChooserInnerPanel extends javax.swing.JPanel {
-  private var combos: Array[JComboBox] = _
+  private var combos: Array[JComboBox/*[_]*/] = _
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private var bottomPanel: javax.swing.JPanel = _
   private var contentPanel: javax.swing.JPanel = _
@@ -99,7 +99,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
         
       var row = 0
 
-      combos = new Array[JComboBox](candidateSize)
+      combos = new Array[JComboBox/*[_]*/](candidateSize)
 
       val monoSpaced = new Font( "Monospaced", Font.PLAIN, new JLabel().getFont.getSize)
       val focusListener = new FocusListener {
@@ -166,7 +166,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
 
   }
     
-  private def createComboBox(choices: Array[String], defaultValue: String, icons: Array[Icon], font: Font, listener: FocusListener): JComboBox = {
+  private def createComboBox(choices: Array[String], defaultValue: String, icons: Array[Icon], font: Font, listener: FocusListener): JComboBox/*[_]*/ = {
     val combo = new JComboBox(choices.asInstanceOf[Array[Object]])
     combo.setSelectedItem(defaultValue);
     combo.getAccessibleContext().setAccessibleDescription(getBundleString("FixDupImportStmts_Combo_ACSD")) //NOI18N
@@ -259,9 +259,9 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
     
     
     
-  private class DelegatingRenderer(orig: ListCellRenderer, values: Array[String], icons: Array[Icon]) extends ListCellRenderer {
+  private class DelegatingRenderer[T](orig: ListCellRenderer/*[T]*/, values: Array[String], icons: Array[Icon]) extends ListCellRenderer/*[T]*/ {
 
-    def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component = {
+    def getListCellRendererComponent(list: JList/*[_ <: T]*/, value: AnyRef/*T*/, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component = {
       val res = orig.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
       if (res.isInstanceOf[JLabel] && null != icons ) {
         var i = 0
@@ -281,7 +281,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
   private class TogglePopupAction extends AbstractAction {
     def actionPerformed(e: ActionEvent) {
       e.getSource match {
-        case combo: JComboBox => combo.setPopupVisible( !combo.isPopupVisible)
+        case combo: JComboBox/*[_]*/ => combo.setPopupVisible( !combo.isPopupVisible)
         case _ =>
       }
     }

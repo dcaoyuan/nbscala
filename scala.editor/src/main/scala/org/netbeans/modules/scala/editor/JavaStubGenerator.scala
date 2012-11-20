@@ -45,9 +45,10 @@ import org.netbeans.modules.scala.core.ScalaGlobal
 
 import scala.collection.mutable.HashSet
 import scala.reflect.NameTransformer
+import scala.reflect.internal.ClassfileConstants._
 import scala.tools.nsc.symtab.Flags
 
-abstract class JavaStubGenerator {
+abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasure {
 
   import JavaStubGenerator._
 
@@ -412,135 +413,155 @@ abstract class JavaStubGenerator {
 
   // ----- @see scala.tools.nsc.transform.Erasure
 
-  def javaSig(sym: Symbol, info: Type): Option[String] = {
+  private def hiBounds(bounds: TypeBounds): List[Type] = bounds.hi.normalize match {
+    case RefinedType(parents, _) => parents map (_.normalize)
+    case tp                      => tp :: Nil
+  }
 
-    def jsig(tp: Type): String = jsig2(false, Nil, tp)
+  /** The Java signature of type 'info', for symbol sym. The symbol is used to give the right return
+   *  type for constructors.
+   */
+  def javaSig(sym0: Symbol, info: Type): Option[String] = beforeErasure {
+    val isTraitSignature = sym0.enclClass.isTrait
 
-    def jsig2(toplevel: Boolean, tparams: List[Symbol], atp: Type): String = {
-      if (atp == null) return "Object"
+    def superSig(parents: List[Type]) = {
+      val ps = (
+        if (isTraitSignature) {
+          // java is unthrilled about seeing interfaces inherit from classes
+          val ok = parents filter (p => p.typeSymbol.isTrait || p.typeSymbol.isInterface)
+          // traits should always list Object.
+          if (ok.isEmpty || ok.head.typeSymbol != ObjectClass) ObjectClass.tpe :: ok
+          else ok
+        }
+        else parents
+      )
+      (ps map boxedSig).mkString
+    }
+    def boxedSig(tp: Type) = jsig(tp, primitiveOK = false)
+    def boundsSig(bounds: List[Type]) = {
+      val (isTrait, isClass) = bounds partition (_.typeSymbol.isTrait)
+      val classPart = isClass match {
+        case Nil    => ":" // + boxedSig(ObjectClass.tpe)
+        case x :: _ => ":" + boxedSig(x)
+      }
+      classPart :: (isTrait map boxedSig) mkString ":"
+    }
+    def paramSig(tsym: Symbol) = tsym.name + boundsSig(hiBounds(tsym.info.bounds))
+    def polyParamSig(tparams: List[Symbol]) = (
+      if (tparams.isEmpty) ""
+      else tparams map paramSig mkString ("<", "", ">")
+    )
 
-      val tp = atp.dealias
+    // Anything which could conceivably be a module (i.e. isn't known to be
+    // a type parameter or similar) must go through here or the signature is
+    // likely to end up with Foo<T>.Empty where it needs Foo<T>.Empty$.
+    def fullNameInSig(sym: Symbol) = "L" + beforeIcode(sym.javaBinaryName)
+
+    def jsig(tp0: Type, existentiallyBound: List[Symbol] = Nil, toplevel: Boolean = false, primitiveOK: Boolean = true): String = {
+      val tp = tp0.dealias
       tp match {
         case st: SubType =>
-          jsig2(toplevel, tparams, st.supertype)
-
+          jsig(st.supertype, existentiallyBound, toplevel, primitiveOK)
         case ExistentialType(tparams, tpe) =>
-          jsig2(toplevel, tparams, tpe)
-
+          jsig(tpe, tparams, toplevel, primitiveOK)
         case TypeRef(pre, sym, args) =>
           def argSig(tp: Type) =
-            if (tparams contains tp.typeSymbol) {
+            if (existentiallyBound contains tp.typeSymbol) {
               val bounds = tp.typeSymbol.info.bounds
-
-              if (!(AnyRefClass.tpe <:< bounds.hi))  "? extends " + jsig(bounds.hi)
-              else if (!(bounds.lo <:< NullClass.tpe)) "? super " + jsig(bounds.lo)
-              else "?"
-            } else if (tp.typeSymbol == UnitClass) {
-              jsig(ObjectClass.tpe)
+              if (!(AnyRefClass.tpe <:< bounds.hi)) "+" + boxedSig(bounds.hi)
+              else if (!(bounds.lo <:< NullClass.tpe)) "-" + boxedSig(bounds.lo)
+              else "*"
             } else {
-              boxedClass get tp.typeSymbol match {
-                case Some(boxed) => jsig(boxed.tpe)
-                case None => jsig(tp)
-              }
+              boxedSig(tp)
             }
-          def argsSig(args: List[Type]) = (if (args.isEmpty) "" else (args map argSig).mkString("<", ", ", ">"))
-          def classSig: String = "L" + sym.fullName + global.genJVM.moduleSuffix(sym)
-          //"L" + (sym.fullName + global.genJVM.moduleSuffix(sym)).replace('.', '/')
-          def classSigSuffix: String = "." + sym.name
-
-          sym match {
-            case ArrayClass =>
-              (args map jsig).mkString + "[]"
-              //ARRAY_TAG.toString + (args map jsig).mkString
-            case _ if sym.isTypeParameterOrSkolem && !sym.owner.isTypeParameterOrSkolem =>
-              // * not a higher-order type parameter, as these are suppressed
-              sym.nameString
-            case AnyClass | AnyValClass | SingletonClass =>
-              jsig(ObjectClass.tpe)
-            case UnitClass =>
-              jsig(BoxedUnitClass.tpe)
-            case NothingClass =>
-              jsig(RuntimeNothingClass.tpe)
-            case NullClass =>
-              jsig(RuntimeNullClass.tpe)
-            case _ if isValueClass(sym) =>
-              tagOfClass(sym)
-            case _ if sym.isClass =>
-              sym.fullName match {
-                case "scala.<byname>" =>
-                  "scala.Function0" + argsSig(args)
-                case "scala.<repeated>" =>
-                  "scala.collection.Sequence" + argsSig(args)
-                case _ =>
-                  val postPre = if (needsJavaSig(pre)) {
-                    val s = jsig(pre)
-                    if (s.charAt(0) == 'L') s.substring(0, s.length - 1) + classSigSuffix else classSig
-                  } else classSig
-
-                  (if (postPre.charAt(0) == 'L') postPre.substring(1, postPre.length) else postPre) + argsSig(args)
-              }
-            case _ => jsig(erasure.erasure(tp))
+          def classSig = {
+            val preRebound = pre.baseType(sym.owner) // #2585
+            dotCleanup(
+              (
+                if (needsJavaSig(preRebound)) {
+                  val s = jsig(preRebound, existentiallyBound)
+                  if (s.charAt(0) == 'L') s.substring(0, s.length - 1) + "." + sym.javaSimpleName
+                  else fullNameInSig(sym)
+                }
+                else fullNameInSig(sym)
+              ) + (
+                if (args.isEmpty) "" else
+                "<"+(args map argSig).mkString+">"
+              ) + (
+                ";"
+              )
+            )
           }
 
+          // If args isEmpty, Array is being used as a type constructor
+          if (sym == ArrayClass && args.nonEmpty) {
+            if (unboundedGenericArrayLevel(tp) == 1) jsig(ObjectClass.tpe)
+            else ARRAY_TAG.toString+(args map (jsig(_))).mkString
+          }
+          else if (isTypeParameterInSig(sym, sym0)) {
+            assert(!sym.isAliasType, "Unexpected alias type: " + sym)
+            "" + TVAR_TAG + sym.name + ";"
+          }
+          else if (sym == AnyClass || sym == AnyValClass || sym == SingletonClass)
+            jsig(ObjectClass.tpe)
+          else if (sym == UnitClass)
+            jsig(BoxedUnitClass.tpe)
+          else if (sym == NothingClass)
+            jsig(RuntimeNothingClass.tpe)
+          else if (sym == NullClass)
+            jsig(RuntimeNullClass.tpe)
+          else if (isPrimitiveValueClass(sym)) {
+            if (!primitiveOK) jsig(ObjectClass.tpe)
+            else if (sym == UnitClass) jsig(BoxedUnitClass.tpe)
+            else abbrvTag(sym).toString
+          }
+          else if (sym.isDerivedValueClass) {
+            val unboxed     = sym.derivedValueClassUnbox.info.finalResultType
+            val unboxedSeen = (tp memberType sym.derivedValueClassUnbox).finalResultType
+            def unboxedMsg  = if (unboxed == unboxedSeen) "" else s", seen within ${sym.simpleName} as $unboxedSeen"
+            logResult(s"Erasure of value class $sym (underlying type $unboxed$unboxedMsg) is") {
+              if (isPrimitiveValueType(unboxedSeen) && !primitiveOK)
+                classSig
+              else
+                jsig(unboxedSeen, existentiallyBound, toplevel, primitiveOK)
+            }
+          }
+          else if (sym.isClass)
+            classSig
+          else
+            jsig(erasure(sym0)(tp), existentiallyBound, toplevel, primitiveOK)
         case PolyType(tparams, restpe) =>
-          def hiBounds(bounds: TypeBounds): List[Type] = bounds.hi.normalize match {
-            case RefinedType(parents, _) => parents map analyzer.normalize
-            case tp => List(tp)
-          }
-          def boundSig(bounds: List[Type]) = {
-            def isClassBound(t: Type) = !t.typeSymbol.isTrait
-            val classBound = bounds find isClassBound match {
-              case Some(t) => jsig(t)
-              case None => ""
-            }
-            " extends " + classBound + (for (t <- bounds if !isClassBound(t)) yield ":" + jsig(t)).mkString
-          }
-          def paramSig(tsym: Symbol) = tsym.name + boundSig(hiBounds(tsym.info.bounds))
-          
-          //assert(!tparams.isEmpty)
-          if (tparams.isEmpty) {
-            (if (restpe.typeSymbol == UnitClass) "void" else jsig(restpe)) + " " + sym.name + "()"
-          } else {
-            (if (toplevel) (tparams map paramSig).mkString("<", ", ", ">") else "") + " " + jsig(restpe)
-          }
+          assert(tparams.nonEmpty)
+          val poly = if (toplevel) polyParamSig(tparams) else ""
+          poly + jsig(restpe)
 
         case MethodType(params, restpe) =>
-          def paramsSig(params: List[Symbol]) = {
-            var i = 0
-            params map {x =>
-              var name = x.name + ""
-              name = if (name.length > 0) name else "a" + i
-              i += 1
-              jsig(x.tpe) + " " + name
-            } mkString("(", ", ", ")")
-          }
+          val buf = new StringBuffer("(")
+          params foreach (p => buf append jsig(p.tpe))
+          buf append ")"
+          buf append (if (restpe.typeSymbol == UnitClass || sym0.isConstructor) VOID_TAG.toString else jsig(restpe))
+          buf.toString
 
-          (if (sym.isConstructor) "" else if (restpe.typeSymbol == UnitClass) "void" else jsig(restpe)) + " " +
-          sym.name + paramsSig(params)
-
-        case NullaryMethodType(restpe) =>
-          sym.name + ""
-          
-        case RefinedType(parents, decls) if (!parents.isEmpty) =>
-          jsig(parents.head)
-
+        case RefinedType(parent :: _, decls) =>
+          boxedSig(parent)
         case ClassInfoType(parents, _, _) =>
-          (parents map jsig).mkString
-
+          superSig(parents)
         case AnnotatedType(_, atp, _) =>
-          jsig(atp)
-
+          jsig(atp, existentiallyBound, toplevel, primitiveOK)
+        case BoundedWildcardType(bounds) =>
+          println("something's wrong: "+sym0+":"+sym0.tpe+" has a bounded wildcard type")
+          jsig(bounds.hi, existentiallyBound, toplevel, primitiveOK)
         case _ =>
-          val etp = erasure.erasure(tp)
+          val etp = erasure(sym0)(tp)
           if (etp eq tp) throw new UnknownSig
           else jsig(etp)
       }
     }
-
-    if (info == null) return None
-    try {
-      Some(jsig2(true, Nil, info))
-    } catch {case ex: UnknownSig => LOGGER.warning(sym + " has UnknownSig"); None}
+    if (needsJavaSig(info)) {
+      try Some(jsig(info, toplevel = true))
+      catch { case ex: UnknownSig => None }
+    }
+    else None
   }
 
   class UnknownSig extends Exception
@@ -583,6 +604,32 @@ abstract class JavaStubGenerator {
 
   private def needsJavaSig(tp: Type) = NeedsSigCollector.collect(tp)
 
+  // only refer to type params that will actually make it into the sig, this excludes:
+  // * higher-order type parameters
+  // * type parameters appearing in method parameters
+  // * type members not visible in an enclosing template
+  private def isTypeParameterInSig(sym: Symbol, initialSymbol: Symbol) = (
+    !sym.isHigherOrderTypeParameter &&
+    sym.isTypeParameterOrSkolem && (
+      (initialSymbol.enclClassChain.exists(sym isNestedIn _)) ||
+      (initialSymbol.isMethod && initialSymbol.typeParams.contains(sym))
+    )
+  )
+
+  // Ensure every '.' in the generated signature immediately follows
+  // a close angle bracket '>'.  Any which do not are replaced with '$'.
+  // This arises due to multiply nested classes in the face of the
+  // rewriting explained at rebindInnerClass.   This should be done in a
+  // more rigorous way up front rather than catching it after the fact,
+  // but that will be more involved.
+  private def dotCleanup(sig: String): String = {
+    var last: Char = '\0'
+    sig map {
+      case '.' if last != '>' => last = '.' ; '$'
+      case ch                 => last = ch ; ch
+    }
+  }
+
   // ----- end of scala.tools.nsc.transform.Erasure.scala
 
   /*
@@ -611,6 +658,12 @@ abstract class JavaStubGenerator {
         val sName = qName.substring(i + 1, qName.length)
         pkgName + encodeName(sName)
     }
+  }
+
+  @inline
+  final private def logResult[T](msg: => String)(result: T): T = {
+    LOGGER.warning(msg + ": " + result)
+    result
   }
 }
 

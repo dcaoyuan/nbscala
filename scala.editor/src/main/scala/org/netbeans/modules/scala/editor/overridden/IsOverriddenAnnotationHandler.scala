@@ -77,7 +77,7 @@ import scala.collection.mutable.HashSet
 import org.netbeans.modules.scala.core.{ScalaMimeResolver, ScalaParserResult}
 import org.netbeans.modules.scala.core.ast.{ScalaRootScope}
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.symtab.Symbols
+import scala.reflect.internal.Symbols
 
 /**
  *

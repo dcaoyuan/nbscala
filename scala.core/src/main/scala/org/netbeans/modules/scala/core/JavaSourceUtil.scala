@@ -75,7 +75,7 @@ import org.netbeans.api.java.source.SourceUtils
 import org.netbeans.api.java.source.Task
 import org.openide.filesystems.FileObject
 import org.openide.util.Exceptions
-import scala.tools.nsc.symtab.Symbols
+import scala.reflect.internal.Symbols
 
 /**
  *

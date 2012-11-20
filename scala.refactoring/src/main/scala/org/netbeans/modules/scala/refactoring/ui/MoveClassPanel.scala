@@ -87,9 +87,9 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
   private var labelLocation: javax.swing.JLabel = _
   private var labelPackage: javax.swing.JLabel = _
   private var labelProject: javax.swing.JLabel = _
-  private var packageComboBox: javax.swing.JComboBox = _
-  private var projectsComboBox: javax.swing.JComboBox = _
-  private var rootComboBox: javax.swing.JComboBox = _
+  private var packageComboBox: javax.swing.JComboBox/*[AnyRef]*/ = _
+  private var projectsComboBox: javax.swing.JComboBox/*[Project]*/ = _
+  private var rootComboBox: javax.swing.JComboBox/*[SourceGroup]*/ = _
   private var updateReferencesCheckBox: javax.swing.JCheckBox = _
   // End of variables declaration//GEN-END:variables
 
@@ -354,7 +354,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
     rootComboBox.setSelectedIndex(preselectedItem)
   }
     
-  abstract class BaseCellRenderer extends JLabel with ListCellRenderer with UIResource {
+  abstract class BaseCellRenderer[T] extends JLabel with ListCellRenderer/*[T]*/ with UIResource {
         
     setOpaque(true)
         
@@ -366,10 +366,10 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
   }
     
   /** Groups combo renderer, used also in CopyClassPanel */
-  class GroupCellRenderer extends BaseCellRenderer {
+  class GroupCellRenderer extends BaseCellRenderer[SourceGroup] {
         
-    def getListCellRendererComponent(list: JList,
-                                     value: Object,
+    def getListCellRendererComponent(list: JList/*[_ <: SourceGroup]*/,
+                                     value: AnyRef /*SourceGroup*/,
                                      index: Int,
                                      isSelected: Boolean,
                                      cellHasFocus: Boolean): Component = {
@@ -377,14 +377,8 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
       // #89393: GTK needs name to render cell renderer "natively"
       setName("ComboBox.listRenderer") // NOI18N
             
-      if (value.isInstanceOf[SourceGroup]) {
-        val g = value.asInstanceOf[SourceGroup]
-        setText(g.getDisplayName)
-        setIcon(g.getIcon(false))
-      } else {
-        setText("") // NOI18N
-        setIcon(null)
-      }
+      setText(value.asInstanceOf[SourceGroup].getDisplayName)
+      setIcon(value.asInstanceOf[SourceGroup].getIcon(false))
             
       if ( isSelected ) {
         setBackground(list.getSelectionBackground)
@@ -400,10 +394,10 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
   }
     
   /** Projects combo renderer, used also in CopyClassPanel */
-  class ProjectCellRenderer extends BaseCellRenderer {
+  class ProjectCellRenderer extends BaseCellRenderer[Project] {
         
-    def getListCellRendererComponent(list: JList,
-                                     value: Object,
+    def getListCellRendererComponent(list: JList/*[_ <: Project]*/,
+                                     value: AnyRef /*Project*/,
                                      index: Int,
                                      isSelected: Boolean,
                                      cellHasFocus: Boolean): Component = {

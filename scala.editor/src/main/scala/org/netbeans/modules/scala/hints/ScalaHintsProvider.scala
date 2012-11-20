@@ -115,7 +115,7 @@ class ScalaHintsProvider() extends HintsProvider {
         cancelled = false
         val parserResult = context.parserResult;
         if (parserResult != null) {
-            val errors = JavaConversions.asScalaBuffer(parserResult.getDiagnostics);
+            val errors = JavaConversions.asScalaBuffer(parserResult.getDiagnostics).asInstanceOf[scala.collection.mutable.Buffer[Error]];
             if (errors != null && !errors.isEmpty) {
                 val errHints  = manager.getErrors.asInstanceOf[ju.Map[String, ju.List[ScalaErrorRule]]]
 

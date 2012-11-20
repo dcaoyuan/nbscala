@@ -593,7 +593,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
         case Right(ex) => ScalaGlobal.resetLate(global, ex)
       }
     } catch {
-      case ex => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
+      case ex: Throwable => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
     } 
   }
 

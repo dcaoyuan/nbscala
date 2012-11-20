@@ -53,11 +53,12 @@ import org.netbeans.modules.scala.core.ast.{ScalaItems, ScalaDfns, ScalaRefs, Sc
 import org.netbeans.modules.scala.core.element.{ScalaElements, JavaElements}
 import org.netbeans.modules.scala.core.interactive.Global
 
+import scala.collection.mutable
 import scala.collection.mutable.{ WeakHashMap, ListBuffer}
 import scala.tools.nsc.Settings
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.util.{Position, SourceFile}
+import scala.reflect.internal.util.{Position, SourceFile}
 
 /**
  *
@@ -166,7 +167,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     workingSource = Some(source)
     isCancelingSemantic = false
 
-    qualToRecoveredType = Map()
+    qualToRecoveredType = new mutable.HashMap()
 
     val response = new Response[ScalaRootScope]
     try {
@@ -202,7 +203,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     workingSource = Some(source)
     isCancelingSemantic = false
 
-    qualToRecoveredType = Map()
+    qualToRecoveredType = new mutable.HashMap()
 
     var res: ScalaRootScope = ScalaRootScope.EMPTY
     try {
@@ -290,7 +291,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     
     settings.stop.value = Nil
     settings.stop.tryToSetColon(List(stopPhaseName))
-    qualToRecoveredType = Map()
+    qualToRecoveredType = new mutable.HashMap()
 
     val run = new this.Run
 
@@ -341,6 +342,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   case class AskSemanticItem(source: ScalaSourceFile, response: Response[ScalaRootScope]) extends WorkItem {
     def apply() = respond(response)(getSemanticRoot(source))
     override def toString = "semantic " + source
+
+    def raiseMissing() {}
   }
 }
 
