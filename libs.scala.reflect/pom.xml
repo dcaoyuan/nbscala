@@ -44,6 +44,9 @@
                     <publicPackages>
                         <publicPackage>scala.reflect.api</publicPackage>
                         <publicPackage>scala.reflect.internal</publicPackage>
+                        <publicPackage>scala.reflect.internal.pickling</publicPackage>
+                        <publicPackage>scala.reflect.internal.settings</publicPackage>
+                        <publicPackage>scala.reflect.internal.transform</publicPackage>
                         <publicPackage>scala.reflect.internal.util</publicPackage>
                         <publicPackage>scala.reflect.io</publicPackage>
                         <publicPackage>scala.reflect.macros</publicPackage>

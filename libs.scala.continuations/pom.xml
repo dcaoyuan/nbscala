@@ -21,6 +21,11 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scala-reflect</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-libs-scala-compiler</artifactId>
             <version>${libs.scala.version}</version>
         </dependency>
