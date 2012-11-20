@@ -1,0 +1,59 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.netbeans.modules</groupId>
+        <artifactId>nbscala</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>org-netbeans-libs-scala-reflect</artifactId>
+    <version>${libs.scala.version}</version>
+    <name>org-netbeans-libs-scala-reflect</name>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scala-library</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency><!-- myself -->
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+        <!-- needed to ensure, the libs are deployed in the repostiory previous anything else -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>nbscala-libs-local</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <publicPackages>
+                        <publicPackage>scala.reflect.api</publicPackage>
+                        <publicPackage>scala.reflect.internal</publicPackage>
+                        <publicPackage>scala.reflect.internal.util</publicPackage>
+                        <publicPackage>scala.reflect.io</publicPackage>
+                        <publicPackage>scala.reflect.macros</publicPackage>
+                        <publicPackage>scala.reflect.macros</publicPackage>
+                        <publicPackage>scala.reflect.runtime</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+

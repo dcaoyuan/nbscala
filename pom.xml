@@ -52,13 +52,13 @@
         <netbeans.hint.jdkPlatform>JDK_1.6</netbeans.hint.jdkPlatform>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
-        <scala.version>2.9.2.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.scala -->
+        <scala.version>2.10.0-RC2.nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
         <netbeans.version>RELEASE72</netbeans.version>
         <brandingToken>nbscala</brandingToken>
         <deploy.version>snapshots</deploy.version>
         
         <!-- module versions -->
-        <libs.scala.version>2.9.2</libs.scala.version>
+        <libs.scala.version>2.10.0.2</libs.scala.version>
         <libs.xtc.version>1.15</libs.xtc.version>
         <languages.execution.version>0.11</languages.execution.version>
         <scala.debugger.version>0.13</scala.debugger.version>
@@ -137,9 +137,9 @@
                 
                 <!-- Scala plugin for compiling and running Scala -->
                 <plugin>                    
-                    <groupId>net.alchim31.maven</groupId>
-                    <artifactId>scala-maven-plugin</artifactId>
-                    <version>3.0.2</version>
+				    <groupId>net.alchim31.maven</groupId>
+				    <artifactId>scala-maven-plugin</artifactId>
+				    <version>3.1.0</version>
                     <executions>  
                         <execution>
                             <phase>process-resources</phase> <!-- to support mix java/scala -->
@@ -153,6 +153,7 @@
                     <configuration>
                         <scalaVersion>${scala.version}</scalaVersion>
                         <jvmArgs>
+                            <jvmArg>-Xbootclasspath/p:${settings.localRepository}/org/scala-lang/scala-reflect/${scala.version}/scala-reflect-${scala.version}.jar</jvmArg>
                             <jvmArg>-Xms64m</jvmArg>
                             <jvmArg>-Xmx512m</jvmArg>
                             <jvmArg>-Xss64m</jvmArg> <!-- to avoid StackOverFlowError -->
@@ -268,9 +269,11 @@
     </profiles>
 
     <modules>
+        <module>libs.local</module>
         <module>libs.scala.compiler</module>
         <module>libs.scala.continuations</module>
         <module>libs.scala.library</module>
+        <module>libs.scala.reflect</module>
         <module>libs.xtc</module>
         <module>scala.core</module>
         <module>scala.editor</module>
@@ -282,7 +285,6 @@
         <module>scala.stdplatform</module>
         <module>scala.project</module>
         <module>scala.refactoring</module>
-        <module>libs.local</module>
         <module>scala.app</module>
     </modules>
 

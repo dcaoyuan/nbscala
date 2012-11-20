@@ -19,7 +19,7 @@
             <artifactId>org-netbeans-libs-scala-library</artifactId>
             <version>${libs.scala.version}</version>
         </dependency>
-        <dependency>
+        <dependency><!-- myself -->
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-compiler</artifactId>
             <version>${scala.version}</version>

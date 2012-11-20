@@ -24,7 +24,7 @@
             <artifactId>org-netbeans-libs-scala-compiler</artifactId>
             <version>${libs.scala.version}</version>
         </dependency>
-        <dependency>
+        <dependency><!-- myself -->
             <groupId>org.scala-lang.plugins</groupId>
             <artifactId>continuations</artifactId>
             <version>${scala.version}</version>

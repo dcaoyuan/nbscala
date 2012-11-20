@@ -1,40 +1,36 @@
----
- src/compiler/scala/tools/nsc/Global.scala          |    3 +++
- .../scala/tools/nsc/interactive/Global.scala       |    6 ++----
- .../scala/tools/nsc/typechecker/Namers.scala       |    6 +++++-
- .../scala/tools/nsc/typechecker/Typers.scala       |    4 ++++
- 4 files changed, 14 insertions(+), 5 deletions(-)
-
 diff --git a/src/compiler/scala/tools/nsc/Global.scala b/src/compiler/scala/tools/nsc/Global.scala
-index 4f56a95..22e4058 100644
+index b0288c0..f6cc1d2 100644
 --- a/src/compiler/scala/tools/nsc/Global.scala
 +++ b/src/compiler/scala/tools/nsc/Global.scala
-@@ -119,6 +119,9 @@ class Global(var settings: Settings, var reporter: Reporter) extends SymbolTable
- 
-   val nodeToString = nodePrinters.nodeToString
+@@ -201,6 +201,9 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
    val treeBrowser = treeBrowsers.create()
-+  
-+  /** Tracks errors related to qualifiers */
-+  var qualToRecoveredType: mutable.HashMap[Tree, Type]
  
    // ------------ Hooks for interactive mode-------------------------
++  
++  /** Tracks errors related to qualifiers */
++  var qualToRecoveredType = new mutable.HashMap[Tree, Type]
  
+   /** Called every time an AST node is successfully typechecked in typerPhase.
+    */
 diff --git a/src/compiler/scala/tools/nsc/interactive/Global.scala b/src/compiler/scala/tools/nsc/interactive/Global.scala
-index 797c4d2..2bdbc9c 100644
+index 56617d0..fc40218 100644
 --- a/src/compiler/scala/tools/nsc/interactive/Global.scala
 +++ b/src/compiler/scala/tools/nsc/interactive/Global.scala
-@@ -827,9 +827,7 @@ class Global(settings: Settings, reporter: Reporter, projectName: String = "")
+@@ -847,9 +847,10 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
        (!implicitlyAdded || m.implicitlyAdded)
  
      def add(sym: Symbol, pre: Type, implicitlyAdded: Boolean)(toMember: (Symbol, Type) => M) {
 -      if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
 -        add(sym.accessed, pre, implicitlyAdded)(toMember)
--      } else if (!sym.name.decode.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
-+      if (!sym.name.decode.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
+-      } else if (!sym.name.decodedName.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
++      //if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
++      //  add(sym.accessed, pre, implicitlyAdded)(toMember)
++      //} else if (!sym.name.decodedName.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
++      if (!sym.name.decodedName.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
          val symtpe = pre.memberType(sym) onTypeError ErrorType
          matching(sym, symtpe, this(sym.name)) match {
            case Some(m) =>
-@@ -949,7 +947,7 @@ class Global(settings: Settings, reporter: Reporter, projectName: String = "")
+@@ -969,7 +970,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
      }
  
      //print("add members")
@@ -43,38 +39,16 @@ index 797c4d2..2bdbc9c 100644
        addTypeMember(sym, pre, sym.owner != ownerTpe.typeSymbol, NoSymbol)
      members.allMembers #:: {
        //print("\nadd pimped")
-diff --git a/src/compiler/scala/tools/nsc/typechecker/Namers.scala b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
-index fddf115..2926b3e 100644
---- a/src/compiler/scala/tools/nsc/typechecker/Namers.scala
-+++ b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
-@@ -1257,7 +1257,11 @@ trait Namers { self: Analyzer =>
-                         return
-                       }
+diff --git a/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala b/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
+index 9e9b8b9..a1cfa17 100644
+--- a/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
++++ b/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
+@@ -297,6 +297,8 @@ trait ContextErrors {
  
--                      def notMember = context.error(tree.pos, from.decode + " is not a member of " + expr)
-+                    def notMember = {
-+                      global.qualToRecoveredType += (tree -> base)
-+                      global.qualToRecoveredType += (expr -> base)
-+                      context.error(tree.pos, from.decode + " is not a member of " + expr)
-+                    }
-                       // for Java code importing Scala objects
-                       if (from endsWith nme.raw.DOLLAR)
-                         isValidSelector(from stripEnd "$")(notMember)
-diff --git a/src/compiler/scala/tools/nsc/typechecker/Typers.scala b/src/compiler/scala/tools/nsc/typechecker/Typers.scala
-index b1b5601..a232916 100644
---- a/src/compiler/scala/tools/nsc/typechecker/Typers.scala
-+++ b/src/compiler/scala/tools/nsc/typechecker/Typers.scala
-@@ -3593,6 +3593,10 @@ trait Typers extends Modes {
-           }
- 
-           def makeErrorTree = {
-+			if (!qual.tpe.widen.isErroneous) {
-+              global.qualToRecoveredType += (tree -> qual.tpe.widen)
-+              global.qualToRecoveredType += (qual -> qual.tpe.widen)
-+            }
-             val tree1 = tree match {
-               case Select(_, _) => treeCopy.Select(tree, qual, name)
-               case SelectFromTypeTree(_, _) => treeCopy.SelectFromTypeTree(tree, qual, name)
--- 
-1.7.9.msysgit.0
-
+       //typedSelect
+       def NotAMemberError(sel: Tree, qual: Tree, name: Name) = {
++		global.qualToRecoveredType += (sel  -> qual.tpe.widen)
++		global.qualToRecoveredType += (qual -> qual.tpe.widen)
+         def errMsg = {
+           val owner            = qual.tpe.typeSymbol
+           val target           = qual.tpe.widen

@@ -54,6 +54,21 @@
                     </execution>
                     
                     <execution>
+                        <id>install-scala-reflect</id>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+                        <configuration>
+                            <file>${project.basedir}/lib/scala-reflect.jar</file>
+                            <groupId>org.scala-lang</groupId>
+                            <artifactId>scala-reflect</artifactId>
+                            <version>${scala.version}</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+
+                    <execution>
                         <id>install-scala-plugin-continuations</id>
                         <goals>
                             <goal>install-file</goal>
