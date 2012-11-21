@@ -19,7 +19,7 @@ The project central point is [https://github.com/dcaoyuan/nbscala](). There are 
 Until recently, this has mostly been a one man project. Some patches were supplied by different people, but I'm still convinced that it will gather a community soon. For questions and bug reports use the [issue tracker](https://github.com/dcaoyuan/nbscala/issues). If interested in joining the project, you can write me directly or send patches/pull requests.
 
 ### Snapshot Builds
-Snapshot builds can be found here [http://sourceforge.net/projects/erlybird](http://sourceforge.net/projects/erlybird). I'm using sourceforge because of their supply of higher bandwidth.
+Snapshot builds can be found here [http://github.com/dcaoyuan/nbscala/downloads](https://github.com/dcaoyuan/nbscala/downloads). 
 
 ### Installation
 Make sure you don't have an old version installed. (Check your netbeans installation for a 'nbscala' directory: if it exists, delete it.)
