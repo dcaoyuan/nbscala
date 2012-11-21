@@ -96,13 +96,12 @@
             <artifactId>org-netbeans-modules-scala-refactoring</artifactId>
             <version>${scala.refactoring.version}</version>
         </dependency>
-
-<!-- Can't test the maven component. See http://netbeans.org/bugzilla/show_bug.cgi?id=216738 -->       
-<!--        <dependency>
+        <!-- Can't test the maven component. See http://netbeans.org/bugzilla/show_bug.cgi?id=216738 -->       
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-modules-scala-maven</artifactId>
             <version>${project.version}</version>
-        </dependency>-->
+        </dependency>
         
         <!-- The clusters platform, java, ide and nb represent a full fuctioning Netbeans IDE -->       
         <dependency>
@@ -160,6 +159,7 @@
                 <configuration>
                     <cluster>${brandingToken}</cluster>
                     <useOSGiDependencies>true</useOSGiDependencies>
+                    <etcConfFile>nbscala.conf</etcConfFile> <!-- this will cause ignorance of additionalArguments? -->
                 </configuration>
             </plugin>
             <plugin>
