@@ -56,7 +56,6 @@ import org.netbeans.modules.scala.core.interactive.Global
 import scala.collection.mutable
 import scala.collection.mutable.{ WeakHashMap, ListBuffer}
 import scala.tools.nsc.Settings
-import scala.tools.nsc.interactive.MissingResponse
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.reflect.internal.util.{Position, SourceFile}
@@ -166,43 +165,6 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
   
-  @deprecated("Use askForSemantic")
-  def askForSemanticAsync(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
-    resetReporter
-    
-    workingSource = Some(source)
-    isCancelingSemantic = false
-
-    qualToRecoveredType = new mutable.HashMap()
-
-    val response = new Response[ScalaRootScope]
-    try {
-      if (isCancelingSemantic) return ScalaRootScope.EMPTY
-      val typeResp = new Response[Tree]
-      askType(source, forceReload, typeResp)
-
-      if (isCancelingSemantic) return ScalaRootScope.EMPTY
-      typeResp.get
-
-      if (isCancelingSemantic) return ScalaRootScope.EMPTY
-      askSemantic(source, response)
-    } catch {
-      case ex: AssertionError =>
-        /**
-         * @Note: avoid scala nsc's assert error. Since global's
-         * symbol table may have been broken, we have to reset ScalaGlobal
-         * to clean this global
-         */
-        ScalaGlobal.resetLate(this, ex)
-      case ex: java.lang.Error => // avoid scala nsc's Error error
-      case ex: Throwable => // just ignore all ex
-    }
-
-    val res = response.get.left.toOption getOrElse ScalaRootScope.EMPTY
-    workingSource = None
-    res
-  }
-
   def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
     resetReporter
     
@@ -211,8 +173,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
     qualToRecoveredType = new mutable.HashMap()
 
-    var res: ScalaRootScope = ScalaRootScope.EMPTY
-    try {
+    val res = try {
       if (isCancelingSemantic) return ScalaRootScope.EMPTY
       val typeResp = new Response[Tree]
       askType(source, forceReload, typeResp)
@@ -221,7 +182,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
       typeResp.get
 
       if (isCancelingSemantic) return ScalaRootScope.EMPTY
-      res = getSemanticRoot(source)
+      getSemanticRoot(source)
     } catch {
       case ex: AssertionError =>
         /**
@@ -230,16 +191,13 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
          * to clean this global
          */
         ScalaGlobal.resetLate(this, ex)
-      case ex: java.lang.Error => // avoid scala nsc's Error error
-      case ex: Throwable => // just ignore all ex
+        ScalaRootScope.EMPTY
+      case ex: java.lang.Error => ScalaRootScope.EMPTY // avoid scala nsc's Error error
+      case ex: Throwable => ScalaRootScope.EMPTY // just ignore all ex
     }
 
     workingSource = None
     res
-  }
-  
-  private def askSemantic(source: ScalaSourceFile, response: Response[ScalaRootScope]) = {
-    scheduler postWorkItem AskSemanticItem(source, response)
   }
   
   /**
@@ -254,36 +212,11 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
           log1.info("Cancel semantic " + fileA.getName)
           isCancelingSemantic = true
           true
-        } else false
+        } else {
+          false
+        }
       case _ => false
     }
-  }
-
-  // ----- Code that has been deprecated, for reference only
-  
-  /** batch complie */
-  def compileSourcesForPresentation(srcFiles: List[FileObject]) {
-    resetReporter
-    
-    settings.stop.value = Nil
-    settings.stop.tryToSetColon(List(superAccessors.phaseName))
-    try {
-      new this.Run compile (srcFiles map (FileUtil.toFile(_).getAbsolutePath))
-    } catch {
-      case ex: AssertionError =>
-        /**
-         * @Note: avoid scala nsc's assert error. Since global's
-         * symbol table may have been broken, we have to reset ScalaGlobal
-         * to clean this global
-         */
-        ScalaGlobal.resetLate(this, ex)
-      case ex: java.lang.Error => // avoid scala nsc's Error error
-      case ex: Throwable => // just ignore all ex
-    }
-  }
-
-  def compileSourceForPresentation(srcFile: ScalaSourceFile): ScalaRootScope = {
-    compileSource(srcFile, superAccessors.phaseName)
   }
 
   // * @Note Should pass phase "lambdalift" to get anonfun's class symbol built
@@ -343,15 +276,6 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
       case None => 
         log1.warning("Tried to visit " + source.file.file.getName + ", but got no unit!")
         ScalaRootScope.EMPTY
-    }
-  }
-  
-  case class AskSemanticItem(source: ScalaSourceFile, response: Response[ScalaRootScope]) extends WorkItem {
-    def apply() = respond(response)(getSemanticRoot(source))
-    override def toString = "semantic " + source
-
-    def raiseMissing() = {
-      response raise new MissingResponse
     }
   }
 }
