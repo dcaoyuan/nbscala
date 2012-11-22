@@ -147,7 +147,7 @@
             <artifactId>org-netbeans-modules-jellytools-ide</artifactId>
             <version>${netbeans.version}</version>
             <scope>test</scope>
-        </dependency>
+        </dependency>        
     </dependencies>
 
     <build>

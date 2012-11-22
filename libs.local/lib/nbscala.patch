@@ -1,35 +1,31 @@
 diff --git a/src/compiler/scala/tools/nsc/Global.scala b/src/compiler/scala/tools/nsc/Global.scala
-index b0288c0..f6cc1d2 100644
+index b0288c0..168c2a0 100644
 --- a/src/compiler/scala/tools/nsc/Global.scala
 +++ b/src/compiler/scala/tools/nsc/Global.scala
-@@ -201,6 +201,9 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
+@@ -201,6 +201,7 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
    val treeBrowser = treeBrowsers.create()
  
    // ------------ Hooks for interactive mode-------------------------
-+  
-+  /** Tracks errors related to qualifiers */
 +  var qualToRecoveredType = new mutable.HashMap[Tree, Type]
  
    /** Called every time an AST node is successfully typechecked in typerPhase.
     */
 diff --git a/src/compiler/scala/tools/nsc/interactive/Global.scala b/src/compiler/scala/tools/nsc/interactive/Global.scala
-index 56617d0..fc40218 100644
+index 56617d0..bd19099 100644
 --- a/src/compiler/scala/tools/nsc/interactive/Global.scala
 +++ b/src/compiler/scala/tools/nsc/interactive/Global.scala
-@@ -847,9 +847,10 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
+@@ -847,8 +847,9 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
        (!implicitlyAdded || m.implicitlyAdded)
  
      def add(sym: Symbol, pre: Type, implicitlyAdded: Boolean)(toMember: (Symbol, Type) => M) {
 -      if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
 -        add(sym.accessed, pre, implicitlyAdded)(toMember)
--      } else if (!sym.name.decodedName.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
-+      //if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
-+      //  add(sym.accessed, pre, implicitlyAdded)(toMember)
-+      //} else if (!sym.name.decodedName.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
-+      if (!sym.name.decodedName.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
++      val accessed = if (sym.isGetter || sym.isSetter) sym.accessed else NoSymbol
++      if (accessed != NoSymbol) {
++        add(accessed, pre, implicitlyAdded)(toMember)
+       } else if (!sym.name.decodedName.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
          val symtpe = pre.memberType(sym) onTypeError ErrorType
          matching(sym, symtpe, this(sym.name)) match {
-           case Some(m) =>
 @@ -969,7 +970,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
      }
  
@@ -40,15 +36,35 @@ index 56617d0..fc40218 100644
      members.allMembers #:: {
        //print("\nadd pimped")
 diff --git a/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala b/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
-index 9e9b8b9..a1cfa17 100644
+index 9e9b8b9..f0a05e1 100644
 --- a/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
 +++ b/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
 @@ -297,6 +297,8 @@ trait ContextErrors {
  
        //typedSelect
        def NotAMemberError(sel: Tree, qual: Tree, name: Name) = {
-+		global.qualToRecoveredType += (sel  -> qual.tpe.widen)
-+		global.qualToRecoveredType += (qual -> qual.tpe.widen)
++        global.qualToRecoveredType += (sel  -> qual.tpe.widen)
++        global.qualToRecoveredType += (qual -> qual.tpe.widen)
          def errMsg = {
            val owner            = qual.tpe.typeSymbol
            val target           = qual.tpe.widen
+diff --git a/src/compiler/scala/tools/nsc/typechecker/Namers.scala b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
+index e3b1ae5..c0e2636 100644
+--- a/src/compiler/scala/tools/nsc/typechecker/Namers.scala
++++ b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
+@@ -1166,6 +1166,7 @@ trait Namers extends MethodSynthesis {
+             }
+             if (!isConstr)
+               clazz.resetFlag(INTERFACE) // there's a concrete member now
++            if (parentNamer != null) { // 'null' should only happen forInteractive
+             val default = parentNamer.enterSyntheticSym(defaultTree)
+             if (forInteractive && default.owner.isTerm) {
+               // save the default getters as attachments in the method symbol. if compiling the
+@@ -1177,6 +1178,7 @@ trait Namers extends MethodSynthesis {
+                 case None => meth.updateAttachment(new DefaultsOfLocalMethodAttachment(default))
+               }
+             }
++            }
+           } else if (baseHasDefault) {
+             // the parameter does not have a default itself, but the
+             // corresponding parameter in the base class does.
