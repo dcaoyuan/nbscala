@@ -66,7 +66,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
   private var _errors: java.util.List[Error] = _
 
   /** reset the _root and unit of srcFile */
-  private def reset {
+  private def reset: Unit = _root synchronized {
     //global.resetUnitOf(srcFile)
     _root = ScalaRootScope.EMPTY
     _errors = null
@@ -134,7 +134,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     global.askForType(srcFile, true)
   }
   
-  def toSemanticed {
+  def toSemanticed: Unit = _root synchronized {
     // although the unit may have been ahead to typed phase during autocompletion, 
     // the typed trees may not be correct for semantic analysis, it's better to reset 
     // the unit to get the best error report.
@@ -158,7 +158,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
   /**
    * If toSemanticed procedure is canceled, a new ScalaParserResult will be created, so it's safe to use 'val' instead of 'def' here.
    */
-  lazy val rootScope: ScalaRootScope = {
+  lazy val rootScope: ScalaRootScope = _root synchronized {
     if (isInvalid) {
       isInSemantic = true
       toSemanticed
@@ -172,7 +172,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     global.compileSourceForDebug(srcFile)
   }
   
-  override def toString = "ParserResult(file=" + this.fileObject.getNameExt + ")"
+  override def toString = "ParserResult(file=" + fileObject.getNameExt + ")"
 }
 
 object ScalaParserResult {

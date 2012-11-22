@@ -110,7 +110,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     val global: ScalaGlobal.this.type = ScalaGlobal.this
   }
 
-  private var workingSource: Option[SourceFile] = None
+  @volatile private var workingSource: Option[SourceFile] = None
   var isCancelingSemantic = false
 
   private def resetReporter {
