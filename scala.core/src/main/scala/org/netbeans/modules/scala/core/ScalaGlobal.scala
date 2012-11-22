@@ -113,7 +113,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   var isCancelingSemantic = false
 
   private def resetReporter {
-    this.reporter match {
+    reporter match {
       case x: ErrorReporter => x.reset
       case _ =>
     }
@@ -165,13 +165,17 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
   
-  def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
+  /**
+   * We should carefully design askForSemantic(.) and cancelSemantic(.) to make them thread safe,
+   * so cancelSemantic could be called during askForSemantic and the rootScope is always that we want.
+   */
+  def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = {
     resetReporter
     
     workingSource = Some(source)
     isCancelingSemantic = false
 
-    qualToRecoveredType = new mutable.HashMap()
+    qualToRecoveredType.clear
 
     val res = try {
       if (isCancelingSemantic) return ScalaRootScope.EMPTY
@@ -203,7 +207,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   /**
    * @return will cancel
    */
-  def cancelSemantic(source: SourceFile): Boolean = workingSource synchronized {
+  def cancelSemantic(source: SourceFile): Boolean = {
     workingSource match {
       case Some(x) =>
         val fileA = x.file.file
@@ -230,7 +234,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     
     settings.stop.value = Nil
     settings.stop.tryToSetColon(List(stopPhaseName))
-    qualToRecoveredType = new mutable.HashMap()
+    qualToRecoveredType.clear
 
     val run = new this.Run
 

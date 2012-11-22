@@ -13,7 +13,7 @@ import scala.tools.nsc.io.PlainFile
 import scala.tools.nsc.io.VirtualFile
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.SourceFile
-import scala.tools.nsc.util.BatchSourceFile
+import scala.reflect.internal.util.BatchSourceFile
 import scala.tools.nsc.util.Chars._
 
 /**

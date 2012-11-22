@@ -50,6 +50,7 @@ import org.netbeans.modules.csl.spi.ParserResult
 import org.netbeans.modules.parsing.api.Snapshot
 import org.netbeans.modules.scala.core.ast.ScalaRootScope
 import scala.collection.mutable.WeakHashMap
+import scala.tools.nsc.reporters.Reporter
 
 /**
  *
@@ -63,13 +64,13 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
 
   @volatile private var isInSemantic = false
   @volatile private var _root: ScalaRootScope = ScalaRootScope.EMPTY
-  private var _errors: java.util.List[Error] = _
+  private var _errors: java.util.List[Error] = java.util.Collections.emptyList[Error]
 
   /** reset the _root and unit of srcFile */
   private def reset: Unit = _root synchronized {
     //global.resetUnitOf(srcFile)
     _root = ScalaRootScope.EMPTY
-    _errors = null
+    _errors = java.util.Collections.emptyList[Error]
   }
 
   private def isInvalid = _root eq ScalaRootScope.EMPTY
@@ -89,7 +90,8 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     } else end
   }
   
-  override protected def invalidate {
+  override 
+  protected def invalidate {
     // do nothing, so we can maintain the status of parsed result by ourselves
   }
 
@@ -102,33 +104,8 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
    * other editor behavior, or, the performance of complier is not the bottleneck
    * any more, I'll add it back.
    */
-  override def getDiagnostics: java.util.List[_ <: Error] = {
-    if (_errors eq null) {
-      _errors = global.reporter match {
-        case ErrorReporter(Nil) => java.util.Collections.emptyList[Error]
-        case ErrorReporter(scalaErrors) =>
-          val errs = new java.util.ArrayList[Error]
-          for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
-            // It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
-            if (srcFile.file eq pos.source.file) {
-              val offset = pos.startOrPoint
-              val end = pos.endOrPoint
-
-              val isLineError = (end == -1)
-              val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fileObject, offset, end, isLineError, severity)
-              //error.setParameters(Array(offset, msg))                
-
-              errs.add(error)
-            } else {
-              //println("Not same SourceFile: " + pos.source.file)
-            }
-          }
-          errs
-        case _ => java.util.Collections.emptyList[Error]
-      }
-    }
-    _errors
-  }
+  override 
+  def getDiagnostics: java.util.List[_ <: Error] = _errors
   
   def toTyped {
     global.askForType(srcFile, true)
@@ -142,6 +119,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     // be reported if do not call reset here 
     reset
     _root = global.askForSemantic(srcFile, true)
+    _errors = collectErrors(global.reporter)
   }
   
   def cancelSemantic: Boolean = {
@@ -153,6 +131,31 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     
     isInSemantic = false
     willCancel
+  }
+  
+  private def collectErrors(reporter: Reporter) = {
+    reporter match {
+      case ErrorReporter(Nil) => java.util.Collections.emptyList[Error]
+      case ErrorReporter(scalaErrors) =>
+        val errs = new java.util.ArrayList[Error]
+        for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
+          // It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
+          if (srcFile.file eq pos.source.file) {
+            val offset = pos.startOrPoint
+            val end = pos.endOrPoint
+
+            val isLineError = (end == -1)
+            val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fileObject, offset, end, isLineError, severity)
+            //error.setParameters(Array(offset, msg))                
+
+            errs.add(error)
+          } else {
+            //println("Not same SourceFile: " + pos.source.file)
+          }
+        }
+        errs
+      case _ => java.util.Collections.emptyList[Error]
+    }
   }
 
   /**
@@ -168,11 +171,11 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
   }
 
   lazy val rootScopeForDebug: ScalaRootScope = {
-    val global = ScalaGlobal.getGlobal(fileObject, true)
-    global.compileSourceForDebug(srcFile)
+    ScalaGlobal.getGlobal(fileObject, true).compileSourceForDebug(srcFile)
   }
   
-  override def toString = "ParserResult(file=" + fileObject.getNameExt + ")"
+  override 
+  def toString = "ParserResult(file=" + fileObject.getNameExt + ")"
 }
 
 object ScalaParserResult {
