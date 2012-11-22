@@ -141,7 +141,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     // An example is that when try completing on x. and then press esc, the error won't
     // be reported if do not call reset here 
     reset
-    _root = global.askForSemanticSync(srcFile, true)
+    _root = global.askForSemantic(srcFile, true)
   }
   
   def cancelSemantic: Boolean = {

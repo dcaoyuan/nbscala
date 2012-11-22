@@ -166,7 +166,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
   
-  def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
+  @deprecated("Use askForSemantic")
+  def askForSemanticAsync(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
     resetReporter
     
     workingSource = Some(source)
@@ -202,7 +203,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     res
   }
 
-  def askForSemanticSync(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
+  def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
     resetReporter
     
     workingSource = Some(source)

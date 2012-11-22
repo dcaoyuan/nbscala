@@ -45,11 +45,6 @@ import org.netbeans.api.language.util.ast.AstItem
 
 import org.netbeans.modules.scala.core.lexer.{ScalaTokenId}
 
-import scala.tools.nsc.reporters.{Reporter}
-import scala.tools.nsc.io.VirtualFile
-import scala.tools.nsc.util.BatchSourceFile
-import scala.tools.nsc.util.{Position}
-
 abstract class ScalaSymbolResolver {
   
   val global: ScalaGlobal
