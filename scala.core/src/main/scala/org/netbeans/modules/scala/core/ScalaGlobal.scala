@@ -56,6 +56,7 @@ import org.netbeans.modules.scala.core.interactive.Global
 import scala.collection.mutable
 import scala.collection.mutable.{ WeakHashMap, ListBuffer}
 import scala.tools.nsc.Settings
+import scala.tools.nsc.interactive.MissingResponse
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.reflect.internal.util.{Position, SourceFile}
@@ -66,7 +67,9 @@ import scala.reflect.internal.util.{Position, SourceFile}
  */
 case class ScalaError(pos: Position, msg: String, severity: org.netbeans.modules.csl.api.Severity, force: Boolean)
 case class ErrorReporter(var errors: List[ScalaError] = Nil) extends Reporter {
-  override def reset {
+
+  override 
+  def reset {
     super.reset
     errors = Nil
   }
@@ -93,9 +96,11 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
                                                                                          with ScalaElements
                                                                                          with JavaElements
                                                                                          with ScalaUtils {
-  override def forInteractive = true
+  override 
+  def forInteractive = true
 
-  override def logError(msg: String, t: Throwable) {}
+  override 
+  def logError(msg: String, t: Throwable) {}
 
   private val log1 = Logger.getLogger(this.getClass.getName)
   
@@ -161,7 +166,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
   
-  def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = {
+  def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
     resetReporter
     
     workingSource = Some(source)
@@ -197,7 +202,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     res
   }
 
-  def askForSemanticSync(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = {
+  def askForSemanticSync(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = workingSource synchronized {
     resetReporter
     
     workingSource = Some(source)
@@ -239,7 +244,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   /**
    * @return will cancel
    */
-  def cancelSemantic(source: SourceFile): Boolean = {
+  def cancelSemantic(source: SourceFile): Boolean = workingSource synchronized {
     workingSource match {
       case Some(x) =>
         val fileA = x.file.file
@@ -339,11 +344,14 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
         ScalaRootScope.EMPTY
     }
   }
+  
   case class AskSemanticItem(source: ScalaSourceFile, response: Response[ScalaRootScope]) extends WorkItem {
     def apply() = respond(response)(getSemanticRoot(source))
     override def toString = "semantic " + source
 
-    def raiseMissing() {}
+    def raiseMissing() = {
+      response raise new MissingResponse
+    }
   }
 }
 
