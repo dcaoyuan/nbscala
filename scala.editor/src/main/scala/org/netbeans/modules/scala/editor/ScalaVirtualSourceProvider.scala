@@ -116,7 +116,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
 
   override def translate(files: java.lang.Iterable[File], sourceRoot: File, result: VirtualSourceProvider.Result) {
     val root = FileUtil.toFileObject(sourceRoot)
-    val timeStamps = TimeStamps.forRoot(root.getURL, false)
+    val timeStamps = TimeStamps.forRoot(root.toURL, false)
 
     for (file <- iterableAsScalaIterable(files)) {
       val fo = FileUtil.toFileObject(file)

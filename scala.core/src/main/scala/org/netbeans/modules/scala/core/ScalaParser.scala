@@ -103,7 +103,7 @@ class ScalaParser extends Parser {
     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
     if (srcCp != null) {
       srcCp.getRoots find {x => FileUtil.isParentOf(x, fo)} foreach {root =>
-        val timeStamps = TimeStamps.forRoot(root.getURL, false)
+        val timeStamps = TimeStamps.forRoot(root.toURL, false)
         return timeStamps != null && timeStamps.checkAndStoreTimestamp(fo, FileUtil.getRelativePath(root, fo))
       }
     }

@@ -548,7 +548,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
    dependsOn.put(source, deps);
 
    for (entry <- ClassPath.getClassPath(source, ClassPath.COMPILE).entries()) { //TODO: should also check BOOT?
-   for (s <- SourceForBinaryQuery.findSourceRoots(entry.getURL()).getRoots()) {
+   for (s <- SourceForBinaryQuery.findSourceRoots(entry.toURL()).getRoots()) {
    val targets = edges.get(s);
 
    if (targets != null) {
