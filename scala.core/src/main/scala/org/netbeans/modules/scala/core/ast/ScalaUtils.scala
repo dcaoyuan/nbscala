@@ -296,7 +296,7 @@ trait ScalaUtils {self: ScalaGlobal =>
           fm.appendText("AntiPolyType")
         case TypeVar(_, _) => tpe.safeToString
           // a type variable
-        //case DeBruijnIndex(level, index) => 
+          //case DeBruijnIndex(level, index) => 
           //fm.appendText("DeBruijnIndex")
         case _ => 
           fm.appendText(tpe.getClass.getSimpleName)
@@ -468,7 +468,7 @@ trait ScalaUtils {self: ScalaGlobal =>
         case TypeVar(_, _) => 
           fm.appendText(tpe.safeToString)
           // a type variable
-        //case DeBruijnIndex(level, index) =>
+          //case DeBruijnIndex(level, index) =>
           //fm.appendText("DeBruijnIndex")
         case _ =>
           fm.appendText(tpe.safeToString)
@@ -504,7 +504,7 @@ trait ScalaUtils {self: ScalaGlobal =>
       } else false
     }
 
-    def importantItem(items: List[AstItem]): AstItem = {
+    def importantItem(items: List[AstItem]): ScalaItem = {
       items map {item =>
         val (sym, baseLevel) = item match {
           case dfn: ScalaDfn => (dfn.symbol, 0)
@@ -521,7 +521,7 @@ trait ScalaUtils {self: ScalaGlobal =>
 
         (importantLevel, item)
       } sortWith {(x1, x2) => x1._1 < x2._1} head match {
-        case (_, item) => item
+        case (_, item) => item.asInstanceOf[ScalaItem]
       }
     }
 
@@ -595,7 +595,7 @@ trait ScalaUtils {self: ScalaGlobal =>
         case TypeVar(_, _) =>
           sb append (tpe.safeToString)
           // a type variable
-        //case DeBruijnIndex(level, index) =>
+          //case DeBruijnIndex(level, index) =>
           //sb append ("DeBruijnIndex")
         case _ =>
           sb append (tpe.safeToString)

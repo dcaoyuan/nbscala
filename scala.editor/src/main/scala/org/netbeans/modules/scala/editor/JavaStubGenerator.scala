@@ -180,19 +180,16 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       javaCode ++= " {\n"
 
       if (isCompanion) {
-        javaCode ++= new JavaMemberStubGenerator(IS_NOT_OBJECT, IS_NOT_TRAIT).
-                     genJavaMembers(sym, tpe)
+        javaCode ++= new JavaMemberStubGenerator(IS_NOT_OBJECT, IS_NOT_TRAIT).genJavaMembers(sym, tpe)
 
         val oSym = syms(1)
         val oTpe = tryTpe(oSym)
 
         if (oTpe != null) {
-          javaCode ++= new JavaMemberStubGenerator(IS_OBJECT, IS_NOT_TRAIT).
-                       genJavaMembers(oSym, oTpe)
+          javaCode ++= new JavaMemberStubGenerator(IS_OBJECT, IS_NOT_TRAIT).genJavaMembers(oSym, oTpe)
         }
       } else {
-        javaCode ++= new JavaMemberStubGenerator(isObject, isTrait).
-                     genJavaMembers(sym, tpe)
+        javaCode ++= new JavaMemberStubGenerator(isObject, isTrait).genJavaMembers(sym, tpe)
       }
 
       if (!isTrait) {
@@ -227,7 +224,14 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
    * Returns true if the type is not null and an of its members have the deferred flag.
    */
   private def isAbstractClass(tpe: Type): Boolean = {
-    tpe != null && (tpe.members exists (_ hasFlag Flags.DEFERRED))
+    tpe != null && (
+      (try {
+          tpe.members
+        } catch {
+          case ex: Throwable => EmptyScope
+        }
+      ) exists (_ hasFlag Flags.DEFERRED)
+    )
   }
 
   private case class JavaMemberStubGenerator(isObject: Boolean, isTrait: Boolean) {
@@ -242,7 +246,13 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
      */
     def genJavaMembers(sym: Symbol, tpe: Type): String = {
       val javaCode = new StringBuilder
-      for (member <- tpe.members if !member.hasFlag(Flags.PRIVATE)) {
+      val members = try {
+        tpe.members
+      } catch {
+        case ex: Throwable => EmptyScope
+      }
+      
+      for (member <- members if !member.hasFlag(Flags.PRIVATE)) {
         val memberType = try {
           member.tpe
         } catch {
@@ -250,7 +260,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
         }
         javaCode ++= genJavaMember(sym, member, memberType)
       }
-      return javaCode.toString
+      javaCode.toString
     }
 
     private def genJavaMember(sym: Symbol, member: Symbol, memberType: Type): String = {
@@ -489,7 +499,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
                 else fullNameInSig(sym)
               ) + (
                 if (args.isEmpty) "" else
-                "<"+(args map argSig).mkString+">"
+                  "<"+(args map argSig).mkString+">"
               ) + (
                 ";"
               )

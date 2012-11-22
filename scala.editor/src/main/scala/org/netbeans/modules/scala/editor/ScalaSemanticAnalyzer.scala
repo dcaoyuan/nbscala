@@ -66,65 +66,69 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
     cancelled
   }
 
-  final protected def resume: Unit = synchronized {
-    cancelled = false
-  }
-
-  override def cancel: Unit = synchronized {
+  override 
+  def cancel: Unit = synchronized {
     log.info("Try to cancel in Hightlighting, but we ignore it, @todo")
     //cancelled = true
   }
 
-  override def getHighlights: java.util.Map[OffsetRange, java.util.Set[ColoringAttributes]] = {
+  override 
+  def getHighlights: java.util.Map[OffsetRange, java.util.Set[ColoringAttributes]] = {
     semanticHighlights
   }
 
-  override def getPriority: Int = 0
+  override 
+  def getPriority: Int = 0
 
-  override def getSchedulerClass: Class[_ <: Scheduler] = {
+  override 
+  def getSchedulerClass: Class[_ <: Scheduler] = {
     Scheduler.EDITOR_SENSITIVE_TASK_SCHEDULER
   }
 
   @throws(classOf[Exception])
-  override def run(pr: ScalaParserResult, event: SchedulerEvent) {
+  override 
+  def run(pr: ScalaParserResult, event: SchedulerEvent) {
     log.info("ScalaSemanticAnalyzer run.")
-    resume
+    cancelled = false
 
     if (isCancelled) return
 
     val root = pr.rootScope
 
     val doc = pr.getSnapshot.getSource.getDocument(true)
-    if (doc == null) return
+    if (doc == null) {
+      log.warning("doc is null.")
+      return
+    }
+    
     val th = pr.getSnapshot.getTokenHierarchy
     val global = pr.global
 
-    val highlights = new java.util.HashMap[OffsetRange, java.util.Set[ColoringAttributes]](100)
-    //visitScopeRecursively(doc, th, rootScope, highlights);
-    visitItems(global, th, root, highlights)
+    semanticHighlights = visitItems(global, th, root) match {
+      case null => null
+      case highlights if !highlights.isEmpty =>
+        //            if (result.getTranslatedSource() != null) {
+        //                Map<OffsetRange, ColoringAttributes> translated = new HashMap<OffsetRange, ColoringAttributes>(2 * highlights.size());
+        //                for (Map.Entry<OffsetRange, ColoringAttributes> entry:  highlights.entrySet()) {
+        //                    OffsetRange range = LexUtilities.getLexerOffsets(info, entry.getKey());
+        //                    if (range != OffsetRange.NONE) {
+        //                        translated.put(range, entry.getValue());
+        //                    }
+        //                }
+        //
+        //                highlights = translated;
+        //            }
 
-    this.semanticHighlights = if (!highlights.isEmpty) {
-      //            if (result.getTranslatedSource() != null) {
-      //                Map<OffsetRange, ColoringAttributes> translated = new HashMap<OffsetRange, ColoringAttributes>(2 * highlights.size());
-      //                for (Map.Entry<OffsetRange, ColoringAttributes> entry:  highlights.entrySet()) {
-      //                    OffsetRange range = LexUtilities.getLexerOffsets(info, entry.getKey());
-      //                    if (range != OffsetRange.NONE) {
-      //                        translated.put(range, entry.getValue());
-      //                    }
-      //                }
-      //
-      //                highlights = translated;
-      //            }
-
-      highlights
-    } else null
+        highlights
+      case _ => null
+    }
   }
 
-  private def visitItems(global: ScalaGlobal, th: TokenHierarchy[_], root: ScalaRootScope,
-                         highlights: java.util.Map[OffsetRange, java.util.Set[ColoringAttributes]]
-  ) {
+  private def visitItems(global: ScalaGlobal, th: TokenHierarchy[_], root: ScalaRootScope): java.util.HashMap[OffsetRange, java.util.Set[ColoringAttributes]] = {
 
     import global._
+
+    val highlights = new java.util.HashMap[OffsetRange, java.util.Set[ColoringAttributes]](100)
 
     def isSingletonType(sym: Symbol) = try {
       sym.tpe.resultType.isInstanceOf[SingletonType]
@@ -132,18 +136,19 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
       case _: Throwable => false
     }
 
-    for ((idToken, items) <- root.idTokenToItems;
-         item = ScalaUtil.importantItem(items);
-         name = item.getName if name != "this" && name != "super"
-    ) {
-      if (isCancelled) return
-
+    for {
+      (idToken, items) <- root.idTokenToItems
+      item = ScalaUtil.importantItem(items)
+      name = item.getName if name != "this" && name != "super"
+    } {
+      if (isCancelled) return null
+      
       // * token may be xml tokens, @see AstVisit#getTokenId
       idToken.id match {
         case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super =>
           val hiRange = ScalaLexUtil.getRangeOfToken(th, idToken)
           val coloringSet = new java.util.HashSet[ColoringAttributes]
-          val sym = item.asInstanceOf[ScalaItem].symbol
+          val sym = item.symbol
           
           item match {
             
@@ -282,5 +287,6 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
     }
     
+    highlights
   }
 }

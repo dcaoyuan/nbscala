@@ -646,7 +646,13 @@ abstract class ScalaAstVisitor {
    */
   private def importedSymbol(qual: Tree, xname: Name, yname: Name): Symbol = {
     val targetName = xname.toTermName
-    val result = qual.tpe.members filter {_.name.toTermName == targetName}
+    val members = try {
+      qual.tpe.members
+    } catch {
+      case ex: Throwable => EmptyScope
+    }
+
+    val result = members filter {_.name.toTermName == targetName}
 
     // * prefer type over object
     result find ScalaUtil.isProperType getOrElse result.headOption.getOrElse(null)

@@ -44,7 +44,6 @@ import org.openide.filesystems.FileObject
 
 import org.netbeans.api.language.util.ast.{AstDfn, AstRef, AstScope}
 import org.netbeans.modules.scala.core.{ScalaGlobal, ScalaMimeResolver, ScalaSourceUtil}
-import scala.reflect.internal.Symbols
 
 /**
  * Scala AstDfn special functions, which will be enabled in ScalaGlobal
@@ -56,9 +55,8 @@ trait ScalaDfns {self: ScalaGlobal =>
               idToken: Token[TokenId],
               kind: ElementKind,
               bindingScope: AstScope,
-              fo: Option[FileObject]) = {
-      new ScalaDfn(symbol, idToken, kind, bindingScope, fo)
-    }
+              fo: Option[FileObject]
+    ) = new ScalaDfn(symbol, idToken, kind, bindingScope, fo)
   }
   
   class ScalaDfn(asymbol: Symbol,
@@ -67,21 +65,24 @@ trait ScalaDfns {self: ScalaGlobal =>
                  abindingScope: AstScope,
                  afo: Option[FileObject]
   ) extends ScalaItem with AstDfn {
-
+    
     make(aidToken, akind, abindingScope, afo)
 
     symbol = asymbol
 
-    override def getMimeType: String = ScalaMimeResolver.MIME_TYPE
+    override 
+    def getMimeType: String = ScalaMimeResolver.MIME_TYPE
 
-    override def getModifiers: java.util.Set[Modifier] = {
+    override 
+    def getModifiers: java.util.Set[Modifier] = {
       if (!modifiers.isDefined) {
         modifiers = Some(ScalaUtil.getModifiers(symbol))
       }
       modifiers.get
     }
 
-    override def qualifiedName: String = symbol.fullName
+    override 
+    def qualifiedName: String = symbol.fullName
 
     /** @Note: do not call ref.getKind here, which will recursively call this function, use ref.kind ! */
     def isReferredBy(ref: AstRef): Boolean = {

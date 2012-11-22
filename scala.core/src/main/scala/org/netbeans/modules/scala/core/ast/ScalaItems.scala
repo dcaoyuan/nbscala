@@ -50,7 +50,8 @@ trait ScalaItems {self: ScalaGlobal =>
     type S = Symbol
     type T = Type
 
-    override def getKind: ElementKind = {
+    override 
+    def getKind: ElementKind = {
       if (super.getKind != ElementKind.OTHER) return super.getKind
 
       if (symbol hasFlag Flags.ACCESSOR)        return ElementKind.FIELD
@@ -62,5 +63,14 @@ trait ScalaItems {self: ScalaGlobal =>
 
       return ElementKind.OTHER
     }
+    
+    def members: Scope = {
+      try {
+        symbol.tpe.members
+      } catch {
+        case ex: Throwable => EmptyScope
+      }
+    }
+    
   }
 }

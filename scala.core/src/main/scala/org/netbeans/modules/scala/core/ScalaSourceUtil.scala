@@ -763,8 +763,8 @@ object ScalaSourceUtil {
   }
 
   
-  def isMainMethodExists(obj: ScalaDfns#ScalaDfn): Boolean = {
-    obj.symbol.tpe.members exists {member => member.isMethod && isMainMethod(member)}
+  def isMainMethodExists(dfn: ScalaDfns#ScalaDfn): Boolean = {
+    dfn.members exists {member => member.isMethod && isMainMethod(member)}
   }
 
   /**
@@ -773,9 +773,13 @@ object ScalaSourceUtil {
    * @return true when the method is a main method
    */
   def isMainMethod(method: Symbols#Symbol): Boolean = {
-    (method.nameString, method.tpe.paramTypes) match {
-      case ("main", List(x)) => true  //NOI18N
-      case _ => false
+    try {
+      (method.nameString, method.tpe.paramTypes) match {
+        case ("main", List(x)) => true  //NOI18N
+        case _ => false
+      }
+    } catch {
+      case _: Throwable => false
     }
   }
 
@@ -819,7 +823,9 @@ object ScalaSourceUtil {
         //                    }
         //                }, false);
         cpInfo
-      } catch {case ioe: Exception => Exceptions.printStackTrace(ioe); Nil}
+      } catch {
+        case ioe: Exception => Exceptions.printStackTrace(ioe); Nil
+      }
     }
 
     result
@@ -832,7 +838,7 @@ object ScalaSourceUtil {
 
     if (bootCp == null || compCp == null || srcCp == null) {
       /** @todo why? at least I saw this happens on "Scala project created from existing sources" */
-      println("No classpath for " + fo)
+      logger.warning("No classpath for " + fo)
       None
     } else {
       ClasspathInfo.create(bootCp, compCp, srcCp) match {

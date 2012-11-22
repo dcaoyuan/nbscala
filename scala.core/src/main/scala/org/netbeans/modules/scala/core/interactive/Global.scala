@@ -10,8 +10,8 @@ import scala.tools.nsc.ast._
 
 /** The main class of the presentation compiler in an interactive environment such as an IDE
  */
-class Global(_settings: Settings, _reporter: Reporter, projectName: String = "")
-extends scala.tools.nsc.interactive.Global(_settings, _reporter, projectName) {
+class Global(_settings: Settings, _reporter: Reporter, projectName: String = ""
+) extends scala.tools.nsc.interactive.Global(_settings, _reporter, projectName) {
   
   // @see scala.tools.nsc.interactive.Global.reset(unit: RichCompilationUnit)
   def resetUnitOf(source: SourceFile) {
