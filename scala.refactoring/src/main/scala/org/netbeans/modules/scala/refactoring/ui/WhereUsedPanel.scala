@@ -76,7 +76,7 @@ import org.netbeans.modules.scala.core.ast.ScalaItems
 import org.netbeans.modules.scala.core.element.ScalaElements
 import org.netbeans.modules.scala.refactoring.RefactoringModule
 import org.netbeans.modules.scala.refactoring.RetoucheUtils
-import scala.tools.nsc.symtab.Flags
+import scala.reflect.internal.Flags
 
 
 /**

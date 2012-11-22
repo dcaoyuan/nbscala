@@ -481,7 +481,9 @@ object ScalaGlobal {
       try {
         val file = FileUtil.toFile(out)
         if (!file.exists) file.mkdirs
-      } catch {case _ =>}
+      } catch {
+        case _: Throwable =>
+      }
 
       return Some(out)
     }
@@ -599,7 +601,9 @@ object ScalaGlobal {
         try {
           val file = new File(outPath)
           if (!file.exists) file.mkdirs
-        } catch {case _ =>}
+        } catch {
+          case _: Throwable =>
+        }
       }
     }
 

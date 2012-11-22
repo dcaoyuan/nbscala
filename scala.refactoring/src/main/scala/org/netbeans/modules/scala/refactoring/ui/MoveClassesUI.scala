@@ -193,18 +193,20 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
       val f = q.head
       q = q.tail
       if (VisibilityQuery.getDefault.isVisible(f)) {
-        val d = try {
-          DataObject.find(f)
-        } catch {case ex: DataObjectNotFoundException => ex.printStackTrace; null}
-
-        d match {
-          case null =>
-          case df: DataFolder =>
-            for (o <- df.getChildren) {
-              q = o.getPrimaryFile :: q
-            }
-          case _ => result.add(d.getNodeDelegate)
+        try {
+          DataObject.find(f) match {
+            case null =>
+            case df: DataFolder =>
+              for (o <- df.getChildren) {
+                q = o.getPrimaryFile :: q
+              }
+            case d => result.add(d.getNodeDelegate)
+            
+          }
+        } catch {
+          case ex: DataObjectNotFoundException => ex.printStackTrace
         }
+
       }
     }
     result

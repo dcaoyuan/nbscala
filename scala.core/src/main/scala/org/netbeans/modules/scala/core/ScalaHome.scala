@@ -287,7 +287,9 @@ object ScalaHome {
             val is = propFile.getInputStream
             try {
               props.load(is)
-            } catch {case _ =>} finally {
+            } catch {
+              case _: Throwable =>
+            } finally {
               if (is != null) is.close
             }
         }

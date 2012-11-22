@@ -116,7 +116,9 @@ trait ScalaDfns {self: ScalaGlobal =>
         fm.appendText(symbol.enclClass.fullName)
         fm.appendHtml("</i><p>")
         ScalaUtil.htmlDef(symbol, fm)
-      } catch {case ex => ScalaGlobal.resetLate(self, ex)}
+      } catch {
+        case ex: Throwable => ScalaGlobal.resetLate(self, ex)
+      }
     }
   }
 

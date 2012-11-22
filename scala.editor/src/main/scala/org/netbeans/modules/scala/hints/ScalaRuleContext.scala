@@ -64,7 +64,7 @@ class ScalaRuleContext extends RuleContext {
     try {
       Some(new OffsetRange(Utilities.getRowStart(doc, start), Utilities.getRowEnd(doc, end)))
     } catch {
-      case ex => None
+      case ex: Throwable => None
     }
   }
 

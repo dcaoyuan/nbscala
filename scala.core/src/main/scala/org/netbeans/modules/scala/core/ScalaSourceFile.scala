@@ -11,8 +11,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.PlainFile
 import scala.tools.nsc.io.VirtualFile
-import scala.tools.nsc.util.Position
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.Position
+import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.util.BatchSourceFile
 import scala.tools.nsc.util.Chars._
 

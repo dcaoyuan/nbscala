@@ -537,7 +537,7 @@ object ScalaSourceUtil {
         val fqn = new StringBuilder(sym.fullName('.'))
 
         // * getTopLevelClassName "scalarun.Dog"
-        val topSym = sym.toplevelClass
+        val topSym = sym.enclosingTopLevelClass
         val topClzName = topSym.fullName('.')
 
         // "scalarun.Dog$$talk$1"
@@ -613,7 +613,7 @@ object ScalaSourceUtil {
         val fqn = new StringBuilder(sym.fullName('.'))
 
         // * getTopLevelClassName "scalarun.Dog"
-        val topSym = sym.toplevelClass
+        val topSym = sym.enclosingTopLevelClass
         val topClzName = topSym.fullName('.')
 
         // "scalarun.Dog$$talk$1"

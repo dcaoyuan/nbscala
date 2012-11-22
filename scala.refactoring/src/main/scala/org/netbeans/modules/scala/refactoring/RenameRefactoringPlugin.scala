@@ -86,7 +86,7 @@ import scala.collection.mutable.HashSet
 import scala.tools.nsc.ast.Trees
 
 import org.openide.text.CloneableEditorSupport
-import scala.tools.nsc.symtab.Flags
+import scala.reflect.internal.Flags
 
 /**
  * The actual Renaming refactoring work for Python.
@@ -517,7 +517,9 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
                 else overriddens exists {_.fullName == qNamex}
               case _ => false
             }
-          } catch {case _ => false}
+          } catch {
+            case _: Throwable => false
+          }
 
           val tokens = new HashSet[Token[_]]
           for {(token, items) <- root.idTokenToItems

@@ -47,9 +47,9 @@ import org.netbeans.api.language.util.ast.{AstItem, AstScope}
 import org.netbeans.modules.scala.core.ScalaGlobal
 import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
 
-import scala.tools.nsc.symtab.{Flags}
-import scala.tools.nsc.symtab.Flags._
-import scala.tools.nsc.util.{SourceFile, OffsetPosition}
+import scala.reflect.internal.Flags
+import scala.reflect.internal.Flags._
+import scala.reflect.internal.util.{SourceFile, OffsetPosition}
 import scala.collection.mutable.{Stack, HashSet, HashMap}
 
 /**
@@ -99,7 +99,7 @@ abstract class ScalaAstVisitor {
     scopes push rootScope
 
     owners.clear
-    owners push definitions.RootClass
+    owners push rootMirror.RootClass
 
     treeTraverser(unit.body)
 

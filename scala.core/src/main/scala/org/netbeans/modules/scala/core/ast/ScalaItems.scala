@@ -42,7 +42,7 @@ package org.netbeans.modules.scala.core.ast
 import org.netbeans.modules.csl.api.ElementKind
 import org.netbeans.api.language.util.ast.AstItem
 import org.netbeans.modules.scala.core.ScalaGlobal
-import scala.tools.nsc.symtab.Flags
+import scala.reflect.internal.Flags
 
 trait ScalaItems {self: ScalaGlobal =>
 

@@ -1,7 +1,7 @@
 package org.netbeans.modules.scala.core.interactive
 
 import scala.tools.nsc._
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.reporters._
 import scala.tools.nsc.symtab._
 import scala.tools.nsc.ast._

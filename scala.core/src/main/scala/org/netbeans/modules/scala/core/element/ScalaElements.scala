@@ -51,7 +51,7 @@ import org.netbeans.modules.scala.core.ScalaSourceFile
 import org.openide.filesystems.{FileObject}
 import org.openide.util.Exceptions
 
-import scala.tools.nsc.symtab.{Flags}
+import scala.reflect.internal.Flags
 
 import org.netbeans.api.language.util.ast.{AstElementHandle}
 import org.netbeans.modules.scala.core.{JavaSourceUtil, ScalaGlobal, ScalaSourceUtil, ScalaMimeResolver}
@@ -121,7 +121,9 @@ trait ScalaElements {self: ScalaGlobal =>
     override def getIn: String = {
       try {
         symbol.owner.nameString
-      } catch {case _ => ""}
+      } catch {
+        case _: Throwable => ""
+      }
     }
 
     override def getKind: ElementKind = {
@@ -251,7 +253,9 @@ trait ScalaElements {self: ScalaGlobal =>
     def isDeprecated: Boolean = {
       try {
         symbol.isDeprecated
-      } catch {case _ => false}
+      } catch {
+        case _: Throwable => false
+      }
     }
     def isDeprecated_=(b: Boolean) {}
 
@@ -289,7 +293,9 @@ trait ScalaElements {self: ScalaGlobal =>
         fm.appendText(symbol.enclClass.fullName)
         fm.appendHtml("</i><p>")
         ScalaUtil.htmlDef(symbol, fm)
-      } catch {case ex => ScalaGlobal.resetLate(self, ex)}
+      } catch {
+        case ex: Throwable => ScalaGlobal.resetLate(self, ex)
+      }
     }
 
   }

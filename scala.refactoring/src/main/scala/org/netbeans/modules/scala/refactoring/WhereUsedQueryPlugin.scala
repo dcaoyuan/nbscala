@@ -73,7 +73,7 @@ import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.openide.filesystems.FileObject
 import org.openide.util.NbBundle;
 import scala.collection.mutable.HashSet
-import scala.tools.nsc.symtab.Flags
+import scala.reflect.internal.Flags
 
 
 /**
@@ -356,7 +356,9 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
               else overriddens exists {_.fullName == qNamex}
             case _ => false
           }
-        } catch {case _ => false}
+        } catch {
+          case _: Throwable => false
+        }
         
         val tokens = new HashSet[Token[_]]
         for ((token, items) <- root.idTokenToItems;

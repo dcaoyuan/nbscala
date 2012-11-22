@@ -307,7 +307,9 @@ object JavaSourceUtil {
                 val params1 = ee.getParameters
                 val params2 = try {
                   sym.tpe.paramTypes
-                } catch {case _ => /**@todo reset global */ Nil}
+                } catch {
+                  case _: Throwable => /**@todo reset global */ Nil
+                }
                 if (params1.size == params2.size) {
                   var i = 0
                   for (param2 <- params2) {

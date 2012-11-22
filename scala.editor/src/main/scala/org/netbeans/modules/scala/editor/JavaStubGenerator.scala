@@ -46,7 +46,7 @@ import org.netbeans.modules.scala.core.ScalaGlobal
 import scala.collection.mutable.HashSet
 import scala.reflect.NameTransformer
 import scala.reflect.internal.ClassfileConstants._
-import scala.tools.nsc.symtab.Flags
+import scala.reflect.internal.Flags
 
 abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasure {
 
@@ -218,7 +218,9 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
   private def tryTpe(sym: Symbol): Type = {
     try {
       sym.tpe
-    } catch {case _ => null}
+    } catch {
+      case _: Throwable => null
+    }
   }
 
   /**
@@ -243,7 +245,9 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       for (member <- tpe.members if !member.hasFlag(Flags.PRIVATE)) {
         val memberType = try {
           member.tpe
-        } catch {case ex => ScalaGlobal.resetLate(global, ex); null}
+        } catch {
+          case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
+        }
         javaCode ++= genJavaMember(sym, member, memberType)
       }
       return javaCode.toString
@@ -296,7 +300,9 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val mSName = member.nameString
       val mResTpe = try {
         memberType.resultType
-      } catch {case ex => ScalaGlobal.resetLate(global, ex); null}
+      } catch {
+        case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
+      }
 
       if (mResTpe != null && mSName != "$init$" && mSName != "synchronized") {
         val mResSym = mResTpe.typeSymbol
@@ -375,15 +381,12 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     while (itr.hasNext) {
       val param = itr.next
 
-      val tpe = try {
-        param.tpe
-      } catch {case ex => ScalaGlobal.resetLate(global, ex); null}
-      
-      if (tpe != null) {
-        sb.append(encodeQName(tpe.typeSymbol.fullName))
-      } else {
-        sb.append("Object")
+      val tpeName = try {
+        encodeQName(param.tpe.typeSymbol.fullName)
+      } catch {
+        case ex: Throwable => ScalaGlobal.resetLate(global, ex); "Object"
       }
+      sb.append(tpeName)
       sb.append(" ")
 
       val name = param.nameString

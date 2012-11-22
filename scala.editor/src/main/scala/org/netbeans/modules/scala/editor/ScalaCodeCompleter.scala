@@ -622,7 +622,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
         case Right(ex) => ScalaGlobal.resetLate(global, ex)
       }
     } catch {
-      case ex => ScalaGlobal.resetLate(global, ex)
+      case ex: Throwable => ScalaGlobal.resetLate(global, ex)
     }
 
     // always return true ?
@@ -658,7 +658,9 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
             case x => Some(x)
           }
       }
-    } catch {case ex => ScalaGlobal.resetLate(global, ex); None}
+    } catch {
+      case ex: Throwable => ScalaGlobal.resetLate(global, ex); None
+    }
   }
 
 }

@@ -128,7 +128,9 @@ abstract class ScalaCompletionProposals {
               case null => null
               case x => x.resultType
             }
-          } catch {case ex => ScalaGlobal.resetLate(global, ex); null}
+          } catch {
+            case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
+          }
 
           if (retType != null && !sym.isConstructor) {
             fm.appendText(ScalaUtil.typeToString(retType))
@@ -186,7 +188,9 @@ abstract class ScalaCompletionProposals {
           case null => Nil
           case tpe => tpe.typeParams
         }
-      } catch {case ex => ScalaGlobal.resetLate(completer.global, ex); Nil}
+      } catch {
+        case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex); Nil
+      }
       if (!typeParams.isEmpty) {
         fm.appendHtml("[")
         fm.appendText(typeParams map (_.nameString) mkString(", "))
@@ -213,7 +217,9 @@ abstract class ScalaCompletionProposals {
                   if (t != null) {
                     t.toString
                   } else "<unknown>"
-                } catch {case ex => ScalaGlobal.resetLate(completer.global, ex); "<unknown>"}
+                } catch {
+                  case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex); "<unknown>"
+                }
 
                 fm.`type`(true)
                 fm.appendText(paramTpe)
@@ -226,7 +232,9 @@ abstract class ScalaCompletionProposals {
           case NullaryMethodType(resultType) =>
           case _ =>
         }
-      } catch {case ex => ScalaGlobal.resetLate(completer.global, ex)}
+      } catch {
+        case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex)
+      }
 
       fm.getText
     }
@@ -238,7 +246,9 @@ abstract class ScalaCompletionProposals {
           case NullaryMethodType(resultType) => Nil
           case _ => Nil
         }
-      } catch {case ex => ScalaGlobal.resetLate(completer.global, ex); Nil}
+      } catch {
+        case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex); Nil
+      }
     }
 
     override def getCustomInsertTemplate: String = {

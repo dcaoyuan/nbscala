@@ -45,7 +45,7 @@ import org.netbeans.modules.csl.api.HtmlFormatter
 
 import org.netbeans.modules.scala.core.ScalaGlobal
 
-import scala.tools.nsc.symtab.Flags
+import scala.reflect.internal.Flags
 
 trait ScalaUtils {self: ScalaGlobal =>
   
@@ -186,7 +186,9 @@ trait ScalaUtils {self: ScalaGlobal =>
     def tryTpe(sym: Symbol): Type = {
       try {
         sym.tpe
-      } catch {case ex => ScalaGlobal.resetLate(self, ex); null}
+      } catch {
+        case ex: Throwable => ScalaGlobal.resetLate(self, ex); null
+      }
     }
 
     def htmlTypeName(sym: Symbol, fm: HtmlFormatter): Unit = {      
@@ -474,7 +476,7 @@ trait ScalaUtils {self: ScalaGlobal =>
     }
 
     def completeIfWithLazyType(sym: Symbol) {
-      val topClazz = sym.toplevelClass
+      val topClazz = sym.enclosingTopLevelClass
 
       if (topClazz.nameString.indexOf('$') != -1) return // avoid assertion error @see
       

@@ -49,7 +49,7 @@ import org.netbeans.modules.scala.core.ast.ScalaRootScope
 import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.netbeans.modules.scala.core.lexer.ScalaTokenId
 
-import scala.tools.nsc.symtab.Flags
+import scala.reflect.internal.Flags
 
 /**
  *
@@ -129,7 +129,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
     def isSingletonType(sym: Symbol) = try {
       sym.tpe.resultType.isInstanceOf[SingletonType]
     } catch {
-      case _ => false
+      case _: Throwable => false
     }
 
     for ((idToken, items) <- root.idTokenToItems;
@@ -233,7 +233,9 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
                 val isVariable = try {
                   val owntpe = sym.owner.tpe
                   owntpe.members exists {x => x.isVariable && x.nameString == name}
-                } catch {case _ => false}
+                } catch {
+                  case _: Throwable => false
+                }
 
                 if (isVariable) {
                   coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
