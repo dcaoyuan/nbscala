@@ -53,41 +53,32 @@ import org.openide.filesystems.{FileObject, FileUtil}
  * @author Caoyuan Deng
  */
 class ScalaParser extends Parser {
-  import ScalaParser._
-
   private val log = Logger.getLogger(this.getClass.getName)
 
-  private var _result: ScalaParserResult = _
+  private var _result: Option[ScalaParserResult] = None
 
   @throws(classOf[ParseException])
-  override def getResult(task: Task): Parser.Result = {
-    assert(_result != null, "getResult() called prior parse() or parse() returned a null result") //NOI18N
-    _result
+  override 
+  def getResult(task: Task): Parser.Result = {
+    assert(_result.isDefined, "getResult() called prior parse(.) or parse(.) returned a null result") //NOI18N
+    _result.get
   }
 
-  override def cancel {
-    if (_result != null) _result.cancelSemantic
-  }
-  
-  /**
-   * @todo I still can't make sure the difference between cancel() and cancel(reason: Parser.CancelReason, event: SourceModificationEvent),
-   * but it seems cancel works as what I expected.
-   */
-  /* override */ def cancel_todo(reason: Parser.CancelReason, event: SourceModificationEvent) {
+  override 
+  def cancel(reason: Parser.CancelReason, event: SourceModificationEvent) {
     reason match {
       case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => 
-        log.fine("Get cancel request from event: " + event.getModifiedSource + ", sourceChanged=" + event.sourceChanged)
+        log.info("Get cancel request from event: " + event.getModifiedSource.getFileObject.getNameExt + ", sourceChanged=" + event.sourceChanged)
         // We'll cancelSemantic only when the event is saying sourceChanged, since only in this case, we can expect a
         // follow up parse(..) call. There are other cases there won't be a sfollow up parse(..) call.
-        if (event.sourceChanged && _result != null) {
-          _result.cancelSemantic
-        }
+        if (event.sourceChanged) _result foreach (_.cancelSemantic)
       case _ =>
     }
   }
 
   @throws(classOf[ParseException])
-  override def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent) {
+  override 
+  def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent) {
     // The SourceModificationEvent seems set sourceModified=true even when switch between editor windows, 
     // so one solution is try to avoid redundant parsing by checking if the content is acutally modified,
     // but we cannot rely on that, since other source may have been changed and cause the current file must
@@ -96,13 +87,13 @@ class ScalaParser extends Parser {
     log.fine("Request to parse " + event.getModifiedSource.getFileObject.getNameExt + ", prev parserResult=" + _result)
     log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
     //  will lazily do true parsing in ScalaParserResult
-    _result = ScalaParserResult(snapshot)
+    _result = Some(ScalaParserResult(snapshot))
   }
 
   private def isIndexUpToDate(fo: FileObject): Boolean = {
     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
     if (srcCp != null) {
-      srcCp.getRoots find {x => FileUtil.isParentOf(x, fo)} foreach {root =>
+      srcCp.getRoots find (FileUtil.isParentOf(_, fo)) foreach {root =>
         val timeStamps = TimeStamps.forRoot(root.toURL, false)
         return timeStamps != null && timeStamps.checkAndStoreTimestamp(fo, FileUtil.getRelativePath(root, fo))
       }
@@ -111,16 +102,19 @@ class ScalaParser extends Parser {
     false
   }
 
-  override def addChangeListener(changeListener: ChangeListener) {
+  override 
+  def addChangeListener(changeListener: ChangeListener) {
     // no-op, we don't support state changes
   }
 
-  override def removeChangeListener(changeListener: ChangeListener) {
+  override 
+  def removeChangeListener(changeListener: ChangeListener) {
     // no-op, we don't support state changes
   }
 
   private final class Factory extends ParserFactory {
-    override def createParser(snapshots: java.util.Collection[Snapshot]): Parser = new ScalaParser
+    override 
+    def createParser(snapshots: java.util.Collection[Snapshot]): Parser = new ScalaParser
   }
 }
 

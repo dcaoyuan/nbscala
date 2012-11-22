@@ -404,7 +404,7 @@ object ScalaSourceUtil {
 
     val srcCpTarget = if (root != null) {
       val srcRoots1 = ScalaGlobal.getSrcFileObjects(root, true)
-      val srcRoots2 = SourceForBinaryQuery.findSourceRoots(root.getURL).getRoots
+      val srcRoots2 = SourceForBinaryQuery.findSourceRoots(root.toURL).getRoots
       ClassPathSupport.createClassPath(srcRoots1 ++ srcRoots2: _*)
     } else null
 

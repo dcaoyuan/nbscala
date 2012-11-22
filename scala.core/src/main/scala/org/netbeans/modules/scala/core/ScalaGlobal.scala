@@ -237,7 +237,6 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     qualToRecoveredType.clear
 
     val run = new this.Run
-
     val srcFiles = List(source)
     try {
       run.compileSources(srcFiles)
@@ -752,28 +751,32 @@ object ScalaGlobal {
       srcRoots exists {x => FileUtil.isParentOf(x, fo)}
     }
 
-    override def fileDataCreated(fe: FileEvent): Unit = {
+    override
+    def fileDataCreated(fe: FileEvent): Unit = {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
         global askForReLoad List(fo)
       }
     }
 
-    override def fileChanged(fe: FileEvent): Unit = {
+    override
+    def fileChanged(fe: FileEvent): Unit = {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
         global askForReLoad List(fo)
       }
     }
 
-    override def fileRenamed(fe: FileRenameEvent): Unit = {
+    override 
+    def fileRenamed(fe: FileRenameEvent): Unit = {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
         global askForReLoad List(fo)
       }
     }
 
-    override def fileDeleted(fe: FileEvent): Unit = {
+    override 
+    def fileDeleted(fe: FileEvent): Unit = {
       // @todo get the dependency ot just recompile all?
     }
   }
@@ -788,7 +791,8 @@ object ScalaGlobal {
       found isDefined
     }
 
-    override def fileFolderCreated(fe: FileEvent) {
+    override 
+    def fileFolderCreated(fe: FileEvent) {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && global != null) {
         logger.finest("folder created: " + fo)
@@ -796,7 +800,8 @@ object ScalaGlobal {
       }
     }
 
-    override def fileDataCreated(fe: FileEvent): Unit = {
+    override 
+    def fileDataCreated(fe: FileEvent): Unit = {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && global != null) {
         logger.finest("data created: " + fo)
@@ -804,7 +809,8 @@ object ScalaGlobal {
       }
     }
 
-    override def fileChanged(fe: FileEvent): Unit = {
+    override 
+    def fileChanged(fe: FileEvent): Unit = {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && global != null) {
         logger.finest("file changed: " + fo)
@@ -812,7 +818,8 @@ object ScalaGlobal {
       }
     }
 
-    override def fileRenamed(fe: FileRenameEvent): Unit = {
+    override 
+    def fileRenamed(fe: FileRenameEvent): Unit = {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && global != null) {
         logger.finest("file renamed: " + fo)
@@ -820,7 +827,8 @@ object ScalaGlobal {
       }
     }
 
-    override def fileDeleted(fe: FileEvent): Unit = {
+    override 
+    def fileDeleted(fe: FileEvent): Unit = {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && global != null) {
         logger.finest("file deleted: " + fo)
