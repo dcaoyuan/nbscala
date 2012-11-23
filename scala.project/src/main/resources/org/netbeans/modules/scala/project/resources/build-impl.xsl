@@ -113,13 +113,15 @@ is divided into following sections:
                     property to the end of "netbeans_default_options" in NetBeansInstallationPath/etc/netbeans.conf to point to
                     Scala installation directory.
                 </fail>
-                <property name="scala.compiler" value="${{scala.home}}/lib/scala-compiler.jar"/>
                 <property name="scala.library"  value="${{scala.home}}/lib/scala-library.jar"/>
+                <property name="scala.reflect"  value="${{scala.home}}/lib/scala-reflect.jar"/>
+                <property name="scala.compiler" value="${{scala.home}}/lib/scala-compiler.jar"/>
                 <property name="scala.lib"      value="${{scala.home}}/lib"/>
                 <taskdef resource="scala/tools/ant/antlib.xml">
                     <classpath>
-                        <pathelement location="${{scala.compiler}}"/>
                         <pathelement location="${{scala.library}}"/>
+                        <pathelement location="${{scala.reflect}}"/>
+                        <pathelement location="${{scala.compiler}}"/>
                     </classpath>
                 </taskdef>
             </target>

@@ -42,20 +42,19 @@ package org.netbeans.modules.scala.stdplatform.platformdefinition;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-import java.net.MalformedURLException;
 import org.netbeans.api.java.classpath.ClassPath;
 import org.netbeans.api.java.platform.JavaPlatform;
 import org.netbeans.api.java.platform.JavaPlatformManager;
 import org.netbeans.api.scala.platform.ScalaPlatform;
 import org.netbeans.spi.java.classpath.support.ClassPathSupport;
 import org.openide.filesystems.FileObject;
-import org.openide.util.Exceptions;
-
-import org.openide.util.NbBundle;
 import org.openide.filesystems.FileUtil;
-import org.openide.modules.InstalledFileLocator;
+import org.openide.util.Exceptions;
+import org.openide.util.NbBundle;
+import org.openide.util.Utilities;
 
 /**
  * Implementation of the "Default" platform. The information here is extracted
@@ -77,7 +76,7 @@ public class DefaultPlatformImpl extends J2SEPlatformImpl {
         List<URL> installFolders = new ArrayList<URL>();
         if (scalaHome != null) {
             try {
-                installFolders.add(scalaHome.toURI().toURL());
+                installFolders.add(Utilities.toURI(scalaHome).toURL());
             } catch (MalformedURLException mue) {
                 Exceptions.printStackTrace(mue);
             }
@@ -143,10 +142,12 @@ public class DefaultPlatformImpl extends J2SEPlatformImpl {
                 installFolders, platformProperties, systemProperties, sources, javadoc);
     }
 
+    @Override
     public void setAntName(String antName) {
         throw new UnsupportedOperationException(); //Default platform ant name can not be changed
     }
 
+    @Override
     public String getDisplayName() {
         String displayName = super.getDisplayName();
         if (displayName == null) {
@@ -156,10 +157,12 @@ public class DefaultPlatformImpl extends J2SEPlatformImpl {
         return displayName;
     }
 
+    @Override
     public void setDisplayName(String name) {
         throw new UnsupportedOperationException(); //Default platform name can not be changed
     }
 
+    @Override
     public ClassPath getBootstrapLibraries() {
         synchronized (this) {
             ClassPath cp = (bootstrap == null ? null : bootstrap.get());
@@ -171,13 +174,15 @@ public class DefaultPlatformImpl extends J2SEPlatformImpl {
             if (scalaHome != null && scalaHome.exists() && scalaHome.canRead()) {
                 File scalaLib = new File(scalaHome, "lib");  //NOI18N
                 if (scalaLib.exists() && scalaLib.canRead()) {
-                    pathSpec = scalaLib.getAbsolutePath() + File.separator + "scala-library.jar";
+                    pathSpec = makeClassPath(new String[]{"scala-library.jar", "scala-reflect.jar", "scala-compiler.jar"}, scalaLib);
                 }
             }
 
             cp = Util.createClassPath(pathSpec);
 
-            /** @todo how to deal with project's custom java platform ? */
+            /**
+             * @todo how to deal with project's custom java platform ?
+             */
             JavaPlatform javaPlatform = JavaPlatformManager.getDefault().getDefaultPlatform();
             if (javaPlatform != null) {
                 ClassPath javaBootstrap = javaPlatform.getBootstrapLibraries();
@@ -195,6 +200,22 @@ public class DefaultPlatformImpl extends J2SEPlatformImpl {
             bootstrap = new WeakReference<ClassPath>(cp);
             return cp;
         }
+    }
+
+    private String makeClassPath(String[] jars, final File dir) {
+        String dirPath = dir.getAbsolutePath();
+        StringBuilder cp = new StringBuilder();
+        for (String jar : jars) {
+            String jarPath = dirPath + File.separator + jar;
+            File jarFile = new File(jarPath);
+            if (jarFile.exists() && jarFile.canRead()) {
+                if (cp.length() > 0) {
+                    cp.append(File.pathSeparatorChar);
+                }
+                cp.append(jarPath);
+            }
+        }
+        return cp.toString();
     }
 
     @Override
@@ -288,15 +309,14 @@ public class DefaultPlatformImpl extends J2SEPlatformImpl {
                 if (scalaSrc.exists() && scalaSrc.canRead()) {
                     List<URL> srcUrls = new ArrayList<URL>();
                     for (File src : scalaSrc.listFiles()) {
-                        /** 
-                         * @Note:
-                         * GSF's indexing does not support jar, zip yet 
+                        /**
+                         * @Note: GSF's indexing does not support jar, zip yet
                          */
                         if (src.getName().endsWith(".jar") || src.getName().endsWith(".zip")) { // NOI18N
-                            URL url = FileUtil.getArchiveRoot(src.toURI().toURL());
+                            URL url = FileUtil.getArchiveRoot(Utilities.toURI(src).toURL());
                             srcUrls.add(url);
                         } else if (src.isDirectory()) { // NOI18N
-                            URL url = src.toURI().toURL();
+                            URL url = Utilities.toURI(src).toURL();
                             srcUrls.add(url);
                         }
                     }
@@ -330,7 +350,7 @@ public class DefaultPlatformImpl extends J2SEPlatformImpl {
             File scalaDoc = new File(scalaHome, "doc"); //NOI18N
             if (scalaDoc.isDirectory() && scalaDoc.canRead()) {
                 try {
-                    return Collections.singletonList(scalaDoc.toURI().toURL());
+                    return Collections.singletonList(Utilities.toURI(scalaDoc).toURL());
                 } catch (MalformedURLException mue) {
                     Exceptions.printStackTrace(mue);
                 }
