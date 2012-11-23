@@ -51,7 +51,7 @@ import scala.collection.mutable.ArrayBuffer
 
 object ScalaExecution {
 
-  val SCALA_MAIN_CLASS = "scala.tools.nsc.MainGenericRunner"; // NOI18N <- Change
+  val SCALA_MAIN_CLASS = "scala.tools.nsc.MainGenericRunner" // NOI18N <- Change
     
 //    private static final String WINDOWS_DRIVE = "(?:\\S{1}:[\\\\/])"; // NOI18N
 //    private static final String FILE_CHAR = "[^\\s\\[\\]\\:\\\"]"; // NOI18N
@@ -133,7 +133,7 @@ object ScalaExecution {
    *      scala.tools.nsc.MainGenericRunner
    */    
   def getScalaArgs(scalaHome:String, cmdName:String):Array[String] = {
-    val argvList = new ArrayBuffer[String]();
+    val argvList = new ArrayBuffer[String]()
     if (cmdName.equals("scala") || cmdName.equalsIgnoreCase("scala.bat") || cmdName.equalsIgnoreCase("scala.exe")) { // NOI18N
       val javaHome = getJavaHome
 
@@ -176,7 +176,12 @@ object ScalaExecution {
       val scalaLib = new File(scalaHomeDir, "lib") // NOI18N
 
       // BootClassPath
-      argvList += "-Xbootclasspath/a:" + scalaLib.getAbsolutePath() + File.separator + "scala-library.jar"           
+      argvList += "-Xbootclasspath/a:" + buildClassPath(scalaLib, Array(
+          "scala-library.jar",
+          "scala-reflect.jar",
+          "scala-compiler.jar",
+          "jline.jar"
+        ))   
             
       // Classpath
       argvList += "-classpath" // NOI18N
@@ -218,6 +223,18 @@ object ScalaExecution {
 //        return argvList;
 //    }
     
+  private def buildClassPath(dir: File, jarNames: Array[String]) = {
+    val dirPath = dir.getAbsolutePath 
+    jarNames map (dirPath + File.separator + _) filter {fileName => 
+      try {
+        val file = new File(fileName)
+        file != null && file.exists
+      } catch {
+        case ex: Throwable => false
+      }
+    } mkString File.pathSeparator
+  }
+  
   def getJavaHome(): String = {
     System.getProperty("scala.java.home") match {  // NOI18N
       case null => System.getProperty("java.home") // NOI18N
@@ -282,15 +299,13 @@ object ScalaExecution {
 //    }
     
   /** Package-private for unit test. */
-  def computeScalaClassPath(extraCp:String, scalaLib:File):String = {
-    val cp = new StringBuilder();
-    val libs = scalaLib.listFiles();
+  def computeScalaClassPath(extraCp: String, scalaLib: File):String = {
+    val cp = new StringBuilder()
+    val libs = scalaLib.listFiles
 
-    libs.filter(_.getName.endsWith("jar")).foreach {
-      (lib) => {
-        if (cp.length > 0) cp.append(File.pathSeparatorChar)
-        cp.append(lib.getAbsolutePath)
-      }
+    libs filter (_.getName.endsWith("jar")) foreach {lib => 
+      if (cp.length > 0) cp.append(File.pathSeparatorChar)
+      cp.append(lib.getAbsolutePath)
     }
 
     // Add in user-specified jars passed via SCALA_EXTRA_CLASSPATH
@@ -314,7 +329,7 @@ object ScalaExecution {
     }
 
     if (p.isEmpty && System.getenv("SCALA_EXTRA_CLASSPATH") != null) {
-      p ++= System.getenv("SCALA_EXTRA_CLASSPATH"); // NOI18N
+      p ++= System.getenv("SCALA_EXTRA_CLASSPATH") // NOI18N
     }
 
     if (!p.isEmpty) {
@@ -325,7 +340,7 @@ object ScalaExecution {
       //        extraCp.indexOf(':') != -1) {
       //    extraCp = extraCp.replace(':', File.pathSeparatorChar);
       //}
-      cp.append(p);
+      cp.append(p)
     }
     if (Utilities.isWindows)  "\"" + cp.toString + "\""  else cp.toString // NOI18N
   }

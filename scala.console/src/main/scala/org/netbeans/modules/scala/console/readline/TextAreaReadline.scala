@@ -24,7 +24,7 @@ import scala.collection.mutable.ArrayBuffer
  * 
  * @author Caoyuan Deng
  */
-class TextAreaReadline(area:JTextComponent,message:String,pipedIn:PipedInputStream) extends OutputStream with KeyListener {
+class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInputStream) extends OutputStream with KeyListener {
 
   var startPos:Int = 0
   var currentLine:String = _
