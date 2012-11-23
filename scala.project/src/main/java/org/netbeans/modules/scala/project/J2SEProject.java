@@ -42,10 +42,8 @@ package org.netbeans.modules.scala.project;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
@@ -84,11 +82,9 @@ import org.netbeans.spi.project.AuxiliaryConfiguration;
 import org.netbeans.spi.project.SubprojectProvider;
 import org.netbeans.spi.project.ant.AntArtifactProvider;
 import org.netbeans.spi.project.ant.AntBuildExtenderFactory;
-import org.netbeans.spi.project.support.LookupProviderSupport;
 import org.netbeans.spi.project.ant.AntBuildExtenderImplementation;
-import org.netbeans.spi.project.support.ant.AntProjectEvent;
+import org.netbeans.spi.project.support.LookupProviderSupport;
 import org.netbeans.spi.project.support.ant.AntProjectHelper;
-import org.netbeans.spi.project.support.ant.AntProjectListener;
 import org.netbeans.spi.project.support.ant.EditableProperties;
 import org.netbeans.spi.project.support.ant.FilterPropertyProvider;
 import org.netbeans.spi.project.support.ant.GeneratedFilesHelper;
@@ -117,7 +113,6 @@ import org.openide.util.NbBundle;
 import org.openide.util.lookup.Lookups;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Text;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -125,7 +120,7 @@ import org.w3c.dom.NodeList;
  * Represents one plain J2SE project.
  * @author Jesse Glick, et al.
  */
-public final class J2SEProject implements Project, AntProjectListener {
+public final class J2SEProject implements Project {
 
     private static final Icon J2SE_PROJECT_ICON = ImageUtilities.loadImageIcon("org/netbeans/modules/scala/project/ui/resources/scalaProject.png", true); // NOI18N
 
@@ -285,7 +280,7 @@ public final class J2SEProject implements Project, AntProjectListener {
             cpMod, ProjectProperties.JAVAC_CLASSPATH, null);
         final Lookup base = Lookups.fixed(new Object[]{
                     J2SEProject.this,
-                    new Info(),
+                    QuerySupport.createProjectInformation(updateHelper, this, J2SE_PROJECT_ICON),
                     aux,
                     helper.createAuxiliaryProperties(),
                     helper.createCacheDirectoryProvider(),
@@ -335,21 +330,6 @@ public final class J2SEProject implements Project, AntProjectListener {
 
     public ClassPathModifier getProjectClassPathModifier() {
         return this.cpMod;
-    }
-
-    @Override
-    public void configurationXmlChanged(AntProjectEvent ev) {
-        if (ev.getPath().equals(AntProjectHelper.PROJECT_XML_PATH)) {
-            // Could be various kinds of changes, but name & displayName might have changed.
-            Info info = (Info) ProjectUtils.getInformation(this);
-            info.firePropertyChange(ProjectInformation.PROP_NAME);
-            info.firePropertyChange(ProjectInformation.PROP_DISPLAY_NAME);
-        }
-    }
-
-    @Override
-    public void propertiesChanged(AntProjectEvent ev) {
-        // currently ignored (probably better to listen to evaluator() if you need to)
     }
 
     // Package private methods -------------------------------------------------
@@ -407,81 +387,6 @@ public final class J2SEProject implements Project, AntProjectListener {
                 return null;
             }
         });
-    }
-
-    // Private innerclasses ----------------------------------------------------
-    //when #110886 gets implemented, this class is obsolete
-    private final class Info implements ProjectInformation {
-
-        private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
-        private WeakReference<String> cachedName = null;
-
-        Info() {
-        }
-
-        void firePropertyChange(String prop) {
-            pcs.firePropertyChange(prop, null, null);
-            synchronized (pcs) {
-                cachedName = null;
-            }
-        }
-
-        @Override
-        public String getName() {
-            return PropertyUtils.getUsablePropertyName(getDisplayName());
-        }
-
-        @Override
-        public String getDisplayName() {
-            synchronized (pcs) {
-                if (cachedName != null) {
-                    String dn = cachedName.get();
-                    if (dn != null) {
-                        return dn;
-                    }
-                }
-            }
-            String dn = ProjectManager.mutex().readAccess(new Mutex.Action<String>() {
-
-                @Override
-                public String run() {
-                    Element data = updateHelper.getPrimaryConfigurationData(true);
-                    // XXX replace by XMLUtil when that has findElement, findText, etc.
-                    NodeList nl = data.getElementsByTagNameNS(J2SEProjectType.PROJECT_CONFIGURATION_NAMESPACE, "name"); // NOI18N
-                    if (nl.getLength() == 1) {
-                        nl = nl.item(0).getChildNodes();
-                        if (nl.getLength() == 1 && nl.item(0).getNodeType() == Node.TEXT_NODE) {
-                            return ((Text) nl.item(0)).getNodeValue();
-                        }
-                    }
-                    return "???"; // NOI18N
-                }
-            });
-            synchronized (pcs) {
-                cachedName = new WeakReference<String>(dn);
-            }
-            return dn;
-        }
-
-        @Override
-        public Icon getIcon() {
-            return J2SE_PROJECT_ICON;
-        }
-
-        @Override
-        public Project getProject() {
-            return J2SEProject.this;
-        }
-
-        @Override
-        public void addPropertyChangeListener(PropertyChangeListener listener) {
-            pcs.addPropertyChangeListener(listener);
-        }
-
-        @Override
-        public void removePropertyChangeListener(PropertyChangeListener listener) {
-            pcs.removePropertyChangeListener(listener);
-        }
     }
 
     private final class ProjectXmlSavedHookImpl extends ProjectXmlSavedHook {

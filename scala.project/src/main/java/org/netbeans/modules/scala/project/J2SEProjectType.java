@@ -70,7 +70,6 @@ public final class J2SEProjectType implements AntBasedProjectType {
     @Override
     public Project createProject(AntProjectHelper helper) throws IOException {
         J2SEProject j2SEProject = new J2SEProject(helper);
-        helper.addAntProjectListener(j2SEProject);
         return j2SEProject;
     }
 
