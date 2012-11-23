@@ -135,63 +135,59 @@ object ScalaExecution {
   def getScalaArgs(scalaHome:String, cmdName:String):Array[String] = {
     val argvList = new ArrayBuffer[String]();
     if (cmdName.equals("scala") || cmdName.equalsIgnoreCase("scala.bat") || cmdName.equalsIgnoreCase("scala.exe")) { // NOI18N
-      val javaHome = getJavaHome();
+      val javaHome = getJavaHome
 
-      argvList += (javaHome + File.separator + "bin" + File.separator + "java"); // NOI18N   
+      argvList += (javaHome + File.separator + "bin" + File.separator + "java") // NOI18N   
       // XXX Do I need java.exe on Windows?
 
       // Additional execution flags specified in the Scala startup script:
       argvList += "-Xverify:none" // NOI18N
       argvList += "-da" // NOI18N
             
-      val extraArgs = System.getenv("SCALA_EXTRA_VM_ARGS"); // NOI18N
+      val extraArgs = System.getenv("SCALA_EXTRA_VM_ARGS") // NOI18N
 
-      var javaMemory = "-Xmx512m"; // NOI18N
-      var javaStack = "-Xss1024k"; // NOI18N
+      var javaMemory = "-Xmx512m" // NOI18N
+      var javaStack = "-Xss1024k" // NOI18N
             
       if (extraArgs != null) {
         if (extraArgs.indexOf("-Xmx") != -1) { // NOI18N
-          javaMemory = null;
+          javaMemory = null
         }
         if (extraArgs.indexOf("-Xss") != -1) { // NOI18N
-          javaStack = null;
+          javaStack = null
         }
-        val scalaArgs = Utilities.parseParameters(extraArgs);
+        val scalaArgs = Utilities.parseParameters(extraArgs)
         argvList ++= scalaArgs
       }
             
       if (javaMemory != null) {
-        argvList += javaMemory;
+        argvList += javaMemory
       }
       if (javaStack != null) {
-        argvList += javaStack;
+        argvList += javaStack
       }
             
-      var scalaHomeDir:File = null;
-            
-      try {
-        scalaHomeDir = new File(scalaHome);
-        scalaHomeDir = scalaHomeDir.getCanonicalFile();
+      val scalaHomeDir = try {
+        new File(scalaHome).getCanonicalFile
       } catch  {
-        case ex:IOException => Exceptions.printStackTrace(ex)
+        case ex:IOException => Exceptions.printStackTrace(ex); null
       }
 
-      val scalaLib = new File(scalaHomeDir, "lib"); // NOI18N
+      val scalaLib = new File(scalaHomeDir, "lib") // NOI18N
 
       // BootClassPath
-      argvList += "-Xbootclasspath/a:" + scalaLib.getAbsolutePath() + File.separator + "scala-library.jar";            
+      argvList += "-Xbootclasspath/a:" + scalaLib.getAbsolutePath() + File.separator + "scala-library.jar"           
             
       // Classpath
-      argvList += "-classpath"; // NOI18N
+      argvList += "-classpath" // NOI18N
 
 
 //            argvList.add(computeScalaClassPath(
 //                    descriptor == null ? null : descriptor.getClassPath(), scalaLib));
             
-      argvList += computeScalaClassPath(null, scalaLib);
+      argvList += computeScalaClassPath(null, scalaLib)
             
-      argvList += "-Dscala.home=" + scalaHomeDir; // NOI18N
-            
+      argvList += "-Dscala.home=" + scalaHomeDir // NOI18N
             
       /** 
        * @Note:
@@ -199,17 +195,17 @@ object ScalaExecution {
        * Also, from Scala-2.7.1, jline is used for scala shell, we should 
        * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
        */
-      argvList += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal"; //NOI18N
+      argvList += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal" //NOI18N
             
       // TODO - turn off verifier?
 
       // Main class
-      argvList += SCALA_MAIN_CLASS; // NOI18N
+      argvList += SCALA_MAIN_CLASS // NOI18N
 
       // Application arguments follow
     }
         
-    return argvList.toArray;
+    argvList.toArray
   }
 
 //    @Override
@@ -222,66 +218,56 @@ object ScalaExecution {
 //        return argvList;
 //    }
     
-  def getJavaHome():String = {
-    var javaHome = System.getProperty("scala.java.home"); // NOI18N
-
-    if (javaHome == null) {
-      javaHome = System.getProperty("java.home"); // NOI18N
+  def getJavaHome(): String = {
+    System.getProperty("scala.java.home") match {  // NOI18N
+      case null => System.getProperty("java.home") // NOI18N
+      case x => x
     }
-        
-    return javaHome;
   }
 
-  def getScalaHome():String = {
+  def getScalaHome(): String = {
     //String scalaHome = System.getProperty("scala.home"); // NOI18N
-    var scalaHome:String = null;
-    if (scalaHome == null) {
-      scalaHome = System.getenv("SCALA_HOME"); // NOI18N
-      if (scalaHome != null) {
-        System.setProperty("scala.home", scalaHome);
-      }
-    }
-    if (scalaHome != null) {
-      return scalaHome;
-    } else {
-      var d = new NotifyDescriptor.Message(
-        "SCALA_HOME environment variable may not be set, or is invalid.\n" +
-        "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE);
-      DialogDisplayer.getDefault().notify(d);
-      return null;
+    System.getenv("SCALA_HOME") match { // NOI18N
+      case null => 
+        val d = new NotifyDescriptor.Message(
+          "SCALA_HOME environment variable may not be set, or is invalid.\n" +
+          "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
+        DialogDisplayer.getDefault().notify(d)
+        null
+      case scalaHome => System.setProperty("scala.home", scalaHome); scalaHome
     }
   }
     
-  def getScala():File = {
+  def getScala(): File = {
     var scalaFo:FileObject = null;
     val scalaHome = getScalaHome();
     if (scalaHome != null) {
-      var scalaHomeDir = new File(getScalaHome());
-      if (scalaHomeDir.exists() && scalaHomeDir.isDirectory()) {
+      val scalaHomeDir = new File(getScalaHome())
+      if (scalaHomeDir.exists && scalaHomeDir.isDirectory) {
         try {
-          val scalaHomeFo = FileUtil.createData(scalaHomeDir);
-          val bin = scalaHomeFo.getFileObject("bin");             //NOI18N
-          if (Utilities.isWindows()) {
-            scalaFo = bin.getFileObject("scala", "exe");
+          val scalaHomeFo = FileUtil.createData(scalaHomeDir)
+          val bin = scalaHomeFo.getFileObject("bin")             //NOI18N
+          if (Utilities.isWindows) {
+            scalaFo = bin.getFileObject("scala", "exe")
             if (scalaFo == null) {
-              scalaFo = bin.getFileObject("scala", "bat");
+              scalaFo = bin.getFileObject("scala", "bat")
             }
           } else {
-            scalaFo = bin.getFileObject("scala", null);    //NOI18N
+            scalaFo = bin.getFileObject("scala", null)    //NOI18N
           }
         } catch  {
-          case ex : IOException => Exceptions.printStackTrace(ex);
+          case ex : IOException => Exceptions.printStackTrace(ex)
         }
       }
     }
     if (scalaFo != null) {
-      return FileUtil.toFile(scalaFo);
+      FileUtil.toFile(scalaFo)
     } else {
       val d = new NotifyDescriptor.Message(
         "Can not found ${SCALA_HOME}/bin/scala, the environment variable SCALA_HOME may be invalid.\n" +
-        "Please set proper SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE);
-      DialogDisplayer.getDefault().notify(d);
-      return null;
+        "Please set proper SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
+      DialogDisplayer.getDefault().notify(d)
+      null
     }
   }
     
@@ -309,21 +295,19 @@ object ScalaExecution {
 
     // Add in user-specified jars passed via SCALA_EXTRA_CLASSPATH
 
-    val p = new StringBuilder();
+    val p = new StringBuilder()
     if (extraCp != null && File.pathSeparatorChar != ':') {
       // Ugly hack - getClassPath has mixed together path separator chars
       // (:) and filesystem separators, e.g. I might have C:\foo:D:\bar but
       // obviously only the path separator after "foo" should be changed to ;
-      var pathOffset = 0;
-      extraCp.foreach {
-        (c) => {
-          if (c == ':' && pathOffset != 1) {
-            p += File.pathSeparatorChar
-            pathOffset = 0           
-          } else {
-            pathOffset += 1
-            p += c
-          }
+      var pathOffset = 0
+      extraCp foreach {c => 
+        if (c == ':' && pathOffset != 1) {
+          p += File.pathSeparatorChar
+          pathOffset = 0           
+        } else {
+          pathOffset += 1
+          p += c
         }
       }
       
@@ -334,8 +318,8 @@ object ScalaExecution {
     }
 
     if (!p.isEmpty) {
-      if (cp.length() > 0) {
-        cp.append(File.pathSeparatorChar);
+      if (cp.length > 0) {
+        cp.append(File.pathSeparatorChar)
       }
       //if (File.pathSeparatorChar != ':' && extraCp.indexOf(File.pathSeparatorChar) == -1 &&
       //        extraCp.indexOf(':') != -1) {
@@ -343,7 +327,7 @@ object ScalaExecution {
       //}
       cp.append(p);
     }
-    return if (Utilities.isWindows())  "\"" + cp.toString() + "\""  else cp.toString(); // NOI18N
+    if (Utilities.isWindows)  "\"" + cp.toString + "\""  else cp.toString // NOI18N
   }
      
 }

@@ -410,58 +410,72 @@ final class ScalaConsoleTopComponent extends TopComponent {
             this.err = err;
         }
                 
+        @Override
         public void closeInputOutput() {
             closed = true;
         }
 
+        @Override
         public Reader flushReader() {
             return input;
         }
 
+        @Override
         public OutputWriter getErr() {
             return new CustomOutputWriter(err);
         }
 
+        @Override
         public Reader getIn() {
             return input;
         }
 
+        @Override
         public OutputWriter getOut() {
             return new CustomOutputWriter(out);
         }
 
+        @Override
         public boolean isClosed() {
             return closed;
         }
 
+        @Override
         public boolean isErrSeparated() {
             return false;
         }
 
+        @Override
         public boolean isFocusTaken() {
             return false;
         }
 
+        @Override
         public void select() {
             
         }
 
+        @Override
         public void setErrSeparated(boolean value) {
             
         }
 
+        @Override
         public void setErrVisible(boolean value) {
             
         }
 
+        @Override
         public void setFocusTaken(boolean value) {
             
         }
 
+        @Override
         public void setInputVisible(boolean value) {
             
         }
 
+        @Override
         public void setOutputVisible(boolean value) {
             
         }

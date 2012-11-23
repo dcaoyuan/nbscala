@@ -45,43 +45,40 @@ import scala.collection.mutable.ArrayBuffer
 
 object ConsoleLineReader {
 
-   var currentCompletor:Completor = null
-   var history:History = null;
-   var created:Boolean = false;
+  var _currentCompletor: Completor = null
+  var _history:History = null
+  var created:Boolean = false
     
-    def createConsoleLineReader() {
-        if (! created) {
-            history = new History();
-            currentCompletor = null;
-            initReadline();
-        }
+  def createConsoleLineReader() {
+    if (!created) {
+      _history = new History()
+      _currentCompletor = null
+      initReadline
     }
+  }
     
-    protected def initReadline() {
-        if (currentCompletor == null)
-            currentCompletor = new DefaultFileNameCompletor();
-    }
+  protected def initReadline() {
+    if (_currentCompletor == null)
+      _currentCompletor = new DefaultFileNameCompletor()
+  }
     
-    def getHistory():History = {
-        return history;
-    }
+  def history = _history
     
-    def setCompletor(completor:Completor) = {
-        currentCompletor = completor;
-    }
+  def completor = _currentCompletor
+  def completor_=(completor: Completor) {
+    _currentCompletor = completor
+  }
     
-    def getCompletor():Completor = {
-        return currentCompletor;
-    }
     
-    // Fix FileNameCompletor to work mid-line
-    class DefaultFileNameCompletor extends FileNameCompletor {
-        override def complete(inBuffer:String, cursor:Int, candidates:ArrayBuffer[String]):Int = {
-            var buffer = inBuffer.substring(0, cursor);
-            val index = buffer.lastIndexOf(" ");
-            if (index != -1) buffer = buffer.substring(index + 1);
-            return index + 1 + super.complete(buffer, cursor, candidates);
-        }
+  // Fix FileNameCompletor to work mid-line
+  class DefaultFileNameCompletor extends FileNameCompletor {
+    override 
+    def complete(inBuffer: String, cursor: Int, candidates: ArrayBuffer[String]): Int = {
+      var buffer = inBuffer.substring(0, cursor);
+      val index = buffer.lastIndexOf(" ");
+      if (index != -1) buffer = buffer.substring(index + 1);
+      index + 1 + super.complete(buffer, cursor, candidates);
     }
+  }
     
 }

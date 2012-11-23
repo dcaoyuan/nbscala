@@ -6,7 +6,8 @@
  */
 package org.netbeans.modules.scala.console.readline
 
-// import scala.collection.JavaConversions._
+import java.io.File
+import scala.collection.mutable.ArrayBuffer
 
 /**
  *  A file name completor takes the buffer and issues a list of
@@ -36,48 +37,47 @@ package org.netbeans.modules.scala.console.readline
  *  @author  <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
  *  @author oliver.guenther at gg-net dot de
  */
-import java.io.File
-import scala.collection.mutable.ArrayBuffer
 
 class FileNameCompletor extends Completor {
   
-  var pwd:File = null;
+  private var _pwd: File = null
 
-  def setPwd(pwd:File) {
-    this.pwd = pwd;
+  def pwd_=(pwd: File) {
+    this._pwd = pwd
   }
 
-  override def complete(buf:String, cursor:Int, candidates:ArrayBuffer[String]):Int = {
-    val buffer:String = if(buf == null) "" else buf;  
+  override 
+  def complete(buf: String, cursor: Int, candidates: ArrayBuffer[String]): Int = {
+    val buffer = if (buf == null) "" else buf
 
-    var translated:String = buffer;
-
-    var dir:File = null;
-    if (pwd != null && pwd.exists()) {
-      dir = pwd;
+    val (translated, dir) = if (_pwd != null && _pwd.exists) {
+      (buffer, _pwd)
     } else {
       // special character: ~ maps to the user's home directory
-      if (translated.startsWith("~" + File.separator)) {
-        translated = System.getProperty("user.home") + translated.substring(1);
-      } else if (translated.startsWith("~")) {
-        translated = new File(System.getProperty("user.home")).getParentFile().getAbsolutePath();
-      } else if (!(translated.startsWith(File.separator))) {
-        translated = new File("").getAbsolutePath() + File.separator + translated;
-      }
-
-      val f = new File(translated);
-
-      if (translated.endsWith(File.separator)) {
-        dir = f;
+      val translated = if (buffer.startsWith("~" + File.separator)) {
+        System.getProperty("user.home") + buffer.substring(1)
+      } else if (buffer.startsWith("~")) {
+        new File(System.getProperty("user.home")).getParentFile.getAbsolutePath
+      } else if (!buffer.startsWith(File.separator)) {
+        new File("").getAbsolutePath + File.separator + buffer
       } else {
-        dir = f.getParentFile();
+        buffer
       }
+
+      val f = new File(translated)
+      val dir = if (translated.endsWith(File.separator)) {
+        f
+      } else {
+        f.getParentFile
+      }
+      
+      (translated, dir)
     }
 
-    var entries:Array[File] = if(dir == null) Array() else dir.listFiles
+    val entries = if (dir == null) Array[File]() else dir.listFiles
     
     try {
-      return matchFiles(buffer, translated, entries, candidates);
+      return matchFiles(buffer, translated, entries, candidates)
     } finally {
       candidates.sorted
     }
@@ -96,28 +96,26 @@ class FileNameCompletor extends Completor {
    *
    *  @return  the offset of the match
    */
-  def matchFiles(buffer:String, translated:String, entries:Array[File], candidates:ArrayBuffer[String]): Int = {
+  def matchFiles(buffer: String, translated: String, entries: Array[File], candidates: ArrayBuffer[String]): Int = {
     if (entries == null) {
-      return -1;
+      return -1
     }
 
     // first pass: just count the matches
-    val matches = entries.count(_.getAbsolutePath.startsWith(translated))
+    val matches = entries count (_.getAbsolutePath.startsWith(translated))
 
     // green - executable
     // blue - directory
     // red - compressed
     // cyan - symlink
-    entries.foreach{
-      (entry) => {
-        if (entry.getAbsolutePath().startsWith(translated)) {                
-          val name = entry.getName() + (if ((matches == 1) && entry.isDirectory()) {File.separator } else { " " });
-          // if (entries [i].isDirectory ()) { name = new ANSIBuffer ().blue (name).toString (); }
-          candidates += name;
-        }
+    entries foreach {entry => 
+      if (entry.getAbsolutePath.startsWith(translated)) {                
+        val name = entry.getName + (if (matches == 1 && entry.isDirectory) File.separator else " ")
+        // if (entries [i].isDirectory ()) { name = new ANSIBuffer ().blue (name).toString (); }
+        candidates += name
       }
     }      
-    buffer.lastIndexOf(File.separator) + File.separator.length();
+    buffer.lastIndexOf(File.separator) + File.separator.length
   }
 
   
