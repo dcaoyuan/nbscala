@@ -34,8 +34,13 @@ Make sure you don't have an old version installed. (Check your netbeans installa
 ## Build Instructions
 Cause of the smale group of people involved in the project we only supply updates for the latest netbeans version (7.2 at the moment).
 
-### Requirement:
-* Java 1.6 (Java 1.7 is not supported yet)
+### Requirement - Run:
+* Java 1.6+
+* NetBeans 7.2
+
+### Requirement - Build:
+* Java 1.7 (for master branch)
+* Java 1.6 (for 2.9.x branch)
 * Maven 2.x/3.x 
 * NetBeans 7.2
 
