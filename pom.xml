@@ -137,9 +137,9 @@
                 
                 <!-- Scala plugin for compiling and running Scala -->
                 <plugin>                    
-				    <groupId>net.alchim31.maven</groupId>
-				    <artifactId>scala-maven-plugin</artifactId>
-				    <version>3.1.0</version>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <version>3.1.0</version>
                     <executions>  
                         <execution>
                             <phase>process-resources</phase> <!-- to support mix java/scala -->
