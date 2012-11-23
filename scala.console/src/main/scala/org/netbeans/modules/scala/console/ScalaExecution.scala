@@ -176,12 +176,12 @@ object ScalaExecution {
       val scalaLib = new File(scalaHomeDir, "lib") // NOI18N
 
       // BootClassPath
-      argvList += "-Xbootclasspath/a:" + buildClassPath(scalaLib, Array(
+      argvList += "-Xbootclasspath/a:" + makeClassPath(Array(
           "scala-library.jar",
           "scala-reflect.jar",
           "scala-compiler.jar",
           "jline.jar"
-        ))   
+        ), scalaLib)   
             
       // Classpath
       argvList += "-classpath" // NOI18N
@@ -223,12 +223,12 @@ object ScalaExecution {
 //        return argvList;
 //    }
     
-  private def buildClassPath(dir: File, jarNames: Array[String]) = {
+  private def makeClassPath(jarNames: Array[String], dir: File) = {
     val dirPath = dir.getAbsolutePath 
     jarNames map (dirPath + File.separator + _) filter {fileName => 
       try {
         val file = new File(fileName)
-        file != null && file.exists
+        file != null && file.exists && file.canRead
       } catch {
         case ex: Throwable => false
       }

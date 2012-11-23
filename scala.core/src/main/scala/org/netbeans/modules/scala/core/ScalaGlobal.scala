@@ -228,12 +228,12 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     compileSource(srcFile, constructors.phaseName)
   }
 
-  // * @Note the following setting exlcudes 'stopPhase' itself
-  def compileSource(source: ScalaSourceFile, stopPhaseName: String): ScalaRootScope = synchronized {
+  // * @Note the following setting excludes 'stopPhase' itself
+  def compileSource(source: ScalaSourceFile, stopPhase: String): ScalaRootScope = synchronized {
     resetReporter
     
     settings.stop.value = Nil
-    settings.stop.tryToSetColon(List(stopPhaseName))
+    settings.stop.tryToSetColon(List(stopPhase))
     qualToRecoveredType.clear
 
     val run = new this.Run
