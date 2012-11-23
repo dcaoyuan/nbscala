@@ -50,6 +50,7 @@ import java.util.logging.Logger;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeListener;
 import org.netbeans.api.java.classpath.ClassPath;
@@ -234,7 +235,7 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
   ) extends MoveClassPanel(parent, startPackage, headLine, if (targetFolder != null) targetFolder else javaObjects.iterator.next) {
     setCombosEnabled(!isDisable)
     val nodelist = new JList(getNodes)
-    nodelist.setCellRenderer(new NodeRenderer)
+    nodelist.setCellRenderer((new NodeRenderer).asInstanceOf[ListCellRenderer[Node]])
     nodelist.setVisibleRowCount(5)
     val pane = new JScrollPane(nodelist)
     bottomPanel.setBorder(new EmptyBorder(8,0,0,0))

@@ -34,7 +34,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
   val outputStyle = new SimpleAttributeSet()
   val resultStyle = new SimpleAttributeSet()
 
-  val completeCombo = new JComboBox()
+  val completeCombo = new JComboBox[String]()
   var start: Int = _
   var end: Int = _
     

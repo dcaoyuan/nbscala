@@ -42,9 +42,7 @@ package org.netbeans.modules.scala.refactoring.ui
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.ItemEvent;
-import java.io.IOException;
 import java.text.MessageFormat;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JList;
@@ -55,11 +53,7 @@ import javax.swing.SwingConstants;
 import javax.swing.plaf.UIResource;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeListener;
-import org.netbeans.api.java.source.CompilationInfo;
-import org.netbeans.api.java.source.TreePathHandle;
 import org.netbeans.api.project.FileOwnerQuery
-import org.netbeans.api.project.Project
-import org.netbeans.api.project.ProjectInformation
 import org.netbeans.api.project.ProjectUtils
 import org.netbeans.modules.csl.api.{ElementKind, Modifier}
 import org.netbeans.modules.parsing.spi.ParseException
@@ -73,9 +67,7 @@ import org.openide.util.NbBundle
 
 import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ast.ScalaItems
-import org.netbeans.modules.scala.core.element.ScalaElements
 import org.netbeans.modules.scala.refactoring.RefactoringModule
-import org.netbeans.modules.scala.refactoring.RetoucheUtils
 import scala.reflect.internal.Flags
 
 
@@ -110,7 +102,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
   private var m_overriders: javax.swing.JCheckBox = _
   private var m_usages: javax.swing.JCheckBox = _
   private var methodsPanel: javax.swing.JPanel = _
-  private var scope: javax.swing.JComboBox = _
+  private var scope: javax.swing.JComboBox[JLabel] = _
   private var scopeLabel: javax.swing.JLabel = _
   private var scopePanel: javax.swing.JPanel = _
   private var searchInComments: javax.swing.JCheckBox = _
@@ -226,7 +218,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
                   }
                   
                   if (currentProject != null) {
-                    scope.setModel(new DefaultComboBoxModel(Array(allProjects, currentProject).asInstanceOf[Array[Object]]))
+                    scope.setModel(new DefaultComboBoxModel(Array(allProjects, currentProject).asInstanceOf[Array[JLabel]]))
                     val defaultItem = RefactoringModule.getOption("whereUsed.scope", 0).toInt // NOI18N
                     scope.setSelectedIndex(defaultItem)
                     scope.setRenderer(new JLabelRenderer)
@@ -243,10 +235,10 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
     initialized = true
   }
 
-  private class JLabelRenderer extends JLabel with ListCellRenderer with UIResource {
+  private class JLabelRenderer extends JLabel with ListCellRenderer[JLabel] with UIResource {
     setOpaque(true)
-    def getListCellRendererComponent(list: JList,
-                                     value: Object,
+    def getListCellRendererComponent(list: JList[_ <: JLabel],
+                                     value: JLabel,
                                      index: Int,
                                      isSelected: Boolean,
                                      cellHasFocus: Boolean): Component = {
@@ -255,8 +247,8 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
       setName("ComboBox.listRenderer") // NOI18N
             
       if ( value != null ) {
-        setText(value.asInstanceOf[JLabel].getText)
-        setIcon(value.asInstanceOf[JLabel].getIcon)
+        setText(value.getText)
+        setIcon(value.getIcon)
       }
             
       if ( isSelected ) {

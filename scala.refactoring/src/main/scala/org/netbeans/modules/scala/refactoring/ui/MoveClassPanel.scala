@@ -47,6 +47,7 @@ import java.awt.event.ActionListener;
 import java.text.Collator;
 import java.util.Arrays;
 import java.util.Comparator;
+import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -87,19 +88,19 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
   private var labelLocation: javax.swing.JLabel = _
   private var labelPackage: javax.swing.JLabel = _
   private var labelProject: javax.swing.JLabel = _
-  private var packageComboBox: javax.swing.JComboBox/*[AnyRef]*/ = _
-  private var projectsComboBox: javax.swing.JComboBox/*[Project]*/ = _
-  private var rootComboBox: javax.swing.JComboBox/*[SourceGroup]*/ = _
+  private var packageComboBox: javax.swing.JComboBox[AnyRef] = _
+  private var projectsComboBox: javax.swing.JComboBox[Project] = _
+  private var rootComboBox: javax.swing.JComboBox[SourceGroup] = _
   private var updateReferencesCheckBox: javax.swing.JCheckBox = _
   // End of variables declaration//GEN-END:variables
 
 
-
+  
   initComponents
   setCombosEnabled(true)
   labelHeadLine.setText(headLine)
   rootComboBox.setRenderer(GROUP_CELL_RENDERER)
-  packageComboBox.setRenderer(PackageView.listRenderer)
+  packageComboBox.setRenderer(PackageView.listRenderer.asInstanceOf[ListCellRenderer[AnyRef]])
   projectsComboBox.setRenderer( PROJECT_CELL_RENDERER )
                 
   rootComboBox.addActionListener( this )
@@ -130,7 +131,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
                                    ProjectUtils.getInformation(p2).getDisplayName) > 0
     }
 
-    val projectsModel = new DefaultComboBoxModel(openProjects.asInstanceOf[Array[Object]])
+    val projectsModel = new DefaultComboBoxModel(openProjects)
     projectsComboBox.setModel( projectsModel );
     projectsComboBox.setSelectedItem( project );
         
@@ -310,7 +311,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
         
   private def updatePackages {
     val g = rootComboBox.getSelectedItem.asInstanceOf[SourceGroup]
-    packageComboBox.setModel(PackageView.createListView(g))
+    packageComboBox.setModel(PackageView.createListView(g).asInstanceOf[ComboBoxModel[AnyRef]])
   }
     
   def setCombosEnabled(enabled: Boolean) {
@@ -350,16 +351,17 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
     }
                 
     // Setup comboboxes
-    rootComboBox.setModel(new DefaultComboBoxModel(groups.asInstanceOf[Array[Object]]))
+    rootComboBox.setModel(new DefaultComboBoxModel(groups))
     rootComboBox.setSelectedIndex(preselectedItem)
   }
     
-  abstract class BaseCellRenderer[T] extends JLabel with ListCellRenderer/*[T]*/ with UIResource {
+  abstract class BaseCellRenderer[T] extends JLabel with ListCellRenderer[T] with UIResource {
         
     setOpaque(true)
         
     // #89393: GTK needs name to render cell renderer "natively"
-    override def getName: String = {
+    override 
+    def getName: String = {
       val name = super.getName
       if (name == null) "ComboBox.renderer" else name  // NOI18N
     }
@@ -368,8 +370,8 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
   /** Groups combo renderer, used also in CopyClassPanel */
   class GroupCellRenderer extends BaseCellRenderer[SourceGroup] {
         
-    def getListCellRendererComponent(list: JList/*[_ <: SourceGroup]*/,
-                                     value: AnyRef /*SourceGroup*/,
+    def getListCellRendererComponent(list: JList[_ <: SourceGroup],
+                                     value: SourceGroup,
                                      index: Int,
                                      isSelected: Boolean,
                                      cellHasFocus: Boolean): Component = {
@@ -396,8 +398,8 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
   /** Projects combo renderer, used also in CopyClassPanel */
   class ProjectCellRenderer extends BaseCellRenderer[Project] {
         
-    def getListCellRendererComponent(list: JList/*[_ <: Project]*/,
-                                     value: AnyRef /*Project*/,
+    def getListCellRendererComponent(list: JList[_ <: Project],
+                                     value: Project,
                                      index: Int,
                                      isSelected: Boolean,
                                      cellHasFocus: Boolean): Component = {

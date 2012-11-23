@@ -71,278 +71,277 @@ import sun.swing.DefaultLookup;
  * @author Hans Muller
  */
 class DefaultListCellRenderer[T] extends JLabel
-    with ListCellRenderer/*[T]*/ with Serializable
+                                    with ListCellRenderer[T] with Serializable
 {
-    import DefaultListCellRenderer._
+  import DefaultListCellRenderer._
 
-    setOpaque(true);
-    setBorder(getNoFocusBorder());
-    setName("List.cellRenderer");
+  setOpaque(true);
+  setBorder(getNoFocusBorder());
+  setName("List.cellRenderer");
 
-    private def getNoFocusBorder(): Border = {
-        val border = DefaultLookup.getBorder(this, ui, "List.cellNoFocusBorder");
-        if (System.getSecurityManager() != null) {
-            if (border != null) return border;
-            return SAFE_NO_FOCUS_BORDER;
-        } else {
-            if (border != null &&
-                    (noFocusBorder == null ||
-                    noFocusBorder == DEFAULT_NO_FOCUS_BORDER)) {
-                return border;
-            }
-            return noFocusBorder;
-        }
+  private def getNoFocusBorder(): Border = {
+    val border = DefaultLookup.getBorder(this, ui, "List.cellNoFocusBorder");
+    if (System.getSecurityManager() != null) {
+      if (border != null) return border;
+      return SAFE_NO_FOCUS_BORDER;
+    } else {
+      if (border != null &&
+          (noFocusBorder == null ||
+           noFocusBorder == DEFAULT_NO_FOCUS_BORDER)) {
+        return border;
+      }
+      return noFocusBorder;
+    }
+  }
+
+  def getListCellRendererComponent(list: JList[_ <: T],
+                                   value: T,
+                                   index: Int,
+                                   _isSelected: Boolean,
+                                   cellHasFocus: Boolean): Component = {
+    
+    setComponentOrientation(list.getComponentOrientation)
+
+    var isSelected = _isSelected
+    var bg: Color = null;
+    var fg: Color = null;
+
+    val dropLocation = list.getDropLocation
+    if (dropLocation != null
+        && !dropLocation.isInsert()
+        && dropLocation.getIndex() == index) {
+
+      bg = DefaultLookup.getColor(this, ui, "List.dropCellBackground");
+      fg = DefaultLookup.getColor(this, ui, "List.dropCellForeground");
+
+      isSelected = true;
     }
 
-   def getListCellRendererComponent(
-        list: JList/*[_ <: T]*/,
-        value: AnyRef /*T*/,
-        index: Int,
-        _isSelected: Boolean,
-        cellHasFocus: Boolean): Component =
-    {
-        setComponentOrientation(list.getComponentOrientation());
-
-		var isSelected = _isSelected
-        var bg: Color = null;
-        var fg: Color = null;
-
-        val dropLocation = list.getDropLocation();
-        if (dropLocation != null
-                && !dropLocation.isInsert()
-                && dropLocation.getIndex() == index) {
-
-            bg = DefaultLookup.getColor(this, ui, "List.dropCellBackground");
-            fg = DefaultLookup.getColor(this, ui, "List.dropCellForeground");
-
-            isSelected = true;
-        }
-
-        if (isSelected) {
-            setBackground(if (bg == null) list.getSelectionBackground() else bg);
-            setForeground(if (fg == null) list.getSelectionForeground() else fg);
-        }
-        else {
-            setBackground(list.getBackground());
-            setForeground(list.getForeground());
-        }
-
-        if (value.isInstanceOf[Icon]) {
-            setIcon(value.asInstanceOf[Icon]);
-            setText("");
-        }
-        else {
-            setIcon(null);
-            setText(if (value == null) "" else value.toString());
-        }
-
-        setEnabled(list.isEnabled());
-        setFont(list.getFont());
-
-        var border: Border = null;
-        if (cellHasFocus) {
-            if (isSelected) {
-                border = DefaultLookup.getBorder(this, ui, "List.focusSelectedCellHighlightBorder");
-            }
-            if (border == null) {
-                border = DefaultLookup.getBorder(this, ui, "List.focusCellHighlightBorder");
-            }
-        } else {
-            border = getNoFocusBorder();
-        }
-        setBorder(border);
-
-        return this;
+    if (isSelected) {
+      setBackground(if (bg == null) list.getSelectionBackground() else bg);
+      setForeground(if (fg == null) list.getSelectionForeground() else fg);
+    }
+    else {
+      setBackground(list.getBackground());
+      setForeground(list.getForeground());
     }
 
-    /**
-     * Overridden for performance reasons.
-     * See the <a href="#override">Implementation Note</a>
-     * for more information.
-     *
-     * @since 1.5
-     * @return <code>true</code> if the background is completely opaque
-     *         and differs from the JList's background;
-     *         <code>false</code> otherwise
-     */
-    override
-    def isOpaque(): Boolean = {
-        val back = getBackground();
-        var p = getParent();
-        if (p != null) {
-            p = p.getParent();
-        }
-        // p should now be the JList.
-        val colorMatch = (back != null) && (p != null) &&
-            back.equals(p.getBackground()) &&
-                        p.isOpaque();
-        return !colorMatch && super.isOpaque();
+    if (value.isInstanceOf[Icon]) {
+      setIcon(value.asInstanceOf[Icon]);
+      setText("");
+    }
+    else {
+      setIcon(null);
+      setText(if (value == null) "" else value.toString());
     }
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def validate() {}
+    setEnabled(list.isEnabled());
+    setFont(list.getFont());
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    *
-    * @since 1.5
-    */
-    override
-    def invalidate() {}
-
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    *
-    * @since 1.5
-    */
-    override
-    def repaint() {}
-
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def revalidate() {}
-
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def repaint(tm: Long, x: Int, y: Int, width: Int, height: Int) {}
-
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def repaint(r: Rectangle) {}
-
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    protected def firePropertyChange(propertyName: String, oldValue: Object, newValue: Object) {
-        // Strings get interned...
-        if (propertyName == "text"
-                || ((propertyName == "font" || propertyName == "foreground")
-                    && oldValue != newValue
-                    && getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) != null)) {
-
-            super.firePropertyChange(propertyName, oldValue, newValue);
-        }
+    var border: Border = null;
+    if (cellHasFocus) {
+      if (isSelected) {
+        border = DefaultLookup.getBorder(this, ui, "List.focusSelectedCellHighlightBorder");
+      }
+      if (border == null) {
+        border = DefaultLookup.getBorder(this, ui, "List.focusCellHighlightBorder");
+      }
+    } else {
+      border = getNoFocusBorder();
     }
+    setBorder(border);
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def firePropertyChange(propertyName: String, oldValue: Byte, newValue: Byte) {}
+    return this;
+  }
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def firePropertyChange(propertyName: String, oldValue: Char, newValue: Char) {}
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   *
+   * @since 1.5
+   * @return <code>true</code> if the background is completely opaque
+   *         and differs from the JList's background;
+   *         <code>false</code> otherwise
+   */
+  override
+  def isOpaque(): Boolean = {
+    val back = getBackground();
+    var p = getParent();
+    if (p != null) {
+      p = p.getParent();
+    }
+    // p should now be the JList.
+    val colorMatch = (back != null) && (p != null) &&
+    back.equals(p.getBackground()) &&
+    p.isOpaque();
+    return !colorMatch && super.isOpaque();
+  }
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def firePropertyChange(propertyName: String, oldValue: Short, newValue: Short) {}
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def validate() {}
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def firePropertyChange(propertyName: String, oldValue: Int, newValue: Int) {}
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   *
+   * @since 1.5
+   */
+  override
+  def invalidate() {}
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def firePropertyChange(propertyName: String, oldValue: Long, newValue: Long) {}
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   *
+   * @since 1.5
+   */
+  override
+  def repaint() {}
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def firePropertyChange(propertyName: String, oldValue: Float, newValue: Float) {}
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def revalidate() {}
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def firePropertyChange(propertyName: String, oldValue: Double, newValue: Double) {}
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def repaint(tm: Long, x: Int, y: Int, width: Int, height: Int) {}
 
-   /**
-    * Overridden for performance reasons.
-    * See the <a href="#override">Implementation Note</a>
-    * for more information.
-    */
-    override
-    def firePropertyChange(propertyName: String, oldValue: Boolean, newValue: Boolean) {}
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def repaint(r: Rectangle) {}
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  protected def firePropertyChange(propertyName: String, oldValue: Object, newValue: Object) {
+    // Strings get interned...
+    if (propertyName == "text"
+        || ((propertyName == "font" || propertyName == "foreground")
+            && oldValue != newValue
+            && getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) != null)) {
+
+      super.firePropertyChange(propertyName, oldValue, newValue);
+    }
+  }
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def firePropertyChange(propertyName: String, oldValue: Byte, newValue: Byte) {}
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def firePropertyChange(propertyName: String, oldValue: Char, newValue: Char) {}
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def firePropertyChange(propertyName: String, oldValue: Short, newValue: Short) {}
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def firePropertyChange(propertyName: String, oldValue: Int, newValue: Int) {}
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def firePropertyChange(propertyName: String, oldValue: Long, newValue: Long) {}
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def firePropertyChange(propertyName: String, oldValue: Float, newValue: Float) {}
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def firePropertyChange(propertyName: String, oldValue: Double, newValue: Double) {}
+
+  /**
+   * Overridden for performance reasons.
+   * See the <a href="#override">Implementation Note</a>
+   * for more information.
+   */
+  override
+  def firePropertyChange(propertyName: String, oldValue: Boolean, newValue: Boolean) {}
 
 }
 
 object DefaultListCellRenderer {
-   /**
-    * An empty <code>Border</code>. This field might not be used. To change the
-    * <code>Border</code> used by this renderer override the
-    * <code>getListCellRendererComponent</code> method and set the border
-    * of the returned component directly.
-    */
-    private val SAFE_NO_FOCUS_BORDER: Border = new EmptyBorder(1, 1, 1, 1);
-    private val DEFAULT_NO_FOCUS_BORDER: Border = new EmptyBorder(1, 1, 1, 1);
-    protected val noFocusBorder: Border = DEFAULT_NO_FOCUS_BORDER;
+  /**
+   * An empty <code>Border</code>. This field might not be used. To change the
+   * <code>Border</code> used by this renderer override the
+   * <code>getListCellRendererComponent</code> method and set the border
+   * of the returned component directly.
+   */
+  private val SAFE_NO_FOCUS_BORDER: Border = new EmptyBorder(1, 1, 1, 1);
+  private val DEFAULT_NO_FOCUS_BORDER: Border = new EmptyBorder(1, 1, 1, 1);
+  protected val noFocusBorder: Border = DEFAULT_NO_FOCUS_BORDER;
 
-    /**
-     * A subclass of DefaultListCellRenderer that implements UIResource.
-     * DefaultListCellRenderer doesn't implement UIResource
-     * directly so that applications can safely override the
-     * cellRenderer property with DefaultListCellRenderer subclasses.
-     * <p>
-     * <strong>Warning:</strong>
-     * Serialized objects of this class will not be compatible with
-     * future Swing releases. The current serialization support is
-     * appropriate for short term storage or RMI between applications running
-     * the same version of Swing.  As of 1.4, support for long term storage
-     * of all JavaBeans<sup><font size="-2">TM</font></sup>
-     * has been added to the <code>java.beans</code> package.
-     * Please see {@link java.beans.XMLEncoder}.
-     */
-    class UIResource extends DefaultListCellRenderer
-        with javax.swing.plaf.UIResource
-    {
-    }
+  /**
+   * A subclass of DefaultListCellRenderer that implements UIResource.
+   * DefaultListCellRenderer doesn't implement UIResource
+   * directly so that applications can safely override the
+   * cellRenderer property with DefaultListCellRenderer subclasses.
+   * <p>
+   * <strong>Warning:</strong>
+   * Serialized objects of this class will not be compatible with
+   * future Swing releases. The current serialization support is
+   * appropriate for short term storage or RMI between applications running
+   * the same version of Swing.  As of 1.4, support for long term storage
+   * of all JavaBeans<sup><font size="-2">TM</font></sup>
+   * has been added to the <code>java.beans</code> package.
+   * Please see {@link java.beans.XMLEncoder}.
+   */
+  class UIResource extends DefaultListCellRenderer
+                      with javax.swing.plaf.UIResource
+  {
+  }
 
 }

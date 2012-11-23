@@ -70,7 +70,7 @@ import org.openide.util.NbBundle;
  * @author  Matthias Schmidt collectified it.
  */
 class ImportChooserInnerPanel extends javax.swing.JPanel {
-  private var combos: Array[JComboBox/*[_]*/] = _
+  private var combos: Array[JComboBox[_]] = _
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private var bottomPanel: javax.swing.JPanel = _
   private var contentPanel: javax.swing.JPanel = _
@@ -99,7 +99,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
         
       var row = 0
 
-      combos = new Array[JComboBox/*[_]*/](candidateSize)
+      combos = new Array[JComboBox[_]](candidateSize)
 
       val monoSpaced = new Font( "Monospaced", Font.PLAIN, new JLabel().getFont.getSize)
       val focusListener = new FocusListener {
@@ -166,7 +166,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
 
   }
     
-  private def createComboBox(choices: Array[String], defaultValue: String, icons: Array[Icon], font: Font, listener: FocusListener): JComboBox/*[_]*/ = {
+  private def createComboBox(choices: Array[String], defaultValue: String, icons: Array[Icon], font: Font, listener: FocusListener): JComboBox[_] = {
     val combo = new JComboBox(choices.asInstanceOf[Array[Object]])
     combo.setSelectedItem(defaultValue);
     combo.getAccessibleContext().setAccessibleDescription(getBundleString("FixDupImportStmts_Combo_ACSD")) //NOI18N
@@ -218,51 +218,51 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
     setPreferredSize(null);
     setLayout(new java.awt.GridBagLayout());
 
-    lblTitle.setText("~Select the fully qualified name to use in the import statement.");
-    var gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-    gridBagConstraints.weightx = 0.1;
-    gridBagConstraints.insets = new java.awt.Insets(0, 0, 6, 0);
-    add(lblTitle, gridBagConstraints);
+    lblTitle.setText("~Select the fully qualified name to use in the import statement.")
+    var gridBagConstraints = new java.awt.GridBagConstraints()
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST
+    gridBagConstraints.weightx = 0.1
+    gridBagConstraints.insets = new java.awt.Insets(0, 0, 6, 0)
+    add(lblTitle, gridBagConstraints)
 
-    jScrollPane1.setBorder(null);
+    jScrollPane1.setBorder(null)
 
-    contentPanel.setLayout(new java.awt.GridBagLayout());
-    jScrollPane1.setViewportView(contentPanel);
+    contentPanel.setLayout(new java.awt.GridBagLayout())
+    jScrollPane1.setViewportView(contentPanel)
 
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 2;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-    gridBagConstraints.weightx = 1.0;
-    gridBagConstraints.weighty = 1.0;
-    add(jScrollPane1, gridBagConstraints);
+    gridBagConstraints = new java.awt.GridBagConstraints()
+    gridBagConstraints.gridx = 0
+    gridBagConstraints.gridy = 2
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH
+    gridBagConstraints.weightx = 1.0
+    gridBagConstraints.weighty = 1.0
+    add(jScrollPane1, gridBagConstraints)
 
-    bottomPanel.setLayout(new java.awt.BorderLayout());
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 3;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-    gridBagConstraints.weightx = 1.0;
-    add(bottomPanel, gridBagConstraints);
+    bottomPanel.setLayout(new java.awt.BorderLayout())
+    gridBagConstraints = new java.awt.GridBagConstraints()
+    gridBagConstraints.gridx = 0
+    gridBagConstraints.gridy = 3
+    gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH
+    gridBagConstraints.weightx = 1.0
+    add(bottomPanel, gridBagConstraints)
 
-    lblHeader.setText("~Import Statements:");
-    gridBagConstraints = new java.awt.GridBagConstraints();
-    gridBagConstraints.gridx = 0;
-    gridBagConstraints.gridy = 1;
-    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-    gridBagConstraints.insets = new java.awt.Insets(3, 0, 3, 0);
+    lblHeader.setText("~Import Statements:")
+    gridBagConstraints = new java.awt.GridBagConstraints()
+    gridBagConstraints.gridx = 0
+    gridBagConstraints.gridy = 1
+    gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST
+    gridBagConstraints.insets = new java.awt.Insets(3, 0, 3, 0)
     add(lblHeader, gridBagConstraints);
   }// </editor-fold>//GEN-END:initComponents
     
     
     
-  private class DelegatingRenderer[T](orig: ListCellRenderer/*[T]*/, values: Array[String], icons: Array[Icon]) extends ListCellRenderer/*[T]*/ {
+  private class DelegatingRenderer[T](orig: ListCellRenderer[T], values: Array[String], icons: Array[Icon]) extends ListCellRenderer[T] {
 
-    def getListCellRendererComponent(list: JList/*[_ <: T]*/, value: AnyRef/*T*/, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component = {
-      val res = orig.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+    def getListCellRendererComponent(list: JList[_ <: T], value: T, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component = {
+      val res = orig.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
       if (res.isInstanceOf[JLabel] && null != icons ) {
         var i = 0
         var break = false
@@ -281,7 +281,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
   private class TogglePopupAction extends AbstractAction {
     def actionPerformed(e: ActionEvent) {
       e.getSource match {
-        case combo: JComboBox/*[_]*/ => combo.setPopupVisible( !combo.isPopupVisible)
+        case combo: JComboBox[_] => combo.setPopupVisible(!combo.isPopupVisible)
         case _ =>
       }
     }

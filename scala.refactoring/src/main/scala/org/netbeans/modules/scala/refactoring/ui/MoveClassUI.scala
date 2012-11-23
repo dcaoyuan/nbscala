@@ -46,8 +46,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
-import java.util.Collection;
-import java.util.Collections;
 import javax.swing.event.ChangeListener;
 import org.netbeans.api.java.classpath.ClassPath;
 import org.netbeans.api.java.source.TreePathHandle;

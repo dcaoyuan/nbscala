@@ -47,18 +47,12 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import org.netbeans.modules.scala.editor.ui.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.ListModel;
-import org.netbeans.api.java.source.JavaSource;
-import org.netbeans.api.java.source.SourceUtils;
-import org.netbeans.api.java.source.ui.ElementOpen;
 import org.netbeans.modules.csl.api.UiUtils
-import org.openide.filesystems.FileObject;
 
 /**
  *
@@ -68,7 +62,7 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private var jLabel1: javax.swing.JLabel = _
-  private var jList1: javax.swing.JList/*[ElementDescription]*/ = _
+  private var jList1: javax.swing.JList[ElementDescription] = _
   private var jScrollPane1: javax.swing.JScrollPane = _
   // End of variables declaration//GEN-END:variables
 
@@ -158,8 +152,8 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
     PopupUtil.hidePopup
   }
     
-  private def createListModel: ListModel/*[ElementDescription]*/ = {
-    val dlm = new DefaultListModel/*[ElementDescription]*/
+  private def createListModel: ListModel[ElementDescription] = {
+    val dlm = new DefaultListModel[ElementDescription]
         
     for (el <- declarations) {
       dlm.addElement(el)
@@ -169,8 +163,9 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
   }
     
   private class RendererImpl extends DefaultListCellRenderer[ElementDescription] {
-    override def getListCellRendererComponent(list: JList/*[_ <: ElementDescription]*/,
-                                     value: AnyRef/*ElementDescription*/,
+    override 
+    def getListCellRendererComponent(list: JList[_ <: ElementDescription],
+                                     value: ElementDescription,
                                      index: Int,
                                      isSelected: Boolean,
                                      cellHasFocus: Boolean): Component = {

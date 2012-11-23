@@ -361,7 +361,7 @@ object FmtOptions {
           val df = getDefaultAsBoolean(optionID)
           checkBox.setSelected( node.getBoolean(optionID, df))
 
-        case cb: JComboBox/*[ComboItem]*/ =>
+        case cb: JComboBox[ComboItem] =>
           val value = node.get(optionID, getDefaultAsString(optionID))
           val model = createModel(value)
           cb.setModel(model)
@@ -404,7 +404,7 @@ object FmtOptions {
           else
             node.putBoolean(optionID, checkBox.isSelected)
 
-        case comboBox: JComboBox/*[ComboItem]*/ =>
+        case comboBox: JComboBox[ComboItem] =>
           val value = comboBox.getSelectedItem.asInstanceOf[ComboItem].value
           if (getDefaultAsString(optionID).equals(value))
             node.remove(optionID)
@@ -424,14 +424,14 @@ object FmtOptions {
         case checkBox: JCheckBox =>
           checkBox.addActionListener(this)
 
-        case cb: JComboBox/*[ComboItem]*/ =>
+        case cb: JComboBox[ComboItem] =>
           cb.addActionListener(this)
           
         case _ =>
       }
     }
 
-    private def createModel(value: String): ComboBoxModel/*[ComboItem]*/ = {
+    private def createModel(value: String): ComboBoxModel[ComboItem] = {
 
       //            // is it braces placement?
       //            for (ComboItem comboItem : bracePlacement) {
@@ -457,7 +457,7 @@ object FmtOptions {
       null
     }
 
-    private def whichItem(value: String, model: ComboBoxModel/*[ComboItem]*/): ComboItem = {
+    private def whichItem(value: String, model: ComboBoxModel[ComboItem]): ComboItem = {
       for (i <- 0 until model.getSize) {
         val item = model.getElementAt(i).asInstanceOf[ComboItem]
         if (value.equals(item.value)) {
