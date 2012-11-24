@@ -91,7 +91,7 @@ class ScalaStructureAnalyzer extends StructureScanner {
 
   val emptyFolds = java.util.Collections.emptyMap[String, java.util.List[OffsetRange]]
   override def folds(result: ParserResult): java.util.Map[String, java.util.List[OffsetRange]] = {
-    if (result == null) {
+    if (result eq null) {
       return emptyFolds
     }
 
@@ -278,8 +278,8 @@ class ScalaStructureAnalyzer extends StructureScanner {
 
     override def hashCode: Int = {
       var hash = 7
-      hash = (29 * hash) + (if (getName != null) getName.hashCode else 0)
-      hash = (29 * hash) + (if (dfn.getKind != null) dfn.getKind.hashCode else 0)
+      hash = (29 * hash) + (if (getName ne null) getName.hashCode else 0)
+      hash = (29 * hash) + (if (dfn.getKind ne null) dfn.getKind.hashCode else 0)
       hash
     }
 

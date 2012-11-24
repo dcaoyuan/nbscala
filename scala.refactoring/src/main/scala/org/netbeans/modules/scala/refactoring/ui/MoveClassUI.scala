@@ -71,7 +71,7 @@ class MoveClassUI(javaObject: DataObject, targetFolder: FileObject, pasteType: P
     
   private var panel: MoveClassPanel = _
   private var targetPkgName: String = ""
-  private val disable = targetFolder != null
+  private val disable = targetFolder ne null
   private val refactoring = new MoveRefactoring(Lookups.fixed(javaObject.getPrimaryFile, handles.toArray))
   refactoring.getContext.add(RetoucheUtils.getClasspathInfoFor(Array(javaObject.getPrimaryFile)))
     
@@ -99,12 +99,12 @@ class MoveClassUI(javaObject: DataObject, targetFolder: FileObject, pasteType: P
   }
         
   def getPanel(parent: ChangeListener): CustomRefactoringPanel = {
-    if (panel == null) {
-      val pkgName = if (targetFolder != null) getPackageName(targetFolder) else getPackageName(javaObject.getPrimaryFile.getParent)
+    if (panel eq null) {
+      val pkgName = if (targetFolder ne null) getPackageName(targetFolder) else getPackageName(javaObject.getPrimaryFile.getParent)
       panel = new MoveClassPanel (parent, pkgName,
                                   new MessageFormat(getString("LBL_MoveClassNamed")).format (
           Array(javaObject.getPrimaryFile.getName).asInstanceOf[Array[Object]]),
-                                  if (targetFolder != null) targetFolder else (if (javaObject != null) javaObject.getPrimaryFile else null)
+                                  if (targetFolder ne null) targetFolder else (if (javaObject ne null) javaObject.getPrimaryFile else null)
       )
       panel.setCombosEnabled(!disable)
     }

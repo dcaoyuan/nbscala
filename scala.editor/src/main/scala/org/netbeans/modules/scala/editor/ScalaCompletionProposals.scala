@@ -132,7 +132,7 @@ abstract class ScalaCompletionProposals {
             case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
           }
 
-          if (retType != null && !sym.isConstructor) {
+          if ((retType ne null) && !sym.isConstructor) {
             fm.appendText(ScalaUtil.typeToString(retType))
           }
           fm.`type`(false)
@@ -214,7 +214,7 @@ abstract class ScalaCompletionProposals {
 
                 val paramTpe = try {
                   val t = param.tpe
-                  if (t != null) {
+                  if (t ne null) {
                     t.toString
                   } else "<unknown>"
                 } catch {
@@ -318,7 +318,7 @@ abstract class ScalaCompletionProposals {
     }
 
     override def getRhsHtml(fm: HtmlFormatter): String = {
-      if (description != null) {
+      if (description ne null) {
         fm.appendText(description)
 
         fm.getText

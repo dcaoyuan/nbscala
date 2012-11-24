@@ -90,7 +90,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
       false
     case _ : RenameRefactoring =>
       val fo = refactoring.getRefactoringSource.lookup(classOf[FileObject])
-      if (fo != null) {
+      if (fo ne null) {
         setup(List(fo), "", true)
       } else {
         setup(List(refactoring.getRefactoringSource.lookup(classOf[NonRecursiveFolder]).getFolder), "", false) // NOI18N
@@ -165,7 +165,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
     if (isRenameRefactoring) {
       //folder rename
       val f = refactoring.getRefactoringSource.lookup(classOf[FileObject])
-      if (f != null) {
+      if (f ne null) {
         val newName = refactoring.asInstanceOf[RenameRefactoring].getNewName
         if (!RetoucheUtils.isValidPackageName(newName)) {
           val msg = new MessageFormat(NbBundle.getMessage(classOf[RenameRefactoringPlugin], "ERR_InvalidPackage")).format(
@@ -174,7 +174,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
           return new Problem(true, msg)
         }
                 
-        if (f.getParent.getFileObject(newName, f.getExt) != null) {
+        if (f.getParent.getFileObject(newName, f.getExt) ne null) {
           val msg = new MessageFormat(NbBundle.getMessage(classOf[RenameRefactoringPlugin],"ERR_PackageExists")).format(
             Array(newName).asInstanceOf[Array[Object]]
           )
@@ -198,16 +198,16 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
             val targetRoot = RetoucheUtils.getClassPathRoot(refactoring.asInstanceOf[MoveRefactoring].getTarget.lookup(classOf[URL]))
             val targetF = targetRoot.getFileObject(targetPackageName.replace('.', '/'));
                     
-            if ((targetF!=null && !targetF.canWrite())) {
+            if ((targetF ne null) && !targetF.canWrite()) {
               return new Problem(true, new MessageFormat(NbBundle.getMessage(classOf[MoveRefactoringPlugin], "ERR_PackageIsReadOnly")).format( // NOI18N
                   Array(targetPackageName).asInstanceOf[Array[Object]]
                 ))
             }
                     
-            //                this.movingToDefaultPackageMap.put(r, Boolean.valueOf(targetF!= null && targetF.equals(classPath.findOwnerRoot(targetF))));
+            //                this.movingToDefaultPackageMap.put(r, Boolean.valueOf(targetFne null && targetF.equals(classPath.findOwnerRoot(targetF))));
             var pkgName = targetPackageName;
                     
-            if (pkgName == null) {
+            if (pkgName eq null) {
               pkgName = "" // NOI18N
             } else if (pkgName.length > 0) {
               pkgName = pkgName + '.'
@@ -222,7 +222,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
             //
             //                FileObject movedFile = JavaMetamodel.getManager().getDataObject(r).getPrimaryFile();
             val fileName = f.getName
-            if (targetF != null) {
+            if (targetF ne null) {
               for (child <- targetF.getChildren) {
                 if (child.getName().equals(fileName) && "java".equals(child.getExt()) && !child.equals(f) && !child.isVirtual) { //NOI18N
                   return new Problem(true, new MessageFormat(
@@ -253,13 +253,13 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
       val sourceRoots = new HashSet[FileObject]
       for (file <- filesToMove) {
         val cp = ClassPath.getClassPath(file, ClassPath.SOURCE)
-        if (cp != null) {
+        if (cp ne null) {
           val root = cp.findOwnerRoot(file)
           sourceRoots.add(root)
         }
       }
       val target = refactoring.asInstanceOf[MoveRefactoring].getTarget.lookup(classOf[URL])
-      if (target == null) {
+      if (target eq null) {
         return null
       }
       try {
@@ -273,8 +273,8 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
             for (affected <- a) {
               if (FileOwnerQuery.getOwner(affected).equals(sourceProject) && !filesToMove.contains(affected)) {
                 val targetProject = FileOwnerQuery.getOwner(r)
-                assert(sourceProject != null)
-                assert(targetProject != null)
+                assert(sourceProject ne null)
+                assert(targetProject ne null)
                 val sourceName = ProjectUtils.getInformation(sourceProject).getDisplayName
                 val targetName = ProjectUtils.getInformation(targetProject).getDisplayName
                 return createProblem(null, false, NbBundle.getMessage(classOf[MoveRefactoringPlugin], "ERR_MissingProjectDeps", sourceName, targetName));
@@ -374,15 +374,15 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
     }
     val prob: Problem = null//createAndAddElements(a, task, elements, refactoring)
     fireProgressListenerStop
-    if (prob != null) prob else chainProblems(p, t.getProblem)
+    if (prob ne null) prob else chainProblems(p, t.getProblem)
   }
     
   private def chainProblems(p: Problem, p1: Problem): Problem = {        
-    if (p  == null) return p1
-    if (p1 == null) return p
+    if (p  eq null) return p1
+    if (p1 eq null) return p
 
     var problem: Problem  = p
-    while (problem.getNext != null) {
+    while (problem.getNext ne null) {
       problem = problem.getNext
     }
     problem.setNext(p1)
@@ -399,7 +399,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
     
   def getTargetPackageName(fo: FileObject): String = {
     if (isRenameRefactoring) {
-      if (refactoring.getRefactoringSource.lookup(classOf[NonRecursiveFolder]) != null){
+      if (refactoring.getRefactoringSource.lookup(classOf[NonRecursiveFolder]) ne null){
         //package rename
         return getNewPackageName
       } else {
@@ -411,8 +411,8 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
         val postfix = FileUtil.getRelativePath(folder, if (fo.isFolder) fo else fo.getParent()).replace('/', '.')
         return concat(prefix, getNewPackageName, postfix)
       }
-    } else if (packagePostfix != null) {
-      if (fo == null) {
+    } else if (packagePostfix ne null) {
+      if (fo eq null) {
         return getNewPackageName
       }
       val postfix = packagePostfix.get(fo).getOrElse(null)
@@ -424,11 +424,11 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
     
   private def concat(s1: String, s2: String, s3: String): String = {
     var result = ""
-    if (s1 != null && !"".equals(s1)) {
+    if ((s1 ne null) && !"".equals(s1)) {
       result += s1 + "." // NOI18N
     }
     result += s2
-    if (s3 != null && !"".equals(s3)) {
+    if ((s3 ne null) && !"".equals(s3)) {
       result += (if (result == "") "" else ".") + s3 // NOI18N
     }
     result

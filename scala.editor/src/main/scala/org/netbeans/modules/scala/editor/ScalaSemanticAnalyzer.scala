@@ -96,7 +96,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
     val root = pr.rootScope
 
     val doc = pr.getSnapshot.getSource.getDocument(true)
-    if (doc == null) {
+    if (doc eq null) {
       log.warning("doc is null.")
       return
     }
@@ -107,7 +107,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
     semanticHighlights = visitItems(global, th, root) match {
       case null => null
       case highlights if !highlights.isEmpty =>
-        //            if (result.getTranslatedSource() != null) {
+        //            if (result.getTranslatedSource() ne null) {
         //                Map<OffsetRange, ColoringAttributes> translated = new HashMap<OffsetRange, ColoringAttributes>(2 * highlights.size());
         //                for (Map.Entry<OffsetRange, ColoringAttributes> entry:  highlights.entrySet()) {
         //                    OffsetRange range = LexUtilities.getLexerOffsets(info, entry.getKey());
@@ -179,7 +179,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
                 coloringSet.add(ColoringAttributes.FIELD)
                 val owner = sym.owner
-                if (owner != null && (owner.isClass || owner.isTrait || owner.isModule)) {
+                if ((owner ne null) && (owner.isClass || owner.isTrait || owner.isModule)) {
                   coloringSet.add(ColoringAttributes.GLOBAL)
                 }
 
@@ -223,7 +223,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
                 coloringSet.add(ColoringAttributes.FIELD)
                 val owner = sym.owner
-                if (owner != null && (owner.isClass || owner.isTrait || owner.isModule)) {
+                if ((owner ne null) && (owner.isClass || owner.isTrait || owner.isModule)) {
                   coloringSet.add(ColoringAttributes.GLOBAL)
                 }
 

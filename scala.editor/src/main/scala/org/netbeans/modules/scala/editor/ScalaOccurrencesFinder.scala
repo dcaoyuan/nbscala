@@ -103,7 +103,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     var highlights = new java.util.HashMap[OffsetRange, ColoringAttributes](100)
 
     val document = pResult.getSnapshot.getSource.getDocument(true)
-    if (document == null) {
+    if (document eq null) {
       return
     }
 
@@ -153,7 +153,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
         // lines. This should trigger if you put the caret on the method definition
         // line, unless it's in a comment there.
         val token = ScalaLexUtil.getToken(doc, caretPosition)
-        //boolean isFunctionKeyword = (token != null) && token.id() == JsTokenId.FUNCTION;
+        //boolean isFunctionKeyword = (token ne null) && token.id() == JsTokenId.FUNCTION;
         //boolean isMethodName = closest.getKind() == ElementKind.METHOD;
         //boolean isReturn = closest.getType() == Token.RETURN && astOffset < closest.getSourceStart() + "return".length();
 
@@ -173,10 +173,10 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
         //                            func = func.getParentNode();
         //                        } else if (isReturn) {
         //                            Node f = func.getParentNode();
-        //                            while (f != null && f.getType() != Token.FUNCTION) {
+        //                            while (f ne null && f.getType() != Token.FUNCTION) {
         //                                f = f.getParentNode();
         //                            }
-        //                            if (f != null) {
+        //                            if (f ne null) {
         //                                func = f;
         //                            }
         //                        }
@@ -236,7 +236,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
   //        if (node.hasChildren()) {
   //            Node child = node.getFirstChild();
   //
-  //            for (; child != null; child = child.getNext()) {
+  //            for (; child ne null; child = child.getNext()) {
   //                highlightExitPoints(child, highlights, info);
   //            }
   //        }
@@ -246,7 +246,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
   // Highlighting the last statement is disabled because statement offsets are generally
   // not valid yet. Fix that first.
   //        Node last = node.getLastChild();
-  //        if (last == null || last.getType() == Token.PARAMETER || last.getType() == Token.FUNCNAME) {
+  //        if (last eq null || last.getType() == Token.PARAMETER || last.getType() == Token.FUNCNAME) {
   //            return;
   //        }
   //
@@ -309,7 +309,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
   //        if (node.hasChildren()) {
   //            Node child = node.getFirstChild();
   //
-  //            for (; child != null; child = child.getNext()) {
+  //            for (; child ne null; child = child.getNext()) {
   //                highlightExitPoints(child, highlights, info);
   //            }
   //        }

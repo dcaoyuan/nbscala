@@ -86,7 +86,7 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
   private var panel: MovePanel = _
   private var refactoring: MoveRefactoring = _
   private var targetPkgName = ""
-  val isDisable = targetFolder != null
+  val isDisable = targetFolder ne null
   private val resources = if (!isDisable) {
     javaObjects
   } else Set()
@@ -113,15 +113,15 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
   }
         
   def getPanel(parent: ChangeListener): CustomRefactoringPanel = {
-    if (panel == null) {
+    if (panel eq null) {
       var pkgName: String = null
-      if (targetFolder != null) {
+      if (targetFolder ne null) {
         val cp = ClassPath.getClassPath(targetFolder, ClassPath.SOURCE)
-        if (cp != null)
+        if (cp ne null)
           pkgName = cp.getResourceName(targetFolder, '.', false)
       }
       panel = new MovePanel (parent,
-                             if (pkgName != null) pkgName else getDOPackageName(javaObjects.iterator.next.asInstanceOf[FileObject].getParent),
+                             if (pkgName ne null) pkgName else getDOPackageName(javaObjects.iterator.next.asInstanceOf[FileObject].getParent),
                              getString("LBL_MoveClassesHeadline")
       );
     }
@@ -136,7 +136,7 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
 //    }
   private def getDOPackageName(f: FileObject): String = {
     val cp = ClassPath.getClassPath(f, ClassPath.SOURCE);
-    if (cp != null) {
+    if (cp ne null) {
       cp.getResourceName(f, '.', false);
     } else {
       Logger.getLogger("org.netbeans.modules.scala.refactoring").info("Cannot find classpath for " + f.getPath());
@@ -175,7 +175,7 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
   }
     
   def getRefactoring: AbstractRefactoring = {
-    if (refactoring == null) {
+    if (refactoring eq null) {
       if (isDisable) {
         refactoring = new MoveRefactoring(Lookups.fixed(javaObjects.toArray.asInstanceOf[Array[java.lang.Object]]: _*))
         refactoring.getContext().add(RetoucheUtils.getClasspathInfoFor(javaObjects.toArray))
@@ -232,7 +232,7 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
 
   // MovePanel ...............................................................
   class MovePanel(parent: ChangeListener, startPackage: String, headLine: String
-  ) extends MoveClassPanel(parent, startPackage, headLine, if (targetFolder != null) targetFolder else javaObjects.iterator.next) {
+  ) extends MoveClassPanel(parent, startPackage, headLine, if (targetFolder ne null) targetFolder else javaObjects.iterator.next) {
     setCombosEnabled(!isDisable)
     val nodelist = new JList(getNodes)
     nodelist.setCellRenderer((new NodeRenderer).asInstanceOf[ListCellRenderer[Node]])

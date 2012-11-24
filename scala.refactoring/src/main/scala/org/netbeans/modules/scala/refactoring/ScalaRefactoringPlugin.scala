@@ -80,7 +80,7 @@ abstract class ScalaRefactoringPlugin extends ProgressProviderAdapter with Refac
   def createProblem(result: Problem, isFatal: Boolean, message: String): Problem = {
     val problem = new Problem(isFatal, message)
 
-    if (result == null) {
+    if (result eq null) {
       problem
     } else if (isFatal) {
       problem.setNext(result)
@@ -91,7 +91,7 @@ abstract class ScalaRefactoringPlugin extends ProgressProviderAdapter with Refac
 
       // [TODO] performance
       var p = result
-      while (p.getNext != null) {
+      while (p.getNext ne null) {
         p = p.getNext
       }
       p.setNext(problem)

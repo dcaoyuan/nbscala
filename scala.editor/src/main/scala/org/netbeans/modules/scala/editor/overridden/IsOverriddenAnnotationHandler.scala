@@ -124,7 +124,7 @@ object IsOverriddenAnnotationHandler {
     Name name = ee.getSimpleName();
     List<ExecutableElement> alreadySeen = where.get(name);
 
-    if (alreadySeen != null) {
+    if (alreadySeen ne null) {
     for (ExecutableElement seen : alreadySeen) {
     if (info.getElements().overrides(seen, ee, (TypeElement) seen.getEnclosingElement())) {
     continue OUTTER; //a method that overrides this one was already handled, ignore
@@ -135,7 +135,7 @@ object IsOverriddenAnnotationHandler {
 
    val lee = newlyAdded.get(name)
 
-   if (lee == null) {
+   if (lee eq null) {
    newlyAdded.put(name, lee = new ArrayBuffer<ExecutableElement>());
    }
 
@@ -144,7 +144,7 @@ object IsOverriddenAnnotationHandler {
    for ((k, v) <- newlyAdded) {
    val lee = where.get(k)
 
-   if (lee == null) {
+   if (lee eq null) {
    where += (k, v)
    } else {
    lee ++= (v)
@@ -241,7 +241,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
     val root = pr.rootScope
     val th = pr.getSnapshot.getTokenHierarchy
 
-    if (root == ScalaRootScope.EMPTY || th == null) return Nil
+    if (root == ScalaRootScope.EMPTY || (th eq null)) return Nil
     
     val doc = pr.getSnapshot.getSource.getDocument(true) match {
       case x: StyledDocument => x
@@ -251,7 +251,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
     val global = pr.global
     
     val thisSourceRoot = findSourceRoot
-    if (thisSourceRoot == null) return Nil
+    if (thisSourceRoot eq null) return Nil
     
     val reverseSourceRoots = if (enableReverseLookups) {
       //XXX: special case "this" source root (no need to create a new JS and load the classes again for it):
@@ -265,7 +265,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
     for ((idToken, items) <- root.idTokenToItems;
          item <- items if item.isInstanceOf[global.ScalaDfn];
          sym = item.asInstanceOf[global.ScalaDfn].symbol if sym != global.NoSymbol;
-         pos = getPosition(doc, item.idOffset(th)) if pos != null
+         pos = getPosition(doc, item.idOffset(th)) if pos ne null
     ) {
       if (isCanceled) return Nil
 
@@ -312,7 +312,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
 
      val resolvedType = td.resolve(info);
 
-     if (resolvedType == null)
+     if (resolvedType eq null)
      continue;
 
      sortOutMethods(info, name2Method, resolvedType, false)
@@ -323,14 +323,14 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
 
      val ee = methodHandle.resolve(info);
 
-     if (ee == null)
+     if (ee eq null)
      continue;
 
      Log.log(Level.FINE, "method: {0}", ee.toString()) //NOI18N
 
      val lee = name2Method.get(ee.getSimpleName()).getOrElse(null);
 
-     if (lee == null || lee.isEmpty) {
+     if (lee eq null || lee.isEmpty) {
      continue;
      }
 
@@ -349,7 +349,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
      val position: Int = info.getTrees().getSourcePositions().getStartPosition(info.getCompilationUnit(), v.declaration2Tree.get(methodHandle).getOrElse(null));
      val pos = getPosition(doc, position);
 
-     if (pos == null) {
+     if (pos eq null) {
      //cannot compute the position, skip
      continue;
      }
@@ -384,8 +384,8 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
      var resolved: TypeElement = td.resolve(info);
 
 
-     if (resolved == null) {
-     Logger.getLogger("global").log(Level.SEVERE, "IsOverriddenAnnotationHandler: resolved == null!"); //NOI18N
+     if (resolved eq null) {
+     Logger.getLogger("global").log(Level.SEVERE, "IsOverriddenAnnotationHandler: resolved eq null!"); //NOI18N
      continue;
      }
 
@@ -407,7 +407,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
      val users = computeUsers(reverseSourceRoots, ElementHandle.create(resolved), classIndexTime);
      val endTime = System.currentTimeMillis();
 
-     if (users == null) {
+     if (users eq null) {
      return Nil
      }
 
@@ -426,10 +426,10 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
      if (!overridingClasses.isEmpty) {
      val t = v.declaration2Class.get(td).getOrElse(null)
 
-     if (t != null) {
+     if (t ne null) {
      val pos = getPosition(doc, info.getTrees().getSourcePositions().getStartPosition(unit, t).toInt);
 
-     if (pos == null) {
+     if (pos eq null) {
      //cannot compute the position, skip
      continue;
      }
@@ -444,7 +444,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
 
      val pos = getPosition(doc, info.getTrees().getSourcePositions().getStartPosition(unit, v.declaration2Tree.get(original).getOrElse(null)).toInt);
 
-     if (pos == null) {
+     if (pos eq null) {
      //cannot compute the position, skip
      continue;
      }
@@ -524,7 +524,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
    result.add(eh);
    val typeElements = cpinfo.getClassIndex().getElements(eh, Collections.singleton(SearchKind.IMPLEMENTORS), EnumSet.of(ClassIndex.SearchScope.SOURCE));
    //XXX: Canceling
-   if (typeElements != null) {
+   if (typeElements ne null) {
    l ++= (typeElements);
    }
    }
@@ -551,7 +551,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
    for (s <- SourceForBinaryQuery.findSourceRoots(entry.toURL()).getRoots()) {
    val targets = edges.get(s);
 
-   if (targets != null) {
+   if (targets ne null) {
    targets.add(source);
    }
 
@@ -579,7 +579,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
    for (dep <- dependsOn.get(file)) {
    val depTypes = result.get(dep);
 
-   if (depTypes != null) {
+   if (depTypes ne null) {
    baseTypes.addAll(depTypes);
    }
    }
@@ -627,21 +627,21 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
    for (originalMethodHandle <- methods) {
    val originalMethod = originalMethodHandle.resolve(controller);
 
-   if (originalMethod != null) {
+   if (originalMethod ne null) {
    val overrider = getImplementationOf(controller, originalMethod, tpe);
 
-   if (overrider == null)
+   if (overrider eq null)
    continue;
 
    val overriddingMethods = overriding.get(originalMethodHandle);
 
-   if (overriddingMethods == null) {
+   if (overriddingMethods eq null) {
    overriding.put(originalMethodHandle, overriddingMethods = new ArrayBuffer<ElementDescription>());
    }
 
    overriddingMethods.add(new ElementDescription(controller, overrider));
    } else {
-   Logger.getLogger("global").log(Level.SEVERE, "IsOverriddenAnnotationHandler: originalMethod == null!"); //NOI18N
+   Logger.getLogger("global").log(Level.SEVERE, "IsOverriddenAnnotationHandler: originalMethod eq null!"); //NOI18N
    }
    }
    }

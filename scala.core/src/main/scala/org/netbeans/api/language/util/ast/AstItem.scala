@@ -51,8 +51,8 @@ import org.openide.filesystems.{FileObject}
  */
 trait AstItem extends ForElementHandle {
 
-  type S  // type of symbol
-  type T  // type of symbol's type
+  type S <: AnyRef // type of symbol
+  type T <: AnyRef // type of symbol's type
 
   def make(idToken: Token[TokenId], kind: ElementKind, fo: Option[FileObject]): Unit = {
     this.idToken = idToken
@@ -91,7 +91,7 @@ trait AstItem extends ForElementHandle {
   def name = _name
   def name_=(name: String) = this._name = name
   def name_=(idToken: Token[TokenId]): Unit = {
-    if (idToken == null) {
+    if (idToken eq null) {
       _name = "" // should not happen?
       return
     }
@@ -131,8 +131,8 @@ trait AstItem extends ForElementHandle {
    *   {@link AstScope#addElement(Element)} or {@link AstScope#addMirror(Mirror)}
    */
   def enclosingScope_=(enclosingScope: AstScope): AstItem = {
-    if (enclosingScope != null) {
-      this._enclosingScope = enclosingScope
+    if (enclosingScope ne null) {
+      _enclosingScope = enclosingScope
     }
     this
   }
@@ -141,7 +141,7 @@ trait AstItem extends ForElementHandle {
    * @return the scope that encloses this item
    */
   def enclosingScope: AstScope = {
-    assert(_enclosingScope != null, name + ": Each item should set enclosing scope!, except native TypeRef")
+    assert(_enclosingScope ne null, name + ": Each item should set enclosing scope!, except native TypeRef")
     _enclosingScope
   }
 

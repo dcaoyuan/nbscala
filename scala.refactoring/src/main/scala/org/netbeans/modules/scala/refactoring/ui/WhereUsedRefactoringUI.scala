@@ -88,7 +88,7 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
   def isQuery = true
 
   def getPanel(parent: ChangeListener): CustomRefactoringPanel = {
-    if (panel == null) {
+    if (panel eq null) {
       panel = new WhereUsedPanel(name, handle, parent)
     }
     panel
@@ -100,7 +100,7 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
     if (panel.getScope == WhereUsedPanel.Scope.ALL) {
       if (kind == ElementKind.METHOD && panel.isMethodFromBaseClass) {
         val basem = panel.getBaseMethod
-        if (basem != null && (basem.fo == None || basem.fo.get.getNameExt.endsWith("class"))) { //NOI18N
+        if ((basem ne null) && (basem.fo == None || basem.fo.get.getNameExt.endsWith("class"))) { //NOI18N
           query.getContext.add(RetoucheUtils.getClasspathInfoFor(Array(handle, basem)))
         } else {
           query.getContext.add(RetoucheUtils.getClasspathInfoFor(Array(basem)))
@@ -159,11 +159,11 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
   }
 
   def getRefactoring: AbstractRefactoring = {
-    if (query != null) query else delegate
+    if (query ne null) query else delegate
   }
 
   def getDescription: String = {
-    if (panel != null) {
+    if (panel ne null) {
       kind match {
         case ElementKind.MODULE | ElementKind.CLASS =>
           if (!panel.isClassFindUsages)
@@ -179,7 +179,7 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
           }
                     
           if (panel.isMethodOverriders) {
-            if (description != null) {
+            if (description ne null) {
               description += " " + getString("DSC_And") + " "
             } else {
               description = ""
@@ -198,7 +198,7 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
     
   private var bundle: ResourceBundle = _
   private def getString(key: String): String = {
-    if (bundle == null) {
+    if (bundle eq null) {
       bundle = NbBundle.getBundle(classOf[WhereUsedRefactoringUI])
     }
     bundle.getString(key)

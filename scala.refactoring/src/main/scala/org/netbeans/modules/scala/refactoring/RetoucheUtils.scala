@@ -108,7 +108,7 @@ object RetoucheUtils {
   }
 
   def getDocument(pr: Parser.Result): BaseDocument = {
-    if (pr != null) {
+    if (pr ne null) {
       pr.getSnapshot.getSource.getDocument(true).asInstanceOf[BaseDocument]
     } else null
   }
@@ -127,7 +127,7 @@ object RetoucheUtils {
    name = node.getString();
    } else if (node.getType() == org.mozilla.nb.javascript.Token.FUNCTION) {
    name = AstUtilities.getFunctionFqn(node, null);
-   if (name != null && name.indexOf('.') != -1) {
+   if (name ne null && name.indexOf('.') != -1) {
    name = name.substring(name.indexOf('.')+1);
    }
    } else {
@@ -135,7 +135,7 @@ object RetoucheUtils {
    }
    // TODO - FUNCTION - also get full name!
 
-   if (simpleName == null) {
+   if (simpleName eq null) {
    simpleName = name;
    }
 
@@ -199,7 +199,7 @@ object RetoucheUtils {
   }
 
   private def color(string: String, set: AttributeSet): String = {
-    if (set == null) {
+    if (set eq null) {
       return string
     }
     if (string.trim.length == 0) {
@@ -238,7 +238,7 @@ object RetoucheUtils {
   }
 
   def isElementInOpenProject(f: FileObject): Boolean = {
-    if (f == null) return false
+    if (f eq null) return false
     
     val p = FileOwnerQuery.getOwner(f)
     OpenProjects.getDefault.isProjectOpen(p)
@@ -246,7 +246,7 @@ object RetoucheUtils {
 
 
   def isFileInOpenProject(file: FileObject): Boolean = {
-    assert(file != null)
+    assert(file ne null)
     val p = FileOwnerQuery.getOwner(file)
     OpenProjects.getDefault.isProjectOpen(p)
   }
@@ -269,7 +269,7 @@ object RetoucheUtils {
 
   def isOnSourceClasspath(fo: FileObject): Boolean = {
     val p = FileOwnerQuery.getOwner(fo)
-    if (p == null) {
+    if (p eq null) {
       return false
     }
     val opened = OpenProjects.getDefault.getOpenProjects
@@ -297,7 +297,7 @@ object RetoucheUtils {
   /* def getPackageName(folder: FileObject): String = {
     assert(folder.isFolder, "argument must be folder")
     val cp = ClassPath.getClassPath(folder, ClassPath.SOURCE)
-    if (cp == null) {
+    if (cp eq null) {
       // see http://www.netbeans.org/issues/show_bug.cgi?id=159228
       throw new IllegalStateException(String.format("No classpath for %s.", folder)) // NOI18N
     }
@@ -323,7 +323,7 @@ object RetoucheUtils {
     var suffix = ""
     do {
       val fo = FileUtil.toFileObject(f)
-      if (fo != null) {
+      if (fo ne null) {
         if (suffix == "") return getPackageName(fo)
 
         val prefix = getPackageName(fo)
@@ -345,9 +345,9 @@ object RetoucheUtils {
 // XXX: parsingapi
 //    def boolean isClasspathRoot(FileObject fo) {
 //        ClassPath cp = ClassPath.getClassPath(fo, ClassPath.SOURCE);
-//        if (cp != null) {
+//        if (cp ne null) {
 //            FileObject f = cp.findOwnerRoot(fo);
-//            if (f != null) {
+//            if (f ne null) {
 //                return fo.equals(f);
 //            }
 //        }
@@ -358,11 +358,11 @@ object RetoucheUtils {
   def getPackageName(folder: FileObject): String = {
     assert(folder.isFolder, "argument must be folder") //NOI18N
     val p = FileOwnerQuery.getOwner(folder)
-    if (p != null) {
+    if (p ne null) {
       val s = ProjectUtils.getSources(p)
       for {g <- s.getSourceGroups(Sources.TYPE_GENERIC)
            relativePath = FileUtil.getRelativePath(g.getRootFolder, folder)
-           if relativePath != null
+           if relativePath ne null
       } {
         return relativePath.replace('/', '.') //NOI18N
       }
@@ -374,8 +374,8 @@ object RetoucheUtils {
   @throws(classOf[IOException])
   def getClassPathRoot(url: URL): FileObject = {
     var result = URLMapper.findFileObject(url);
-    var f = if (result != null) null else FileUtil.normalizeFile(new File(URLDecoder.decode(url.getPath, "UTF-8"))) //NOI18N
-    while (result == null) {
+    var f = if (result ne null) null else FileUtil.normalizeFile(new File(URLDecoder.decode(url.getPath, "UTF-8"))) //NOI18N
+    while (result eq null) {
       result = FileUtil.toFileObject(f)
       f = f.getParentFile
     }
@@ -405,14 +405,14 @@ object RetoucheUtils {
     for (fo <- files) {
       var p: Project = null
       var ownerRoot: FileObject = null
-      if (fo != null) {
+      if (fo ne null) {
         p = FileOwnerQuery.getOwner(fo)
         val cp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
-        if (cp != null) {
+        if (cp ne null) {
           ownerRoot = cp.findOwnerRoot(fo)
         }
       }
-      if (p != null && ownerRoot != null) {
+      if ((p ne null) && (ownerRoot ne null)) {
         val sourceRoot = URLMapper.findURL(ownerRoot, URLMapper.INTERNAL)
         if (dependencies) {
           dependentRoots ++= ScalaSourceUtil.getDependentRoots(sourceRoot)
@@ -431,7 +431,7 @@ object RetoucheUtils {
     }
 
     if (backSource) {
-      for (fo <- files if fo != null) {
+      for (fo <- files if fo ne null) {
         val compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
         val entries = compCp.entries.iterator
         while (entries.hasNext) {
@@ -443,15 +443,15 @@ object RetoucheUtils {
     }
 
     val srcCp = ClassPathSupport.createClassPath(dependentRoots.toArray: _*)
-    val bootCp = if (files(0) != null) ClassPath.getClassPath(files(0), ClassPath.BOOT) else nullPath
-    var compCp = if (files(0) != null) ClassPath.getClassPath(files(0), ClassPath.COMPILE) else nullPath
-    if (compCp == null) {
+    val bootCp = if (files(0) ne null) ClassPath.getClassPath(files(0), ClassPath.BOOT) else nullPath
+    var compCp = if (files(0) ne null) ClassPath.getClassPath(files(0), ClassPath.COMPILE) else nullPath
+    if (compCp eq null) {
       // * when file(0) is a class file, there is no compile cp but execute cp, try to get it
       compCp = ClassPath.getClassPath(files(0), ClassPath.EXECUTE)
     }
     // * if no cp found at all log the file and use nullPath since the ClasspathInfo.create
     // * doesn't accept null compile or boot cp.
-    if (compCp == null) {
+    if (compCp eq null) {
       Log.warning ("No classpath for: " + FileUtil.getFileDisplayName(files(0)) + " " + FileOwnerQuery.getOwner(files(0)))
       compCp = nullPath
     }

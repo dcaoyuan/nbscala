@@ -112,7 +112,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
     textField.asInstanceOf[JTextField].getDocument.addDocumentListener(this)
   }
         
-  private var project = if (fo != null) FileOwnerQuery.getOwner(fo) else OpenProjects.getDefault.getOpenProjects()(0)
+  private var project = if (fo ne null) FileOwnerQuery.getOwner(fo) else OpenProjects.getDefault.getOpenProjects()(0)
         
     
   private var initialized = false
@@ -137,7 +137,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
         
     updateRoots
     updatePackages
-    if (preselectedFolder != null) {
+    if (preselectedFolder ne null) {
       packageComboBox.setSelectedItem(preselectedFolder)
     }
     // Determine the extension
@@ -339,7 +339,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
 
     var preselectedItem = 0
     for( i <- 0 until groups.length) {
-      if (fo != null) {
+      if (fo ne null) {
         try {
           if (groups(i).contains(fo)) {
             preselectedItem = i
@@ -363,7 +363,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
     override 
     def getName: String = {
       val name = super.getName
-      if (name == null) "ComboBox.renderer" else name  // NOI18N
+      if (name eq null) "ComboBox.renderer" else name  // NOI18N
     }
   }
     
@@ -407,7 +407,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
       // #89393: GTK needs name to render cell renderer "natively"
       setName("ComboBox.listRenderer"); // NOI18N
             
-      if ( value != null ) {
+      if ( value ne null ) {
         val pi = ProjectUtils.getInformation(value.asInstanceOf[Project]);
         setText(pi.getDisplayName);
         setIcon(pi.getIcon);

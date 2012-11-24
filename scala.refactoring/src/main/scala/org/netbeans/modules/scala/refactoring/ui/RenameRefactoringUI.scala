@@ -71,7 +71,7 @@ import org.netbeans.modules.scala.refactoring.RetoucheUtils
  */
 object RenameRefactoringUI {
   def apply(file: FileObject, newName: String, handle: ScalaItems#ScalaItem) = {
-    val refactoring = if (handle != null) {
+    val refactoring = if (handle ne null) {
       new RenameRefactoring(Lookups.fixed(file, handle))
     } else {
       new RenameRefactoring(Lookups.fixed(file))
@@ -103,12 +103,12 @@ object RenameRefactoringUI {
   }
 
   def apply(file: FileObject, handle: ScalaItems#ScalaItem) = {
-    val refactoring = if (handle != null) {
+    val refactoring = if (handle ne null) {
       new RenameRefactoring(Lookups.fixed(file, handle))
     } else {
       new RenameRefactoring(Lookups.fixed(file))
     }
-    val oldName = if (handle != null) handle.symbol.nameString else file.getName
+    val oldName = if (handle ne null) handle.symbol.nameString else file.getName
     val dispOldName = oldName
     val stripPrefix = null
     val pkgRename = true
@@ -175,13 +175,13 @@ class RenameRefactoringUI(refactoring: AbstractRefactoring,
   def isQuery = false
 
   def getPanel(parent: ChangeListener): CustomRefactoringPanel = {
-    if (panel == null) {
+    if (panel eq null) {
       var name = oldName
-      if (stripPrefix != null && name.startsWith(stripPrefix)) {
+      if ((stripPrefix ne null) && name.startsWith(stripPrefix)) {
         name = name.substring(stripPrefix.length)
       }
             
-      var suffix = if (handle != null) {
+      var suffix = if (handle ne null) {
         handle.kind match {
           //if (kind.isClass() || kind.isInterface()) {
           case ElementKind.CLASS /* || kind == ElementKind.MODULE*/ =>
@@ -192,7 +192,7 @@ class RenameRefactoringUI(refactoring: AbstractRefactoring,
             getString("LBL_Field")
           case ElementKind.VARIABLE =>
             getString("LBL_LocalVar")
-          case ElementKind.MODULE /*(jmiObject == null && fromListener)*/ =>
+          case ElementKind.MODULE /*(jmiObject eq null && fromListener)*/ =>
             if (pkgRename) getString("LBL_Package") else getString("LBL_Folder")
           case ElementKind.PARAMETER =>
             getString("LBL_Parameter")
@@ -209,7 +209,7 @@ class RenameRefactoringUI(refactoring: AbstractRefactoring,
     
   private def getPanelName: String = {
     var name = panel.getNameValue
-    if (stripPrefix != null && !name.startsWith(stripPrefix)) {
+    if ((stripPrefix ne null) && !name.startsWith(stripPrefix)) {
       name = stripPrefix + name
     }
         
@@ -266,7 +266,7 @@ class RenameRefactoringUI(refactoring: AbstractRefactoring,
 
   @throws(classOf[IOException])
   def doRefactoringBypass {
-    val dob = if (byPassFolder != null) {
+    val dob = if (byPassFolder ne null) {
       DataFolder.findFolder(byPassFolder);
     } else {
       DataObject.find(refactoring.getRefactoringSource.lookup(classOf[FileObject]))

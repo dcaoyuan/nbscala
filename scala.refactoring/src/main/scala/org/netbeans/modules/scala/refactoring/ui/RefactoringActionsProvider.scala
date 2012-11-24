@@ -81,13 +81,13 @@ object RefactoringActionsProvider {
   private var isFindUsages: Boolean = _
 
   def getName(dict: Dictionary[_, _]): String = {
-    if (dict != null) {
+    if (dict ne null) {
       dict.get("name").asInstanceOf[String] //NOI18N
     } else null
   }
 
   def isFromEditor(ec: EditorCookie): Boolean = {
-    if (ec != null && ec.getOpenedPanes != null) {
+    if ((ec ne null) && (ec.getOpenedPanes ne null)) {
       // This doesn't seem to work well - a lot of the time, I'm right clicking
       // on the editor and it still has another activated view (this is on the mac)
       // and as a result does file-oriented refactoring rather than the specific
@@ -127,16 +127,16 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
 
           override protected def createRefactoringUI(selectedElements: Array[FileObject], handles: Seq[ScalaItems#ScalaItem]): RefactoringUI= {
             val newName = getName(dictionary)
-            if (newName != null) {
-              if (pkg(0) != null)
+            if (newName ne null) {
+              if (pkg(0) ne null)
                 RenameRefactoringUI(pkg(0), newName)
               else
-                RenameRefactoringUI(selectedElements(0), newName, if (handles == null || handles.isEmpty) null else handles.iterator.next)
+                RenameRefactoringUI(selectedElements(0), newName, if ((handles eq null) || handles.isEmpty) null else handles.iterator.next)
             } else{
-              if (pkg(0) != null)
+              if (pkg(0) ne null)
                 RenameRefactoringUI(pkg(0))
               else
-                RenameRefactoringUI(selectedElements(0), if (handles == null|| handles.isEmpty) null else handles.iterator.next)
+                RenameRefactoringUI(selectedElements(0), if ((handles eq null) || handles.isEmpty) null else handles.iterator.next)
             }
           }
         }
@@ -185,7 +185,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
         d.readLock
         try {
           val caret = textC.getCaretPosition
-          if (ScalaLexUtil.getToken(d, caret) == null) {
+          if (ScalaLexUtil.getToken(d, caret) eq null) {
             // Not in Scala code!
             return true
           }
@@ -210,7 +210,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
     }
     val n = nodes.iterator.next
     val dob = n.getCookie(classOf[DataObject])
-    if (dob == null) {
+    if (dob eq null) {
       return false
     }
 
@@ -220,7 +220,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
       return false
     }
 
-    if (dob != null && RetoucheUtils.isScalaFile(fo)) { //NOI18N
+    if ((dob ne null) && RetoucheUtils.isScalaFile(fo)) { //NOI18N
       return true
     }
     
@@ -298,7 +298,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
          } */
         val inPlaceItem = root.findItemsAt(th, caret) match {
           case Nil => return
-          case xs => xs find {_.idToken != null} getOrElse {return}
+          case xs => xs find {_.idToken ne null} getOrElse {return}
         }
         
         val handle = root.findDfnOf(inPlaceItem) getOrElse inPlaceItem
@@ -322,11 +322,11 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
 
       val activetc = TopComponent.getRegistry.getActivated
 
-      if (ui != null) {
+      if (ui ne null) {
 // XXX: what is this supposed to do??
-//                if (fo != null) {
+//                if (fo ne null) {
 //                    ClasspathInfo classpathInfoFor = RetoucheUtils.getClasspathInfoFor(fo);
-//                    if (classpathInfoFor == null) {
+//                    if (classpathInfoFor eq null) {
 //                        JOptionPane.showMessageDialog(null, NbBundle.getMessage(RefactoringActionsProvider.class, "ERR_CannotFindClasspath"));
 //                        return;
 //                    }
@@ -375,7 +375,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
         ParserManager.parse(java.util.Collections.singleton(source), this)
       } catch {case ex: ParseException => logger.log(Level.WARNING, null, ex); return}
 
-      if (ui != null) {
+      if (ui ne null) {
         UI.openRefactoringUI(ui)
       } else {
         val key = if (isFindUsages) {
@@ -389,7 +389,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
   }
 
   abstract class NodeToFileObjectTask(nodes: java.util.Collection[_ <: Node]) extends UserTask with Runnable {
-    assert(nodes != null)
+    assert(nodes ne null)
 //        private RefactoringUI ui;
     protected val pkg =  new Array[NonRecursiveFolder](nodes.size)
 //        public WeakReference<JsParseResult> cinfo;
@@ -422,7 +422,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
       while (itr.hasNext) {
         val node = itr.next
         val dob = node.getCookie(classOf[DataObject])
-        if (dob != null) {
+        if (dob ne null) {
           fobs(i) = dob.getPrimaryFile
           val source = Source.create(fobs(i))
           try {

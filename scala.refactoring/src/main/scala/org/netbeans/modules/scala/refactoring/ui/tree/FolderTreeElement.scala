@@ -64,7 +64,7 @@ import org.openide.util.NbBundle;
 object FolderTreeElement {
   def getSourceGroup(file: FileObject): SourceGroup = {
     val prj = FileOwnerQuery.getOwner(file)
-    if (prj == null) return null
+    if (prj eq null) return null
     val src = ProjectUtils.getSources(prj);
     //TODO: needs to be generified
     //SourceGroup[] rubygroups = src.getSourceGroups(RubyProject.SOURCES_TYPE_RUBY);
@@ -88,7 +88,7 @@ object FolderTreeElement {
 
   private def getScalaSourceGroup(file: FileObject): SourceGroup = {
     val prj = FileOwnerQuery.getOwner(file);
-    if (prj == null)
+    if (prj eq null)
       return null;
     val src = ProjectUtils.getSources(prj);
 //        SourceGroup[] rubygroups = src.getSourceGroups(RubyProject.SOURCES_TYPE_RUBY);
@@ -109,14 +109,14 @@ class FolderTreeElement(fo: FileObject) extends TreeElement {
   override def getParent(isLogical: Boolean): TreeElement = {
     if (isLogical) {
       val sg = getSourceGroup(fo)
-      if (sg != null) {
+      if (sg ne null) {
         TreeElementFactory.getTreeElement(sg)
       } else {
         null
       }
     } else {
       val p = FileOwnerQuery.getOwner(fo)
-      if (p != null) {
+      if (p ne null) {
         TreeElementFactory.getTreeElement(p)
       } else {
         null
@@ -131,10 +131,10 @@ class FolderTreeElement(fo: FileObject) extends TreeElement {
 
   override def getText(isLogical: Boolean): String = {
     val cp = ClassPath.getClassPath(fo, ClassPath.SOURCE);
-    if (cp == null) {
+    if (cp eq null) {
       fo.getPath
     } else {
-      if (getScalaSourceGroup(fo) != null) {
+      if (getScalaSourceGroup(fo) ne null) {
         val name = cp.getResourceName(fo).replace('/','.')
         if ("".equals(name)) {
           return NbBundle.getMessage(classOf[UiUtils], "LBL_DefaultPackage_PDU");

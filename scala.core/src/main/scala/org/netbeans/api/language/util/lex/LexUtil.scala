@@ -90,7 +90,7 @@ trait LexUtil {
    */
   //    def TokenSequence<? extends FortressCommentTokenId> getCommentFor(doc:BaseDocument, offset:Int) {
   //        TokenSequence<?extends ScalaTokenId> jts = getTokenSequence(doc, offset);
-  //        if (jts == null) {
+  //        if (jts eq null) {
   //            return null;
   //        }
   //        jts.move(offset);
@@ -109,7 +109,7 @@ trait LexUtil {
   
   /** For a possibly generated offset in an AST, return the corresponding lexing/true document offset */
   def getLexerOffset(info: Parser.Result, astOffset: Int): Int = {
-    if (info != null) {
+    if (info ne null) {
       info.getSnapshot.getOriginalOffset(astOffset)
     } else {
       astOffset
@@ -117,7 +117,7 @@ trait LexUtil {
   }
 
   def getLexerOffsets(info: Parser.Result, astRange: OffsetRange): OffsetRange = {
-    if (info != null) {
+    if (info ne null) {
       val rangeStart = astRange.getStart
       val start = info.getSnapshot.getOriginalOffset(rangeStart)
       if (start == rangeStart) {
@@ -134,13 +134,13 @@ trait LexUtil {
   }
 
   def getAstOffset(pResult: Parser.Result, lexOffset: Int): Int = {
-    if (pResult != null) {
+    if (pResult ne null) {
       pResult.getSnapshot.getEmbeddedOffset(lexOffset)
     } else lexOffset
   }
 
   def getAstOffsets(pResult: Parser.Result, lexicalRange: OffsetRange): OffsetRange = {
-    if (pResult != null) {
+    if (pResult ne null) {
       val rangeStart = lexicalRange.getStart
       pResult.getSnapshot.getEmbeddedOffset(rangeStart) match {
         case `rangeStart` => lexicalRange
@@ -168,7 +168,7 @@ trait LexUtil {
 
   final def getTokenSequence(th: TokenHierarchy[_], offset: Int): Option[TokenSequence[TokenId]] = {
     var ts = th.tokenSequence(LANGUAGE)
-    if (ts == null) {
+    if (ts eq null) {
       // Possibly an embedding scenario such as an RHTML file
       // First try with backward bias true
       var list = th.embeddedTokenSequences(offset, true)
@@ -183,7 +183,7 @@ trait LexUtil {
         }
       }
 
-      if (ts == null) {
+      if (ts eq null) {
         list = th.embeddedTokenSequences(offset, false)
         itr = list.iterator
         break = false
@@ -197,7 +197,7 @@ trait LexUtil {
       }
     }
 
-    if (ts != null) Some(ts) else None
+    if (ts ne null) Some(ts) else None
   }
 
   def getPositionedSequence(doc: BaseDocument, offset: Int): Option[TokenSequence[TokenId]] = {
@@ -276,8 +276,7 @@ trait LexUtil {
       while (ts.moveNext && excludes.contains(ts.token.id)) {}
     }
 
-    val token = ts.token
-    if (token == null) None else Some(token)
+    Option(ts.token)
   }
 
   final def findPreviousNotIn(ts:TokenSequence[TokenId], excludes:Set[TokenId]): Option[Token[TokenId]] = {
@@ -285,8 +284,7 @@ trait LexUtil {
       while (ts.movePrevious && excludes.contains(ts.token.id)) {}
     }
 
-    val token = ts.token
-    if (token == null) None else Some(token)
+    Option(ts.token)
   }
 
   final def findNext(ts: TokenSequence[TokenId], id: TokenId): Option[Token[TokenId]] = {
@@ -294,8 +292,7 @@ trait LexUtil {
       while (ts.moveNext && ts.token.id != id) {}
     }
 
-    val token = ts.token
-    if (token == null) None else Some(token)
+    Option(ts.token)
   }
 
   final def findNextIn(ts: TokenSequence[TokenId], includes: Set[TokenId]): Option[Token[TokenId]] = {
@@ -303,8 +300,7 @@ trait LexUtil {
       while (ts.moveNext && !includes.contains(ts.token.id)) {}
     }
 
-    val token = ts.token
-    if (token == null) None else Some(token)
+    Option(ts.token)
   }
 
   final def findPrevious(ts: TokenSequence[TokenId], id: TokenId): Option[Token[TokenId]] = {
@@ -312,15 +308,13 @@ trait LexUtil {
       while (ts.movePrevious && ts.token.id != id) {}
     }
 
-    val token = ts.token
-    if (token == null) None else Some(token)
+    Option(ts.token)
   }
 
   def findNextIncluding(ts: TokenSequence[TokenId], includes: Set[TokenId]): Option[Token[TokenId]] = {
     while (ts.moveNext && !includes.contains(ts.token.id)) {}
 
-    val token = ts.token
-    if (token == null) None else Some(token)
+    Option(ts.token)
   }
 
   final def findPreviousIn(ts: TokenSequence[TokenId], includes: Set[TokenId]): Option[Token[TokenId]] = {
@@ -328,8 +322,7 @@ trait LexUtil {
       while (ts.movePrevious && !includes.contains(ts.token.id)) {}
     }
 
-    val token = ts.token
-    if (token == null) None else Some(token)
+    Option(ts.token)
   }
 
   def skipParenthesis(ts: TokenSequence[TokenId]): Boolean = {
@@ -343,7 +336,7 @@ trait LexUtil {
     var balance = 0
 
     var token = ts.token
-    if (token == null) {
+    if (token eq null) {
       return false
     }
 
@@ -391,7 +384,7 @@ trait LexUtil {
     var balance = 0
 
     var token = ts.token
-    if (token == null) {
+    if (token eq null) {
       return false
     }
 
@@ -796,7 +789,7 @@ trait LexUtil {
    def getStringAt(caretOffset:Int, th:TokenHierarchy[Document]): String = {
    val ts = getTokenSequence(th, caretOffset)
 
-   if (ts == null) {
+   if (ts eq null) {
    return null
    }
 
@@ -813,14 +806,14 @@ trait LexUtil {
    }
 
    var token = ts.token
-   if (token != null) {
+   if (token ne null) {
    var id = token.id
 
    //            // We're within a String that has embedded Js. Drop into the
    //            // embedded language and see if we're within a literal string there.
    //            if (id == ScalaTokenId.EMBEDDED_RUBY) {
    //                ts = (TokenSequence)ts.embedded();
-   //                assert ts != null;
+   //                assert ts ne null;
    //                ts.move(caretOffset);
    //
    //                if (!ts.moveNext() && !ts.movePrevious()) {
@@ -880,7 +873,7 @@ trait LexUtil {
   //    def int getRequireStringOffset(caretOffset:Int, th:TokenHierarchy[Document]) {
   //        TokenSequence<?extends ScalaTokenId> ts = getTokenSequence(th, caretOffset);
   //
-  //        if (ts == null) {
+  //        if (ts eq null) {
   //            return -1;
   //        }
   //
@@ -898,7 +891,7 @@ trait LexUtil {
   //
   //        Token<?extends ScalaTokenId> token = ts.token();
   //
-  //        if (token != null) {
+  //        if (token ne null) {
   //            id:TokenId = token.id();
   //
   //            // Skip over embedded Js segments and literal strings until you find the beginning
@@ -957,7 +950,7 @@ trait LexUtil {
    private def getLiteralStringOffset(caretOffset:Int, th:TokenHierarchy[Document], begin:ScalaTokenId): Int = {
    val ts = getTokenSequence(th, caretOffset)
 
-   if (ts == null) {
+   if (ts eq null) {
    return -1
    }
 
@@ -975,14 +968,14 @@ trait LexUtil {
 
    var token = ts.token
 
-   if (token != null) {
+   if (token ne null) {
    var id = token.id
 
    //            // We're within a String that has embedded Js. Drop into the
    //            // embedded language and see if we're within a literal string there.
    //            if (id == ScalaTokenId.EMBEDDED_RUBY) {
    //                ts = (TokenSequence)ts.embedded();
-   //                assert ts != null;
+   //                assert ts ne null;
    //                ts.move(caretOffset);
    //
    //                if (!ts.moveNext() && !ts.movePrevious()) {
@@ -1018,7 +1011,7 @@ trait LexUtil {
    def isInsideRegexp(doc:BaseDocument, offset:Int): Boolean = {
    val ts = getTokenSequence(doc, offset)
 
-   if (ts == null) {
+   if (ts eq null) {
    return false
    }
 
@@ -1086,11 +1079,11 @@ trait LexUtil {
       }
       val token = ts.token
 
-      if (token != null && isBlockComment(token.id)) {
+      if ((token ne null) && isBlockComment(token.id)) {
         return new OffsetRange(ts.offset, ts.offset + token.length)
       }
 
-      if (token != null && isLineComment(token.id)) {
+      if ((token ne null) && isLineComment(token.id)) {
         // First add a range for the current line
         var begin = Utilities.getRowStart(doc, caretOffset)
         var end = Utilities.getRowEnd(doc, caretOffset)
@@ -1139,7 +1132,7 @@ trait LexUtil {
   //    def boolean isInsideQuotedString(doc:BaseDocument, offset:Int) {
   //        TokenSequence<?extends ScalaTokenId> ts = FortressLexUtilities.getTokenSequence(doc, offset);
   //
-  //        if (ts == null) {
+  //        if (ts eq null) {
   //            return false;
   //        }
   //
@@ -1231,7 +1224,7 @@ trait LexUtil {
   def gatherDocumentation(info: Parser.Result, baseDoc: BaseDocument, nodeOffset: Int): List[String] = {
     var comments: List[String] = Nil
     var elementBegin = nodeOffset
-    if (info != null && info.getSnapshot.getSource.getDocument(true) == baseDoc) {
+    if ((info ne null) && info.getSnapshot.getSource.getDocument(true) == baseDoc) {
       elementBegin = getLexerOffset(info, elementBegin)
       if (elementBegin == -1) {
         return Nil
@@ -1369,7 +1362,7 @@ trait LexUtil {
     try {
       val dobj = DataObject.find(fo)
       val ec = dobj.getCookie(classOf[EditorCookie])
-      if (ec != null) {
+      if (ec ne null) {
         return (if (openIfNecessary) Some(ec.openDocument) else Some(ec.getDocument)).asInstanceOf[Option[BaseDocument]]
       }
     } catch {

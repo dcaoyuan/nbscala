@@ -125,7 +125,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
   /** Creates a new instance of RenameRefactoring */
   private def init {
     val item = rename.getRefactoringSource.lookup(classOf[SItem])
-    if (item != null) {
+    if (item ne null) {
       searchHandle = item
     } else {
       val source = Source.create(rename.getRefactoringSource.lookup(classOf[FileObject]))
@@ -152,14 +152,14 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 
   override def fastCheckParameters: Problem = {
     var fastCheckProblem: Problem = null
-    if (searchHandle == null) {
+    if (searchHandle eq null) {
       return null; //no refactoring, not params check
     }
 
     val kind = searchHandle.kind
     val newName = refactoring.getNewName
     val oldName = searchHandle.symbol.fullName
-    if (oldName == null) {
+    if (oldName eq null) {
       return new Problem(true, "Cannot determine target name. Please file a bug with detailed information on how to reproduce (preferably including the current source file and the cursor position)");
     }
 
@@ -199,7 +199,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 
 
      val msg = JsUtils.getIdentifierWarning(newName, 0);
-     if (msg != null) {
+     if (msg ne null) {
      fastCheckProblem = ScalaRefactoringPlugin.createProblem(fastCheckProblem, false, msg);
      } */
     // ----- by Caoyuan
@@ -244,13 +244,13 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 //            } // for
 //        } else if (kind == ElementKind.LOCAL_VARIABLE || kind == ElementKind.PARAMETER) {
 //            String msg = variableClashes(newName,treePath, info);
-//            if (msg != null) {
+//            if (msg ne null) {
 //                fastCheckProblem = createProblem(fastCheckProblem, true, msg);
 //                return fastCheckProblem;
 //            }
 //        } else {
 //            String msg = clashes(element, newName, info);
-//            if (msg != null) {
+//            if (msg ne null) {
 //                fastCheckProblem = createProblem(fastCheckProblem, true, msg);
 //                return fastCheckProblem;
 //            }
@@ -262,10 +262,10 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 
     var checkProblem: Problem = null
     var steps = 0
-    if (overriddenByMethods != null) {
+    if (overriddenByMethods ne null) {
       steps += overriddenByMethods.size
     }
-    if (overridesMethods != null) {
+    if (overridesMethods ne null) {
       steps += overridesMethods.size
     }
 
@@ -291,7 +291,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 //            fireProgressListenerStep();
 //            fireProgressListenerStep();
 //            fireProgressListenerStep();
-//            if (hiddenField != null) {
+//            if (hiddenField ne null) {
 //                msg = new MessageFormat(getString("ERR_WillHide")).format(
 //                        new Object[] {SourceUtils.getEnclosingTypeElement(hiddenField).toString()}
 //                );
@@ -314,7 +314,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 //    private Set<searchHandle<ExecutableElement>> allMethods;
 
   override def preCheck: Problem = {
-    if (searchHandle == null) {
+    if (searchHandle eq null) {
       return null
     }
     searchHandle.fo match {
@@ -337,7 +337,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 
       if (notLocal) {
         val srcCp = cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE)
-        if (srcCp != null) {
+        if (srcCp ne null) {
           set ++= RetoucheUtils.getScalaFilesInSrcCp(srcCp, true)
         }
       }
@@ -417,7 +417,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
   private var allMethods: Set[ScalaItems#ScalaItem] = _
 
   override def prepare(elements: RefactoringElementsBag): Problem = {
-    if (searchHandle == null) {
+    if (searchHandle eq null) {
       return null
     }
     val files = getRelevantFiles
@@ -499,7 +499,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       if (root != ScalaRootScope.EMPTY) {
         val doc = GsfUtilities.getDocument(workingCopyFo, true)
         try {
-          if (doc != null) doc.readLock
+          if (doc ne null) doc.readLock
 
           if (samePlaceSymToDSimpleSig.isEmpty) {
             samePlaceSymToDSimpleSig = samePlaceSyms map {case x: Symbol => (x, ScalaUtil.symSimpleSig(x))}
@@ -533,7 +533,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
           }
 
         } finally {
-          if (doc != null) doc.readUnlock
+          if (doc ne null) doc.readUnlock
         }
       } else {
         //System.out.println("Skipping file " + workingCopy.getFileObject());
@@ -541,7 +541,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
         val workingCopyText = workingCopy.getSnapshot.getText.toString
         if (workingCopyText.indexOf(oldName) != -1) {
           // TODO - icon??
-          if (ces == null) {
+          if (ces eq null) {
             ces = RetoucheUtils.findCloneableEditorSupport(workingCopy)
           }
           var start = 0
@@ -558,7 +558,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
                 break = true
               }
             }
-            if (error == null) {
+            if (error eq null) {
               error = errors.get(0)
             }
 
@@ -582,9 +582,9 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
         }
       }
 
-      if (error == null && refactoring.isSearchInComments) {
+      if ((error eq null) && refactoring.isSearchInComments) {
         val doc = RetoucheUtils.getDocument(workingCopy)
-        if (doc != null) {
+        if (doc ne null) {
           //force open
           val th = TokenHierarchy.get(doc)
           val ts = th.tokenSequence.asInstanceOf[TokenSequence[TokenId]]
@@ -607,7 +607,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
             case "comment" | "block-comment" => // NOI18N
               // search this comment
               val tokenText = token.text
-              if (tokenText != null && oldName != null) {
+              if ((tokenText ne null) && (oldName ne null)) {
                 val index = TokenUtilities.indexOf(tokenText, oldName) match {
                   case -1 =>
                   case idx =>
@@ -621,7 +621,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
                          !Character.isLetterOrDigit(text.charAt(idx+oldName.length)))) {
                       val start = ts.offset + idx
                       val end = start + oldName.length
-                      if (ces == null) {
+                      if (ces eq null) {
                         ces = RetoucheUtils.findCloneableEditorSupport(workingCopy)
                       }
                       val startPos = ces.createPositionRef(start, Bias.Forward)
@@ -658,11 +658,11 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
         return
       }
 
-      if (desc == null) {
+      if (desc eq null) {
         desc = NbBundle.getMessage(classOf[RenameRefactoringPlugin], "UpdateRef", oldCode)
       }
 
-      if (ces == null) {
+      if (ces eq null) {
         ces = RetoucheUtils.findCloneableEditorSupport(workingCopy)
       }
 
@@ -738,12 +738,12 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
         case ex: IOException => Exceptions.printStackTrace(ex)
         case ex: BadLocationException => Exceptions.printStackTrace(ex)
       } finally {
-        if (doc != null) {
+        if (doc ne null) {
           doc.readUnlock
         }
       }
 
-      if (newCode == null) {
+      if (newCode eq null) {
         // Usually it's the new name so allow client code to refer to it as just null
         newCode = refactoring.getNewName // XXX isn't this == our field "newName"?
       }

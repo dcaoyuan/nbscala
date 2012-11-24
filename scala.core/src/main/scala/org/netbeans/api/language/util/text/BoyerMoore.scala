@@ -111,10 +111,10 @@ class BoyerMoore(text: String, textArray: Array[Char], lenText: Int) {
 
   private final def indexOf(index: Int): Int = {
     if (lenText <= textThreshold / 2 || lenPat <= patternThreshold) {
-      return (if (text != null) text else new String(textArray)).indexOf(pattern, index)
+      return (if (text ne null) text else new String(textArray)).indexOf(pattern, index)
     }
 
-    if (text != null) {
+    if (text ne null) {
       indexOfTextString(index)
     } else {
       indexOfTextArray(index)

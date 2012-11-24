@@ -86,7 +86,7 @@ class GoToSuperTypeAction extends BaseAction {
     public void actionPerformed(ActionEvent evt, final JTextComponent target) {
         JavaSource js = JavaSource.forDocument(target.getDocument());
 
-        if (js == null) {
+        if (js eq null) {
             StatusDisplayer.getDefault().setStatusText(NbBundle.getMessage(GoToSupport.class, "WARN_CannotGoToGeneric",1));
             return;
         }
@@ -101,18 +101,18 @@ class GoToSuperTypeAction extends BaseAction {
 
                     TreePath path = parameter.getTreeUtilities().pathFor(target.getCaretPosition());
 
-                    while (path != null && path.getLeaf().getKind() != Kind.METHOD) {
+                    while (path ne null && path.getLeaf().getKind() != Kind.METHOD) {
                         path = path.getParentPath();
                     }
 
-                    if (path == null) {
+                    if (path eq null) {
                         Toolkit.getDefaultToolkit().beep();
                         return ;
                     }
 
                     Element resolved = parameter.getTrees().getElement(path);
 
-                    if (resolved == null || resolved.getKind() != ElementKind.METHOD) {
+                    if (resolved eq null || resolved.getKind() != ElementKind.METHOD) {
                         Toolkit.getDefaultToolkit().beep();
                         return ;
                     }
@@ -124,7 +124,7 @@ class GoToSuperTypeAction extends BaseAction {
 
             }, true);
 
-            if (type[0] == null) {
+            if (type[0] eq null) {
                 Toolkit.getDefaultToolkit().beep();
                 return ;
             }

@@ -63,9 +63,9 @@ class ScalaRefactoringsFactory extends RefactoringPluginFactory {
     val fo = look.lookup(classOf[FileObject])
     
     refactoring match {
-      case where: WhereUsedQuery if handle != null =>
+      case where: WhereUsedQuery if handle ne null =>
         new WhereUsedQueryPlugin(where)
-      case rename: RenameRefactoring if handle != null || (fo != null && RetoucheUtils.isScalaFile(fo)) =>
+      case rename: RenameRefactoring if (handle ne null) || ((fo ne null) && RetoucheUtils.isScalaFile(fo)) =>
         new RenameRefactoringPlugin(rename)
       case _ => null
 

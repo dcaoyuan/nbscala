@@ -58,7 +58,7 @@ object ConsoleLineReader {
   }
     
   protected def initReadline() {
-    if (_currentCompletor == null)
+    if (_currentCompletor eq null)
       _currentCompletor = new DefaultFileNameCompletor()
   }
     

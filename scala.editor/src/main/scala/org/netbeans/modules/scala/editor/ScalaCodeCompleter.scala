@@ -280,7 +280,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
 
   def completeKeywords(proposals: java.util.List[CompletionProposal]) {
     // No keywords possible in the RHS of a call (except for "this"?)
-    //        if (request.call.getLhs() != null) {
+    //        if (request.call.getLhs() ne null) {
     //            return;
     //        }
     val itr = ParserScala.SCALA_KEYWORDS.iterator
@@ -339,7 +339,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
       return true
     }
 
-    if (true /* && index != null */) {
+    if (true /* && index ne null */) {
 
       if (ts.offset == lexOffset) {
         // We're looking at the offset to the RIGHT of the caret
@@ -349,7 +349,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
       }
 
       var token = ts.token
-      if (token != null) {
+      if (token ne null) {
         var id = token.id
 
         // See if we're in the identifier - "foo" in "def foo"
@@ -503,7 +503,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
       if (callLineStart != -1 && currentLineStart == callLineStart) {
         // We know the method call
         targetMethod = callMethod
-        if (targetMethod != null) {
+        if (targetMethod ne null) {
           // Somehow figure out the argument index
           // Perhaps I can keep the node tree around and look in it
           // (This is all trying to deal with temporarily broken
@@ -514,7 +514,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
 
       var anchorOffset = -1
 
-      //            if (targetMethod != null) {
+      //            if (targetMethod ne null) {
       //                Iterator<Node> it = path.leafToRoot();
       //                String name = targetMethod.getName();
       //                while (it.hasNext()) {
@@ -522,7 +522,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
       //                }
       //            }
 
-      if (call == null) {
+      if (call eq null) {
         // Find the call in around the caret. Beware of
         // input sanitization which could have completely
         // removed the current parameter (e.g. with just
@@ -543,16 +543,16 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
         //                }
       }
 
-      if (call == null || index == -1) {
+      if ((call eq null) || index == -1) {
         callLineStart = -1
         callMethod = null
         return false
-      } else if (targetMethod == null) {
+      } else if (targetMethod eq null) {
         // Look up the
         // See if we can find the method corresponding to this call
 
         //targetMethod = new ScalaDeclarationFinder().findMethodDeclaration(info, call, alternativesHolder);
-        if (targetMethod == null) {
+        if (targetMethod eq null) {
           return false
         }
       }
@@ -646,7 +646,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
       proposal = PlainProposal(element, this)
     }
 
-    if (proposal != null) Some(proposal) else None
+    if (proposal ne null) Some(proposal) else None
   }
 
   private def getResultType(sym: Symbol): Option[Type] = {

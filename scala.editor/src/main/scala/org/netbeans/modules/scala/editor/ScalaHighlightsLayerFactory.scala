@@ -64,7 +64,7 @@ class ScalaHighlightsLayerFactory extends HighlightsLayerFactory {
 
   def createLayers(context: Context): Array[HighlightsLayer] = {
     val semantic = GsfSemanticLayer.getLayer(classOf[SemanticHighlighter], context.getDocument)
-    if (semantic != null) {
+    if (semantic ne null) {
       semantic.clearColoringCache
       Array(
         HighlightsLayer.create(classOf[SemanticHighlighter].getName + "-SyntaxHighlighting", ZOrder.SYNTAX_RACK.forPosition(1001), false, semantic)

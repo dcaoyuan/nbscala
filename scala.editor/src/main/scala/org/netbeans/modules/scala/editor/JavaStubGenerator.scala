@@ -128,7 +128,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     }
 
 
-    if (tpe != null) {
+    if (tpe ne null) {
       val itr = tpe.baseClasses.tail.iterator // head is always `java.lang.Object`?
       var implemented = false
       while (itr.hasNext) {
@@ -185,7 +185,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
         val oSym = syms(1)
         val oTpe = tryTpe(oSym)
 
-        if (oTpe != null) {
+        if (oTpe ne null) {
           javaCode ++= new JavaMemberStubGenerator(IS_OBJECT, IS_NOT_TRAIT).genJavaMembers(oSym, oTpe)
         }
       } else {
@@ -224,7 +224,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
    * Returns true if the type is not null and an of its members have the deferred flag.
    */
   private def isAbstractClass(tpe: Type): Boolean = {
-    tpe != null && (
+    (tpe ne null) && (
       (try {
           tpe.members
         } catch {
@@ -264,7 +264,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     }
 
     private def genJavaMember(sym: Symbol, member: Symbol, memberType: Type): String = {
-      if (memberType == null || ScalaUtil.isInherited(sym, member)) {
+      if ((memberType eq null) || ScalaUtil.isInherited(sym, member)) {
         return ""
       }
 
@@ -314,7 +314,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
         case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
       }
 
-      if (mResTpe != null && mSName != "$init$" && mSName != "synchronized") {
+      if ((mResTpe ne null) && mSName != "$init$" && mSName != "synchronized") {
         val mResSym = mResTpe.typeSymbol
 
         javaCode ++= modifiers(member)

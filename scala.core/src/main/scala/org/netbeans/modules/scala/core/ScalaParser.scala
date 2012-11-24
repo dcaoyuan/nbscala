@@ -92,10 +92,10 @@ class ScalaParser extends Parser {
 
   private def isIndexUpToDate(fo: FileObject): Boolean = {
     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
-    if (srcCp != null) {
+    if (srcCp ne null) {
       srcCp.getRoots find (FileUtil.isParentOf(_, fo)) foreach {root =>
         val timeStamps = TimeStamps.forRoot(root.toURL, false)
-        return timeStamps != null && timeStamps.checkAndStoreTimestamp(fo, FileUtil.getRelativePath(root, fo))
+        return (timeStamps ne null) && timeStamps.checkAndStoreTimestamp(fo, FileUtil.getRelativePath(root, fo))
       }
     }
     

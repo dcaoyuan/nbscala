@@ -89,7 +89,7 @@ object PopupUtil  {
   }
 
   def showPopup(content: JComponent, title: String, x: Int, y: Int, undecorated: Boolean, altHeight: Int) {
-    if (popupWindow != null ) {
+    if (popupWindow ne null ) {
       return // Content already showing
     }
                            
@@ -108,13 +108,13 @@ object PopupUtil  {
 	
     //set a11y
     val a11yName = content.getAccessibleContext.getAccessibleName
-    if (a11yName != null && !a11yName.equals(""))
+    if ((a11yName ne null) && a11yName != "")
       popupWindow.getAccessibleContext().setAccessibleName(a11yName)
     val a11yDesc = content.getAccessibleContext.getAccessibleDescription
-    if (a11yDesc != null && !a11yDesc.equals(""))
+    if ((a11yDesc ne null) && a11yDesc != "")
       popupWindow.getAccessibleContext.setAccessibleDescription(a11yDesc)
 	    
-    if ( title != null ) {
+    if ( title ne null ) {
       // popupWindow.setTitle( title );
     }
     // popupWindow.setAlwaysOnTop( true );
@@ -142,7 +142,7 @@ object PopupUtil  {
   }
     
   def hidePopup {
-    if (popupWindow != null) {
+    if (popupWindow ne null) {
 //            popupWindow.getContentPane().removeAll();
       Toolkit.getDefaultToolkit.removeAWTEventListener(hideListener)
             
@@ -202,8 +202,8 @@ object PopupUtil  {
               case comp: Component =>
                 val par = SwingUtilities.getAncestorNamed(POPUP_NAME, comp) //NOI18N
                 // Container barpar = SwingUtilities.getAncestorOfClass(PopupUtil.class, comp);
-                // if (par == null && barpar == null) {
-                if (par == null) {
+                // if (par eq null && barpar eq null) {
+                if (par eq null) {
                   hidePopup
                 }
               case _ => hidePopup; return
@@ -214,7 +214,7 @@ object PopupUtil  {
     }
 
     def windowStateChanged(windowEvent: WindowEvent) {
-      if (popupWindow != null ) {
+      if (popupWindow ne null ) {
         val oldState = windowEvent.getOldState
         val newState = windowEvent.getNewState
             
@@ -229,13 +229,13 @@ object PopupUtil  {
     }
         
     override def componentResized(evt: ComponentEvent) {
-      if (popupWindow != null) {
+      if (popupWindow ne null) {
         resizePopup
       }
     }
         
     override def componentMoved(evt: ComponentEvent) {
-      if (popupWindow != null) {
+      if (popupWindow ne null) {
         resizePopup
       }
     }

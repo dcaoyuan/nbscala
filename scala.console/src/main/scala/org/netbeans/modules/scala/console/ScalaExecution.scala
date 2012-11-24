@@ -82,9 +82,9 @@ object ScalaExecution {
 //    public ScalaExecution(ExecutionDescriptor descriptor) {
 //        super(descriptor);
 //
-//        assert descriptor != null;
+//        assert descriptor ne null;
 //        
-//        if (descriptor.getCmd() == null) {
+//        if (descriptor.getCmd() eq null) {
 //            descriptor.cmd(getScala());
 //        }
 //
@@ -98,7 +98,7 @@ object ScalaExecution {
 //    }
     
 //    public synchronized static List<? extends RegexpOutputRecognizer> getStandardScalaRecognizers() {
-//        if (stdScalaRecognizers == null) {
+//        if (stdScalaRecognizers eq null) {
 //            stdScalaRecognizers = new LinkedList<RegexpOutputRecognizer>();
 //            stdScalaRecognizers.add(SCALA_COMPILER_WIN_MY);
 //            stdScalaRecognizers.add(SCALA_COMPILER);
@@ -149,7 +149,7 @@ object ScalaExecution {
       var javaMemory = "-Xmx512m" // NOI18N
       var javaStack = "-Xss1024k" // NOI18N
             
-      if (extraArgs != null) {
+      if (extraArgs ne null) {
         if (extraArgs.indexOf("-Xmx") != -1) { // NOI18N
           javaMemory = null
         }
@@ -160,10 +160,10 @@ object ScalaExecution {
         argvList ++= scalaArgs
       }
             
-      if (javaMemory != null) {
+      if (javaMemory ne null) {
         argvList += javaMemory
       }
-      if (javaStack != null) {
+      if (javaStack ne null) {
         argvList += javaStack
       }
             
@@ -188,7 +188,7 @@ object ScalaExecution {
 
 
 //            argvList.add(computeScalaClassPath(
-//                    descriptor == null ? null : descriptor.getClassPath(), scalaLib));
+//                    descriptor eq null ? null : descriptor.getClassPath(), scalaLib));
             
       argvList += computeScalaClassPath(null, scalaLib)
             
@@ -228,7 +228,7 @@ object ScalaExecution {
     jarNames map (dirPath + File.separator + _) filter {fileName => 
       try {
         val file = new File(fileName)
-        file != null && file.exists && file.canRead
+        (file ne null) && file.exists && file.canRead
       } catch {
         case ex: Throwable => false
       }
@@ -258,7 +258,7 @@ object ScalaExecution {
   def getScala(): File = {
     var scalaFo:FileObject = null;
     val scalaHome = getScalaHome();
-    if (scalaHome != null) {
+    if (scalaHome ne null) {
       val scalaHomeDir = new File(getScalaHome())
       if (scalaHomeDir.exists && scalaHomeDir.isDirectory) {
         try {
@@ -266,7 +266,7 @@ object ScalaExecution {
           val bin = scalaHomeFo.getFileObject("bin")             //NOI18N
           if (Utilities.isWindows) {
             scalaFo = bin.getFileObject("scala", "exe")
-            if (scalaFo == null) {
+            if (scalaFo eq null) {
               scalaFo = bin.getFileObject("scala", "bat")
             }
           } else {
@@ -277,7 +277,7 @@ object ScalaExecution {
         }
       }
     }
-    if (scalaFo != null) {
+    if (scalaFo ne null) {
       FileUtil.toFile(scalaFo)
     } else {
       val d = new NotifyDescriptor.Message(
@@ -311,7 +311,7 @@ object ScalaExecution {
     // Add in user-specified jars passed via SCALA_EXTRA_CLASSPATH
 
     val p = new StringBuilder()
-    if (extraCp != null && File.pathSeparatorChar != ':') {
+    if ((extraCp ne null) && File.pathSeparatorChar != ':') {
       // Ugly hack - getClassPath has mixed together path separator chars
       // (:) and filesystem separators, e.g. I might have C:\foo:D:\bar but
       // obviously only the path separator after "foo" should be changed to ;
@@ -328,7 +328,7 @@ object ScalaExecution {
       
     }
 
-    if (p.isEmpty && System.getenv("SCALA_EXTRA_CLASSPATH") != null) {
+    if (p.isEmpty && (System.getenv("SCALA_EXTRA_CLASSPATH") ne null)) {
       p ++= System.getenv("SCALA_EXTRA_CLASSPATH") // NOI18N
     }
 

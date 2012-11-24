@@ -64,128 +64,128 @@ import org.openide.util.ChangeSupport
 
 class ScalaFileWizardIterator extends WizardDescriptor.InstantiatingIterator[WizardDescriptor] {
     
-    import ScalaFileUtil._
-    var index : Int = 0
-    var panels : Array[WizardDescriptor.Panel[WizardDescriptor]] = null
-    var wiz : WizardDescriptor = null;
+  import ScalaFileUtil._
+  var index : Int = 0
+  var panels : Array[WizardDescriptor.Panel[WizardDescriptor]] = null
+  var wiz : WizardDescriptor = null;
     
-    def createPanels (wizardDescriptor : WizardDescriptor) : Array[WizardDescriptor.Panel[WizardDescriptor]] = {
-        val project = Templates.getProject(wizardDescriptor)
-        val sources = ProjectUtils.getSources(project)
-        val groupList = getScalaSourceGroups(sources)
-        val groups = groupList.toArray
-        if (groups.length == 0) {
-            Array(Templates.buildSimpleTargetChooser(project, sources.getSourceGroups(Sources.TYPE_GENERIC)).create)
-        } else {
-            Array(JavaTemplates.createPackageChooser(project, groups))
-        }
+  def createPanels (wizardDescriptor : WizardDescriptor) : Array[WizardDescriptor.Panel[WizardDescriptor]] = {
+    val project = Templates.getProject(wizardDescriptor)
+    val sources = ProjectUtils.getSources(project)
+    val groupList = getScalaSourceGroups(sources)
+    val groups = groupList.toArray
+    if (groups.length == 0) {
+      Array(Templates.buildSimpleTargetChooser(project, sources.getSourceGroups(Sources.TYPE_GENERIC)).create)
+    } else {
+      Array(JavaTemplates.createPackageChooser(project, groups))
     }
+  }
     
-    def createSteps(before : Array[String], panels : Array[WizardDescriptor.Panel[WizardDescriptor]]) : Array[String] = {
-        // hack to use the steps set before this panel processed
-        val diff = if (before.length > 0) {
-              if ("...".equals (before(before.length - 1))) 1 else 0 //NOI18N
-            } else 0
+  def createSteps(before : Array[String], panels : Array[WizardDescriptor.Panel[WizardDescriptor]]) : Array[String] = {
+    // hack to use the steps set before this panel processed
+    val diff = if (before.length > 0) {
+      if ("...".equals (before(before.length - 1))) 1 else 0 //NOI18N
+    } else 0
 
-        val ret = for (i <- 0 until ((before.length - diff) + panels.length)) yield
-                      if (i < (before.length - diff)) {
-                          before(i)
-                      } else {
-                          panels(i - before.length + diff).getComponent().getName()
-                      }
-        ret.toArray
-    }
+    val ret = for (i <- 0 until ((before.length - diff) + panels.length)) yield
+      if (i < (before.length - diff)) {
+        before(i)
+      } else {
+        panels(i - before.length + diff).getComponent().getName()
+      }
+    ret.toArray
+  }
 
-    @throws(classOf[java.io.IOException])
-    def instantiate() : ju.Set[FileObject] = {
-        val dir = Templates.getTargetFolder(wiz)
-        val targetName = Templates.getTargetName(wiz)
+  @throws(classOf[java.io.IOException])
+  def instantiate() : ju.Set[FileObject] = {
+    val dir = Templates.getTargetFolder(wiz)
+    val targetName = Templates.getTargetName(wiz)
         
-        val df = DataFolder.findFolder(dir)
-        val template = Templates.getTemplate(wiz)
+    val df = DataFolder.findFolder(dir)
+    val template = Templates.getTemplate(wiz)
         
-        val dTemplate = DataObject.find(template)
-        val pkgName = getPackageName(dir)
-        val dobj = pkgName match {
-          case null => dTemplate.createFromTemplate(df, targetName)
-          case _ => dTemplate.createFromTemplate(df, targetName, ju.Collections.singletonMap("package", pkgName)) // NOI18N
-        }
-        ju.Collections.singleton(dobj.getPrimaryFile())
+    val dTemplate = DataObject.find(template)
+    val pkgName = getPackageName(dir)
+    val dobj = pkgName match {
+      case null => dTemplate.createFromTemplate(df, targetName)
+      case _ => dTemplate.createFromTemplate(df, targetName, ju.Collections.singletonMap("package", pkgName)) // NOI18N
     }
+    ju.Collections.singleton(dobj.getPrimaryFile())
+  }
     
-    def initialize(wiz : WizardDescriptor) : Unit = {
-        this.wiz = wiz;
-        index = 0;
-        panels = createPanels( wiz );
-        // Make sure list of steps is accurate.
-        val beforeSteps = wiz.getProperty (WizardDescriptor.PROP_CONTENT_DATA) match {
-            case s : Array[String] => s
-            case _ => Array[String]()
-        }
-        val steps = createSteps (beforeSteps, panels)
-        var i = 0
-        for (p  <- panels) {
-            p.getComponent() match {
-              case c : JComponent => {
-                c.putClientProperty(WizardDescriptor.PROP_CONTENT_SELECTED_INDEX, Integer.valueOf(i)); // NOI18N
-                c.putClientProperty(WizardDescriptor.PROP_CONTENT_DATA, steps) // NOI18N
-              }
-              case _ =>
-            }
-        }
+  def initialize(wiz : WizardDescriptor) : Unit = {
+    this.wiz = wiz;
+    index = 0;
+    panels = createPanels( wiz );
+    // Make sure list of steps is accurate.
+    val beforeSteps = wiz.getProperty (WizardDescriptor.PROP_CONTENT_DATA) match {
+      case s : Array[String] => s
+      case _ => Array[String]()
     }
+    val steps = createSteps (beforeSteps, panels)
+    var i = 0
+    for (p  <- panels) {
+      p.getComponent() match {
+        case c : JComponent => {
+            c.putClientProperty(WizardDescriptor.PROP_CONTENT_SELECTED_INDEX, Integer.valueOf(i)); // NOI18N
+            c.putClientProperty(WizardDescriptor.PROP_CONTENT_DATA, steps) // NOI18N
+          }
+        case _ =>
+      }
+    }
+  }
 
-    def uninitialize(wiz : WizardDescriptor) : Unit = {
-        this.wiz = null
-        panels = null
-    }
+  def uninitialize(wiz : WizardDescriptor) : Unit = {
+    this.wiz = null
+    panels = null
+  }
     
-    def name() = "" //NOI18N
+  def name() = "" //NOI18N
     
-    def hasNext() = index < panels.length - 1
-    def hasPrevious() = index > 0
-    def current() : WizardDescriptor.Panel[WizardDescriptor] = panels(index)
-    def nextPanel() : Unit = {
-        if (!hasNext()) throw new NoSuchElementException()
-        index = index + 1
-    }
-    def previousPanel() : Unit = {
-        if (!hasPrevious()) throw new NoSuchElementException()
-        index = index - 1
-    }
+  def hasNext() = index < panels.length - 1
+  def hasPrevious() = index > 0
+  def current() : WizardDescriptor.Panel[WizardDescriptor] = panels(index)
+  def nextPanel() : Unit = {
+    if (!hasNext()) throw new NoSuchElementException()
+    index = index + 1
+  }
+  def previousPanel() : Unit = {
+    if (!hasPrevious()) throw new NoSuchElementException()
+    index = index - 1
+  }
     
-    val changeSupport = new ChangeSupport(this)
-    def addChangeListener(l : ChangeListener ) : Unit = changeSupport.addChangeListener(l)
-    def removeChangeListener(l : ChangeListener ) : Unit = changeSupport.removeChangeListener(l)
-    protected def fireChangeEvent() : Unit = changeSupport.fireChange()
+  val changeSupport = new ChangeSupport(this)
+  def addChangeListener(l : ChangeListener ) : Unit = changeSupport.addChangeListener(l)
+  def removeChangeListener(l : ChangeListener ) : Unit = changeSupport.removeChangeListener(l)
+  protected def fireChangeEvent() : Unit = changeSupport.fireChange()
 }
 
 
 object ScalaFileUtil {
-    def create() : WizardDescriptor.InstantiatingIterator[WizardDescriptor] = {
-      new ScalaFileWizardIterator()
-    }
+  def create() : WizardDescriptor.InstantiatingIterator[WizardDescriptor] = {
+    new ScalaFileWizardIterator()
+  }
 
-    def getPackageName(targetFolder : FileObject) : String =  {
-        val project = FileOwnerQuery.getOwner(targetFolder)
-        val sources = ProjectUtils.getSources(project)
-        val groups = getScalaSourceGroups(sources)
-        var packageName : String = null
-        if (groups.exists( (gr) => {
-            packageName = FileUtil.getRelativePath(gr.getRootFolder(), targetFolder)
-            packageName != null
-          })) 
-        {
-          packageName.replaceAll("/", ".") // NOI18N
-        } else {
-          null
-        }
+  def getPackageName(targetFolder: FileObject): String =  {
+    val project = FileOwnerQuery.getOwner(targetFolder)
+    val sources = ProjectUtils.getSources(project)
+    val groups = getScalaSourceGroups(sources)
+    var packageName : String = null
+    if (groups exists {gr => 
+        packageName = FileUtil.getRelativePath(gr.getRootFolder, targetFolder)
+        packageName ne null
+      }) 
+    {
+      packageName.replaceAll("/", ".") // NOI18N
+    } else {
+      null
     }
+  }
 
-    def getScalaSourceGroups(sources : Sources ) :  Array[SourceGroup] = {
-        Array[SourceGroup]() ++
-            sources.getSourceGroups("scala") ++
-            sources.getSourceGroups(JavaProjectConstants.SOURCES_TYPE_JAVA)
-    }
+  def getScalaSourceGroups(sources: Sources ):  Array[SourceGroup] = {
+    Array[SourceGroup]() ++
+    sources.getSourceGroups("scala") ++
+    sources.getSourceGroups(JavaProjectConstants.SOURCES_TYPE_JAVA)
+  }
 
 }

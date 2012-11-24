@@ -72,7 +72,7 @@ trait JavaElements {self: ScalaGlobal =>
      // only check local call only
      if (funCall.isLocal) {
      return element.getSimpleName.toString.equals(funCall.getCall().getSimpleName().toString()) &&
-     params != null &&
+     params ne null &&
      params.size == funCall.getArgs.size
      } else {
      val containsVariableLengthArg = Function.isVarArgs(function)

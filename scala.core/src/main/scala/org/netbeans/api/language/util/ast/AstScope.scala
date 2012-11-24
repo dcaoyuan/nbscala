@@ -53,15 +53,15 @@ object AstScope {
 
 class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
-  var (boundsToken, boundsEndToken) = if (boundsTokens != null) {
+  var (boundsToken, boundsEndToken) = if (boundsTokens ne null) {
     assert(boundsTokens.length <= 2)
     boundsTokens.length match {
-      case 1 if boundsTokens(0) != null =>
-        (if (boundsTokens(0) != null) Some(boundsTokens(0)) else None,
+      case 1 if boundsTokens(0) ne null =>
+        (if (boundsTokens(0) ne null) Some(boundsTokens(0)) else None,
          None)
       case 2 =>
-        (if (boundsTokens(0) != null) Some(boundsTokens(0)) else None,
-         if (boundsTokens(1) != null) Some(boundsTokens(1)) else None)
+        (if (boundsTokens(0) ne null) Some(boundsTokens(0)) else None,
+         if (boundsTokens(1) ne null) Some(boundsTokens(1)) else None)
       case _ => (None, None)
     }
   } else (None, None)

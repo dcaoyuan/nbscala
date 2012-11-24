@@ -99,7 +99,7 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
     public Tree visitMemberSelect(MemberSelectTree node, Element p) {
         if (!workingCopy.getTreeUtilities().isSynthetic(getCurrentPath())) {
             final Element el = workingCopy.getTrees().getElement(getCurrentPath());
-            if (el != null) {
+            if (el ne null) {
                 if (isElementMoving(el)) {
                     elementsAlreadyImported.add(el);
                     String newPackageName = getTargetPackageName(el);
@@ -134,7 +134,7 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
                 ExpressionTree exprTree = node.getExpression();
                 TreePath exprPath = workingCopy.getTrees().getPath(workingCopy.getCompilationUnit(), exprTree);
                 Element elem = workingCopy.getTrees().getElement(exprPath);
-                if (elem != null && elem.getKind() == ElementKind.PACKAGE && isThisPackageMoving((PackageElement) elem)) {
+                if (elem ne null && elem.getKind() == ElementKind.PACKAGE && isThisPackageMoving((PackageElement) elem)) {
                     String newPackageName = getTargetPackageName(elem);
                     Tree nju = make.MemberSelect(make.Identifier(newPackageName), "*"); // NOI18N
                     rewrite(node, nju);
@@ -148,7 +148,7 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
     public Tree visitIdentifier(IdentifierTree node, Element p) {
         if (!workingCopy.getTreeUtilities().isSynthetic(getCurrentPath())) {
             Element el = workingCopy.getTrees().getElement(getCurrentPath());
-            if (el != null) {
+            if (el ne null) {
                 if (!isThisFileMoving) {
                     if (isElementMoving(el)) {
                         if (!elementsAlreadyImported.contains(el)) {
@@ -204,7 +204,7 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
     }
     static final Problem createProblem(Problem result, boolean isFatal, String message) {
         Problem problem = new Problem(isFatal, message);
-        if (result == null) {
+        if (result eq null) {
             return problem;
         }
         problem.setNext(result);
@@ -239,7 +239,7 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
 //    }
 
     private boolean isElementMoving(Element el, Boolean[] cache) {
-        if (cache[0] == null) {
+        if (cache[0] eq null) {
             cache[0] = isElementMoving(el);
         }
 
@@ -278,7 +278,7 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
             // change package statement if old and new package exist, i.e.
             // neither old nor new package is default
             String newPckg = move.getTargetPackageName(workingCopy.getFileObject());
-            if (node.getPackageName() != null && !"".equals(newPckg)) {
+            if (node.getPackageName() ne null && !"".equals(newPckg)) {
                 if (importToRemove.isEmpty()) {
                     rewrite(node.getPackageName(), make.Identifier(newPckg));
                 } else {
@@ -297,7 +297,7 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
             if (isThisFileReferencingOldPackage) {
                 //add import to old package
                 ExpressionTree newPackageName = cut.getPackageName();
-                if (newPackageName != null) {
+                if (newPackageName ne null) {
                     try {
                         cut = RetoucheUtils.addImports(cut, new LinkedList<String>(importToAdd), make);
                     } catch (IOException ex) {
@@ -344,7 +344,7 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
     public Tree visitImport(ImportTree node, Element p) {
         if (!workingCopy.getTreeUtilities().isSynthetic(getCurrentPath())) {
             final Element el = workingCopy.getTrees().getElement(new TreePath(getCurrentPath(), node.getQualifiedIdentifier()));
-            if (el != null) {
+            if (el ne null) {
                 if (isElementMoving(el)) {
                     String newPackageName = getTargetPackageName(el);
 

@@ -57,7 +57,7 @@ class ScalaInstantRenamer extends InstantRenamer {
     val rootScope = pResult.rootScope
 
     val document = info.getSnapshot.getSource.getDocument(true)
-    if (document == null) {
+    if (document eq null) {
       return false
     }
 
@@ -87,14 +87,14 @@ class ScalaInstantRenamer extends InstantRenamer {
   }
 
   override def getRenameRegions(info: ParserResult, caretOffset: Int): java.util.Set[OffsetRange] = {
-    if (info == null) {
+    if (info eq null) {
       return java.util.Collections.emptySet[OffsetRange]
     }
     
     val pResult = info.asInstanceOf[ScalaParserResult]
 
     val document = pResult.getSnapshot.getSource.getDocument(true)
-    if (document == null) {
+    if (document eq null) {
       return java.util.Collections.emptySet[OffsetRange]
     }
 

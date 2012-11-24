@@ -82,12 +82,12 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
   protected[ast] def put(idToken: Token[TokenId], item: AstItem): Boolean = {
     val items = _idTokenToItems.getOrElse(idToken, Nil)
     if (items exists {_.symbol == item.symbol}) {
-      if (item.resultType != null) {
+      if (item.resultType ne null) {
         // * it has exlicit assigned resultType, always add it
         _idTokenToItems += (idToken -> (item :: items))
         tokensSorted = false
         true
-      } else false // * don't add item with same symbol and resultType == null
+      } else false // * don't add item with same symbol and resultType eq null
     } else {
       _idTokenToItems += (idToken -> (item :: items))
       tokensSorted = false

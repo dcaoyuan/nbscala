@@ -93,7 +93,7 @@ class DiffElement(diff: Difference, bounds: PositionBounds, parentFile: FileObje
   override def getParentFile = parentFile
 
   override protected def getNewFileContent: String = {
-    if (newFileContent != null) {
+    if (newFileContent ne null) {
       newFileContent.get match {
         case null =>
         case x => return x

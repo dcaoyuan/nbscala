@@ -287,7 +287,7 @@ object ScalaSourceUtil {
 
   /** @todo */
   def getDocComment(pr: Parser.Result, element: JavaElements#JavaElement): String = {
-    if (pr == null) {
+    if (pr eq null) {
       return null
     }
 
@@ -333,7 +333,7 @@ object ScalaSourceUtil {
 
   /** @todo */
   def getOffset(pr: Parser.Result, element: JavaElements#JavaElement): Int = {
-    if (pr == null) {
+    if (pr eq null) {
       return -1
     }
 
@@ -348,17 +348,17 @@ object ScalaSourceUtil {
     val pos = sym.pos
     if (pos.isDefined) {
       val srcFile = pos.source
-      if (srcFile != null) {
+      if (srcFile ne null) {
         srcPath = srcFile.path
         var afile = srcFile.file
-        var file = if (afile != null) afile.file else null
-        if (file == null) {
-          if (srcPath != null) {
+        var file = if (afile ne null) afile.file else null
+        if (file eq null) {
+          if (srcPath ne null) {
             file = new File(srcPath)
           }
         }
         
-        if (file != null && file.exists) {
+        if ((file ne null) && file.exists) {
           // * it's a real file instead of an archive file
           return Some(FileUtil.toFileObject(file))
         }
@@ -375,7 +375,7 @@ object ScalaSourceUtil {
         //        at scala.tools.nsc.symtab.Symbols$Symbol.fullName(Symbols.scala:1166)
     }
 
-    if (qName == null) {
+    if (qName eq null) {
       return None
     }
 
@@ -402,13 +402,13 @@ object ScalaSourceUtil {
     val clzFo = cp.findResource(clzName)
     val root  = cp.findOwnerRoot(clzFo)
 
-    val srcCpTarget = if (root != null) {
+    val srcCpTarget = if (root ne null) {
       val srcRoots1 = ScalaGlobal.getSrcFileObjects(root, true)
       val srcRoots2 = SourceForBinaryQuery.findSourceRoots(root.toURL).getRoots
       ClassPathSupport.createClassPath(srcRoots1 ++ srcRoots2: _*)
     } else null
 
-    if (srcPath != null && srcPath != "") {
+    if ((srcPath ne null) && srcPath != "") {
       findSourceFileObject(srcCpMine, srcCpTarget, srcPath) match {
         case None =>
         case some => return some
@@ -424,18 +424,18 @@ object ScalaSourceUtil {
     }
 
     try {
-      srcPath = if (clzFo != null) {
+      srcPath = if (clzFo ne null) {
         val in = clzFo.getInputStream
         try {
           new ClassFile(in, false) match {
             case null => null
             case clzFile => clzFile.getSourceFileName
           }
-        } finally {if (in != null) in.close}
+        } finally {if (in ne null) in.close}
       } else null
 
-      if (srcPath != null) {
-        val srcPath1 = if (pkgName != null) pkgName + "/" + srcPath else srcPath
+      if (srcPath ne null) {
+        val srcPath1 = if (pkgName ne null) pkgName + "/" + srcPath else srcPath
         findSourceFileObject(srcCpMine, srcCpTarget, srcPath1)
       } else None
     } catch {case ex: Exception => ex.printStackTrace; None}
@@ -444,7 +444,7 @@ object ScalaSourceUtil {
   def findSourceFileObject(srcCpMine: ClassPath, srcCpTarget: ClassPath, srcPath: String): Option[FileObject] = {
     // find in own project's srcCp first
     srcCpMine.findResource(srcPath) match {
-      case null if srcCpTarget == null => None
+      case null if srcCpTarget eq null => None
       case null => srcCpTarget.findResource(srcPath) match {
           case null => None
           case x => Some(x)
@@ -575,12 +575,12 @@ object ScalaSourceUtil {
       val in = clazzFo.getInputStream
       try {
         val clazzBin = new ClassFile(in, true)
-        if (clazzBin != null) {
+        if (clazzBin ne null) {
           val itr = clazzBin.getMethods.iterator
           while (itr.hasNext) {
             val method = itr.next
             val code = method.getCode
-            if (code != null) {
+            if (code ne null) {
               //Log.info("LineNumbers: " + code.getLineNumberTable.mkString("[", ",", "]"))
               if (code.getLineNumberTable exists {_ == lineNumber}) {
                 clazzName = FileUtil.getRelativePath(out, clazzFo).replace('/', '.')
@@ -594,7 +594,7 @@ object ScalaSourceUtil {
             }
           }
         }
-      } finally {if (in != null) in.close}
+      } finally {if (in ne null) in.close}
     }
 
     clazzName
@@ -608,7 +608,7 @@ object ScalaSourceUtil {
     var clzName = ""
     root.enclosingDfn(TMPL_KINDS, th, offset) foreach {enclDfn =>
       val sym = enclDfn.asInstanceOf[ScalaDfns#ScalaDfn].symbol
-      if (sym != null) {
+      if (sym ne null) {
         // "scalarun.Dog.$talk$1"
         val fqn = new StringBuilder(sym.fullName('.'))
 
@@ -637,10 +637,10 @@ object ScalaSourceUtil {
     }
 
     //        AstDfn tmpl = rootScope.getEnclosinDef(ElementKind.CLASS, th, offset);
-    //        if (tmpl == null) {
+    //        if (tmpl eq null) {
     //            tmpl = rootScope.getEnclosinDef(ElementKind.MODULE, th, offset);
     //        }
-    //        if (tmpl == null) {
+    //        if (tmpl eq null) {
     //            ErrorManager.getDefault().log(ErrorManager.WARNING,
     //                    "No enclosing class for " + pResult.getSnapshot().getSource().getFileObject() + ", offset = " + offset);
     //        }
@@ -648,7 +648,7 @@ object ScalaSourceUtil {
     //        String className = tmpl.getBinaryName();
     //
     //        String enclosingPackage = tmpl.getPackageName();
-    //        if (enclosingPackage == null || enclosingPackage != null && enclosingPackage.length() == 0) {
+    //        if (enclosingPackage eq null || enclosingPackage ne null && enclosingPackage.length() == 0) {
     //            result[0] = className;
     //        } else {
     //            result[0] = enclosingPackage + "." + className;
@@ -663,7 +663,7 @@ object ScalaSourceUtil {
    * @throws IllegalArgumentException when file does not exist or is not a java source file.
    */
   def getMainClasses(fo: FileObject): Seq[ScalaDfns#ScalaDfn] = {
-    if (fo == null || !fo.isValid || fo.isVirtual) {
+    if ((fo eq null) || !fo.isValid || fo.isVirtual) {
       throw new IllegalArgumentException
     }
     val source = Source.create(fo) match {
@@ -742,7 +742,7 @@ object ScalaSourceUtil {
         //                    public void run(CompilationController control) throws Exception {
         //                        for (AstElement cls : classes) {
         //                            TypeElement te = cls.resolve(control);
-        //                            if (te != null) {
+        //                            if (te ne null) {
         //                                Iterable<? extends ExecutableElement> methods = ElementFilter.methodsIn(te.getEnclosedElements());
         //                                for (ExecutableElement method : methods) {
         //                                    if (isMainMethod(method)) {
@@ -808,7 +808,7 @@ object ScalaSourceUtil {
         //                    public void run(CompilationController control) throws Exception {
         //                        for (JavaElement cls:  classes) {
         //                            TypeElement te = cls.resolve(control);
-        //                            if (te != null) {
+        //                            if (te ne null) {
         //                                Iterable<? extends ExecutableElement> methods = ElementFilter.methodsIn(te.getEnclosedElements());
         //                                for (ExecutableElement method:  methods) {
         //                                    if (isMainMethod(method)) {
@@ -836,7 +836,7 @@ object ScalaSourceUtil {
     val compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
 
-    if (bootCp == null || compCp == null || srcCp == null) {
+    if ((bootCp eq null) || (compCp eq null) || (srcCp eq null)) {
       /** @todo why? at least I saw this happens on "Scala project created from existing sources" */
       logger.warning("No classpath for " + fo)
       None

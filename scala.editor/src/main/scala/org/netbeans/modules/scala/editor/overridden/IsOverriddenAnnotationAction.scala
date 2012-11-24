@@ -72,7 +72,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
     if (!invokeDefaultAction(e.getSource.asInstanceOf[JTextComponent])) {
       val actions = ImplementationProvider.getDefault.getGlyphGutterActions(e.getSource.asInstanceOf[JTextComponent])
             
-      if (actions == null) return
+      if (actions eq null) return
             
       var nextAction = 0
       while (nextAction < actions.length && actions(nextAction) != this) {
@@ -82,7 +82,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
             
       if (actions.length > nextAction) {
         val action = actions(nextAction)
-        if (action != null && action.isEnabled){
+        if ((action ne null) && action.isEnabled){
           action.actionPerformed(e)
         }
       }
@@ -99,7 +99,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
     
   private def findAnnotation(component: JTextComponent, desc: AnnotationDesc, offset: Int): IsOverriddenAnnotation = {
     val file = getFile(component)
-    if (file == null) {
+    if (file eq null) {
       if (ErrorManager.getDefault.isLoggable(ErrorManager.WARNING)) {
         ErrorManager.getDefault.log(ErrorManager.WARNING, "component=" + component + " does not have a file specified in the document."); //NOI18N
       }
@@ -107,7 +107,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
     }
         
     val ah = AnnotationsHolder(file)
-    if (ah == null) {
+    if (ah eq null) {
       IsOverriddenAnnotationHandler.Log.log(Level.INFO, "component=" + component + " does not have attached a IsOverriddenAnnotationHandler"); //NOI18N
       return null
     }
@@ -138,7 +138,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
             }
           })
             
-        if (annotation(0) == null) return false
+        if (annotation(0) eq null) return false
             
         JumpList.addEntry(comp, currentPosition)
             

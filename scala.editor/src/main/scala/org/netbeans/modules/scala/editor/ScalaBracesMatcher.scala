@@ -39,7 +39,7 @@
 
 package org.netbeans.modules.scala.editor
 
-import javax.swing.text.{AbstractDocument, BadLocationException}
+import javax.swing.text.BadLocationException
 import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.scala.core.lexer.{ScalaTokenId, ScalaLexUtil}
 import org.netbeans.spi.editor.bracesmatching.{BracesMatcher, MatcherContext}
@@ -65,7 +65,7 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
         }
 
         var token = ts.token
-        if (token == null) {
+        if (token eq null) {
           return null
         }
 
@@ -141,7 +141,7 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
         }
 
         var token = ts.token
-        if (token == null) {
+        if (token eq null) {
           return null
         }
 

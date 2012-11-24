@@ -60,7 +60,7 @@ class ScalaHintsProvider() extends HintsProvider {
      */
     def computeHints(manager : HintsManager, context : RuleContext, hints : java.util.List[Hint]) : Unit = {
       val parserResult = context.parserResult;
-      if (parserResult != null) {
+      if (parserResult ne null) {
           val scalaParserResult = parserResult.asInstanceOf[ScalaParserResult]
           val rootScope = scalaParserResult.rootScope
           val hintRules  = manager.getHints.asInstanceOf[ju.Map[_, ju.List[ScalaAstRule]]]
@@ -92,7 +92,7 @@ class ScalaHintsProvider() extends HintsProvider {
       //println("compute selections")
       cancelled = false
       val parserResult = context.parserResult;
-      if (parserResult != null) {
+      if (parserResult ne null) {
         val selHints  = manager.getSelectionHints.asInstanceOf[ju.List[ScalaSelectionRule]]
         if (!selHints.isEmpty && !cancelled) {
           try {
@@ -114,9 +114,9 @@ class ScalaHintsProvider() extends HintsProvider {
         //println("compute errors")
         cancelled = false
         val parserResult = context.parserResult;
-        if (parserResult != null) {
+        if (parserResult ne null) {
             val errors = JavaConversions.asScalaBuffer(parserResult.getDiagnostics).asInstanceOf[scala.collection.mutable.Buffer[Error]];
-            if (errors != null && !errors.isEmpty) {
+            if ((errors ne null) && !errors.isEmpty) {
                 val errHints  = manager.getErrors.asInstanceOf[ju.Map[String, ju.List[ScalaErrorRule]]]
 
                 if (errHints.isEmpty || cancelled) {
@@ -138,7 +138,7 @@ class ScalaHintsProvider() extends HintsProvider {
         val code = error.getKey
         //println("code=" + code)
         val rules = errRules.get(code)
-        if (rules != null) {
+        if (rules ne null) {
            var added = List[Hint]()
            val applicableRules = for {
                rule <- JavaConversions.asScalaBuffer(rules.asInstanceOf[ju.List[ScalaErrorRule]])

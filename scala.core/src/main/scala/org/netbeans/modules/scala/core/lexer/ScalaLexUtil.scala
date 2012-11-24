@@ -213,7 +213,7 @@ object ScalaLexUtil extends LexUtil {
       }
     }
     // if we found end of sequence or end of line
-    if (ts.token == null || (ts.token.id != ScalaTokenId.LBrace && eolFound)) {
+    if ((ts.token eq null) || (ts.token.id != ScalaTokenId.LBrace && eolFound)) {
       new OffsetRange(startOffset, lastEolOffset);
     } else OffsetRange.NONE
   }

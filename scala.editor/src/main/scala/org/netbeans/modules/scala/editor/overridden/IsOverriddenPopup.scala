@@ -139,10 +139,10 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
   private def openSelected {
     val desc = jList1.getSelectedValue.asInstanceOf[ElementDescription]
         
-    if (desc != null) {
+    if (desc ne null) {
       val file = desc.getSourceFile
             
-      if (file != null) {
+      if (file ne null) {
         UiUtils.open(file, desc.getOffset)
       } else {
         Toolkit.getDefaultToolkit.beep

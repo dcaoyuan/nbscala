@@ -68,7 +68,7 @@ object AnnotationsHolder {
       }
 
       val ec = od.getLookup.lookup(classOf[EditorCookie.Observable])
-      if (ec == null) {
+      if (ec eq null) {
         return null
       }
 
@@ -96,7 +96,7 @@ class AnnotationsHolder(file: DataObject, ec: EditorCookie.Observable) extends P
   Logger.getLogger("TIMER").log(Level.FINE, "Overridden AnnotationsHolder", Array(file.getPrimaryFile, this).asInstanceOf[Array[Object]]); //NOI18N
     
   override def propertyChange(evt: PropertyChangeEvent) {
-    if (EditorCookie.Observable.PROP_OPENED_PANES.endsWith(evt.getPropertyName) || evt.getPropertyName == null) {
+    if (EditorCookie.Observable.PROP_OPENED_PANES.endsWith(evt.getPropertyName) || (evt.getPropertyName eq null)) {
       checkForReset
     }
   }
@@ -104,7 +104,7 @@ class AnnotationsHolder(file: DataObject, ec: EditorCookie.Observable) extends P
   private def checkForReset {
     assert(SwingUtilities.isEventDispatchThread)
         
-    if (ec.getOpenedPanes == null) {
+    if (ec.getOpenedPanes eq null) {
       //reset:
       classOf[AnnotationsHolder] synchronized {
         fileToAnnotations.remove(file)

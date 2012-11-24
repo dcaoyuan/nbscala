@@ -15,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
  * @author Caoyuan Deng
  */
 class History(historyFile: File) {
-  if (historyFile != null) setHistoryFile(historyFile)
+  if (historyFile ne null) setHistoryFile(historyFile)
   
   val history = new ArrayBuffer[String]()
 
@@ -53,7 +53,7 @@ class History(historyFile: File) {
     val breader = new BufferedReader(reader)
     val lines = new ArrayBuffer[String]()
     var line = breader.readLine
-    while (line != null) {
+    while (line ne null) {
       lines += line
       line = breader.readLine
     }
@@ -88,7 +88,7 @@ class History(historyFile: File) {
 
     _currentIndex = history.size
 
-    if (output != null) {
+    if (output ne null) {
       output.println(buffer)
       output.flush
     }
@@ -98,7 +98,7 @@ class History(historyFile: File) {
    * Flush the entire history buffer to the output PrintWriter.
    */
   def flushBuffer() {
-    if (output == null) return
+    if (output eq null) return
     history foreach (output.println(_))
     output.flush
   }

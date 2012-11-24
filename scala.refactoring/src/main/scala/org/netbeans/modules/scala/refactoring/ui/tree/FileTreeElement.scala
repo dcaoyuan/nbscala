@@ -63,7 +63,7 @@ class FileTreeElement(fo: FileObject) extends TreeElement {
       return TreeElementFactory.getTreeElement(fo.getParent)
     } else {
       val p = FileOwnerQuery.getOwner(fo)
-      return TreeElementFactory.getTreeElement(if (p != null) p else fo.getParent)
+      return TreeElementFactory.getTreeElement(if (p ne null) p else fo.getParent)
     }
   }
 

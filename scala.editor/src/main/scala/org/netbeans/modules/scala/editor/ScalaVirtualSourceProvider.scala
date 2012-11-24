@@ -133,7 +133,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
   }
 
   private def translateFile(fileObj: FileObject, srcRootFileObj: FileObject, result: VirtualSourceProvider.Result) {
-    if (fileObj == null) return
+    if (fileObj eq null) return
 
     try {
       val source = Source.create(fileObj)
@@ -168,7 +168,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                 // * source is probably broken and there is no AST
                 // * let's generate empty Java stub with simple name equal to file name
                 var pkg = FileUtil.getRelativePath(srcRootFileObj, fileObj.getParent)
-                if (pkg != null) {
+                if (pkg ne null) {
                   pkg = pkg.replace('/', '.')
                   val sb = new StringBuilder
                   if (!pkg.equals("")) { // NOI18N
@@ -207,7 +207,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                 
                 for ((clzName, syms) <- clzNameToSyms) {
                   try {
-                    val pkgQName = syms find (_ != null) match {
+                    val pkgQName = syms find (_ ne null) match {
                       case Some(sym) => sym.enclosingPackage match {
                           case null => ""
                           case packaging => packaging.fullName match {

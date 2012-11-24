@@ -63,7 +63,7 @@ trait AstDfn extends AstItem with AstElementHandle {
 
     super.make(_idToken, _kind, _fo)
     // we allow _bindingScope to be set later
-    if (abindingScope != null) {
+    if (abindingScope ne null) {
       _bindingScope = abindingScope
       _bindingScope.bindingDfn = Some(this)
     }
@@ -96,7 +96,7 @@ trait AstDfn extends AstItem with AstElementHandle {
   }
 
   def enclosedElements: Seq[AstDfn] = {
-    if (_bindingScope != null) {
+    if (_bindingScope ne null) {
       _bindingScope.dfns
     } else Nil
   }
@@ -104,7 +104,7 @@ trait AstDfn extends AstItem with AstElementHandle {
   def enclosingDfn: Option[AstDfn] = enclosingScope.bindingDfn
 
   def bindingScope: AstScope = {
-    assert(_bindingScope != null, toString + ": Each definition should set binding scope!")
+    assert(_bindingScope ne null, toString + ": Each definition should set binding scope!")
     _bindingScope
   }
 

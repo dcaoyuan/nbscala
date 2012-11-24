@@ -70,8 +70,8 @@ import sun.swing.DefaultLookup;
  * @author Philip Milne
  * @author Hans Muller
  */
-class DefaultListCellRenderer[T] extends JLabel
-                                    with ListCellRenderer[T] with Serializable
+class DefaultListCellRenderer[T <: AnyRef] extends JLabel
+                                              with ListCellRenderer[T] with Serializable
 {
   import DefaultListCellRenderer._
 
@@ -81,13 +81,11 @@ class DefaultListCellRenderer[T] extends JLabel
 
   private def getNoFocusBorder(): Border = {
     val border = DefaultLookup.getBorder(this, ui, "List.cellNoFocusBorder");
-    if (System.getSecurityManager() != null) {
-      if (border != null) return border;
+    if (System.getSecurityManager() ne null) {
+      if (border ne null) return border;
       return SAFE_NO_FOCUS_BORDER;
     } else {
-      if (border != null &&
-          (noFocusBorder == null ||
-           noFocusBorder == DEFAULT_NO_FOCUS_BORDER)) {
+      if ((border ne null) && ((noFocusBorder eq null) || noFocusBorder == DEFAULT_NO_FOCUS_BORDER)) {
         return border;
       }
       return noFocusBorder;
@@ -107,9 +105,7 @@ class DefaultListCellRenderer[T] extends JLabel
     var fg: Color = null;
 
     val dropLocation = list.getDropLocation
-    if (dropLocation != null
-        && !dropLocation.isInsert()
-        && dropLocation.getIndex() == index) {
+    if ((dropLocation ne null) && !dropLocation.isInsert && dropLocation.getIndex == index) {
 
       bg = DefaultLookup.getColor(this, ui, "List.dropCellBackground");
       fg = DefaultLookup.getColor(this, ui, "List.dropCellForeground");
@@ -118,8 +114,8 @@ class DefaultListCellRenderer[T] extends JLabel
     }
 
     if (isSelected) {
-      setBackground(if (bg == null) list.getSelectionBackground() else bg);
-      setForeground(if (fg == null) list.getSelectionForeground() else fg);
+      setBackground(if (bg eq null) list.getSelectionBackground() else bg);
+      setForeground(if (fg eq null) list.getSelectionForeground() else fg);
     }
     else {
       setBackground(list.getBackground());
@@ -132,7 +128,7 @@ class DefaultListCellRenderer[T] extends JLabel
     }
     else {
       setIcon(null);
-      setText(if (value == null) "" else value.toString());
+      setText(if (value eq null) "" else value.toString());
     }
 
     setEnabled(list.isEnabled());
@@ -143,7 +139,7 @@ class DefaultListCellRenderer[T] extends JLabel
       if (isSelected) {
         border = DefaultLookup.getBorder(this, ui, "List.focusSelectedCellHighlightBorder");
       }
-      if (border == null) {
+      if (border eq null) {
         border = DefaultLookup.getBorder(this, ui, "List.focusCellHighlightBorder");
       }
     } else {
@@ -168,11 +164,11 @@ class DefaultListCellRenderer[T] extends JLabel
   def isOpaque(): Boolean = {
     val back = getBackground();
     var p = getParent();
-    if (p != null) {
+    if (p ne null) {
       p = p.getParent();
     }
     // p should now be the JList.
-    val colorMatch = (back != null) && (p != null) &&
+    val colorMatch = (back ne null) && (p ne null) &&
     back.equals(p.getBackground()) &&
     p.isOpaque();
     return !colorMatch && super.isOpaque();
@@ -238,10 +234,10 @@ class DefaultListCellRenderer[T] extends JLabel
   override
   protected def firePropertyChange(propertyName: String, oldValue: Object, newValue: Object) {
     // Strings get interned...
-    if (propertyName == "text"
-        || ((propertyName == "font" || propertyName == "foreground")
-            && oldValue != newValue
-            && getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) != null)) {
+    if (propertyName == "text" || 
+        ((propertyName == "font" || propertyName == "foreground") && 
+         (oldValue != newValue) && 
+         (getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) ne null))) {
 
       super.firePropertyChange(propertyName, oldValue, newValue);
     }

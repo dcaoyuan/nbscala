@@ -98,7 +98,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
   def isInsertMatchingEnabled(doc: BaseDocument): Boolean = {
     // The editor options code is calling methods on BaseOptions instead of looking in the settings map :(
     //Boolean b = ((Boolean)Settings.getValue(doc.getKitClass(), SettingsNames.PAIR_CHARACTERS_COMPLETION));
-    //return b == null || b.booleanValue();
+    //return b eq null || b.booleanValue();
     EditorOptions.get(ScalaMimeResolver.MIME_TYPE) match {
       case null => true
       case options => options.getMatchBrackets
@@ -494,7 +494,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
     // that we don't have "indented" code already (tokens at an
     // indentation level higher than the current line was), OR that
     // there is no actual end or } coming up.
-    if (startOffsetResult != null) {
+    if (startOffsetResult ne null) {
       startOffsetResult(0) = Utilities.getRowFirstNonWhite(doc, offset)
     }
 
@@ -542,15 +542,15 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         next = Utilities.getRowEnd(doc, next) + 1
       }
 
-      if (insertEndResult != null) {
+      if (insertEndResult ne null) {
         insertEndResult(0) = insertEnd
       }
 
-      if (insertRBraceResult != null) {
+      if (insertRBraceResult ne null) {
         insertRBraceResult(0) = insertRBrace
       }
 
-      if (indentResult != null) {
+      if (indentResult ne null) {
         indentResult(0) = indent
       }
 
@@ -586,7 +586,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
           case '"' | '\'' | '`' | '(' | '{' | '[' | '<' | '/' | '~' =>
             // * Bracket the selection
             val selection = target.getSelectedText
-            if (selection != null && selection.length > 0) {
+            if ((selection ne null) && selection.length > 0) {
               val firstChar = selection.charAt(0)
               if (firstChar != c) {
                 val start = target.getSelectionStart
@@ -712,7 +712,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
 
     //        if (REFLOW_COMMENTS) {
     //            Token<?extends ScalaTokenId> token = ScalaLexUtil.getToken(doc, dotPos);
-    //            if (token != null) {
+    //            if (token ne null) {
     //                TokenId id = token.id();
     //                if (id == ScalaTokenId.LINE_COMMENT || id == ScalaTokenId.DOCUMENTATION) {
     //                    new ReflowParagraphAction().reflowEditedComment(target);
@@ -744,7 +744,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       //        case '#': {
       //            // Automatically insert #{^} when typing "#" in a quoted string or regexp
       //            Token<?extends ScalaTokenId> token = ScalaLexUtil.getToken(doc, dotPos);
-      //            if (token == null) {
+      //            if (token eq null) {
       //                return true;
       //            }
       //            TokenId id = token.id();
@@ -968,7 +968,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         // Fallthrough for match-deletion
       case '|' | '\"' | '\'' =>
         val mtch = doc.getChars(dotPos, 1)
-        if (mtch != null && mtch(0) == ch) {
+        if ((mtch ne null) && mtch(0) == ch) {
           doc.remove(dotPos, 1)
         }
       case _ =>
@@ -1026,7 +1026,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
 
     var token = ts.token
     // Check whether character follows the bracket is the same bracket
-    if (token != null && token.id == bracketId) {
+    if ((token ne null) && token.id == bracketId) {
       val bracketIntId = bracketId.ordinal
       val leftBracketIntId = if (bracketIntId == ScalaTokenId.RParen.ordinal) {
         ScalaTokenId.LParen.ordinal
@@ -1039,7 +1039,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
 
       var nextToken = ts.token
       var break = false
-      while (nextToken != null && nextToken.id == bracketId && ts.moveNext && !break) {
+      while ((nextToken ne null) && nextToken.id == bracketId && ts.moveNext && !break) {
         token = nextToken
 
         if (!ts.moveNext) {
@@ -1059,7 +1059,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       token = ts.token
 
       var finished = false
-      while (!finished && token != null) {
+      while (!finished && (token ne null)) {
         val tokenIntId = token.id.ordinal
         token.id match {
           case ScalaTokenId.LParen | ScalaTokenId.LBracket =>
@@ -1125,7 +1125,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         ts.moveNext
         token = ts.token
         finished = false
-        while (!finished && token != null) {
+        while (!finished && (token ne null)) {
           //int tokenIntId = token.getTokenID().getNumericID();
           token.id match {
             case ScalaTokenId.LParen | ScalaTokenId.LBracket =>
@@ -1269,11 +1269,11 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       }
     }
 
-    if (id == ScalaTokenId.Error && previousToken != null && previousToken.id == beginToken) {
+    if (id == ScalaTokenId.Error && (previousToken ne null) && previousToken.id == beginToken) {
       insideString = true
     }
 
-    if (id == ScalaTokenId.Nl && previousToken != null) {
+    if (id == ScalaTokenId.Nl && (previousToken ne null)) {
       if (previousToken.id == beginToken) {
         insideString = true;
       } else if (previousToken.id == ScalaTokenId.Error) {
@@ -1446,7 +1446,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
 
       ScalaLexUtil.getPositionedSequence(doc, caretOffset) foreach {ts =>
         val token = ts.token
-        if (token == null) {
+        if (token eq null) {
           return ranges
         }
         token.id match {

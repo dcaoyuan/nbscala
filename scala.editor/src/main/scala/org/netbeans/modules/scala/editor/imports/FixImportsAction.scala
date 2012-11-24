@@ -79,7 +79,7 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
   def actionPerformed(evt: ActionEvent, comp: JTextComponent) {
     LOG.log(Level.FINEST, "actionPerformed(final JTextComponent comp)")
 
-    assert(comp != null)
+    assert(comp ne null)
     comp.getDocument match {
       case null =>
       case x => 
@@ -90,7 +90,7 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
 
   def run {
     val dob = NbEditorUtilities.getDataObject(doc)
-    if (dob == null) {
+    if (dob eq null) {
       LOG.log(Level.FINEST, "Could not get DataObject for document")
       return
     }
@@ -104,9 +104,9 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
           @throws(classOf[Exception])
           override def run(resultIterator: ResultIterator)  {
             val pResult = resultIterator.getParserResult.asInstanceOf[ScalaParserResult]
-            if (pResult != null) {
+            if (pResult ne null) {
               val errors = pResult.getDiagnostics
-              if (errors == null) {
+              if (errors eq null) {
                 LOG.log(Level.FINEST, "Could not get list of errors")
                 return
               }

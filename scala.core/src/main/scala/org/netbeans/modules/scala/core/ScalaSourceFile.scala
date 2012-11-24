@@ -44,15 +44,15 @@ object ScalaSourceFile {
 class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
   
   lazy val file: AbstractFile = {
-    val file = if (fileObject != null) FileUtil.toFile(fileObject) else null
-    if (file != null) new PlainFile(file) else new VirtualFile("<current>", "")
+    val file = if (fileObject ne null) FileUtil.toFile(fileObject) else null
+    if (file ne null) new PlainFile(file) else new VirtualFile("<current>", "")
   }
   
   lazy val source = Source.create(fileObject) // if has been created, will return existed one
   
   private var _snapshot: Snapshot = _
   def snapshot = {
-    if (_snapshot == null) {
+    if (_snapshot eq null) {
       refreshSnapshot
     }
     _snapshot

@@ -195,7 +195,7 @@ trait ScalaElements {self: ScalaGlobal =>
 
     def getDoc: Option[BaseDocument] = {
       val srcFo = getFileObject
-      if (srcFo != null) {
+      if (srcFo ne null) {
         doc match {
           case None => GsfUtilities.getDocument(srcFo, true) match {
               case null =>
@@ -224,7 +224,7 @@ trait ScalaElements {self: ScalaGlobal =>
         javaElement = JavaSourceUtil.getJavaElement(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), symbol)
       } else {
         val fo = getFileObject 
-        if (fo != null) {
+        if (fo ne null) {
           val srcFile = ScalaSourceFile.sourceFileOf(fo)
           try {
             /**

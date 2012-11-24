@@ -116,7 +116,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
 
       if (notLocal) {
         val srcCp = cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE)
-        if (srcCp != null) {
+        if (srcCp ne null) {
           set ++= RetoucheUtils.getScalaFilesInSrcCp(srcCp, false)
         }
       }
@@ -125,7 +125,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
     /*
      val index = cpInfo.getClassIndex
      val file = handle.fo.getOrElse(return Set[FileObject]())
-     val source = if (file != null) {
+     val source = if (file ne null) {
      set.add(file)
      Source.create(file)
      } else {
@@ -140,7 +140,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
      public void run(CompilationController info) throws Exception {
      info.toPhase(JavaSource.Phase.RESOLVED);
      final Element el = tph.resolveElement(info);
-     if (el == null) {
+     if (el eq null) {
      throw new NullPointerException(String.format("#145291: Cannot resolve handle: %s\n%s", tph, info.getClasspathInfo())); // NOI18N
      }
      if (el.getKind().isField()) {
@@ -212,7 +212,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
   }
 
   override def fastCheckParameters: Problem = {
-    if (targetName == null) {
+    if (targetName eq null) {
       return new Problem(true, "Cannot determine target name. Please file a bug with detailed information on how to reproduce (preferably including the current source file and the cursor position)");
     }
     if (searchHandle.kind == ElementKind.METHOD) {
@@ -268,7 +268,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
         val sourceText = pr.getSnapshot.getText.toString
         //System.out.println("Skipping file " + workingCopy.getFileObject());
         // See if the document contains references to this symbol and if so, put a warning in
-        if (sourceText != null && sourceText.indexOf(targetName) != -1) {
+        if ((sourceText ne null) && sourceText.indexOf(targetName) != -1) {
           var start = 0
           var end = 0
           var desc = "Parse error in file which contains " + targetName + " reference - skipping it"
@@ -283,7 +283,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
                 break = true
               }
             }
-            if (error == null) {
+            if (error eq null) {
               error = errors.get(0)
             }
 
@@ -308,9 +308,9 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
         }
       }
 
-      if (error == null && isSearchInComments) {
+      if ((error eq null) && isSearchInComments) {
         val doc = RetoucheUtils.getDocument(pr)
-        if (doc != null) {
+        if (doc ne null) {
           val th = pr.getSnapshot.getTokenHierarchy
           val ts = th.tokenSequence.asInstanceOf[TokenSequence[TokenId]]
 
@@ -319,7 +319,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
         }
       }
 
-      if (root == null) {
+      if (root eq null) {
         // TODO - warn that this file isn't compileable and is skipped?
         return Nil
       }
@@ -330,7 +330,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
 
       /*            if (isFindSubclasses() || isFindDirectSubclassesOnly()) {
        // I'm only looking for the specific classes
-       assert subclasses != null;
+       assert subclasses ne null;
        // Look in these files for the given classes
        //findSubClass(root);
        for (IndexedClass clz : subclasses) {
@@ -388,9 +388,9 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
           id.primaryCategory match {  
             case "comment" | "block-comment" => // NOI18N
               // search this comment
-              assert(targetName != null)
+              assert(targetName ne null)
               val tokenText = token.text
-              if (tokenText != null && targetName != null) {
+              if ((tokenText ne null) && (targetName ne null)) {
                 TokenUtilities.indexOf(tokenText, targetName) match {
                   case -1 =>
                   case idx =>

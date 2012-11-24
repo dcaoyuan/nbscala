@@ -131,7 +131,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
     val source = Source.create(fo)
     val p = FileOwnerQuery.getOwner(fo)
     val (currentProject, allProjects) =
-      if (p != null) {
+      if (p ne null) {
         val pi = ProjectUtils.getInformation(FileOwnerQuery.getOwner(fo))
         (new JLabel(pi.getDisplayName(), pi.getIcon(), SwingConstants.LEFT),
          new JLabel(NbBundle.getMessage(classOf[WhereUsedPanel],"LBL_AllProjects"), pi.getIcon(), SwingConstants.LEFT))
@@ -197,7 +197,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
                                                 enclClass.hasFlag(Flags.FINAL) ||
                                                 modifiers.contains(Modifier.STATIC) ||
                                                 modifiers.contains(Modifier.PRIVATE)))
-                      if (methodDeclaringSuperClass != null ) {
+                      if (methodDeclaringSuperClass ne null ) {
                         m_isBaseClass.setVisible(true)
                         m_isBaseClass.setSelected(true)
                         Mnemonics.setLocalizedText(m_isBaseClass, isBaseClassText)
@@ -217,7 +217,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
                       c_directOnly.setVisible(false)
                   }
                   
-                  if (currentProject != null) {
+                  if (currentProject ne null) {
                     scope.setModel(new DefaultComboBoxModel(Array(allProjects, currentProject).asInstanceOf[Array[JLabel]]))
                     val defaultItem = RefactoringModule.getOption("whereUsed.scope", 0).toInt // NOI18N
                     scope.setSelectedIndex(defaultItem)
@@ -246,7 +246,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
       // #89393: GTK needs name to render cell renderer "natively"
       setName("ComboBox.listRenderer") // NOI18N
             
-      if ( value != null ) {
+      if ( value ne null ) {
         setText(value.getText)
         setIcon(value.getIcon)
       }

@@ -91,7 +91,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
     val startOffset = context.startOffset
     val endOffset = context.endOffset
 
-    if (codeStyle != null) {
+    if (codeStyle ne null) {
       // Make sure we're not reindenting HTML content
       reindent(context, document, startOffset, endOffset, null, true)
     } else {
@@ -105,7 +105,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
     val startOffset = context.startOffset
     val endOffset = context.endOffset
 
-    if (codeStyle != null) {
+    if (codeStyle ne null) {
       // Make sure we're not reindenting HTML content
       reindent(context, document, startOffset, endOffset, info, true)
     } else {
@@ -115,7 +115,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
   }
 
   def indentSize: Int = {
-    if (codeStyle != null) {
+    if (codeStyle ne null) {
       codeStyle.indentSize
     } else {
       CodeStyle.get(null.asInstanceOf[Document]).indentSize
@@ -123,7 +123,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
   }
 
   def hangingIndentSize: Int = {
-    if (codeStyle != null) {
+    if (codeStyle ne null) {
       codeStyle.continuationIndentSize
     } else {
       CodeStyle.get(null.asInstanceOf[Document]).continuationIndentSize
@@ -417,7 +417,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
       ts.move(lineBegin)
       do {
         val token = ts.token
-        if (token != null) {
+        if (token ne null) {
 
           val offset = ts.offset
           val id = token.id
@@ -581,7 +581,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
 
       // * special case for next line indent with `=` is at the end of this line, or unfinished `if` `else` `for`
       // * since this line has been processed totally, we can now traverse ts freely
-      if (latestNoWSToken != null) {
+      if (latestNoWSToken ne null) {
         // * move `ts` to `latestNoWSToken` by following 2 statements:
         ts.move(latestNoWSTokenOffset); ts.moveNext
         // * is the next token LBrace? if true, don't open any brace
@@ -700,11 +700,11 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
     } else null
 
     // * decide if next line is new or continued continute line
-    val isContinueLine = if (latestNoWSToken == null) {
+    val isContinueLine = if (latestNoWSToken eq null) {
       // * empty line or comment line
       false
     } else {
-      if (latestOpenBrace != null && latestOpenBrace.isLatestOnLine) {
+      if ((latestOpenBrace ne null) && latestOpenBrace.isLatestOnLine) {
         // * we have special case
         (latestOpenBrace.token.id, latestNoWSToken.id) match {
           //case (ScalaTokenId.LParen | ScalaTokenId.LBracket | ScalaTokenId.LBrace, ScalaTokenId.Comma) => true
@@ -728,7 +728,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
       // Reset continueIndent
       continueIndent = -1
 
-      if (latestOpenBrace == null) {
+      if (latestOpenBrace eq null) {
         // All braces resolved
         nextIndent = 0
       } else {
@@ -747,7 +747,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
               }
             }
 
-            if (nearestHangableBrace != null) {
+            if (nearestHangableBrace ne null) {
               // * Hang it from this brace
               nearestHangableBrace.offsetOnline + depth * indentSize
             } else {
@@ -755,8 +755,8 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
             }
             
           case ScalaTokenId.LParen | ScalaTokenId.LBracket | ScalaTokenId.LBrace
-            if !latestOpenBrace.isLatestOnLine && (latestOpenBrace.lasestTokenOnLine == null ||
-                                                   latestOpenBrace.lasestTokenOnLine.id != ScalaTokenId.RArrow) =>
+            if !latestOpenBrace.isLatestOnLine && ((latestOpenBrace.lasestTokenOnLine eq null) ||
+                                                   (latestOpenBrace.lasestTokenOnLine.id != ScalaTokenId.RArrow)) =>
 
             latestOpenBrace.offsetOnline + latestOpenBrace.token.text.length
 

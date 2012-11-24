@@ -103,7 +103,7 @@ object FmtOptions {
   // Ruby needs its own indent size; the global "4" isn't a good match
   //    public static int getGlobalIndentSize() {
   //        org.netbeans.editor.Formatter f = (org.netbeans.editor.Formatter)Settings.getValue(getKitClass(), "formatter");
-  //        if (f != null)
+  //        if (f ne null)
   //            return f.getShiftWidth();
   //        return getDefaultAsInt(indentSize);
   //    }
@@ -113,7 +113,7 @@ object FmtOptions {
   }
 
   def getKitClass: Class[_ <: EditorKit] = {
-    if (kitClass == null) {
+    if (kitClass eq null) {
       kitClass = MimeLookup.getLookup(MimePath.get(mimePath)).lookup(classOf[EditorKit]) match {
         case null => classOf[EditorKit]
         case kit => kit.getClass.asInstanceOf[Class[EditorKit]]
@@ -161,7 +161,7 @@ object FmtOptions {
   }
 
   def getLastValue(optionID: String): String = {
-    val p = if (lastValues == null) getPreferences else lastValues
+    val p = if (lastValues eq null) getPreferences else lastValues
     p.get(optionID, getDefaultAsString(optionID))
   }
 
@@ -198,7 +198,7 @@ object FmtOptions {
 
     import Customizer._
 
-    private val previewText = if (apreviewText != null) apreviewText else NbBundle.getMessage(classOf[FmtOptions], "SAMPLE_Default")
+    private val previewText = if (apreviewText ne null) apreviewText else NbBundle.getMessage(classOf[FmtOptions], "SAMPLE_Default")
     private var isChanged = false
     private val components = new ArrayBuffer[JComponent]
     private var previewPane: JEditorPane = _
@@ -235,7 +235,7 @@ object FmtOptions {
     }
 
     def getPreviewComponent: JComponent = {
-      if (previewPane == null) {
+      if (previewPane eq null) {
         previewPane = new JEditorPane
         previewPane.getAccessibleContext.setAccessibleName(NbBundle.getMessage(classOf[FmtOptions], "AN_Preview")) //NOI18N
         previewPane.getAccessibleContext.setAccessibleDescription(NbBundle.getMessage(classOf[FmtOptions], "AD_Preview")) //NOI18N
@@ -556,7 +556,7 @@ object FmtOptions {
     }
 
     protected def getSpi(key: String): String = {
-      delegates.find{_.get(key, null) != null}.map(_.get(key, null)).getOrElse(null)
+      delegates.find{_.get(key, null) ne null}.map(_.get(key, null)).getOrElse(null)
     }
 
     protected def removeSpi(key: String) {

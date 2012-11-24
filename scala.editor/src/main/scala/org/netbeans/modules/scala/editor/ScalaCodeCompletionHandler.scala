@@ -223,18 +223,18 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       completer.findCall(ts, th) match {
         case completer.Call(null, _, _) =>
         case completer.Call(base, dot, select) =>
-          val go = dot != null || !isAtNewLine
+          val go = (dot ne null) || !isAtNewLine
 
           if (go) {
-            completer.prefix = if (select != null) select.text.toString else ""
+            completer.prefix = if (select ne null) select.text.toString else ""
             // * it should be expecting call proposals, so just return right
             // * now to avoid keyword local vars proposals
             needSemantice()
-            if (completer.completeSymbolMembers(if (dot != null) dot else base, proposals)) {
+            if (completer.completeSymbolMembers(if (dot ne null) dot else base, proposals)) {
               return completionResult
             }
 
-            if (dot != null) {
+            if (dot ne null) {
               // * what ever, it should be expecting call proposals, so just return right now to avoid keyword local vars proposals
               return completionResult
             }
@@ -256,20 +256,20 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
        case completer.Call(null, _, _) =>
        case completer.Call(base, select, caretAfterDot) =>
        val items = root.findItemsAt(th, base.offset(th))
-       val baseItem = items find {_.resultType != null} getOrElse {
+       val baseItem = items find {_.resultType ne null} getOrElse {
        items find {x => x.symbol.asInstanceOf[Symbol].hasFlag(Flags.METHOD)} getOrElse {
        if (items.isEmpty) null else items.head
        }
        }
 
-       if (baseItem != null) {
+       if (baseItem ne null) {
        val go = if (caretAfterDot) {
        true
        } else !isAtNewLine
 
        if (go) {
        if (select.length > 0) completer.prefix = select
-       if (baseItem.symbol != null) {
+       if (baseItem.symbol ne null) {
        if (completer.completeSymbolMembers(baseItem, proposals)) {
        // * it should be expecting call proposals, so just return right
        // * now to avoid keyword local vars proposals
@@ -342,7 +342,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //        // See if we're in prototype js functions, $() and $F(), and if so,
   //        // offer to complete the function ids
   //        TokenSequence<ScalaTokenId> ts = ScalaLexUtil.getPositionedSequence(request.doc, request.lexOffset);
-  //        assert ts != null; // or we wouldn't have been called in the first place
+  //        assert ts ne null; // or we wouldn't have been called in the first place
   //        //Token<? extends ScalaTokenId> stringToken = ts.token();
   //        int stringOffset = ts.offset();
   //
@@ -379,7 +379,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //                            }
   //                        }
   //                        if (!jQuery) {
-  //                            jQuery = request.index.getType("jQuery") != null;
+  //                            jQuery = request.index.getType("jQuery") ne null;
   //                        }
   //                    }
   //
@@ -495,7 +495,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //    }
   //    private void addElementClasses(List<CompletionProposal> proposals, CompletionRequest request, String prefix) {
   //        ParserResult result = request.info.getEmbeddedResult(JsUtils.HTML_MIME_TYPE, 0);
-  //        if (result != null) {
+  //        if (result ne null) {
   //            HtmlParserResult htmlResult = (HtmlParserResult)result;
   //            List<SyntaxElement> elementsList = htmlResult.elementsList();
   //            Set<String> classes = new HashSet<String>();
@@ -525,7 +525,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //
   //    private void addTagNames(List<CompletionProposal> proposals, CompletionRequest request, String prefix) {
   //        ParserResult result = request.info.getEmbeddedResult(JsUtils.HTML_MIME_TYPE, 0);
-  //        if (result != null) {
+  //        if (result ne null) {
   //            HtmlParserResult htmlResult = (HtmlParserResult)result;
   //            List<SyntaxElement> elementsList = htmlResult.elementsList();
   //            Set<String> tagNames = new HashSet<String>();
@@ -554,7 +554,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //    }
   //    private void addElementIds(List<CompletionProposal> proposals, CompletionRequest request, String prefix) {
   //        ParserResult result = request.info.getEmbeddedResult(JsUtils.HTML_MIME_TYPE, 0);
-  //        if (result != null) {
+  //        if (result ne null) {
   //            HtmlParserResult htmlResult = (HtmlParserResult)result;
   //            Set<SyntaxElement.TagAttribute> elementIds = htmlResult.elementsIds();
   //            String filename = request.fileObject.getNameExt();
@@ -608,7 +608,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
 
       val token = ts.token
 
-      if (token != null) {
+      if (token ne null) {
         token.id match {
           case
             ScalaTokenId.STRING_BEGIN | ScalaTokenId.STRING_END | ScalaTokenId.StringLiteral |
@@ -624,7 +624,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
         //                // embedded language and see if we're within a literal string there.
         //                if (id == ScalaTokenId.EMBEDDED_RUBY) {
         //                    ts = (TokenSequence)ts.embedded();
-        //                    assert ts != null;
+        //                    assert ts ne null;
         //                    ts.move(lexOffset);
         //
         //                    if (!ts.moveNext() && !ts.movePrevious()) {
@@ -875,7 +875,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //        //   foo.^
   //        // and if found, add all methods
   //        // (no keywords etc. are possible matches)
-  //        if ((index != null) && (ts != null)) {
+  //        if ((index ne null) && (ts ne null)) {
   //            boolean skipPrivate = true;
   //
   //            if ((call == MaybeCall.LOCAL) || (call == MaybeCall.NONE)) {
@@ -892,8 +892,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //            String typeQName = call.getType();
   //            String lhs = call.getLhs();
   //
-  //            if (typeQName == null) {
-  //                if (closest != null) {
+  //            if (typeQName eq null) {
+  //                if (closest ne null) {
   //                    TypeMirror type = null;
   //                    if (closest instanceof FieldCall) {
   //                        // dog.tal|
@@ -908,12 +908,12 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //                        type = closest.asType();
   //                    }
   //
-  //                    if (type != null) {
+  //                    if (type ne null) {
   //                        typeQName = Type.qualifiedNameOf(type);
   //                    }
   //                }
   //            //Node method = AstUtilities.findLocalScope(node, path);
-  //            //if (method != null) {
+  //            //if (method ne null) {
   //            //    List<Node> nodes = new ArrayList<Node>();
   //            //    AstUtilities.addNodesByType(method, new int[] { org.mozilla.javascript.Token.MISSING_DOT }, nodes);
   //            //    if (nodes.size() > 0) {
@@ -924,10 +924,10 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //            //}
   //            }
   //
-  //            if (typeQName == null && call.getPrevCallParenPos() != -1) {
+  //            if (typeQName eq null && call.getPrevCallParenPos() != -1) {
   //                // It's some sort of call
-  //                assert call.getType() == null;
-  //                assert call.getLhs() == null;
+  //                assert call.getType() eq null;
+  //                assert call.getLhs() eq null;
   //
   //                // Try to figure out the call in question
   //                int callEndAstOffset = AstUtilities.getAstOffset(info, call.getPrevCallParenPos());
@@ -941,7 +941,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   ////                        } else if (callNode.getType() == org.mozilla.javascript.Token.CALL) {
   ////                            Node method = AstUtilities.findLocalScope(node, path);
   ////
-  ////                            if (method != null) {
+  ////                            if (method ne null) {
   ////                                JsTypeAnalyzer analyzer = new JsTypeAnalyzer(info, /*request.info.getParserResult(),*/ index, method, node, astOffset, lexOffset, doc, fileObject);
   ////                                type = analyzer.getType(callNode);
   ////                            }
@@ -949,7 +949,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   ////                        } else if (callNode.getType() == org.mozilla.javascript.Token.GETELEM) {
   ////                            Node method = AstUtilities.findLocalScope(node, path);
   ////
-  ////                            if (method != null) {
+  ////                            if (method ne null) {
   ////                                JsTypeAnalyzer analyzer = new JsTypeAnalyzer(info, /*request.info.getParserResult(),*/ index, method, node, astOffset, lexOffset, doc, fileObject);
   ////                                type = analyzer.getType(callNode);
   ////                            }
@@ -957,19 +957,19 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   ////                        }
   ////                    }
   //                }
-  //            } else if (typeQName == null && lhs != null && closest != null) {
+  //            } else if (typeQName eq null && lhs ne null && closest ne null) {
   ////                Node method = AstUtilities.findLocalScope(node, path);
   ////
-  ////                if (method != null) {
+  ////                if (method ne null) {
   ////                    JsTypeAnalyzer analyzer = new JsTypeAnalyzer(info, /*request.info.getParserResult(),*/ index, method, node, astOffset, lexOffset, doc, fileObject);
   ////                    type = analyzer.getType(node);
   ////                }
   //            }
   //
-  //            if ((typeQName == null) && (lhs != null) && (closest != null) && call.isSimpleIdentifier()) {
+  //            if ((typeQName eq null) && (lhs ne null) && (closest ne null) && call.isSimpleIdentifier()) {
   ////                Node method = AstUtilities.findLocalScope(node, path);
   ////
-  ////                if (method != null) {
+  ////                if (method ne null) {
   ////                    // TODO - if the lhs is "foo.bar." I need to split this
   ////                    // up and do it a bit more cleverly
   ////                    JsTypeAnalyzer analyzer = new JsTypeAnalyzer(info, /*request.info.getParserResult(),*/ index, method, node, astOffset, lexOffset, doc, fileObject);
@@ -979,7 +979,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //
   //            // I'm not doing any data flow analysis at this point, so
   //            // I can't do anything with a LHS like "foo.". Only actual types.
-  //            if (typeQName != null && typeQName.length() > 0) {
+  //            if (typeQName ne null && typeQName.length() > 0) {
   //                if ("this".equals(lhs)) {
   //                    typeQName = fqn;
   //                    skipPrivate = false;
@@ -988,27 +988,27 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   ////
   ////                    IndexedClass sc = index.getSuperclass(fqn);
   ////
-  ////                    if (sc != null) {
+  ////                    if (sc ne null) {
   ////                        type = sc.getFqn();
   ////                    } else {
   ////                        ClassNode cls = AstUtilities.findClass(path);
   ////
-  ////                        if (cls != null) {
+  ////                        if (cls ne null) {
   ////                            type = AstUtilities.getSuperclass(cls);
   ////                        }
   ////                    }
   ////
-  ////                    if (type == null) {
+  ////                    if (type eq null) {
   ////                        type = "Object"; // NOI18N
   ////                    }
   //                }
   //
-  //                if (typeQName != null && typeQName.length() > 0) {
+  //                if (typeQName ne null && typeQName.length() > 0) {
   //                    // Possibly a class on the left hand side: try searching with the class as a qualifier.
   //                    // Try with the LHS + current FQN recursively. E.g. if we're in
   //                    // Test::Unit when there's a call to Foo.x, we'll try
   //                    // Test::Unit::Foo, and Test::Foo
-  //                    while (elements.size() == 0 && fqn != null && !fqn.equals(typeQName)) {
+  //                    while (elements.size() == 0 && fqn ne null && !fqn.equals(typeQName)) {
   //                        elements = index.getMembers(prefix, fqn + "." + typeQName, kind, ScalaIndex.ALL_SCOPE, result, false);
   //
   //                        int f = fqn.lastIndexOf("::");
@@ -1027,7 +1027,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //                        elements = m;
   //                    }
   //                }
-  //            } else if (lhs != null && lhs.length() > 0) {
+  //            } else if (lhs ne null && lhs.length() > 0) {
   //                // No type but an LHS - perhaps it's a type?
   //                Set<GsfElement> m = index.getMembers(prefix, lhs, kind, ScalaIndex.ALL_SCOPE, result, false);
   //
@@ -1038,7 +1038,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //
   //            // Try just the method call (e.g. across all classes). This is ignoring the
   //            // left hand side because we can't resolve it.
-  //            if ((elements.size() == 0) && (prefix.length() > 0 || typeQName == null)) {
+  //            if ((elements.size() == 0) && (prefix.length() > 0 || typeQName eq null)) {
   ////                if (prefix.length() == 0) {
   ////                    proposals.clear();
   ////                    proposals.add(new KeywordItem("", "Type more characters to see matches", request));
@@ -1189,7 +1189,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
      }
 
      Function method = methodHolder[0];
-     if (method == null) {
+     if (method eq null) {
      return ParameterInfo.NONE;
      }
      val index = paramIndexHolder(0)
@@ -1199,7 +1199,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
      // TODO: Make sure the caret offset is inside the arguments portion
      // (parameter hints shouldn't work on the method call name itself
      // See if we can find the method corresponding to this call
-     //        if (proposal != null) {
+     //        if (proposal ne null) {
      //            Element node = proposal.getElement();
      //            if (node instanceof IndexedFunction) {
      //                method = ((IndexedFunction)node);

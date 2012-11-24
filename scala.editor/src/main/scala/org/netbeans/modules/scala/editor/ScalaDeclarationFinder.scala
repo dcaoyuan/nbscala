@@ -121,7 +121,7 @@ class ScalaDeclarationFinder extends DeclarationFinder {
                 val item = ScalaUtil.importantItem(xs).asInstanceOf[ScalaItem]
                 val remoteDfn = ScalaElement(item.symbol, info)
                 val location = new DeclarationLocation(remoteDfn.getFileObject, remoteDfn.getOffset, remoteDfn)
-                if (remoteDfn.getFileObject == null) {
+                if (remoteDfn.getFileObject eq null) {
                   // even fo is null, we should return a location to enable popping up a declaration string
                   location.setInvalidMessage("No source file found!")
                 }

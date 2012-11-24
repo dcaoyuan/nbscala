@@ -97,20 +97,20 @@ object JavaSourceUtil {
   private var cachedPattern: Pattern = _
 
   def startsWith(theString: String, prefix: String): Boolean = {
-    if (theString == null || theString.length == 0 || ERROR.equals(theString)) {
+    if ((theString eq null) || theString.length == 0 || ERROR.equals(theString)) {
       return false
     }
-    if (prefix == null || prefix.length == 0) {
+    if ((prefix eq null) || prefix.length == 0) {
       return true
     }
     if (isCaseSensitive) theString.startsWith(prefix) else theString.toLowerCase.startsWith(prefix.toLowerCase)
   }
 
   def startsWithCamelCase(theString: String, prefix: String): Boolean = {
-    if (theString == null || theString.length == 0 || prefix == null || prefix.length == 0) {
+    if ((theString eq null) || theString.length == 0 || (prefix eq null) || prefix.length == 0) {
       return false
     }
-    if (!prefix.equals(cachedPrefix) || cachedPattern == null) {
+    if (!prefix.equals(cachedPrefix) || (cachedPattern eq null)) {
       val sb = new StringBuilder
       var lastIndex = 0
       var index = 0
@@ -175,7 +175,7 @@ object JavaSourceUtil {
       case ref => ref.get
     }
 
-    if (info == null) {
+    if (info eq null) {
       val javaControllers = new Array[CompilationInfo](1)
       val source = getJavaSourceForScalaFile(fo)
       try {
@@ -208,9 +208,9 @@ object JavaSourceUtil {
    */
   private def getJavaSourceForScalaFile(fo: FileObject): JavaSource = {
     val sourceRef = scalaFileToJavaSource.get(fo)
-    var source = if (sourceRef != null) sourceRef.get else null
+    var source = if (sourceRef ne null) sourceRef.get else null
 
-    if (source == null) {
+    if (source eq null) {
       val javaCpInfo = ClasspathInfo.create(fo)
       source = JavaSource.create(javaCpInfo)
       //scalaFileToJavaSource.put(fo, new WeakReference<JavaSource>(source));
@@ -270,7 +270,7 @@ object JavaSourceUtil {
             v.scan(cu, null)
             val elTree = v.declTree
 
-            if (elTree != null) {
+            if (elTree ne null) {
               offset(0) = controller.getTrees.getSourcePositions.getStartPosition(cu, elTree).toInt
             }
           }
@@ -293,7 +293,7 @@ object JavaSourceUtil {
         ElementHandle.create(namedTe).resolve(info)
     }
 
-    if (te == null) {
+    if (te eq null) {
       return None
     }
     

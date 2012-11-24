@@ -40,17 +40,17 @@ import scala.collection.mutable.ArrayBuffer
 
 class FileNameCompletor extends Completor {
   
-  private var _pwd: File = null
+  private var _pwd: File = _
 
   def pwd_=(pwd: File) {
-    this._pwd = pwd
+    _pwd = pwd
   }
 
   override 
   def complete(buf: String, cursor: Int, candidates: ArrayBuffer[String]): Int = {
-    val buffer = if (buf == null) "" else buf
+    val buffer = if (buf eq null) "" else buf
 
-    val (translated, dir) = if (_pwd != null && _pwd.exists) {
+    val (translated, dir) = if ((_pwd ne null) && _pwd.exists) {
       (buffer, _pwd)
     } else {
       // special character: ~ maps to the user's home directory
@@ -74,7 +74,7 @@ class FileNameCompletor extends Completor {
       (translated, dir)
     }
 
-    val entries = if (dir == null) Array[File]() else dir.listFiles
+    val entries = if (dir eq null) Array[File]() else dir.listFiles
     
     try {
       return matchFiles(buffer, translated, entries, candidates)
@@ -97,7 +97,7 @@ class FileNameCompletor extends Completor {
    *  @return  the offset of the match
    */
   def matchFiles(buffer: String, translated: String, entries: Array[File], candidates: ArrayBuffer[String]): Int = {
-    if (entries == null) {
+    if (entries eq null) {
       return -1
     }
 

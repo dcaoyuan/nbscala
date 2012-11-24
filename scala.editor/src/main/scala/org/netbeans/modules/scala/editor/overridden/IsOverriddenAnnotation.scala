@@ -65,7 +65,7 @@ object IsOverriddenAnnotation {
         case desc :: Nil =>
           val file = desc.getSourceFile
 
-          if (file != null) {
+          if (file ne null) {
             UiUtils.open(file, desc.getOffset)
           } else {
             Toolkit.getDefaultToolkit.beep
@@ -96,7 +96,7 @@ class IsOverriddenAnnotation(document: StyledDocument,
   import IsOverriddenAnnotation._
   import AnnotationType._
 
-  assert(pos != null)
+  assert(pos ne null)
         
   def getShortDescription: String = shortDescription
 

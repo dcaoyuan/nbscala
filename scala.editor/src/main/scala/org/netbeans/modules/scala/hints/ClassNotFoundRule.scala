@@ -95,7 +95,7 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
         val desc = error.getDescription
         //println("desc=" + desc)
         val rangeOpt = context.calcOffsetRange(error.getStartPosition, error.getEndPosition)
-        if (rangeOpt == None || desc == null) return List[Hint]()
+        if (rangeOpt == None || (desc eq null)) return List[Hint]()
         val hintfixes = mutable.ListBuffer[HintFix]()
         FixImportsHelper.checkMissingImport(desc) match {
             case Some(missing) => hintfixes.addAll(createImportHints(missing, context, error, rangeOpt.get))

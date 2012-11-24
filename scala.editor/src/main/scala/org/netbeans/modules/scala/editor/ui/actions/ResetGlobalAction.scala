@@ -62,7 +62,7 @@ class ResetGlobalAction extends BaseAction(NbBundle.getMessage(classOf[ResetGlob
   }
 
   def actionPerformed(evt: ActionEvent, comp: JTextComponent) {
-    assert(comp != null)
+    assert(comp ne null)
     doc = comp.getDocument match {
       case null => None
       case x => Some(x)
@@ -75,13 +75,13 @@ class ResetGlobalAction extends BaseAction(NbBundle.getMessage(classOf[ResetGlob
 
   def run {
     val dob = NbEditorUtilities.getDataObject(doc.get)
-    if (dob == null) {
+    if (dob eq null) {
       return
     }
 
     val fo = dob.getPrimaryFile
     val global = ScalaGlobal.getGlobal(fo)
-    if (global != null) {
+    if (global ne null) {
       ScalaGlobal.resetLate(global, ScalaGlobal.userRequest)
     }
   }

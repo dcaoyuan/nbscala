@@ -55,7 +55,7 @@ class ElementGripTreeElement(element: ElementGrip) extends TreeElement {
   override def getParent(isLogical: Boolean): TreeElement = {
     val enclosing = element.getParent
     if (isLogical) {
-      if (enclosing == null) {
+      if (enclosing eq null) {
         return TreeElementFactory.getTreeElement(element.fileObject.getParent)
       }
       TreeElementFactory.getTreeElement(enclosing)

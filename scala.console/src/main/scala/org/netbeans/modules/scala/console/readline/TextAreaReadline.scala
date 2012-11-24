@@ -73,7 +73,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
   completeCombo.setRenderer(new DefaultListCellRenderer()) // no silly ticks!
   val completePopup = new BasicComboPopup(completeCombo)
         
-  if (message != null) {
+  if (message ne null) {
     val messageStyle = new SimpleAttributeSet()
     StyleConstants.setBackground(messageStyle, area.getForeground)
     StyleConstants.setForeground(messageStyle, area.getBackground)
@@ -146,7 +146,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
   }
   
   protected def completeAction(event: KeyEvent) {
-    if (ConsoleLineReader.completor == null) {
+    if (ConsoleLineReader.completor eq null) {
       return
     }
         
@@ -271,7 +271,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
     event.consume
         
     if (completePopup.isVisible) {
-      if (completeCombo.getSelectedItem != null)
+      if (completeCombo.getSelectedItem ne null)
         replaceText(start, end, completeCombo.getSelectedItem.asInstanceOf[String])
       completePopup.setVisible(false)
       return

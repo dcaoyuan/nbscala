@@ -107,7 +107,7 @@ object FixImportsHelper{
     var importStatement = findNextImport(ts, ts.token)
     // +1 means the dot
     val toRet = new ArrayBuffer[(Int, Int, String)]
-    while (importStatement != null && importStatement._1 != -1 && importStatement._3.trim.length > 0) {
+    while ((importStatement ne null) && importStatement._1 != -1 && importStatement._3.trim.length > 0) {
       toRet += importStatement
       importStatement = findNextImport(ts, ts.token)
     }

@@ -100,7 +100,7 @@ class TreeElementFactoryImpl extends TreeElementFactoryImplementation {
         }
     }
 
-    if (r != null) {
+    if (r ne null) {
       o match {
         case x: SourceGroup => map.put(x.getRootFolder, r)
         case _ => map.put(o, r)

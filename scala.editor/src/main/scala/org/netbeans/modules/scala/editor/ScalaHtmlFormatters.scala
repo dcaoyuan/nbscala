@@ -221,7 +221,7 @@ trait ScalaHtmlFormatters {
         sb.append(summary)
       }
 
-      if (deprecation != null) {
+      if (deprecation ne null) {
         val hasDescription = deprecation.trim.length > 0
         sb.append("<b")
         if (!hasDescription) {
@@ -255,17 +255,17 @@ trait ScalaHtmlFormatters {
         sb.append("</blockquote>") // NOI18N
       }
 
-      if (returnTag != null || returnType != null) {
+      if ((returnTag ne null) || (returnType ne null)) {
         sb.append("<b>"); // NOI18N
         sb.append(NbBundle.getMessage(classOf[ScalaCommentFormatter], "Returns"))
         sb.append("</b><blockquote>") //NOI18N
-        if (returnTag != null) {
+        if (returnTag ne null) {
           sb.append(returnTag)
-          if (returnType != null) {
+          if (returnType ne null) {
             sb.append("<br>") // NOI18N
           }
         }
-        if (returnType != null) {
+        if (returnType ne null) {
           sb.append(NbBundle.getMessage(classOf[ScalaCommentFormatter], "ReturnType"))
           sb.append(" <i>") // NOI18N
           sb.append(returnType)
@@ -285,7 +285,7 @@ trait ScalaHtmlFormatters {
         sb.append("</blockquote>") // NOI18N
       }
 
-      if (code != null) {
+      if (code ne null) {
         sb.append("<b>")
         sb.append(NbBundle.getMessage(classOf[ScalaCommentFormatter], "CodeExample"))
         sb.append("</b><blockquote>") //NOI18N
@@ -331,18 +331,18 @@ trait ScalaHtmlFormatters {
       while (ts.moveNext) {
         val token = ts.token
         if (token.id == ScalaTokenId.CommentTag) {
-          if (sb != null) {
+          if (sb ne null) {
             processTag(sb.toString.trim)
           }
           sb = new StringBuilder
         }
-        if (sb != null) { // we have some tags
+        if (sb ne null) { // we have some tags
           val line = token.text.toString.trim
           sb.append(removeStar(line)).append(' ')
         }
       }
 
-      if (sb != null) {
+      if (sb ne null) {
         processTag(sb.toString.trim)
       }
 

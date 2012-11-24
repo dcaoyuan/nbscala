@@ -75,7 +75,7 @@ case class ErrorReporter(var errors: List[ScalaError] = Nil) extends Reporter {
   
   def info0(pos: Position, msg: String, severity: Severity, force: Boolean) {
     val sev = toCslSeverity(severity)
-    if (sev != null && msg != "this code must be compiled with the Scala continuations plugin enabled") {
+    if ((sev ne null) && msg != "this code must be compiled with the Scala continuations plugin enabled") {
       errors ::= ScalaError(pos, msg, sev, force)
     }
   }
@@ -212,7 +212,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
       case Some(x) =>
         val fileA = x.file.file
         val fileB = source.file.file
-        if (fileA != null && fileB != null && fileA.getAbsolutePath == fileB.getAbsolutePath) {
+        if ((fileA ne null) && (fileB ne null) && fileA.getAbsolutePath == fileB.getAbsolutePath) {
           log1.info("Cancel semantic " + fileA.getName)
           isCancelingSemantic = true
           true
@@ -390,7 +390,7 @@ object ScalaGlobal {
 
   private def getResourceOf(fo: FileObject, refresh: Boolean): Map[FileObject, FileObject] = {
     val project = FileOwnerQuery.getOwner(fo)
-    if (project == null) {
+    if (project eq null) {
       // * it may be a standalone file, or file in standard lib
       return Map()
     }
@@ -439,7 +439,7 @@ object ScalaGlobal {
     resetBadGlobals
     
     val project = FileOwnerQuery.getOwner(fo)
-    if (project == null) {
+    if (project eq null) {
       // * it may be a standalone file, or file in standard lib
       return globalForStdLib getOrElse {
         val g = ScalaHome.getGlobalForStdLib
@@ -492,7 +492,7 @@ object ScalaGlobal {
     val srcCp  = ClassPath.getClassPath(fo, ClassPath.SOURCE)
 
     val inStdLib =
-      if (bootCp == null || compCp == null) {
+      if ((bootCp eq null) || (compCp eq null)) {
         true // * in case of `fo` in standard libaray
       } else false
 
@@ -550,7 +550,7 @@ object ScalaGlobal {
 
     logger.info("Project's source paths set for global: " + srcPaths)
     logger.info("Project's output paths set for global: " + outPath)
-    if (srcCp != null){
+    if (srcCp ne null){
       logger.info(srcCp.getRoots.map(_.getPath).mkString("Project's srcCp: [", ", ", "]"))
     } else {
       logger.info("Project's srcCp is null !")
@@ -572,7 +572,7 @@ object ScalaGlobal {
     globals(idx) = global
 
     // * listen to compCp's change
-    if (compCp != null) {
+    if (compCp ne null) {
       val compCpListener = new CompCpListener(global, compCp)
       globalToListeners += (global -> (compCpListener :: globalToListeners.getOrElse(global, Nil)))
       project.getProjectDirectory.getFileSystem.addFileChangeListener(compCpListener)
@@ -580,7 +580,7 @@ object ScalaGlobal {
    
     if (!forDebug) {
       // we have to do following step to get mixed java sources visible to scala sources
-      if (srcCp != null) {
+      if (srcCp ne null) {
         val srcCpListener = new SrcCpListener(global, srcCp)
         globalToListeners += (global -> (srcCpListener :: globalToListeners.getOrElse(global, Nil)))
         project.getProjectDirectory.getFileSystem.addFileChangeListener(srcCpListener)
@@ -654,9 +654,9 @@ object ScalaGlobal {
 
     var out: FileObject = null
     val query = project.getLookup.lookup(classOf[BinaryForSourceQueryImplementation])
-    if (query != null && srcRootUrl != null) {
+    if ((query ne null) && (srcRootUrl ne null)) {
       val result = query.findBinaryRoots(srcRootUrl)
-      if (result != null) {
+      if (result ne null) {
         var break = false
         val itr = result.getRoots.iterator
         while (itr.hasNext && !break) {
@@ -666,10 +666,10 @@ object ScalaGlobal {
               url.toURI
             } catch {case ex: URISyntaxException => Exceptions.printStackTrace(ex); null}
 
-            if (uri != null) {
+            if (uri ne null) {
               val file = new File(uri)
               break =
-                if (file != null) {
+                if (file ne null) {
                   if (file.isDirectory) {
                     out = FileUtil.toFileObject(file)
                     true
@@ -689,21 +689,21 @@ object ScalaGlobal {
       }
     }
 
-    if (out == null) {
+    if (out eq null) {
       val execCp = ClassPath.getClassPath(srcRoot, ClassPath.EXECUTE)
-      if (execCp != null) {
+      if (execCp ne null) {
         val candidates = execCp.getRoots filter (!_.getFileSystem.isInstanceOf[JarFileSystem])
         candidates find (x => x.getPath.endsWith("classes")) foreach {out = _}
-        if (out == null & candidates.length > 0) {
+        if ((out eq null) & candidates.length > 0) {
           out = candidates(0)
         }
       }
     }
 
     // global requires an exist out path, so we have to create a tmp folder
-    if (out == null) {
+    if (out eq null) {
       val projectDir = project.getProjectDirectory
-      if (projectDir != null && projectDir.isFolder) {
+      if ((projectDir ne null) && projectDir.isFolder) {
         try {
           val tmpClasses = "build.classes"
           out = projectDir.getFileObject(tmpClasses) match {
@@ -718,7 +718,7 @@ object ScalaGlobal {
   }
 
   private def toClassPathString(project: Project, cp: ClassPath): String = {
-    if (cp == null) return ""
+    if (cp eq null) return ""
 
     val sb = new StringBuilder
     val itr = cp.entries.iterator
@@ -734,7 +734,7 @@ object ScalaGlobal {
           }
         } catch {case ex:FileStateInvalidException => Exceptions.printStackTrace(ex); null}
 
-      if (rootFile != null) {
+      if (rootFile ne null) {
         sb.append(rootFile.getAbsolutePath)
         if (itr.hasNext) sb.append(File.pathSeparator)
       }
@@ -754,7 +754,7 @@ object ScalaGlobal {
     override
     def fileDataCreated(fe: FileEvent): Unit = {
       val fo = fe.getFile
-      if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
+      if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
         global askForReLoad List(fo)
       }
     }
@@ -762,7 +762,7 @@ object ScalaGlobal {
     override
     def fileChanged(fe: FileEvent): Unit = {
       val fo = fe.getFile
-      if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
+      if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
         global askForReLoad List(fo)
       }
     }
@@ -770,7 +770,7 @@ object ScalaGlobal {
     override 
     def fileRenamed(fe: FileRenameEvent): Unit = {
       val fo = fe.getFile
-      if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && global != null) {
+      if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
         global askForReLoad List(fo)
       }
     }
@@ -794,43 +794,44 @@ object ScalaGlobal {
     override 
     def fileFolderCreated(fe: FileEvent) {
       val fo = fe.getFile
-      if (isUnderCompCp(fo) && global != null) {
+      if (isUnderCompCp(fo) && (global ne null)) {
         logger.finest("folder created: " + fo)
         resetLate(global, compCpChanged)
       }
     }
 
     override 
-    def fileDataCreated(fe: FileEvent): Unit = {
+    def fileDataCreated(fe: FileEvent) {
       val fo = fe.getFile
-      if (isUnderCompCp(fo) && global != null) {
+      if (isUnderCompCp(fo) && (global ne null)) {
         logger.finest("data created: " + fo)
         resetLate(global, compCpChanged)
       }
     }
 
     override 
-    def fileChanged(fe: FileEvent): Unit = {
+    def fileChanged(fe: FileEvent) {
+      val a: AnyRef = ""
       val fo = fe.getFile
-      if (isUnderCompCp(fo) && global != null) {
+      if (isUnderCompCp(fo) && (global ne null)) {
         logger.finest("file changed: " + fo)
         resetLate(global, compCpChanged)
       }
     }
 
     override 
-    def fileRenamed(fe: FileRenameEvent): Unit = {
+    def fileRenamed(fe: FileRenameEvent) {
       val fo = fe.getFile
-      if (isUnderCompCp(fo) && global != null) {
+      if (isUnderCompCp(fo) && (global ne null)) {
         logger.finest("file renamed: " + fo)
         resetLate(global, compCpChanged)
       }
     }
 
     override 
-    def fileDeleted(fe: FileEvent): Unit = {
+    def fileDeleted(fe: FileEvent) {
       val fo = fe.getFile
-      if (isUnderCompCp(fo) && global != null) {
+      if (isUnderCompCp(fo) && (global ne null)) {
         logger.finest("file deleted: " + fo)
         resetLate(global, compCpChanged)
       }

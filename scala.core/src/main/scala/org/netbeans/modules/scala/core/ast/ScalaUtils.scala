@@ -156,7 +156,7 @@ trait ScalaUtils {self: ScalaGlobal =>
     }
 
     def typeToString(tpe: Type): String = {
-      if (tpe == null) return ""
+      if (tpe eq null) return ""
       val str = try {
         tpe.toString
       } catch {
@@ -164,7 +164,7 @@ trait ScalaUtils {self: ScalaGlobal =>
         case ex: Throwable => ScalaGlobal.resetLate(self, ex); null
       }
 
-      if (str != null) str else tpe.termSymbol.nameString
+      if (str ne null) str else tpe.termSymbol.nameString
     }
 
     def htmlFormat(symbol: Symbol, fm: HtmlFormatter): Unit = {
@@ -196,7 +196,7 @@ trait ScalaUtils {self: ScalaGlobal =>
     }
 
     def htmlTypeName(tpe: Type, fm: HtmlFormatter): Unit = {
-      if (tpe == null) return
+      if (tpe eq null) return
       tpe match {
         case ErrorType => fm.appendText("<error>")
           // internal: error
@@ -348,7 +348,7 @@ trait ScalaUtils {self: ScalaGlobal =>
     }
 
     def htmlTypeInfo(tpe: Type, fm: HtmlFormatter): Unit = {
-      if (tpe == null) return
+      if (tpe eq null) return
       tpe match {
         case ErrorType => fm.appendText("<error>")
           // internal: error
@@ -539,7 +539,7 @@ trait ScalaUtils {self: ScalaGlobal =>
 
     /** use to test if type is the same: when they have same typeSimpleSig true, otherwise false */
     private def typeSimpleSig_(tpe: Type, sb: StringBuilder): Unit = {
-      if (tpe == null) return
+      if (tpe eq null) return
       tpe match {
         case ErrorType =>
           sb.append("<error>")

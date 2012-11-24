@@ -56,7 +56,7 @@ object CodeStyle {
   private lazy val INSTANCE: CodeStyle = new CodeStyle(FmtOptions.getPreferences)
   
   def getDefault(project: Project): CodeStyle = synchronized {
-    if (FmtOptions.codeStyleProducer == null) {
+    if (FmtOptions.codeStyleProducer eq null) {
       FmtOptions.codeStyleProducer = new Producer
     }
     INSTANCE

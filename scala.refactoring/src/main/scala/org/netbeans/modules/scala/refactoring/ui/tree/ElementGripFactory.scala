@@ -58,7 +58,7 @@ import scala.collection.mutable.WeakHashMap
 object ElementGripFactory {
   private var instance: ElementGripFactory = _
   def getDefault: ElementGripFactory = {
-    if (instance == null) {
+    if (instance eq null) {
       instance = new ElementGripFactory
     }
     instance
@@ -87,7 +87,7 @@ class ElementGripFactory {
   def put(parentFile: FileObject, name: String, range: OffsetRange, icon: Icon) {
     val root = map.get(parentFile).getOrElse(null)
     val i = Interval(range, name, icon, root, null, parentFile)
-    if (i != null) {
+    if (i ne null) {
       map.put(parentFile, i)
     }
   }
@@ -113,9 +113,9 @@ class ElementGripFactory {
 //                    }
 //                }
       var i: Interval = null
-//                if (root != null) {
+//                if (root ne null) {
 //                    Interval o = root.get(start);
-//                    if (o!= null && o.item.resolveElement(info).equals(current)) {
+//                    if (one null && o.item.resolveElement(info).equals(current)) {
 //                        if (p!=null)
 //                            o.subintervals.add(p);
 //                        return null;
@@ -150,7 +150,7 @@ class ElementGripFactory {
       if (from <= position && to >= position) {
         for (o <- subintervals) {
           val ob = o.get(position)
-          if (ob != null)
+          if (ob ne null)
             return ob
         }
         return this
@@ -165,7 +165,7 @@ class ElementGripFactory {
           return this.item;
         } else {
           val e = i.getParent(eh)
-          if (e != null) {
+          if (e ne null) {
             return e
           }
         }

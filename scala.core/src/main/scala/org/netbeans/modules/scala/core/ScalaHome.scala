@@ -122,7 +122,7 @@ object ScalaHome {
       case x => System.setProperty("scala.home", x); x
     }
 
-    if (scalaHome != null) {
+    if (scalaHome ne null) {
       scalaHome
     } else {
       println("Can not found ${SCALA_HOME}/bin/scala, the environment variable SCALA_HOME may be invalid.\nPlease set proper SCALA_HOME first!")
@@ -153,16 +153,16 @@ object ScalaHome {
         } else null
     }
     
-    if (scalaFo != null) {
+    if (scalaFo ne null) {
       FileUtil.toFile(scalaFo)
     } else null
   }
 
   def getSources(scalaHome: File): List[URL] = {
-    if (scalaHome != null) {
+    if (scalaHome ne null) {
       try {
         val scalaSrc = new File(scalaHome, "src")    //NOI18N
-        if (scalaSrc != null && scalaSrc.exists && scalaSrc.canRead) {
+        if ((scalaSrc ne null) && scalaSrc.exists && scalaSrc.canRead) {
           val srcUrls = new ArrayBuffer[URL]
           for (src <- scalaSrc.listFiles) {
             /**
@@ -182,9 +182,9 @@ object ScalaHome {
           //                    if (Utilities.getOperatingSystem() == Utilities.OS_MAC) {
           //                        try {
           //                            FileObject fo = URLMapper.findFileObject(url);
-          //                            if (fo != null) {
+          //                            if (fo ne null) {
           //                                fo = fo.getFileObject("src");    //NOI18N
-          //                                if (fo != null) {
+          //                                if (fo ne null) {
           //                                    url = fo.getURL();
           //                                }
           //                            }
@@ -200,9 +200,9 @@ object ScalaHome {
   }
 
   def getScaladoc(scalaHome: File): List[URL] = {
-    if (scalaHome != null) {
+    if (scalaHome ne null) {
       val scalaDoc = new File(scalaHome, "doc") //NOI18N
-      if (scalaDoc != null && scalaDoc.isDirectory && scalaDoc.canRead) {
+      if ((scalaDoc ne null) && scalaDoc.isDirectory && scalaDoc.canRead) {
         try {
           return List(scalaDoc.toURI.toURL)
         } catch {case mue: MalformedURLException => Exceptions.printStackTrace(mue)}
@@ -227,7 +227,7 @@ object ScalaHome {
 
     // Add in user-specified jars passed via SCALA_EXTRA_CLASSPATH
 
-    if (extraCp != null && File.pathSeparatorChar != ':') {
+    if ((extraCp ne null) && File.pathSeparatorChar != ':') {
       // Ugly hack - getClassPath has mixed together path separator chars
       // (:) and filesystem separators, e.g. I might have C:\foo:D:\bar but
       // obviously only the path separator after "foo" should be changed to ;
@@ -246,11 +246,11 @@ object ScalaHome {
       extraCp = p.toString
     }
 
-    if (extraCp == null) {
+    if (extraCp eq null) {
       extraCp = System.getenv("SCALA_EXTRA_CLASSPATH") // NOI18N
     }
 
-    if (extraCp != null) {
+    if (extraCp ne null) {
       if (cp.length > 0) {
         cp.append(File.pathSeparatorChar)
       }
@@ -265,10 +265,10 @@ object ScalaHome {
   }
 
   def getStandardLib(scalaHome: File): Option[File] = {
-    if (scalaHome != null) {
+    if (scalaHome ne null) {
       try {
         val scalaLib = new File(scalaHome, "lib")    //NOI18N
-        if (scalaLib != null && scalaLib.exists && scalaLib.canRead) {
+        if ((scalaLib ne null) && scalaLib.exists && scalaLib.canRead) {
           return scalaLib.listFiles find {jar => jar.getName == "library.jar"}
         }
       }
@@ -290,7 +290,7 @@ object ScalaHome {
             } catch {
               case _: Throwable =>
             } finally {
-              if (is != null) is.close
+              if (is ne null) is.close
             }
         }
     }
