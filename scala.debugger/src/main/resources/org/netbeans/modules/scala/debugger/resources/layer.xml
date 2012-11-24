@@ -50,13 +50,11 @@ made subject to such option by the copyright holder.
                 </folder>
                 
                 <folder name="GlyphGutterActions">
-                    <!--<file name="org-netbeans-modules-debugger-ui-actions-ToggleBreakpointAction.shadow">
-                        <attr name="originalFile" stringvalue="Actions/Debug/org-netbeans-modules-debugger-ui-actions-ToggleBreakpointAction.instance"/>
-                    </file>-->
-                    <!-- @see org.netbeans.editor.GlyphGutter#GutterMouseListener#mouseClicked in module: editor.lib -->
+                    <!-- @see editor.lib module: org.netbeans.editor.GlyphGutter#GutterMouseListener#mouseClicked -->
+                    <!-- @see debuger.jpda.ui module's 'GlyphGutterActions' folder in layer.xml -->
                     <file name="org-netbeans-modules-scala-debugger-actions-ToggleMethodFieldBreakpointAction.shadow">
                         <attr name="originalFile" stringvalue="Actions/Debug/org-netbeans-modules-scala-debugger-actions-ToggleMethodFieldBreakpointAction.instance"/>
-                        <attr name="position" intvalue="500"/>
+                        <attr name="position" intvalue="2500"/>
                     </file>
                 </folder>
                 

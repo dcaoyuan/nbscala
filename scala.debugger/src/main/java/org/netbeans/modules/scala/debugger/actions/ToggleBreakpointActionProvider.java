@@ -56,6 +56,7 @@ import org.netbeans.spi.debugger.ContextProvider;
 import org.netbeans.api.debugger.jpda.JPDADebugger;
 import org.netbeans.api.debugger.jpda.LineBreakpoint;
 import org.netbeans.modules.scala.debugger.EditorContextBridge;
+import org.netbeans.spi.debugger.ActionsProvider;
 import org.netbeans.spi.debugger.ActionsProviderSupport;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.URLMapper;
@@ -69,6 +70,10 @@ import org.openide.util.NbBundle;
  * @see
  * debugger.jpda.ui/src/org/netbeans/modules/debugger/jpda/ui/actions/ToggleBreakpointActionProvider.java
  */
+@ActionsProvider.Registrations({
+    @ActionsProvider.Registration(path="",                     actions={ "toggleBreakpoint" }, activateForMIMETypes={ "text/x-scala" }),
+    @ActionsProvider.Registration(path="netbeans-JPDASession", actions={ "toggleBreakpoint" }, activateForMIMETypes={ "text/x-scala" })
+})
 public class ToggleBreakpointActionProvider extends ActionsProviderSupport
         implements PropertyChangeListener {
 
