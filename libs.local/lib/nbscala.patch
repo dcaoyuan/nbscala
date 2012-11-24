@@ -49,14 +49,14 @@ index 9e9b8b9..f0a05e1 100644
            val owner            = qual.tpe.typeSymbol
            val target           = qual.tpe.widen
 diff --git a/src/compiler/scala/tools/nsc/typechecker/Namers.scala b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
-index e3b1ae5..c0e2636 100644
+index e3b1ae5..78d81b2 100644
 --- a/src/compiler/scala/tools/nsc/typechecker/Namers.scala
 +++ b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
 @@ -1166,6 +1166,7 @@ trait Namers extends MethodSynthesis {
              }
              if (!isConstr)
                clazz.resetFlag(INTERFACE) // there's a concrete member now
-+            if (parentNamer != null) { // 'null' should only happen forInteractive
++            if (parentNamer ne null) { // 'null' should only happen forInteractive
              val default = parentNamer.enterSyntheticSym(defaultTree)
              if (forInteractive && default.owner.isTerm) {
                // save the default getters as attachments in the method symbol. if compiling the
