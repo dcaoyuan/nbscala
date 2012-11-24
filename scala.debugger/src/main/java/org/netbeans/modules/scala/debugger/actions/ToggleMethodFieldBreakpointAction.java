@@ -70,6 +70,21 @@ import org.openide.util.Utilities;
 public class ToggleMethodFieldBreakpointAction extends AbstractAction {//implements PropertyChangeListener {
     
     private final static String MIME_TYPE = "text/x-scala";
+    
+    private static final String[] BREAKPOINT_ANNOTATION_TYPES = new String[] {
+        "Breakpoint_broken",
+        "Breakpoint",
+        "CondBreakpoint_broken",
+        "CondBreakpoint",
+        "DisabledBreakpoint",
+        "DisabledCondBreakpoint",
+        "ClassBreakpoint",
+        "DisabledClassBreakpoint",
+        "DisabledFieldBreakpoint",
+        "DisabledMethodBreakpoint",
+        "FieldBreakpoint",
+        "MethodBreakpoint",
+    };
 
     private Object action;
     private RequestProcessor postponedToggleRP;
@@ -77,6 +92,9 @@ public class ToggleMethodFieldBreakpointAction extends AbstractAction {//impleme
     public ToggleMethodFieldBreakpointAction () {
         //EditorContextBridge.addPropertyChangeListener (this);
         setEnabled (true);
+        putValue("default-action", true);
+        putValue("supported-annotation-types", BREAKPOINT_ANNOTATION_TYPES);
+        putValue("default-action-excluded-annotation-types", BREAKPOINT_ANNOTATION_TYPES);
     }
     
     public Object getAction () {
@@ -126,6 +144,7 @@ public class ToggleMethodFieldBreakpointAction extends AbstractAction {//impleme
     
     public void actionPerformed (ActionEvent evt) {
         if (!submitFieldOrMethodBreakpoint()) {
+            // Do the toggle BP action directly in this AWT so that it gets the correct current line number.
             DebuggerManager.getDebuggerManager().getActionsManager().doAction(ActionsManager.ACTION_TOGGLE_BREAKPOINT + MIME_TYPE);
         }
     }
@@ -134,23 +153,23 @@ public class ToggleMethodFieldBreakpointAction extends AbstractAction {//impleme
         // 1) get class name & element info
         final String[] className = new String[] { null };
         java.awt.IllegalComponentStateException cex;
+        final String[] fieldName = new String[] { null };
+        java.awt.IllegalComponentStateException fex;
+        final String methodName;
+        final String methodSignature;
+        java.awt.IllegalComponentStateException mex;
         try {
             className[0] = EditorContextBridge.getContext().getCurrentClassName();
             cex = null;
         } catch (java.awt.IllegalComponentStateException icsex) {
             cex = icsex;
         }
-        final String[] fieldName = new String[] { null };
-        java.awt.IllegalComponentStateException fex;
         try {
             fieldName[0] = EditorContextBridge.getContext().getCurrentFieldName();
             fex = null;
         } catch (java.awt.IllegalComponentStateException icsex) {
             fex = icsex;
         }
-        final String methodName;
-        final String methodSignature;
-        java.awt.IllegalComponentStateException mex;
         if (fex != null || fieldName[0] == null || fieldName[0].length() == 0) {
             fieldName[0] = null;
             String[] methodInfo;

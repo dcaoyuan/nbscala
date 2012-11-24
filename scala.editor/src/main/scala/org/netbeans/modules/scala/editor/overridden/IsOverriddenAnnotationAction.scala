@@ -65,7 +65,14 @@ import org.openide.util.NbBundle;
  */
 class IsOverriddenAnnotationAction extends AbstractAction {
 
-  putValue(Action.NAME, NbBundle.getMessage(classOf[IsOverriddenAnnotationAction], "CTL_IsOverriddenAnnotationAction")) //NOI18N
+  putValue(Action.NAME, NbBundle.getMessage(classOf[IsOverriddenAnnotationAction], 
+                                            "CTL_IsOverriddenAnnotationAction")) //NOI18N
+  putValue("supported-annotation-types", Array(
+      "org-netbeans-modules-editor-annotations-is_overridden",
+      "org-netbeans-modules-editor-annotations-has_implementations",
+      "org-netbeans-modules-editor-annotations-implements",
+      "org-netbeans-modules-editor-annotations-overrides"
+    ))
   setEnabled(true)
     
   def actionPerformed(e: ActionEvent) {
