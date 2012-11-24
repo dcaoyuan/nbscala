@@ -46,6 +46,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Set;
+import javax.swing.SwingUtilities;
 import org.netbeans.api.debugger.ActionsManager;
 
 
@@ -61,15 +62,17 @@ import org.openide.filesystems.URLMapper;
 
 import org.openide.util.NbBundle;
 
-/** 
+/**
  *
- * @author   Jan Jancura
+ * @author Jan Jancura
+ *
+ * @see
+ * debugger.jpda.ui/src/org/netbeans/modules/debugger/jpda/ui/actions/ToggleBreakpointActionProvider.java
  */
 public class ToggleBreakpointActionProvider extends ActionsProviderSupport
         implements PropertyChangeListener {
 
     private final static String MIME_TYPE = "text/x-scala";
-
     private JPDADebugger debugger;
 
     public ToggleBreakpointActionProvider() {
@@ -97,13 +100,13 @@ public class ToggleBreakpointActionProvider extends ActionsProviderSupport
         }
         setEnabled(
                 ActionsManager.ACTION_TOGGLE_BREAKPOINT + MIME_TYPE,
-                (EditorContextBridge.getContext().getCurrentLineNumber() >= 0) &&
-                // "text/x-scala" MIMEType will be resolved by scala.editing module, thus this module should run-dependency on scala.editing
+                (EditorContextBridge.getContext().getCurrentLineNumber() >= 0)
+                && // "text/x-scala" MIMEType will be resolved by scala.editing module, thus this module should run-dependency on scala.editing
                 (fo != null && MIME_TYPE.equals(fo.getMIMEType())) // NOI18N
                 //(fo != null && (url.endsWith (".scala")))  // NOI18N
                 );
-        if (debugger != null &&
-                debugger.getState() == JPDADebugger.STATE_DISCONNECTED) {
+        if (debugger != null
+                && debugger.getState() == JPDADebugger.STATE_DISCONNECTED) {
             destroy();
         }
     }
@@ -116,14 +119,14 @@ public class ToggleBreakpointActionProvider extends ActionsProviderSupport
         DebuggerManager d = DebuggerManager.getDebuggerManager();
 
         // 1) get source name & line number
-        int ln = EditorContextBridge.getContext().getCurrentLineNumber();
+        int lineNumber = EditorContextBridge.getContext().getCurrentLineNumber();
         String url = EditorContextBridge.getContext().getCurrentURL();
         if ("".equals(url.trim())) {
             return;
         }
 
         // 2) find and remove existing line breakpoint
-        LineBreakpoint lb = findBreakpoint(url, ln);
+        LineBreakpoint lb = findBreakpoint(url, lineNumber);
         if (lb != null) {
             d.removeBreakpoint(lb);
             return;
@@ -140,9 +143,19 @@ public class ToggleBreakpointActionProvider extends ActionsProviderSupport
 //        }
 
         // 3) create a new line breakpoint
-        lb = LineBreakpoint.create(url, ln);
+        lb = LineBreakpoint.create(url, lineNumber);
         lb.setPrintText(NbBundle.getBundle(ToggleBreakpointActionProvider.class).getString("CTL_Line_Breakpoint_Print_Text"));
         d.addBreakpoint(lb);
+    }
+
+    @Override
+    public void postAction(final Object action, final Runnable actionPerformedNotifier) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                doAction(action);
+                actionPerformedNotifier.run();
+            }
+        });
     }
 
     static LineBreakpoint findBreakpoint(String url, int lineNumber) {
