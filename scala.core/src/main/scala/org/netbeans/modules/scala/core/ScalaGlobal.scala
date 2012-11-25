@@ -650,7 +650,9 @@ object ScalaGlobal {
       try {
         // make sure the url is in same form of BinaryForSourceQueryImplementation
         FileUtil.toFile(srcRoot).toURI.toURL
-      } catch {case ex: MalformedURLException => Exceptions.printStackTrace(ex); null}
+      } catch {
+        case ex: MalformedURLException => Exceptions.printStackTrace(ex); null
+      }
 
     var out: FileObject = null
     val query = project.getLookup.lookup(classOf[BinaryForSourceQueryImplementation])
@@ -752,7 +754,7 @@ object ScalaGlobal {
     }
 
     override
-    def fileDataCreated(fe: FileEvent): Unit = {
+    def fileDataCreated(fe: FileEvent) {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
         global askForReLoad List(fo)
@@ -760,7 +762,7 @@ object ScalaGlobal {
     }
 
     override
-    def fileChanged(fe: FileEvent): Unit = {
+    def fileChanged(fe: FileEvent) {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
         global askForReLoad List(fo)
@@ -768,7 +770,7 @@ object ScalaGlobal {
     }
 
     override 
-    def fileRenamed(fe: FileRenameEvent): Unit = {
+    def fileRenamed(fe: FileRenameEvent) {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
         global askForReLoad List(fo)
@@ -777,7 +779,7 @@ object ScalaGlobal {
 
     override 
     def fileDeleted(fe: FileEvent): Unit = {
-      // @todo get the dependency ot just recompile all?
+      // @todo get the dependency or just recompile all?
     }
   }
 

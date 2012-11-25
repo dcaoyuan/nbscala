@@ -78,11 +78,12 @@ object ScalaHome {
     //println("nbuser:" + nbUserPath)
     settings.outdir.tryToSet(List(nbUserPath))
 
+    val scalaLibPath = scalaLib.getAbsolutePath
     // add boot, compile classpath
     val sb = new StringBuilder
     sb.append(System.getProperty("sun.boot.class.path"))
     sb.append(File.pathSeparator)
-    sb.append(scalaLib.getAbsolutePath + File.separator + "scala-library.jar")
+    sb.append(toClassPath(List("scala-library.jar", "scala-reflect.jar", "scala-compiler.jar"), scalaLib))
         
     //System.out.println("boot:" + sb);
     settings.bootclasspath.value = sb.toString
@@ -95,11 +96,22 @@ object ScalaHome {
     //System.out.println("comp:" + sb);
     settings.classpath.value = sb.toString
 
-    val global = new ScalaGlobal(settings, new ErrorReporter) {
-      override def onlyPresentation = true
+    new ScalaGlobal(settings, new ErrorReporter) {
+      override 
+      def onlyPresentation = true
     }
-
-    global
+  }
+  
+  def toClassPath(jars: List[String], folder: File) = {
+    val folderPath = folder.getAbsolutePath
+    (jars map (folderPath + File.separator + _) filter {x =>
+        val file = new File(x)
+        try {
+          (file ne null) && file.exists && file.canRead
+        } catch {
+          case ex: Throwable => false
+        }
+      }) mkString (File.pathSeparator)
   }
 
   def getJavaHome: String = {
@@ -149,7 +161,9 @@ object ScalaHome {
             } else {
               bin.getFileObject("scala", null)    //NOI18N
             }
-          } catch {case ex: IOException => Exceptions.printStackTrace(ex); null}
+          } catch {
+            case ex: IOException => Exceptions.printStackTrace(ex); null
+          }
         } else null
     }
     
@@ -194,7 +208,9 @@ object ScalaHome {
           //                    }
           return srcUrls.toList
         }
-      } catch {case e: MalformedURLException => Exceptions.printStackTrace(e)}
+      } catch {
+        case e: MalformedURLException => Exceptions.printStackTrace(e)
+      }
     }
     Nil
   }
@@ -205,7 +221,9 @@ object ScalaHome {
       if ((scalaDoc ne null) && scalaDoc.isDirectory && scalaDoc.canRead) {
         try {
           return List(scalaDoc.toURI.toURL)
-        } catch {case mue: MalformedURLException => Exceptions.printStackTrace(mue)}
+        } catch {
+          case mue: MalformedURLException => Exceptions.printStackTrace(mue)
+        }
       }
     }
     Nil
@@ -269,7 +287,7 @@ object ScalaHome {
       try {
         val scalaLib = new File(scalaHome, "lib")    //NOI18N
         if ((scalaLib ne null) && scalaLib.exists && scalaLib.canRead) {
-          return scalaLib.listFiles find {jar => jar.getName == "library.jar"}
+          return scalaLib.listFiles find {jar => jar.getName == "scala-library.jar"}
         }
       }
     }
