@@ -72,7 +72,6 @@ import javax.lang.model.element.VariableElement;
 import org.netbeans.api.debugger.jpda.LineBreakpoint;
 
 import org.netbeans.api.java.source.CompilationController;
-import org.netbeans.api.java.source.JavaSource;
 
 import org.netbeans.modules.parsing.api.ResultIterator;
 import org.openide.ErrorManager;
@@ -139,6 +138,7 @@ public class EditorContextImpl extends EditorContext {
      * @param lineNumber a number of line to be shown
      * @param timeStamp a time stamp to be used
      */
+    @Override
     public boolean showSource(String url, int lineNumber, Object timeStamp) {
         Line l = showSourceLine(url, lineNumber, timeStamp);
         if (l != null) {
@@ -210,6 +210,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @param timeStamp a new time stamp
      */
+    @Override
     public void createTimeStamp(Object timeStamp) {
         LineTranslations.getTranslations().createTimeStamp(timeStamp);
     }
@@ -219,6 +220,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @param timeStamp a time stamp to be disposed
      */
+    @Override
     public void disposeTimeStamp(Object timeStamp) {
         LineTranslations.getTranslations().disposeTimeStamp(timeStamp);
     }
@@ -227,6 +229,7 @@ public class EditorContextImpl extends EditorContext {
      * the chained annotate method from EditorContextImpl under debug.jpda.projects
      * will also be called, so we do not need add a reduantant annotation
      */
+    @Override
     public Object annotate(
             String url,
             int lineNumber,
@@ -309,6 +312,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return true if annotation has been successfully removed
      */
+    @Override
     public void removeAnnotation(
             Object a) {
         return;
@@ -334,6 +338,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return line number given annotation is associated with
      */
+    @Override
     public int getLineNumber(
             Object annotation,
             Object timeStamp) {
@@ -369,6 +374,7 @@ public class EditorContextImpl extends EditorContext {
      * @param timeStamp time stamp to be updated
      * @param url an url
      */
+    @Override
     public void updateTimeStamp(Object timeStamp, String url) {
         LineTranslations.getTranslations().updateTimeStamp(timeStamp, url);
     }
@@ -378,6 +384,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return number of line currently selected in editor or <code>-1</code>
      */
+    @Override
     public int getCurrentLineNumber() {
         return contextDispatcher.getCurrentLineNumber();
     }
@@ -404,8 +411,9 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return name of class currently selected in editor or empty string
      */
+    @Override
     public String getCurrentClassName() {
-        String currentClass = getCurrentElement(ElementKind.CLASS);
+        String currentClass = getClassName(getCurrentURL(), getCurrentLineNumber());//getCurrentElement(ElementKind.CLASS);
         if (currentClass == null) {
             return "";
         } else {
@@ -418,6 +426,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return URL of source currently selected in editor or empty string
      */
+    @Override
     public String getCurrentURL() {
         return contextDispatcher.getCurrentURLAsString();
     }
@@ -427,6 +436,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return name of method currently selected in editor or empty string
      */
+    @Override
     public String getCurrentMethodName() {
         String currentMethod = getCurrentElement(ElementKind.METHOD);
         if (currentMethod == null) {
@@ -467,6 +477,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return name of field currently selected in editor or <code>null</code>
      */
+    @Override
     public String getCurrentFieldName() {
         String currentField = getCurrentElement(ElementKind.FIELD);
         if (currentField == null) {
@@ -482,6 +493,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return identifier currently selected in editor or <code>null</code>
      */
+    @Override
     public String getSelectedIdentifier() {
         JEditorPane ep = contextDispatcher.getCurrentEditor();
         if (ep == null) {
@@ -502,6 +514,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return method name currently selected in editor or empty string
      */
+    @Override
     public String getSelectedMethodName() {
         if (SwingUtilities.isEventDispatchThread()) {
             return getSelectedMethodName_();
@@ -510,6 +523,7 @@ public class EditorContextImpl extends EditorContext {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
 
+                    @Override
                     public void run() {
                         mn[0] = getSelectedMethodName_();
                     }
@@ -609,6 +623,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return line number or -1
      */
+    @Override
     public int getFieldLineNumber(
             String url,
             final String className,
@@ -808,8 +823,8 @@ public class EditorContextImpl extends EditorContext {
             return null;
         }
         JEditorPane ep = contextDispatcher.getCurrentEditor();
-        JavaSource js = JavaSource.forFileObject(fo);
-        if (js == null) {
+        Source source = Source.create(fo);
+        if (source == null) {
             return null;
         }
         final int currentOffset = (ep == null) ? 0 : ep.getCaretPosition();
@@ -966,6 +981,7 @@ public class EditorContextImpl extends EditorContext {
      *
      * @return binary class name for given url and line number or null
      */
+    @Override
     public String getClassName(String url, final int lineNumber) {
         DataObject dataObject = getDataObject(url);
         if (dataObject == null) {
@@ -976,7 +992,9 @@ public class EditorContextImpl extends EditorContext {
             return null;
         }
         Source source = Source.create(fo);
-        //        if (js == null) return "";
+        if (source == null) {
+            return "";
+        }
         if (!"text/x-scala".equals(fo.getMIMEType())) {
             /** Should return null instead of "" here, 
              * @see org.netbeans.modules.debugger.jpda.EditorContextBridge#CompoundContextProvider#getClassName
@@ -984,7 +1002,7 @@ public class EditorContextImpl extends EditorContext {
              */
             return null;
         }
-        EditorCookie ec = (EditorCookie) dataObject.getCookie(EditorCookie.class);
+        EditorCookie ec = (EditorCookie) dataObject.getLookup().lookup(EditorCookie.class);
         if (ec == null) {
             return "";
         }
@@ -1076,7 +1094,7 @@ public class EditorContextImpl extends EditorContext {
         if (source == null) {
             return ops[0];
         }
-        EditorCookie ec = (EditorCookie) dataObject.getCookie(EditorCookie.class);
+        EditorCookie ec = (EditorCookie) dataObject.getLookup().lookup(EditorCookie.class);
         if (ec == null) {
             return ops[0];
         }
@@ -1290,7 +1308,7 @@ public class EditorContextImpl extends EditorContext {
         if (source == null) {
             return null;
         }
-        EditorCookie ec = (EditorCookie) dataObject.getCookie(EditorCookie.class);
+        EditorCookie ec = (EditorCookie) dataObject.getLookup().lookup(EditorCookie.class);
         if (ec == null) {
             return null;
         }
@@ -1598,8 +1616,8 @@ public class EditorContextImpl extends EditorContext {
         }
         JEditorPane ep = contextDispatcher.getCurrentEditor();
 
-        JavaSource js = JavaSource.forFileObject(fo);
-        if (js == null) {
+        Source source = Source.create(fo);
+        if (source == null) {
             return null;
         }
         final int currentOffset;

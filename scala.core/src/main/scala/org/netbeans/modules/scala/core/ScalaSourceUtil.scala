@@ -600,7 +600,7 @@ object ScalaSourceUtil {
     clazzName
   }
 
-  /** @deprecated */
+  @deprecated
   def getBinaryClassName_old(pr: ScalaParserResult, offset: Int): String = {
     val root = pr.rootScopeForDebug
     val th = pr.getSnapshot.getTokenHierarchy
@@ -674,7 +674,8 @@ object ScalaSourceUtil {
       val result = new ArrayBuffer[ScalaDfns#ScalaDfn]
       ParserManager.parse(java.util.Collections.singleton(source), new UserTask {
           @throws(classOf[Exception])
-          override def run(ri: ResultIterator): Unit = {
+          override 
+          def run(ri: ResultIterator) {
             val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
             val root = pr.rootScope
             val global = pr.global

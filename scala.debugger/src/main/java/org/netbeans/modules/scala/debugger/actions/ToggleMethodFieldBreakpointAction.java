@@ -69,8 +69,6 @@ import org.openide.util.Utilities;
  */
 public class ToggleMethodFieldBreakpointAction extends AbstractAction {//implements PropertyChangeListener {
     
-    private final static String MIME_TYPE = "text/x-scala";
-    
     private static final String[] BREAKPOINT_ANNOTATION_TYPES = new String[] {
         "Breakpoint_broken",
         "Breakpoint",
@@ -145,7 +143,7 @@ public class ToggleMethodFieldBreakpointAction extends AbstractAction {//impleme
     public void actionPerformed (ActionEvent evt) {
         if (!submitFieldOrMethodBreakpoint()) {
             // Do the toggle BP action directly in this AWT so that it gets the correct current line number.
-            DebuggerManager.getDebuggerManager().getActionsManager().doAction(ActionsManager.ACTION_TOGGLE_BREAKPOINT + MIME_TYPE);
+            DebuggerManager.getDebuggerManager().getActionsManager().doAction(ActionsManager.ACTION_TOGGLE_BREAKPOINT);
         }
     }
     

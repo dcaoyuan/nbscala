@@ -48,19 +48,16 @@ import java.util.Collections;
 import java.util.Set;
 import javax.swing.SwingUtilities;
 import org.netbeans.api.debugger.ActionsManager;
-
-
 import org.netbeans.api.debugger.Breakpoint;
 import org.netbeans.api.debugger.DebuggerManager;
-import org.netbeans.spi.debugger.ContextProvider;
 import org.netbeans.api.debugger.jpda.JPDADebugger;
 import org.netbeans.api.debugger.jpda.LineBreakpoint;
 import org.netbeans.modules.scala.debugger.EditorContextBridge;
 import org.netbeans.spi.debugger.ActionsProvider;
 import org.netbeans.spi.debugger.ActionsProviderSupport;
+import org.netbeans.spi.debugger.ContextProvider;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.URLMapper;
-
 import org.openide.util.NbBundle;
 
 /**
@@ -77,7 +74,6 @@ import org.openide.util.NbBundle;
 public class ToggleBreakpointActionProvider extends ActionsProviderSupport
         implements PropertyChangeListener {
 
-    private final static String MIME_TYPE = "text/x-scala";
     private JPDADebugger debugger;
 
     public ToggleBreakpointActionProvider() {
@@ -95,6 +91,7 @@ public class ToggleBreakpointActionProvider extends ActionsProviderSupport
         EditorContextBridge.getContext().removePropertyChangeListener(this);
     }
 
+    @Override
     public void propertyChange(PropertyChangeEvent evt) {
         String url = EditorContextBridge.getContext().getCurrentURL();
         FileObject fo;
@@ -104,10 +101,10 @@ public class ToggleBreakpointActionProvider extends ActionsProviderSupport
             fo = null;
         }
         setEnabled(
-                ActionsManager.ACTION_TOGGLE_BREAKPOINT + MIME_TYPE,
+                ActionsManager.ACTION_TOGGLE_BREAKPOINT,
                 (EditorContextBridge.getContext().getCurrentLineNumber() >= 0)
                 && // "text/x-scala" MIMEType will be resolved by scala.editing module, thus this module should run-dependency on scala.editing
-                (fo != null && MIME_TYPE.equals(fo.getMIMEType())) // NOI18N
+                (fo != null && "text/x-scala".equals(fo.getMIMEType())) // NOI18N
                 //(fo != null && (url.endsWith (".scala")))  // NOI18N
                 );
         if (debugger != null
@@ -116,10 +113,12 @@ public class ToggleBreakpointActionProvider extends ActionsProviderSupport
         }
     }
 
+    @Override
     public Set getActions() {
-        return Collections.singleton(ActionsManager.ACTION_TOGGLE_BREAKPOINT + MIME_TYPE);
+        return Collections.singleton(ActionsManager.ACTION_TOGGLE_BREAKPOINT);
     }
 
+    @Override
     public void doAction(Object action) {
         DebuggerManager d = DebuggerManager.getDebuggerManager();
 
@@ -156,6 +155,7 @@ public class ToggleBreakpointActionProvider extends ActionsProviderSupport
     @Override
     public void postAction(final Object action, final Runnable actionPerformedNotifier) {
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 doAction(action);
                 actionPerformedNotifier.run();

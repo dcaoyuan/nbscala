@@ -92,7 +92,6 @@ trait ScalaElements {self: ScalaGlobal =>
 
     private var triedGetFo: Boolean = _
 
-
     def this(kind: ElementKind) = {
       this(null, null)
       this.kind = kind
@@ -102,7 +101,8 @@ trait ScalaElements {self: ScalaGlobal =>
       ""
     }
 
-    override def getFileObject: FileObject = {
+    override 
+    def getFileObject: FileObject = {
       if (!triedGetFo) {
         fo getOrElse {
           fo = ScalaSourceUtil.getFileObject(parserResult, symbol) // try to get
@@ -118,7 +118,8 @@ trait ScalaElements {self: ScalaGlobal =>
       } else fo getOrElse null
     }
 
-    override def getIn: String = {
+    override 
+    def getIn: String = {
       try {
         symbol.owner.nameString
       } catch {
@@ -126,26 +127,32 @@ trait ScalaElements {self: ScalaGlobal =>
       }
     }
 
-    override def getKind: ElementKind = {
+    override 
+    def getKind: ElementKind = {
       ScalaUtil.getKind(symbol)
     }
 
-    override def getMimeType: String = {
+    override 
+    def getMimeType: String = {
       ScalaMimeResolver.MIME_TYPE
     }
 
-    override def getModifiers: java.util.Set[Modifier] = {
+    override 
+    def getModifiers: java.util.Set[Modifier] = {
       if (!modifiers.isDefined) {
         modifiers = Some(ScalaUtil.getModifiers(symbol))
       }
       modifiers.get
     }
 
-    override def getName: String = symbol.nameString
+    override 
+    def getName: String = symbol.nameString
 
-    override def qualifiedName: String = symbol.fullName
+    override 
+    def qualifiedName: String = symbol.fullName
 
-    override def signatureEquals(handle: ElementHandle): Boolean = {
+    override 
+    def signatureEquals(handle: ElementHandle): Boolean = {
       false
     }
 
@@ -189,7 +196,8 @@ trait ScalaElements {self: ScalaGlobal =>
       offset
     }
 
-    override def getOffsetRange(result: ParserResult): OffsetRange = {
+    override 
+    def getOffsetRange(result: ParserResult): OffsetRange = {
       throw new UnsupportedOperationException("Not supported yet.")
     }
 
@@ -277,9 +285,11 @@ trait ScalaElements {self: ScalaGlobal =>
       this.implicite = b
     }
 
-    override def getIcon: Icon = UiUtils.getElementIcon(getKind, getModifiers)
+    override 
+    def getIcon: Icon = UiUtils.getElementIcon(getKind, getModifiers)
 
-    override def toString = {
+    override 
+    def toString = {
       symbol.toString
     }
 
