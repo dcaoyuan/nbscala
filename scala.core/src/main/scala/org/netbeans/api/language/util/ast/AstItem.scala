@@ -163,7 +163,8 @@ trait AstItem extends ForElementHandle {
     _properties += (k -> v)
   }
 
-  override def toString = {
+  override 
+  def toString = {
     symbol.toString
   }
 }

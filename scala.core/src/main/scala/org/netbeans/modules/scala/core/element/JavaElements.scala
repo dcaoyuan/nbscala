@@ -138,23 +138,24 @@ trait JavaElements {self: ScalaGlobal =>
 
     def qualifiedName: String = element.getQualifiedName
 
-    def isDeprecated: Boolean = false
+    def isDeprecated = false
     def isDeprecated_=(b: Boolean) {}
 
-    def isInherited: Boolean = false
+    def isInherited = false
     def isInherited_=(b: Boolean) {}
 
-    def isEmphasize: Boolean = false
+    def isEmphasize = false
     def isEmphasize_=(b: Boolean) {}
 
-    def isImplicit: Boolean = false
+    def isImplicit = false
     def isImplicit_=(b: Boolean) {}
 
     def getIcon: Icon = UiUtils.getElementIcon(getKind, getModifiers)
 
     // -----
 
-    override def toString = {
+    override 
+    def toString = {
       getName + "(kind=" + getKind + ", element=" + element + ")"
     }
 

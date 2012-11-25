@@ -49,7 +49,8 @@ import org.netbeans.modules.csl.api.ElementKind
  */
 trait AstRef extends AstItem {
 
-  override def getKind: ElementKind = {
+  override 
+  def getKind: ElementKind = {
     super.getKind match {
       // if it's a OTHER, we could try to get its kind from its dfn
       case x@ElementKind.OTHER => rootScope.findDfnOf(this) match {
@@ -60,7 +61,8 @@ trait AstRef extends AstItem {
     }
   }
   
-  override def toString = {
+  override 
+  def toString = {
     "Ref: " + "name=" + name + ", idToken=" + super.idToken + ", kind=" + kind + ", symbol=" + symbol
   }
 

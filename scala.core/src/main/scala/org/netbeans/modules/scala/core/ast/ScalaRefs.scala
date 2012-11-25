@@ -70,7 +70,8 @@ trait ScalaRefs {self: ScalaGlobal =>
     
     def getMimeType: String = ScalaMimeResolver.MIME_TYPE
 
-    override def isOccurrence(ref: AstRef): Boolean = {
+    override 
+    def isOccurrence(ref: AstRef): Boolean = {
       if (ref.getName == getName) {
         //        if (isSameNameAsEnclClass() || ref.isSameNameAsEnclClass()) {
         //          return getSymbol().enclClass() == ref.getSymbol().enclClass();

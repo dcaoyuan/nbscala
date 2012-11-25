@@ -96,8 +96,8 @@ trait ScalaUtils {self: ScalaGlobal =>
         } else {
           ElementKind.OTHER
         }
-      } catch {case t: Throwable =>
-          ElementKind.OTHER
+      } catch {
+        case t: Throwable => ElementKind.OTHER
           // java.lang.Error: no-symbol does not have owner
           //      at scala.tools.nsc.symtab.Symbols$NoSymbol$.owner(Symbols.scala:1609)
           //      at scala.tools.nsc.symtab.Symbols$Symbol.isLocal(Symbols.scala:346)

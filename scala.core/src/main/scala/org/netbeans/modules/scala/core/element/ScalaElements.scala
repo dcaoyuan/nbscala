@@ -79,16 +79,16 @@ trait ScalaElements {self: ScalaGlobal =>
 
     symbol = asymbol
 
-    private var modifiers: Option[java.util.Set[Modifier]] = None
-    private var inherited: Boolean = _
-    private var smart: Boolean = _
-    private var implicite: Boolean = _
+    private var _modifiers: Option[java.util.Set[Modifier]] = None
+    private var _isInherited: Boolean = _
+    private var _isSmart: Boolean = _
+    private var _isImplicite: Boolean = _
 
     private var path: String = _
     private var doc: Option[BaseDocument] = None
     private var offset: Int = _
     private var javaElement: Option[Element] = None
-    private var loaded: Boolean = _
+    private var _isLoaded: Boolean = _
 
     private var triedGetFo: Boolean = _
 
@@ -139,10 +139,10 @@ trait ScalaElements {self: ScalaGlobal =>
 
     override 
     def getModifiers: java.util.Set[Modifier] = {
-      if (!modifiers.isDefined) {
-        modifiers = Some(ScalaUtil.getModifiers(symbol))
+      if (!_modifiers.isDefined) {
+        _modifiers = Some(ScalaUtil.getModifiers(symbol))
       }
-      modifiers.get
+      _modifiers.get
     }
 
     override 
@@ -216,7 +216,7 @@ trait ScalaElements {self: ScalaGlobal =>
     }
 
     private def isLoaded: Boolean = {
-      if (loaded) return true
+      if (_isLoaded) return true
 
       if (isJava) {
         javaElement.isDefined
@@ -251,14 +251,14 @@ trait ScalaElements {self: ScalaGlobal =>
         }  
       }
 
-      loaded = true
+      _isLoaded = true
     }
 
     def isJava: Boolean = {
       symbol hasFlag Flags.JAVA
     }
 
-    def isDeprecated: Boolean = {
+    def isDeprecated = {
       try {
         symbol.isDeprecated
       } catch {
@@ -267,22 +267,22 @@ trait ScalaElements {self: ScalaGlobal =>
     }
     def isDeprecated_=(b: Boolean) {}
 
-    def isInherited: Boolean = inherited
+    def isInherited = _isInherited
     def isInherited_=(b: Boolean) {
-      this.inherited = b
+      _isInherited = b
     }
 
-    def isEmphasize: Boolean = !isInherited
+    def isEmphasize = !isInherited
     def isEmphasize_=(b: Boolean) {}
 
-    def isSmart = smart
+    def isSmart = _isSmart
     def isSmart_=(b: Boolean) {
-      this.smart = b
+      _isSmart = b
     }
 
-    def isImplicit = implicite
+    def isImplicit = _isImplicite
     def isImplicit_=(b: Boolean) {
-      this.implicite = b
+      _isImplicite = b
     }
 
     override 
@@ -293,11 +293,11 @@ trait ScalaElements {self: ScalaGlobal =>
       symbol.toString
     }
 
-    def htmlFormat(fm: HtmlFormatter): Unit = {
+    def htmlFormat(fm: HtmlFormatter) {
       ScalaUtil.htmlFormat(symbol, fm)
     }
 
-    def sigFormat(fm: HtmlFormatter) : Unit = {
+    def sigFormat(fm: HtmlFormatter) {
       try {
         fm.appendHtml("<i>")
         fm.appendText(symbol.enclClass.fullName)

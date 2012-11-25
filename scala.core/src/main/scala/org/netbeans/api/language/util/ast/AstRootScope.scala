@@ -50,8 +50,8 @@ import scala.collection.mutable.HashSet
 class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsTokens) {
 
   protected val _idTokenToItems = new HashMap[Token[TokenId], List[AstItem]]
-  private var sortedTokens = Array[Token[TokenId]]()
-  private var tokensSorted = false
+  private var _sortedTokens = Array[Token[TokenId]]()
+  private var _isTokensSorted = false
   private val _importingItems = new HashSet[AstItem]
 
   def contains(idToken: Token[TokenId]): Boolean = _idTokenToItems.contains(idToken)
@@ -65,11 +65,11 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
   }
 
   private def sortedTokens(th: TokenHierarchy[_]): Array[Token[TokenId]] = {
-    if (!tokensSorted) {
-      sortedTokens = _idTokenToItems.keySet.toArray sortWith {compareToken(th, _, _)}
-      tokensSorted = true
+    if (!_isTokensSorted) {
+      _sortedTokens = _idTokenToItems.keySet.toArray sortWith {compareToken(th, _, _)}
+      _isTokensSorted = true
     }
-    sortedTokens
+    _sortedTokens
   }
 
   def putImportingItem(item: AstItem): Boolean = {
@@ -85,12 +85,12 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
       if (item.resultType ne null) {
         // * it has exlicit assigned resultType, always add it
         _idTokenToItems += (idToken -> (item :: items))
-        tokensSorted = false
+        _isTokensSorted = false
         true
       } else false // * don't add item with same symbol and resultType eq null
     } else {
       _idTokenToItems += (idToken -> (item :: items))
-      tokensSorted = false
+      _isTokensSorted = false
       true
     }
   }
@@ -176,7 +176,8 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
     }
   }
 
-  override def findOccurrences(item: AstItem): Seq[AstItem] = {
+  override 
+  def findOccurrences(item: AstItem): Seq[AstItem] = {
     val occurrences = new ArrayBuffer[AstItem]
 
     findDfnOf(item) match {

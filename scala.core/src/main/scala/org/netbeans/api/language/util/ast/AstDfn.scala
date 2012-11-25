@@ -58,26 +58,29 @@ trait AstDfn extends AstItem with AstElementHandle {
   
   def make(_idToken: Token[TokenId],
            _kind: ElementKind,
-           abindingScope: AstScope,
+           _bindingScope: AstScope,
            _fo: Option[FileObject]) = {
 
     super.make(_idToken, _kind, _fo)
     // we allow _bindingScope to be set later
-    if (abindingScope ne null) {
-      _bindingScope = abindingScope
-      _bindingScope.bindingDfn = Some(this)
+    if (_bindingScope ne null) {
+      this._bindingScope = _bindingScope
+      this._bindingScope.bindingDfn = Some(this)
     }
   }
    
-  protected var modifiers: Option[java.util.Set[Modifier]] = None
+  protected var _modifiers: Option[java.util.Set[Modifier]] = None
 
-  override def getFileObject: FileObject = fo.getOrElse(null)
+  override 
+  def getFileObject: FileObject = fo.getOrElse(null)
 
-  override def getModifiers: java.util.Set[Modifier] = {
-    modifiers.getOrElse(java.util.Collections.emptySet[Modifier])
+  override 
+  def getModifiers: java.util.Set[Modifier] = {
+    _modifiers.getOrElse(java.util.Collections.emptySet[Modifier])
   }
 
-  override def getOffsetRange(pResult: ParserResult): OffsetRange = {
+  override 
+  def getOffsetRange(pResult: ParserResult): OffsetRange = {
     pResult.getSnapshot.getTokenHierarchy match {
       case null => OffsetRange.NONE
       case th =>
@@ -150,7 +153,8 @@ trait AstDfn extends AstItem with AstElementHandle {
 
   def isReferredBy(ref: AstRef): Boolean
 
-  override def toString = {
+  override 
+  def toString = {
     "Dfn: " + "name=" + name + ", idToken=" + idToken + ", kind=" + kind + ", sym=" + symbol + ", mods" + getModifiers
   }
 }

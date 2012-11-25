@@ -71,15 +71,15 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   private val _subScopes = new ArrayBuffer[AstScope]
   private val _dfns = new ArrayBuffer[AstDfn]
   private val _refs = new ArrayBuffer[AstRef]
-  private var scopesSorted: Boolean = false
-  private var dfnsSorted: Boolean = false
-  private var refsSorted: Boolean = false
+  private var _isScopesSorted: Boolean = false
+  private var _isDfnsSorted: Boolean = false
+  private var _isRefsSorted: Boolean = false
 
   def isRoot = {
     !parent.isDefined
   }
 
-  def isScopesSorted: Boolean = scopesSorted
+  def isScopesSorted = _isScopesSorted
 
   def range(th: TokenHierarchy[_]): OffsetRange = {
     new OffsetRange(boundsOffset(th), boundsEndOffset(th))
@@ -107,7 +107,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
   def addScope(scope: AstScope): Unit = {
     _subScopes += scope
-    scopesSorted = false
+    _isScopesSorted = false
     scope.parent = Some(this)
   }
 
@@ -118,7 +118,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   def addDfn(dfn: AstDfn): Boolean = {
     if (root.put(dfn.idToken, dfn)) {
       _dfns += dfn
-      dfnsSorted = false
+      _isDfnsSorted = false
       dfn.enclosingScope = this
       true
     } else false
@@ -131,17 +131,16 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   def addRef(ref: AstRef): Boolean = {
     if (root.put(ref.idToken, ref)) {
       _refs += ref
-      refsSorted = false
+      _isRefsSorted = false
       ref.enclosingScope = this
       true
     } else false
   }
 
   def findDfnAt[A <: AstDfn](clazz: Class[A], th: TokenHierarchy[_], offset: Int): Option[A] = {
-
-    if (!dfnsSorted) {
+    if (!_isDfnsSorted) {
       _dfns sortWith {compareDfn(th, _, _)}
-      dfnsSorted = true
+      _isDfnsSorted = true
     }
     var lo = 0
     var hi = _dfns.size - 1
@@ -157,9 +156,9 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
       }
     }
     
-    if (!scopesSorted) {
+    if (!_isScopesSorted) {
       _subScopes sortWith {compareScope(th, _, _)}
-      scopesSorted = true
+      _isScopesSorted = true
     }
     lo = 0
     hi = _subScopes.size - 1
@@ -179,10 +178,9 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   }
     
   def findRefAt[A <: AstRef](clazz: Class[A], th: TokenHierarchy[_], offset: Int): Option[A] = {
-
-    if (!refsSorted) {
+    if (!_isRefsSorted) {
       _refs sortWith {compareRef(th, _, _)}
-      refsSorted = true
+      _isRefsSorted = true
     }
     var lo = 0
     var hi = _refs.size - 1
@@ -198,9 +196,9 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
       }
     }
         
-    if (!scopesSorted) {
+    if (!_isScopesSorted) {
       _subScopes sortWith {compareScope(th, _, _)}
-      scopesSorted = true
+      _isScopesSorted = true
     }
     lo = 0
     hi = _subScopes.size - 1
@@ -451,7 +449,8 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
     None
   }
 
-  override def toString = {
+  override 
+  def toString = {
     "Scope: (Binding=" + bindingDfn + "," + ",dfns=" + dfns + ",refs=" + refs + ")"
   }
 

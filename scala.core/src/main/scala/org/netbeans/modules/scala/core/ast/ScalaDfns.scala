@@ -75,10 +75,10 @@ trait ScalaDfns {self: ScalaGlobal =>
 
     override 
     def getModifiers: java.util.Set[Modifier] = {
-      if (!modifiers.isDefined) {
-        modifiers = Some(ScalaUtil.getModifiers(symbol))
+      if (!_modifiers.isDefined) {
+        _modifiers = Some(ScalaUtil.getModifiers(symbol))
       }
-      modifiers.get
+      _modifiers.get
     }
 
     override 
@@ -107,11 +107,11 @@ trait ScalaDfns {self: ScalaGlobal =>
       }
     }
 
-    def htmlFormat(fm: HtmlFormatter): Unit = {
+    def htmlFormat(fm: HtmlFormatter) {
       ScalaUtil.htmlFormat(symbol, fm)
     }
 
-    def sigFormat(fm: HtmlFormatter) : Unit = {
+    def sigFormat(fm: HtmlFormatter) {
       try {
         fm.appendHtml("<i>")
         fm.appendText(symbol.enclClass.fullName)
