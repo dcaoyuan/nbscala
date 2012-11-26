@@ -28,6 +28,9 @@
   <codetemplate abbreviation="tr">
       <code>trait </code>
   </codetemplate>
+  <codetemplate abbreviation="th">
+      <code>Throwable </code>
+  </codetemplate>
   <codetemplate abbreviation="st">
       <code>String</code>
   </codetemplate>
@@ -37,9 +40,9 @@
       <code><![CDATA[Array[${cursor}]]]></code>
   </codetemplate>
 
-  <codetemplate abbreviation="th">
+  <codetemplate abbreviation="thr">
     <code>
-      <![CDATA[@throws(classOf[${cursor}])]]>
+      <![CDATA[throws(classOf[${cursor}])]]>
     </code>
   </codetemplate>
 
