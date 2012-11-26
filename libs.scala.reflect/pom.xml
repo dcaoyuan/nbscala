@@ -50,7 +50,6 @@
                         <publicPackage>scala.reflect.internal.util</publicPackage>
                         <publicPackage>scala.reflect.io</publicPackage>
                         <publicPackage>scala.reflect.macros</publicPackage>
-                        <publicPackage>scala.reflect.macros</publicPackage>
                         <publicPackage>scala.reflect.runtime</publicPackage>
                     </publicPackages>
                 </configuration>

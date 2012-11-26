@@ -52,8 +52,22 @@
                         <publicPackage>ch.epfl.lamp.compiler.msil.util</publicPackage>
                         <publicPackage>ch.epfl.lamp.fjbg</publicPackage>
                         <publicPackage>ch.epfl.lamp.util</publicPackage>
+                        <publicPackage>scala.reflect.macros.runtime</publicPackage>
+                        <publicPackage>scala.reflect.macros.util</publicPackage>
+                        <publicPackage>scala.reflect.reify</publicPackage>
+                        <publicPackage>scala.reflect.reify.codegen</publicPackage>
+                        <publicPackage>scala.reflect.reify.phases</publicPackage>
+                        <publicPackage>scala.reflect.reify.utils</publicPackage>
                         <publicPackage>scala.tools.ant</publicPackage>
                         <publicPackage>scala.tools.ant.sabbus</publicPackage>
+                        <publicPackage>scala.tools.ant.templates</publicPackage>
+                        <publicPackage>scala.tools.asm</publicPackage>
+                        <publicPackage>scala.tools.asm.signature</publicPackage>
+                        <publicPackage>scala.tools.asm.tree</publicPackage>
+                        <publicPackage>scala.tools.asm.tree.analysis</publicPackage>
+                        <publicPackage>scala.tools.asm.util</publicPackage>
+                        <publicPackage>scala.tools.cmd</publicPackage>
+                        <publicPackage>scala.tools.cmd.gen</publicPackage>
                         <publicPackage>scala.tools.nsc</publicPackage>
                         <publicPackage>scala.tools.nsc.ast</publicPackage>
                         <publicPackage>scala.tools.nsc.ast.parser</publicPackage>
@@ -65,17 +79,25 @@
                         <publicPackage>scala.tools.nsc.backend.opt</publicPackage>
                         <publicPackage>scala.tools.nsc.dependencies</publicPackage>
                         <publicPackage>scala.tools.nsc.doc</publicPackage>
+                        <publicPackage>scala.tools.nsc.doc.doclet</publicPackage>
                         <publicPackage>scala.tools.nsc.doc.html</publicPackage>
                         <publicPackage>scala.tools.nsc.doc.html.page</publicPackage>
+                        <publicPackage>scala.tools.nsc.doc.html.page.diagram</publicPackage>
+                        <publicPackage>scala.tools.nsc.doc.html.resource.lib</publicPackage>
                         <publicPackage>scala.tools.nsc.doc.model</publicPackage>
                         <publicPackage>scala.tools.nsc.doc.model.comment</publicPackage>
+                        <publicPackage>scala.tools.nsc.doc.model.diagram</publicPackage>
                         <publicPackage>scala.tools.nsc.interactive</publicPackage>
+                        <publicPackage>scala.tools.nsc.interactive.test</publicPackage>
+                        <publicPackage>scala.tools.nsc.interactive.test.core</publicPackage>
                         <publicPackage>scala.tools.nsc.interpreter</publicPackage>
+                        <publicPackage>scala.tools.nsc.interpreter.session</publicPackage>
                         <publicPackage>scala.tools.nsc.io</publicPackage>
                         <publicPackage>scala.tools.nsc.javac</publicPackage>
                         <publicPackage>scala.tools.nsc.matching</publicPackage>
                         <publicPackage>scala.tools.nsc.plugins</publicPackage>
                         <publicPackage>scala.tools.nsc.reporters</publicPackage>
+                        <publicPackage>scala.tools.nsc.scratchpad</publicPackage>
                         <publicPackage>scala.tools.nsc.settings</publicPackage>
                         <publicPackage>scala.tools.nsc.symtab</publicPackage>
                         <publicPackage>scala.tools.nsc.symtab.classfile</publicPackage>
@@ -83,6 +105,7 @@
                         <publicPackage>scala.tools.nsc.transform</publicPackage>
                         <publicPackage>scala.tools.nsc.typechecker</publicPackage>
                         <publicPackage>scala.tools.nsc.util</publicPackage>
+                        <publicPackage>scala.tools.reflect</publicPackage>
                         <publicPackage>scala.tools.util</publicPackage>
                     </publicPackages>
                 </configuration>

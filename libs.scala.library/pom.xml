@@ -38,12 +38,6 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>scala</publicPackage>
-                        <publicPackage>scala.actors</publicPackage>
-                        <publicPackage>scala.actors.remote</publicPackage>
-                        <publicPackage>scala.actors.scheduler</publicPackage>
-                        <publicPackage>scala.actors.threadpool</publicPackage>
-                        <publicPackage>scala.actors.threadpool.helpers</publicPackage>
-                        <publicPackage>scala.actors.threadpool.locks</publicPackage>
                         <publicPackage>scala.annotation</publicPackage>
                         <publicPackage>scala.annotation.meta</publicPackage>
                         <publicPackage>scala.annotation.target</publicPackage>
@@ -56,23 +50,22 @@
                         <publicPackage>scala.collection.immutable</publicPackage>
                         <publicPackage>scala.collection.mutable</publicPackage>
                         <publicPackage>scala.collection.parallel</publicPackage>
+                        <publicPackage>scala.collection.parallel.immutable</publicPackage>
+                        <publicPackage>scala.collection.parallel.mutable</publicPackage>
                         <publicPackage>scala.collection.script</publicPackage>
                         <publicPackage>scala.compat</publicPackage>
                         <publicPackage>scala.concurrent</publicPackage>
                         <publicPackage>scala.concurrent.duration</publicPackage>
+                        <publicPackage>scala.concurrent.forkjoin</publicPackage>
                         <publicPackage>scala.concurrent.impl</publicPackage>
+                        <publicPackage>scala.concurrent.util</publicPackage>
                         <publicPackage>scala.io</publicPackage>
                         <publicPackage>scala.math</publicPackage>
                         <publicPackage>scala.parallel</publicPackage>
                         <publicPackage>scala.ref</publicPackage>
                         <publicPackage>scala.reflect</publicPackage>
-                        <publicPackage>scala.reflect.macros</publicPackage>
                         <publicPackage>scala.reflect.macros.internal</publicPackage>
                         <publicPackage>scala.runtime</publicPackage>
-                        <publicPackage>scala.swing</publicPackage>
-                        <publicPackage>scala.swing.event</publicPackage>
-                        <publicPackage>scala.swing.model</publicPackage>                        
-                        <publicPackage>scala.swing.test</publicPackage>
                         <publicPackage>scala.sys</publicPackage>
                         <publicPackage>scala.sys.process</publicPackage>                        
                         <publicPackage>scala.testing</publicPackage>
@@ -90,6 +83,7 @@
                         <publicPackage>scala.util.parsing.combinator.lexical</publicPackage>
                         <publicPackage>scala.util.parsing.combinator.syntactical</publicPackage>
                         <publicPackage>scala.util.parsing.combinator.testing</publicPackage>
+                        <publicPackage>scala.util.parsing.combinator.token</publicPackage>
                         <publicPackage>scala.util.parsing.input</publicPackage>
                         <publicPackage>scala.util.parsing.json</publicPackage>
                         <publicPackage>scala.util.regexp</publicPackage>
