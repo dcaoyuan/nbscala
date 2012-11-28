@@ -68,11 +68,14 @@ abstract class ScalaCompletionProposals {
 
     def getAnchorOffset: Int = completer.anchor
 
-    override def getName: String = element.getName
+    override 
+    def getName: String = element.getName
 
-    override def getInsertPrefix: String = getName
+    override 
+    def getInsertPrefix: String = getName
 
-    override def getSortText: String = {
+    override 
+    def getSortText: String = {
       val name = getName
       val order = name.charAt(0) match {
         case c if c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' => "0"
@@ -115,7 +118,8 @@ abstract class ScalaCompletionProposals {
       fm.getText
     }
 
-    override def getRhsHtml(fm: HtmlFormatter): String = {
+    override 
+    def getRhsHtml(fm: HtmlFormatter): String = {
       element match {
         case x: ScalaElement =>
           val sym = x.symbol
@@ -142,9 +146,11 @@ abstract class ScalaCompletionProposals {
       fm.getText
     }
 
-    override def getModifiers: java.util.Set[Modifier] = element.getModifiers
+    override 
+    def getModifiers: java.util.Set[Modifier] = element.getModifiers
 
-    override def toString: String = {
+    override 
+    def toString: String = {
       var cls = this.getClass.getName
       cls = cls.substring(cls.lastIndexOf('.') + 1)
 
@@ -153,19 +159,23 @@ abstract class ScalaCompletionProposals {
 
     def isSmart: Boolean = false
 
-    override def getCustomInsertTemplate: String = null
+    override 
+    def getCustomInsertTemplate: String = null
   }
 
-  case class FunctionProposal(element: AstElementHandle, completer: ScalaCodeCompleter
+  final case class FunctionProposal(element: AstElementHandle, completer: ScalaCodeCompleter
   ) extends ScalaCompletionProposal(element, completer) {
     private val sym = element.asInstanceOf[ScalaElement].symbol
 
 
-    override def getInsertPrefix: String = getName
+    override 
+    def getInsertPrefix: String = getName
 
-    override def getKind: ElementKind = ElementKind.METHOD
+    override 
+    def getKind: ElementKind = ElementKind.METHOD
 
-    override def getLhsHtml(fm: HtmlFormatter): String = {
+    override 
+    def getLhsHtml(fm: HtmlFormatter): String = {
       val strike = element.isDeprecated
       val emphasize = !element.isInherited
       val preStar = element.isImplicit
@@ -251,7 +261,8 @@ abstract class ScalaCompletionProposals {
       }
     }
 
-    override def getCustomInsertTemplate: String = {
+    override 
+    def getCustomInsertTemplate: String = {
       val sb = new StringBuilder
 
       val insertPrefix = getInsertPrefix
@@ -301,14 +312,17 @@ abstract class ScalaCompletionProposals {
     }
   }
 
-  case class KeywordProposal(keyword: String, description: String, completer: ScalaCodeCompleter
+  final case class KeywordProposal(keyword: String, description: String, completer: ScalaCodeCompleter
   ) extends ScalaCompletionProposal(null, completer) {
 
-    override def getName: String = keyword
+    override 
+    def getName: String = keyword
 
-    override def getKind: ElementKind = ElementKind.KEYWORD
+    override 
+    def getKind: ElementKind = ElementKind.KEYWORD
 
-    override def getLhsHtml(fm: HtmlFormatter): String = {
+    override 
+    def getLhsHtml(fm: HtmlFormatter): String = {
       val kind = getKind
       fm.name(kind, true)
       fm.appendHtml(getName)
@@ -317,7 +331,8 @@ abstract class ScalaCompletionProposals {
       fm.getText
     }
 
-    override def getRhsHtml(fm: HtmlFormatter): String = {
+    override 
+    def getRhsHtml(fm: HtmlFormatter): String = {
       if (description ne null) {
         fm.appendText(description)
 
@@ -325,26 +340,32 @@ abstract class ScalaCompletionProposals {
       } else null
     }
 
-    override def getIcon: ImageIcon = ScalaCompletionProposal.keywordIcon
+    override 
+    def getIcon: ImageIcon = ScalaCompletionProposal.keywordIcon
 
-    override def getModifiers: java.util.Set[Modifier] = java.util.Collections.emptySet[Modifier]
+    override 
+    def getModifiers: java.util.Set[Modifier] = java.util.Collections.emptySet[Modifier]
 
-    override def getElement: ElementHandle = {
+    override 
+    def getElement: ElementHandle = {
       PseudoElement(keyword, ElementKind.KEYWORD) // For completion documentation
     }
 
-    override def isSmart: Boolean = false
+    override 
+    def isSmart: Boolean = false
   }
 
-  case class PlainProposal(element: AstElementHandle, completer: ScalaCodeCompleter
+  final case class PlainProposal(element: AstElementHandle, completer: ScalaCodeCompleter
   ) extends ScalaCompletionProposal(element, completer) {}
 
-  case class PackageItem(element: AstElementHandle, completer: ScalaCodeCompleter
+  final case class PackageItem(element: AstElementHandle, completer: ScalaCodeCompleter
   ) extends ScalaCompletionProposal(element, completer) {
 
-    override def getKind: ElementKind = ElementKind.PACKAGE
+    override 
+    def getKind: ElementKind = ElementKind.PACKAGE
 
-    override def getName: String = {
+    override 
+    def getName: String = {
       val name = element.getName
       name.lastIndexOf('.') match {
         case -1 => name
@@ -352,7 +373,8 @@ abstract class ScalaCompletionProposals {
       }
     }
 
-    override def getLhsHtml(formatter: HtmlFormatter): String = {
+    override 
+    def getLhsHtml(formatter: HtmlFormatter): String = {
       val kind = getKind
       formatter.name(kind, true)
       formatter.appendText(getName)
@@ -366,12 +388,14 @@ abstract class ScalaCompletionProposals {
     override def isSmart: Boolean = true
   }
 
-  case class TypeProposal(element: AstElementHandle, completer: ScalaCodeCompleter
+  final case class TypeProposal(element: AstElementHandle, completer: ScalaCodeCompleter
   ) extends ScalaCompletionProposal(element, completer) {
 
-    override def getKind: ElementKind = ElementKind.CLASS
+    override 
+    def getKind: ElementKind = ElementKind.CLASS
 
-    override def getName: String = {
+    override 
+    def getName: String = {
       val name = element.qualifiedName
       name.lastIndexOf('.') match {
         case -1 => name
@@ -379,7 +403,8 @@ abstract class ScalaCompletionProposals {
       }
     }
 
-    override def getLhsHtml(fm: HtmlFormatter): String = {
+    override 
+    def getLhsHtml(fm: HtmlFormatter): String = {
       val kind = getKind
       val strike = element.isDeprecated
       if (strike) fm.deprecated(true)
@@ -393,7 +418,8 @@ abstract class ScalaCompletionProposals {
       fm.getText
     }
 
-    override def getRhsHtml(fm: HtmlFormatter): String = {
+    override 
+    def getRhsHtml(fm: HtmlFormatter): String = {
       val qname = element.qualifiedName
       val in = qname.lastIndexOf('.') match {
         case -1 => ""
@@ -404,7 +430,7 @@ abstract class ScalaCompletionProposals {
     }
   }
 
-  case class PseudoElement(name: String, kind: ElementKind) extends ElementHandle {
+  final case class PseudoElement(name: String, kind: ElementKind) extends ElementHandle {
 
     def getFileObject: FileObject = null
 

@@ -55,7 +55,8 @@ import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
  */
 class ScalaDeclarationFinder extends DeclarationFinder {
   
-  override def getReferenceSpan(document: Document, lexOffset: Int): OffsetRange = {
+  override 
+  def getReferenceSpan(document: Document, lexOffset: Int): OffsetRange = {
     val th = TokenHierarchy.get(document)
 
     val ts = ScalaLexUtil.getTokenSequence(th, lexOffset).getOrElse(return OffsetRange.NONE)
@@ -85,7 +86,8 @@ class ScalaDeclarationFinder extends DeclarationFinder {
     }
   }
 
-  override def findDeclaration(info: ParserResult, lexOffset: Int): DeclarationLocation = {
+  override 
+  def findDeclaration(info: ParserResult, lexOffset: Int): DeclarationLocation = {
     val pr = info.asInstanceOf[ScalaParserResult]
     val global = pr.global
     import global._

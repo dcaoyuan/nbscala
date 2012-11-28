@@ -110,7 +110,8 @@ object ScalaCodeCompletionHandler {
 class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFormatters {
   import ScalaCodeCompletionHandler._
 
-  override def complete(context: CodeCompletionContext): CodeCompletionResult = {  
+  override 
+  def complete(context: CodeCompletionContext): CodeCompletionResult = {  
     // skip processing other queryType: DOCUMENTATION_QUERY_TYPE, TOOLTIP_QUERY_TYPE etc
     context.getQueryType match {
       case QueryType.ALL_COMPLETION | QueryType.COMPLETION => // go on
@@ -581,7 +582,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
    * For non-string contexts, just return null to let the default identifier-computation
    * kick in.
    */
-  override def getPrefix(info: ParserResult, lexOffset: Int, upToOffset: Boolean): String = {
+  override 
+  def getPrefix(info: ParserResult, lexOffset: Int, upToOffset: Boolean): String = {
     try {
       val doc = info.getSnapshot.getSource.getDocument(true).asInstanceOf[BaseDocument]
 
@@ -831,12 +833,14 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     null
   }
 
-  override def resolveTemplateVariable(variable: String, info: ParserResult, caretOffset: Int,
-                                       name: String , parameters: java.util.Map[_, _]): String = {
+  override 
+  def resolveTemplateVariable(variable: String, info: ParserResult, caretOffset: Int,
+                              name: String , parameters: java.util.Map[_, _]): String = {
     throw new UnsupportedOperationException("Not supported yet.")
   }
 
-  override def resolveLink(link: String, elementHandle: ElementHandle): ElementHandle = {
+  override 
+  def resolveLink(link: String, elementHandle: ElementHandle): ElementHandle = {
     if (link.indexOf(':') != -1) {
       new ElementHandle.UrlHandle(link.replace(':', '.'))
     } else null
@@ -1087,7 +1091,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   //        return false;
   //    }
 
-  override def getAutoQuery(component: JTextComponent, typedText: String): QueryType = {
+  override 
+  def getAutoQuery(component: JTextComponent, typedText: String): QueryType = {
     typedText.charAt(0) match {
       // TODO - auto query on ' and " when you're in $() or $F()
       case '\n' | '(' | '[' | '{' |';' => return QueryType.STOP
@@ -1140,7 +1145,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     QueryType.NONE
   }
 
-  override def document(pr: ParserResult, element: ElementHandle): String = {
+  override 
+  def document(pr: ParserResult, element: ElementHandle): String = {
     val sigFm = new SignatureHtmlFormatter
 
     val comment = element match {
@@ -1171,11 +1177,13 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     html.toString
   }
 
-  override def getApplicableTemplates(info: javax.swing.text.Document, selectionBegin: Int, selectionEnd: Int): java.util.Set[String] = {
+  override 
+  def getApplicableTemplates(info: javax.swing.text.Document, selectionBegin: Int, selectionEnd: Int): java.util.Set[String] = {
     java.util.Collections.emptySet[String]
   }
 
-  override def parameters(info: ParserResult, lexOffset: Int, proposal: CompletionProposal): ParameterInfo = {
+  override 
+  def parameters(info: ParserResult, lexOffset: Int, proposal: CompletionProposal): ParameterInfo = {
     ParameterInfo.NONE
     /*_
      Function[] methodHolder = new Function[1];

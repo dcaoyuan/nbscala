@@ -58,13 +58,17 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
   private var _occurrences: java.util.Map[OffsetRange, ColoringAttributes] = _
   private var fo: FileObject = _
 
-  override def getPriority: Int = 0
+  override 
+  def getPriority: Int = 0
 
-  override def getSchedulerClass: Class[_ <: Scheduler] = Scheduler.CURSOR_SENSITIVE_TASK_SCHEDULER
+  override 
+  def getSchedulerClass: Class[_ <: Scheduler] = Scheduler.CURSOR_SENSITIVE_TASK_SCHEDULER
 
-  override def getOccurrences: java.util.Map[OffsetRange, ColoringAttributes] = _occurrences
+  override 
+  def getOccurrences: java.util.Map[OffsetRange, ColoringAttributes] = _occurrences
 
-  override def setCaretPosition(position: Int): Unit = {
+  override 
+  def setCaretPosition(position: Int) {
     this.caretPosition = position
   }
 
@@ -80,7 +84,8 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     cancelled = true
   }
 
-  override def run(pResult: ScalaParserResult, event: SchedulerEvent) {
+  override 
+  def run(pResult: ScalaParserResult, event: SchedulerEvent) {
     resume
 
     if (isCancelled) {

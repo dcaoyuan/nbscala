@@ -59,9 +59,9 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
   import definitions._
 
   /** Constants for readability */
-  private final val IS_OBJECT = true;
-  private final val IS_NOT_OBJECT = false;
-  private final val IS_NOT_TRAIT = false;
+  private val IS_OBJECT = true
+  private val IS_NOT_OBJECT = false
+  private val IS_NOT_TRAIT = false
 
   private var isTrait = false
   private var isObject = false
@@ -288,7 +288,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       if (isTrait || isObject) {
         return ""
       }
-      return modifiers(member) + encodeName(sym.nameString) + params(memberType.params) + " {}\n"
+      modifiers(member) + encodeName(sym.nameString) + params(memberType.params) + " {}\n"
     }
 
     private def genJavaValue(member: Symbol, memberType: Type): String = {
@@ -301,7 +301,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
         case Some(sig) => sig
         case None => encodeType(mResSym.fullName)
       }
-      return modifiers(member) + " " + mResQName + " " + member.nameString + ";\n"
+      modifiers(member) + " " + mResQName + " " + member.nameString + ";\n"
     }
 
     //TODO: Refactor this down to a smaller method
@@ -344,7 +344,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
           javaCode ++= ";\n"
         }
       }
-      return javaCode.toString
+      javaCode.toString
     }
   }
   
@@ -674,7 +674,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
   }
 
   @inline
-  final private def logResult[T](msg: => String)(result: T): T = {
+  private def logResult[T](msg: => String)(result: T): T = {
     LOGGER.warning(msg + ": " + result)
     result
   }

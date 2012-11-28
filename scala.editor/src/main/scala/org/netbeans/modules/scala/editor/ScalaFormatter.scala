@@ -86,7 +86,8 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
     false
   }
 
-  override def reindent(context: Context) {
+  override 
+  def reindent(context: Context) {
     val document = context.document
     val startOffset = context.startOffset
     val endOffset = context.endOffset
@@ -100,7 +101,8 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
     }
   }
 
-  override def reformat(context: Context, info: ParserResult) {
+  override 
+  def reformat(context: Context, info: ParserResult) {
     val document = context.document
     val startOffset = context.startOffset
     val endOffset = context.endOffset
@@ -288,7 +290,8 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
     var onProcessingLine: Boolean = _ // on the processing line?
     var lasestTokenOnLine: Token[TokenId] = _ // lastest non-white token on this line
 
-    override def toString = {
+    override 
+    def toString = {
       token.text.toString
     }
   }

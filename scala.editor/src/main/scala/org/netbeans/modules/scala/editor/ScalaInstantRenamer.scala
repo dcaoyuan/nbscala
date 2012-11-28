@@ -52,7 +52,8 @@ import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
  */
 class ScalaInstantRenamer extends InstantRenamer {
 
-  override def isRenameAllowed(info: ParserResult, caretOffset: Int, explanationRetValue: Array[String]): Boolean = {
+  override 
+  def isRenameAllowed(info: ParserResult, caretOffset: Int, explanationRetValue: Array[String]): Boolean = {
     val pResult = info.asInstanceOf[ScalaParserResult]
     val rootScope = pResult.rootScope
 
@@ -86,7 +87,8 @@ class ScalaInstantRenamer extends InstantRenamer {
     }
   }
 
-  override def getRenameRegions(info: ParserResult, caretOffset: Int): java.util.Set[OffsetRange] = {
+  override 
+  def getRenameRegions(info: ParserResult, caretOffset: Int): java.util.Set[OffsetRange] = {
     if (info eq null) {
       return java.util.Collections.emptySet[OffsetRange]
     }
@@ -113,9 +115,10 @@ class ScalaInstantRenamer extends InstantRenamer {
     }
 
     val regions = new java.util.HashSet[OffsetRange]
-    for (item <- occurrences;
-         idToken = item.idToken
-    ) {
+    for {
+      item <- occurrences
+      idToken = item.idToken
+    } {
       regions.add(ScalaLexUtil.getRangeOfToken(th, idToken))
     }
 

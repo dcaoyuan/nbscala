@@ -85,12 +85,12 @@
             </snapshots>
         </repository>
 
-       <repository>
-           <id>repository.jboss.org-public</id>
-           <name>JBoss.org Maven repository</name>
-           <url>http://repository.jboss.org/nexus/content/groups/public</url>
-       </repository>  
-   </repositories>
+        <repository>
+            <id>repository.jboss.org-public</id>
+            <name>JBoss.org Maven repository</name>
+            <url>http://repository.jboss.org/nexus/content/groups/public</url>
+        </repository>  
+    </repositories>
   
     <dependencies>
         <dependency>
@@ -159,6 +159,7 @@
                     </executions> 
                     <configuration>
                         <scalaVersion>${scala.version}</scalaVersion>
+                        <!--recompileMode>incremental</recompileMode-->
                         <jvmArgs>
                             <jvmArg>-Xbootclasspath/p:${settings.localRepository}/org/scala-lang/scala-reflect/${scala.version}/scala-reflect-${scala.version}.jar</jvmArg>
                             <jvmArg>-Xms64m</jvmArg>

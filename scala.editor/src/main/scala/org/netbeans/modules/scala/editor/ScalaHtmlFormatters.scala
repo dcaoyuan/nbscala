@@ -63,7 +63,8 @@ trait ScalaHtmlFormatters {
       // Not sure what to do about maxLength here... but presumably
     }
 
-    override def appendText(text: String, fromInclusive: Int, toExclusive: Int) {
+    override 
+    def appendText(text: String, fromInclusive: Int, toExclusive: Int) {
       var i = fromInclusive
       var break = false
       while (i < toExclusive && !break) {
@@ -96,7 +97,8 @@ trait ScalaHtmlFormatters {
       }
     }
 
-    override def name(kind: ElementKind, start: Boolean) {
+    override 
+    def name(kind: ElementKind, start: Boolean) {
       assert(start != isName)
       isName = start
 
@@ -151,16 +153,19 @@ trait ScalaHtmlFormatters {
       }
     }
 
-    override def active(start: Boolean) {
+    override 
+    def active(start: Boolean) {
       emphasis(start)
     }
 
-    override def getText: String = {
+    override 
+    def getText: String = {
       assert(!isParameter && !isDeprecated && !isName && !isType)
       sb.toString
     }
 
-    override def toString = {
+    override 
+    def toString = {
       getText
     }
   }

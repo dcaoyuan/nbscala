@@ -52,7 +52,8 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
 
   @throws(classOf[InterruptedException])
   @throws(classOf[BadLocationException])
-  override def findOrigin: Array[Int] = {
+  override 
+  def findOrigin: Array[Int] = {
     var offset = context.getSearchOffset
     val doc = context.getDocument.asInstanceOf[BaseDocument]
 
@@ -128,7 +129,8 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
 
   @throws(classOf[InterruptedException])
   @throws(classOf[BadLocationException])
-  override def findMatches: Array[Int] = {
+  override 
+  def findMatches: Array[Int] = {
     var offset = context.getSearchOffset
     val doc = context.getDocument.asInstanceOf[BaseDocument]
     

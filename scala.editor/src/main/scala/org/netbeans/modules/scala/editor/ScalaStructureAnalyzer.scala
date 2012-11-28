@@ -59,9 +59,11 @@ import scala.collection.mutable.{Stack}
  */
 class ScalaStructureAnalyzer extends StructureScanner {
 
-  override def getConfiguration: Configuration = null
+  override 
+  def getConfiguration: Configuration = null
 
-  override def scan(result: ParserResult): java.util.List[StructureItem] = {
+  override 
+  def scan(result: ParserResult): java.util.List[StructureItem] = {
     result match {
       case pResult: ScalaParserResult =>
         val rootScope = pResult.rootScope
@@ -89,8 +91,9 @@ class ScalaStructureAnalyzer extends StructureScanner {
     }
   }
 
-  val emptyFolds = java.util.Collections.emptyMap[String, java.util.List[OffsetRange]]
-  override def folds(result: ParserResult): java.util.Map[String, java.util.List[OffsetRange]] = {
+  private val emptyFolds = java.util.Collections.emptyMap[String, java.util.List[OffsetRange]]
+  override 
+  def folds(result: ParserResult): java.util.Map[String, java.util.List[OffsetRange]] = {
     if (result eq null) {
       return emptyFolds
     }
@@ -213,22 +216,29 @@ class ScalaStructureAnalyzer extends StructureScanner {
   private class ScalaStructureItem(val dfn: ScalaDfns#ScalaDfn, pResult: ScalaParserResult) extends StructureItem {
     import ElementKind._
 
-    override def getName: String = dfn.getName
+    override 
+    def getName: String = dfn.getName
 
-    override def getSortText: String = getName
+    override 
+    def getSortText: String = getName
 
-    override def getHtml(formatter:HtmlFormatter): String = {
+    override 
+    def getHtml(formatter:HtmlFormatter): String = {
       dfn.htmlFormat(formatter)
       formatter.getText
     }
 
-    override def getElementHandle: ElementHandle = dfn
+    override 
+    def getElementHandle: ElementHandle = dfn
 
-    override def getKind: ElementKind = dfn.getKind
+    override 
+    def getKind: ElementKind = dfn.getKind
         
-    override def getModifiers: java.util.Set[Modifier] = dfn.getModifiers
+    override 
+    def getModifiers: java.util.Set[Modifier] = dfn.getModifiers
 
-    override def isLeaf: Boolean = {
+    override 
+    def isLeaf: Boolean = {
       dfn.getKind match {
         case MODULE | CLASS => false
         case METHOD | CONSTRUCTOR | FIELD | VARIABLE | OTHER | PARAMETER | ATTRIBUTE => true
@@ -236,13 +246,14 @@ class ScalaStructureAnalyzer extends StructureScanner {
       }
     }
 
-    override def getNestedItems: java.util.List[StructureItem] = {
+    override 
+    def getNestedItems: java.util.List[StructureItem] = {
       val nested = dfn.bindingScope.dfns
       if (!nested.isEmpty) {
         val children = new java.util.ArrayList[StructureItem]
 
-        nested foreach {
-          case child: ScalaDfns#ScalaDfn => child.getKind match {
+        nested foreach {case child: ScalaDfns#ScalaDfn => 
+            child.getKind match {
               case PARAMETER | OTHER =>
               case _ => children.add(new ScalaStructureItem(child, pResult))
             }
@@ -252,39 +263,45 @@ class ScalaStructureAnalyzer extends StructureScanner {
       } else java.util.Collections.emptyList[StructureItem]
     }
 
-    override def getPosition: Long = {
+    override 
+    def getPosition: Long = {
       try {
         pResult.getSnapshot.getTokenHierarchy match {
           case null => 0
           case th => dfn.boundsOffset(th)
         }
-      } catch {case ex:Exception => 0}
+      } catch {case ex: Throwable => 0}
     }
 
-    override def getEndPosition: Long = {
+    override 
+    def getEndPosition: Long = {
       try {
         pResult.getSnapshot.getTokenHierarchy match {
           case null => 0
           case th => dfn.boundsEndOffset(th)
         }
-      } catch {case ex: Exception => 0}
+      } catch {case ex: Throwable => 0}
     }
 
-    override def equals(o: Any): Boolean = o match {
+    override 
+    def equals(o: Any): Boolean = o match {
       case null => false
       case x:ScalaStructureItem if dfn.getKind == x.dfn.getKind && getName.equals(x.getName) => true
       case _ => false
     }
 
-    override def hashCode: Int = {
+    override 
+    def hashCode: Int = {
       var hash = 7
       hash = (29 * hash) + (if (getName ne null) getName.hashCode else 0)
       hash = (29 * hash) + (if (dfn.getKind ne null) dfn.getKind.hashCode else 0)
       hash
     }
 
-    override def toString = getName
+    override 
+    def toString = getName
 
-    override def getCustomIcon: ImageIcon = null
+    override 
+    def getCustomIcon: ImageIcon = null
   }
 }

@@ -72,6 +72,18 @@ import scala.collection.JavaConversions._
  *
  * @author Caoyuan Deng
  */
+class JavaIndex(index: ClassIndex, pResult: ScalaParserResult) {
+  //public static final Map<String, List<? extends Element>> TypeQNameToMemebersCache = new HashMap<String, List<? extends Element>>();
+  //public static final Set<SearchScope> ALL_SCOPE = EnumSet.allOf(SearchScope.class);
+  //public static final Set<SearchScope> SOURCE_SCOPE = EnumSet.of(SearchScope.SOURCE);
+
+  def getPackages(fqnPrefix: String): Set[String] = {
+    val pkgNames = index.getPackageNames(fqnPrefix, true, java.util.EnumSet.allOf(classOf[SearchScope]))
+    pkgNames.map{x => x}.toSet
+  }
+
+
+}
 object JavaIndex {
 
   def get(fo: FileObject, pResult: ScalaParserResult): Option[JavaIndex] = {
@@ -85,14 +97,3 @@ object JavaIndex {
   }
 }
 
-class JavaIndex(index: ClassIndex, pResult: ScalaParserResult) {
-  //public static final Map<String, List<? extends Element>> TypeQNameToMemebersCache = new HashMap<String, List<? extends Element>>();
-  //public static final Set<SearchScope> ALL_SCOPE = EnumSet.allOf(SearchScope.class);
-  //public static final Set<SearchScope> SOURCE_SCOPE = EnumSet.of(SearchScope.SOURCE);
-
-  def getPackages(fqnPrefix: String): Set[String] = {
-    val pkgNames = index.getPackageNames(fqnPrefix, true, java.util.EnumSet.allOf(classOf[SearchScope]))
-    pkgNames.map{x => x}.toSet
-  }
-
-}

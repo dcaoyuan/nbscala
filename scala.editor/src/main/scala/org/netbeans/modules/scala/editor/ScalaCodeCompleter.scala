@@ -57,6 +57,7 @@ import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
 import org.netbeans.modules.scala.core.ScalaGlobal
 import org.netbeans.modules.scala.core.rats.ParserScala
 
+
 /**
  *
  * @author Caoyuan Deng
@@ -65,110 +66,9 @@ import org.netbeans.modules.scala.core.rats.ParserScala
  * that's good. But then, we may need to make sure the prResult had been reset first and 
  * go to semantic analysis when root is required.
  */
-object ScalaCodeCompleter {
-  // Dbl-space lines to keep formatter from collapsing pairs into a block
-  private val REGEXP_WORDS = Array("\\0", "The NUL character (\\u0000)",
-                                   "\\t", "Tab (\\u0009)",
-                                   "\\n", "Newline (\\u000A)",
-                                   "\\v", "Vertical tab (\\u000B)",
-                                   "\\f", "Form feed (\\u000C)",
-                                   "\\r", "Carriage return (\\u000D)",
-                                   "\\x", "\\x<i>nn</i>: The latin character in hex <i>nn</i>",
-                                   "\\u", "\\u<i>xxxx</i>: The Unicode character in hex <i>xxxx</i>",
-                                   "\\c", "\\c<i>X</i>: The control character ^<i>X</i>",
-                                   // Character classes
-                                   "[]", "Any one character between the brackets",
-                                   "[^]", "Any one character not between the brackets",
-                                   "\\w", "Any ASCII word character; same as [0-9A-Za-z_]",
-                                   "\\W", "Not a word character; same as [^0-9A-Za-z_]",
-                                   "\\s", "Unicode space character",
-                                   "\\S", "Non-space character",
-                                   "\\d", "Digit character; same as [0-9]",
-                                   "\\D", "Non-digit character; same as [^0-9]",
-                                   "[\\b]", "Literal backspace",
-                                   // Match positions
-                                   "^", "Start of line",
-                                   "$", "End of line",
-                                   "\\b", "Word boundary (if not in a range specification)",
-                                   "\\B", "Non-word boundary",
-                                   // According to JavaScript The Definitive Guide, the following are not supported
-                                   // in JavaScript:
-                                   // \\a, \\e, \\l, \\u, \\L, \\U, \\E, \\Q, \\A, \\Z, \\z, and \\G
-                                   //
-                                   //"\\A", "Beginning of string",
-                                   //"\\z", "End of string",
-                                   //"\\Z", "End of string (except \\n)",
-
-                                   "*", "Zero or more repetitions of the preceding",
-                                   "+", "One or more repetitions of the preceding",
-                                   "{m,n}", "At least m and at most n repetitions of the preceding",
-                                   "?", "At most one repetition of the preceding; same as {0,1}",
-                                   "|", "Either preceding or next expression may match",
-                                   "()", "Grouping" //"[:alnum:]", "Alphanumeric character class",
-                                   //"[:alpha:]", "Uppercase or lowercase letter",
-                                   //"[:blank:]", "Blank and tab",
-                                   //"[:cntrl:]", "Control characters (at least 0x00-0x1f,0x7f)",
-                                   //"[:digit:]", "Digit",
-                                   //"[:graph:]", "Printable character excluding space",
-                                   //"[:lower:]", "Lowecase letter",
-                                   //"[:print:]", "Any printable letter (including space)",
-                                   //"[:punct:]", "Printable character excluding space and alphanumeric",
-                                   //"[:space:]", "Whitespace (same as \\s)",
-                                   //"[:upper:]", "Uppercase letter",
-                                   //"[:xdigit:]", "Hex digit (0-9, a-f, A-F)",
-  )    // Strings section 7.8
-
-  private val STRING_ESCAPES = Array("\\0", "The NUL character (\\u0000)",
-                                     "\\b", "Backspace (0x08)",
-                                     "\\t", "Tab (\\u0009)",
-                                     "\\n", "Newline (\\u000A)",
-                                     "\\v", "Vertical tab (\\u000B)",
-                                     "\\f", "Form feed (\\u000C)",
-                                     "\\r", "Carriage return (\\u000D)",
-                                     "\\\"", "Double Quote (\\u0022)",
-                                     "\\'", "Single Quote (\\u0027)",
-                                     "\\\\", "Backslash (\\u005C)",
-                                     "\\x", "\\x<i>nn</i>: The latin character in hex <i>nn</i>",
-                                     "\\u", "\\u<i>xxxx</i>: The Unicode character in hex <i>xxxx</i>",
-                                     "\\", "\\<i>ooo</i>: The latin character in octal <i>ooo</i>",
-                                     // PENDING: Is this supported?
-                                     "\\c", "\\c<i>X</i>: The control character ^<i>X</i>"
-  )
-
-
-  private val scalaDocWords = Array("@augments",
-                                    "@class",
-                                    "@config",
-                                    "@constructor",
-                                    "@deprecated",
-                                    "@description",
-                                    "@event",
-                                    "@example",
-                                    "@exception",
-                                    "@fileOverview",
-                                    "@function",
-                                    "@ignore",
-                                    "@inherits",
-                                    "@memberOf",
-                                    "@name",
-                                    "@namespace",
-                                    "@param",
-                                    "@param",
-                                    "@private",
-                                    "@property",
-                                    "@return",
-                                    "@scope",
-                                    "@scope",
-                                    "@static",
-                                    "@type"
-  )
-
-  var callLineStart = -1
-  var callMethod: ExecutableElement = _
-}
-
-import ScalaCodeCompleter._
 class ScalaCodeCompleter(val pResult: ScalaParserResult) {
+  import ScalaCodeCompleter._
+
   val global = pResult.global
   val th = pResult.getSnapshot.getTokenHierarchy
   
@@ -197,7 +97,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
   //var index: ScalaIndex = _
 
 
-  case class Call(base: Token[TokenId], dot: Token[TokenId], select: Token[TokenId])
+  final case class Call(base: Token[TokenId], dot: Token[TokenId], select: Token[TokenId])
 
   private val CALL_IDs: Set[TokenId] = Set(ScalaTokenId.Identifier,
                                            ScalaTokenId.This,
@@ -663,4 +563,106 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
     }
   }
 
+}
+
+object ScalaCodeCompleter {
+  // Dbl-space lines to keep formatter from collapsing pairs into a block
+  private val REGEXP_WORDS = Array("\\0", "The NUL character (\\u0000)",
+                                   "\\t", "Tab (\\u0009)",
+                                   "\\n", "Newline (\\u000A)",
+                                   "\\v", "Vertical tab (\\u000B)",
+                                   "\\f", "Form feed (\\u000C)",
+                                   "\\r", "Carriage return (\\u000D)",
+                                   "\\x", "\\x<i>nn</i>: The latin character in hex <i>nn</i>",
+                                   "\\u", "\\u<i>xxxx</i>: The Unicode character in hex <i>xxxx</i>",
+                                   "\\c", "\\c<i>X</i>: The control character ^<i>X</i>",
+                                   // Character classes
+                                   "[]", "Any one character between the brackets",
+                                   "[^]", "Any one character not between the brackets",
+                                   "\\w", "Any ASCII word character; same as [0-9A-Za-z_]",
+                                   "\\W", "Not a word character; same as [^0-9A-Za-z_]",
+                                   "\\s", "Unicode space character",
+                                   "\\S", "Non-space character",
+                                   "\\d", "Digit character; same as [0-9]",
+                                   "\\D", "Non-digit character; same as [^0-9]",
+                                   "[\\b]", "Literal backspace",
+                                   // Match positions
+                                   "^", "Start of line",
+                                   "$", "End of line",
+                                   "\\b", "Word boundary (if not in a range specification)",
+                                   "\\B", "Non-word boundary",
+                                   // According to JavaScript The Definitive Guide, the following are not supported
+                                   // in JavaScript:
+                                   // \\a, \\e, \\l, \\u, \\L, \\U, \\E, \\Q, \\A, \\Z, \\z, and \\G
+                                   //
+                                   //"\\A", "Beginning of string",
+                                   //"\\z", "End of string",
+                                   //"\\Z", "End of string (except \\n)",
+
+                                   "*", "Zero or more repetitions of the preceding",
+                                   "+", "One or more repetitions of the preceding",
+                                   "{m,n}", "At least m and at most n repetitions of the preceding",
+                                   "?", "At most one repetition of the preceding; same as {0,1}",
+                                   "|", "Either preceding or next expression may match",
+                                   "()", "Grouping" //"[:alnum:]", "Alphanumeric character class",
+                                   //"[:alpha:]", "Uppercase or lowercase letter",
+                                   //"[:blank:]", "Blank and tab",
+                                   //"[:cntrl:]", "Control characters (at least 0x00-0x1f,0x7f)",
+                                   //"[:digit:]", "Digit",
+                                   //"[:graph:]", "Printable character excluding space",
+                                   //"[:lower:]", "Lowecase letter",
+                                   //"[:print:]", "Any printable letter (including space)",
+                                   //"[:punct:]", "Printable character excluding space and alphanumeric",
+                                   //"[:space:]", "Whitespace (same as \\s)",
+                                   //"[:upper:]", "Uppercase letter",
+                                   //"[:xdigit:]", "Hex digit (0-9, a-f, A-F)",
+  )    // Strings section 7.8
+
+  private val STRING_ESCAPES = Array("\\0", "The NUL character (\\u0000)",
+                                     "\\b", "Backspace (0x08)",
+                                     "\\t", "Tab (\\u0009)",
+                                     "\\n", "Newline (\\u000A)",
+                                     "\\v", "Vertical tab (\\u000B)",
+                                     "\\f", "Form feed (\\u000C)",
+                                     "\\r", "Carriage return (\\u000D)",
+                                     "\\\"", "Double Quote (\\u0022)",
+                                     "\\'", "Single Quote (\\u0027)",
+                                     "\\\\", "Backslash (\\u005C)",
+                                     "\\x", "\\x<i>nn</i>: The latin character in hex <i>nn</i>",
+                                     "\\u", "\\u<i>xxxx</i>: The Unicode character in hex <i>xxxx</i>",
+                                     "\\", "\\<i>ooo</i>: The latin character in octal <i>ooo</i>",
+                                     // PENDING: Is this supported?
+                                     "\\c", "\\c<i>X</i>: The control character ^<i>X</i>"
+  )
+
+
+  private val scalaDocWords = Array("@augments",
+                                    "@class",
+                                    "@config",
+                                    "@constructor",
+                                    "@deprecated",
+                                    "@description",
+                                    "@event",
+                                    "@example",
+                                    "@exception",
+                                    "@fileOverview",
+                                    "@function",
+                                    "@ignore",
+                                    "@inherits",
+                                    "@memberOf",
+                                    "@name",
+                                    "@namespace",
+                                    "@param",
+                                    "@param",
+                                    "@private",
+                                    "@property",
+                                    "@return",
+                                    "@scope",
+                                    "@scope",
+                                    "@static",
+                                    "@type"
+  )
+
+  var callLineStart = -1
+  var callMethod: ExecutableElement = _
 }

@@ -106,12 +106,14 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
   }
 
   /** replaced by ScalaBracesMatcher#findMatching */
-  override def findMatching(document: Document, aoffset: Int /*, boolean simpleSearch*/): OffsetRange = {
+  override 
+  def findMatching(document: Document, aoffset: Int /*, boolean simpleSearch*/): OffsetRange = {
     OffsetRange.NONE
   }
 
   @throws(classOf[BadLocationException])
-  override def beforeBreak(document: Document, aoffset: Int, target: JTextComponent): Int = {
+  override 
+  def beforeBreak(document: Document, aoffset: Int, target: JTextComponent): Int = {
     var offset = aoffset
     isAfter = false
 
@@ -559,7 +561,8 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
   }
 
   @throws(classOf[BadLocationException])
-  override def beforeCharInserted(document: Document, acaretOffset: Int, target: JTextComponent, c: Char): Boolean = {
+  override 
+  def beforeCharInserted(document: Document, acaretOffset: Int, target: JTextComponent, c: Char): Boolean = {
     val doc =  document.asInstanceOf[BaseDocument]
     if (!isInsertMatchingEnabled(doc)) {
       return false
@@ -705,7 +708,8 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
    * @throws BadLocationException if dotPos is not correct
    */
   @throws(classOf[BadLocationException])
-  override def afterCharInserted(document: Document, dotPos: Int, target: JTextComponent, ch: Char): Boolean = {
+  override 
+  def afterCharInserted(document: Document, dotPos: Int, target: JTextComponent, ch: Char): Boolean = {
     isAfter = true
     val caret = target.getCaret
     val doc = document.asInstanceOf[BaseDocument]
@@ -926,7 +930,8 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
    * @param ch the character that was deleted
    */
   @throws(classOf[BadLocationException])
-  override def charBackspaced(document: Document, dotPos: Int, target: JTextComponent, ch: Char): Boolean = {
+  override 
+  def charBackspaced(document: Document, dotPos: Int, target: JTextComponent, ch: Char): Boolean = {
     val doc = document.asInstanceOf[BaseDocument]
 
     ch match {
@@ -1390,7 +1395,8 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
     }
   }
 
-  override def findLogicalRanges(info: ParserResult, caretOffset: Int): java.util.List[OffsetRange] = {
+  override 
+  def findLogicalRanges(info: ParserResult, caretOffset: Int): java.util.List[OffsetRange] = {
     val pResult = info.asInstanceOf[ScalaParserResult]
     val root = pResult.rootScope
 
@@ -1541,7 +1547,8 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
   }
 
   // UGH - this method has gotten really ugly after successive refinements based on unit tests - consider cleaning up
-  override def getNextWordOffset(document: Document, offset: Int, reverse: Boolean): Int = {
+  override 
+  def getNextWordOffset(document: Document, offset: Int, reverse: Boolean): Int = {
     val doc = document.asInstanceOf[BaseDocument]
     val ts = ScalaLexUtil.getTokenSequence(doc, offset).getOrElse(return -1)
     ts.move(offset)

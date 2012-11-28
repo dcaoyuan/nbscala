@@ -108,13 +108,16 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
    }
    } */
 
-  override def getSupportedExtensions: java.util.Set[String] = {
+  override 
+  def getSupportedExtensions: java.util.Set[String] = {
     java.util.Collections.singleton("scala") // NOI18N
   }
 
-  override def index: Boolean = true
+  override 
+  def index: Boolean = true
 
-  override def translate(files: java.lang.Iterable[File], sourceRoot: File, result: VirtualSourceProvider.Result) {
+  override 
+  def translate(files: java.lang.Iterable[File], sourceRoot: File, result: VirtualSourceProvider.Result) {
     val root = FileUtil.toFileObject(sourceRoot)
     val timeStamps = TimeStamps.forRoot(root.toURL, false)
 
@@ -186,10 +189,11 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                 val emptySyms: Array[Symbol] = Array(null, null, null)
                 val clzNameToSyms = new HashMap[String, Array[Symbol]] // clzName -> (class, object, trait)
 
-                for (tmpl <- tmpls;
-                     sym = tmpl.symbol.asInstanceOf[Symbol] if sym != NoSymbol; // avoid strange file name, for example: <error: class ActorProxy>.java
-                     symSName = sym.nameString if symSName.length > 0 && symSName.charAt(0) != '<' // @todo <any>
-                ) {
+                for {
+                  tmpl <- tmpls
+                  sym = tmpl.symbol.asInstanceOf[Symbol] if sym != NoSymbol // avoid strange file name, for example: <error: class ActorProxy>.java
+                  symSName = sym.nameString if symSName.length > 0 && symSName.charAt(0) != '<' // @todo <any>
+                } {
                   val clzName = generator.classSName(sym)
                   val syms = clzNameToSyms.getOrElse(clzName, emptySyms) match {
                     case Array(c, o, t) =>
