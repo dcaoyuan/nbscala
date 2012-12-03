@@ -22,7 +22,7 @@
     <fontcolor name="keyword" default="keyword"/>
     <fontcolor name="literal" default="keyword"/>
     <fontcolor name="comment" default="comment"/>
-    <fontcolor name="number" default="number" foreColor="280099"/>
+    <fontcolor name="number" default="number"/>
     <fontcolor name="operator" default="operator"/>
     <fontcolor name="separator" default="separator"/>
     <fontcolor name="whitespace" default="whitespace"/>
@@ -93,7 +93,7 @@
         <font style="bold"/>
     </fontcolor>
     <fontcolor name="mod-method"/>
-    <fontcolor name="mod-custom1" default="comment"/> <!-- implicit method Ref -->
+    <fontcolor name="mod-custom1" default="operator"/> <!-- implicit method Ref -->
     <fontcolor name="mod-custom2" underline="000000"/> <!-- lazy val Ref/Dfn -->
     <fontcolor name="mod-interface" default="comment"/> 
 
