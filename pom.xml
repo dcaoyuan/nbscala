@@ -170,7 +170,7 @@
                             <arg>-deprecation</arg>
                             <arg>-dependencyfile</arg>
                             <arg>${project.build.directory}/.scala_dependencies</arg>
-							<arg>-Xmax-classfile-name</arg><arg>143</arg> <!-- to avoid 'error: File name too long' in Linux/ecryptfs -->
+                            <arg>-Xmax-classfile-name</arg><arg>143</arg> <!-- to avoid 'error: File name too long' in Linux/ecryptfs -->
                         </args>
                         <compilerPlugins>
                             <complierPlugin>
