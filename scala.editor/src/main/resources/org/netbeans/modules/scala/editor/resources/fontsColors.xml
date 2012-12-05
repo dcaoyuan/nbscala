@@ -93,7 +93,7 @@
         <font style="bold"/>
     </fontcolor>
     <fontcolor name="mod-method"/>
-    <fontcolor name="mod-custom1" default="operator"/> <!-- implicit method Ref -->
+    <fontcolor name="mod-custom1" default="comment"/> <!-- implicit method Ref -->
     <fontcolor name="mod-custom2" underline="000000"/> <!-- lazy val Ref/Dfn -->
     <fontcolor name="mod-interface" default="comment"/> 
 
