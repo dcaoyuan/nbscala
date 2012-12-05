@@ -22,7 +22,7 @@
     <fontcolor name="keyword" default="keyword"/>
     <fontcolor name="literal" default="keyword"/>
     <fontcolor name="comment" default="comment"/>
-    <fontcolor name="number" default="number" foreColor="280099"/>
+    <fontcolor name="number" default="number"/>
     <fontcolor name="operator" default="operator"/>
     <fontcolor name="separator" default="separator"/>
     <fontcolor name="whitespace" default="whitespace"/>
