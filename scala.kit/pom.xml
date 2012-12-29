@@ -102,6 +102,11 @@
             <artifactId>org-netbeans-modules-scala-maven</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-sbt</artifactId>
+            <version>${scala.sbt.version}</version>
+        </dependency>
         
         <!-- The clusters platform, java, ide and nb represent a full fuctioning Netbeans IDE -->       
         <dependency>

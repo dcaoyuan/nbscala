@@ -66,6 +66,7 @@
         <scala.editor.version>0.4.0</scala.editor.version>
         <scala.console.version>0.11</scala.console.version>
         <scala.platform.version>0.12</scala.platform.version>
+        <scala.sbt.version>0.1</scala.sbt.version>
         <scala.stdplatform.version>0.12</scala.stdplatform.version>
         <scala.project.version>1.5</scala.project.version>
         <scala.refactoring.version>0.6</scala.refactoring.version>
@@ -290,6 +291,7 @@
         <module>scala.debugger</module>
         <module>scala.maven</module>
         <module>scala.platform</module>
+        <module>scala.sbt</module>
         <module>scala.stdplatform</module>
         <module>scala.project</module>
         <module>scala.refactoring</module>
