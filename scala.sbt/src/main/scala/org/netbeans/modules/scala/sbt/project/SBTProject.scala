@@ -28,12 +28,9 @@ import org.openide.util.lookup.ProxyLookup
  * @author Caoyuan Deng
  */
 class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
-  private val SBT_ICON = "org/netbeans/modules/scala/sbt/resources/scala16x16.png"
-  
-  private lazy val lookup: Lookup = Lookups.fixed(Array[AnyRef](
-      new Info(),
-      new SBTProjectLogicalView(this)
-    )
+  private lazy val lookup: Lookup = Lookups.fixed(
+    new Info(),
+    new SBTProjectLogicalView(this)
   )
 
   override
@@ -129,5 +126,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
 }
 
 object SBTProject {
-  private lazy val SBT_ICON = ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/resources/sbtProject.png")
+  private lazy val SBT_ICON = {
+    ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/resources/sbtProject.png")
+  }
 }
