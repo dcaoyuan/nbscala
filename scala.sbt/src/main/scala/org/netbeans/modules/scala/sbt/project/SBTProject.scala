@@ -37,9 +37,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   def getProjectDirectory = projectDir
 
   override
-  def getLookup: Lookup = {
-    lookup
-  }
+  def getLookup: Lookup = lookup
   
   private final class Info extends ProjectInformation {
 
@@ -97,7 +95,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
     ) {
 
       override
-      def getActions(arg0: Boolean): Array[Action] = Array[Action](
+      def getActions(arg0: Boolean): Array[Action] = Array(
         CommonProjectActions.newFileAction,
         CommonProjectActions.copyProjectAction,
         CommonProjectActions.deleteProjectAction,
@@ -126,7 +124,5 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
 }
 
 object SBTProject {
-  private lazy val SBT_ICON = {
-    ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/resources/sbtProject.png")
-  }
+  private lazy val SBT_ICON = ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/resources/sbtProject.png")
 }

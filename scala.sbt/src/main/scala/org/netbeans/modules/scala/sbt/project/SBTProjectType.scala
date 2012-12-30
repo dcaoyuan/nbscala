@@ -26,8 +26,8 @@ class SBTProjectType extends ProjectFactory {
 
   override
   def isProject(projectDirectory: FileObject) = {
-    getSbtDefinitionFiles(projectDirectory).length > 0 ||
-    !isMavenProject(projectDirectory) && hasStdScalaSrcDir(projectDirectory)
+    !isMavenProject(projectDirectory) && 
+    (getSbtDefinitionFiles(projectDirectory).length > 0 || hasStdScalaSrcDir(projectDirectory))
   }
 
   @throws(classOf[IOException])  
