@@ -132,83 +132,81 @@ object ScalaExecution {
    *      -Djline.terminal=jline.UnsupportedTerminal
    *      scala.tools.nsc.MainGenericRunner
    */    
-  def getScalaArgs(scalaHome:String, cmdName:String):Array[String] = {
+  def getScalaArgs(scalaHome:String): Array[String] = {
     val argvList = new ArrayBuffer[String]()
-    if (cmdName.equals("scala") || cmdName.equalsIgnoreCase("scala.bat") || cmdName.equalsIgnoreCase("scala.exe")) { // NOI18N
-      val javaHome = getJavaHome
+    val javaHome = getJavaHome
 
-      argvList += (javaHome + File.separator + "bin" + File.separator + "java") // NOI18N   
-      // XXX Do I need java.exe on Windows?
+    argvList += (javaHome + File.separator + "bin" + File.separator + "java") // NOI18N   
+    // XXX Do I need java.exe on Windows?
 
-      // Additional execution flags specified in the Scala startup script:
-      argvList += "-Xverify:none" // NOI18N
-      argvList += "-da" // NOI18N
+    // Additional execution flags specified in the Scala startup script:
+    argvList += "-Xverify:none" // NOI18N
+    argvList += "-da" // NOI18N
             
-      val extraArgs = System.getenv("SCALA_EXTRA_VM_ARGS") // NOI18N
+    val extraArgs = System.getenv("SCALA_EXTRA_VM_ARGS") // NOI18N
 
-      var javaMemory = "-Xmx512m" // NOI18N
-      var javaStack = "-Xss1024k" // NOI18N
+    var javaMemory = "-Xmx512m" // NOI18N
+    var javaStack = "-Xss1024k" // NOI18N
             
-      if (extraArgs ne null) {
-        if (extraArgs.indexOf("-Xmx") != -1) { // NOI18N
-          javaMemory = null
-        }
-        if (extraArgs.indexOf("-Xss") != -1) { // NOI18N
-          javaStack = null
-        }
-        val scalaArgs = Utilities.parseParameters(extraArgs)
-        argvList ++= scalaArgs
+    if (extraArgs ne null) {
+      if (extraArgs.indexOf("-Xmx") != -1) { // NOI18N
+        javaMemory = null
       }
+      if (extraArgs.indexOf("-Xss") != -1) { // NOI18N
+        javaStack = null
+      }
+      val scalaArgs = Utilities.parseParameters(extraArgs)
+      argvList ++= scalaArgs
+    }
             
-      if (javaMemory ne null) {
-        argvList += javaMemory
-      }
-      if (javaStack ne null) {
-        argvList += javaStack
-      }
+    if (javaMemory ne null) {
+      argvList += javaMemory
+    }
+    if (javaStack ne null) {
+      argvList += javaStack
+    }
             
-      val scalaHomeDir = try {
-        new File(scalaHome).getCanonicalFile
-      } catch  {
-        case ex:IOException => Exceptions.printStackTrace(ex); null
-      }
+    val scalaHomeDir = try {
+      new File(scalaHome).getCanonicalFile
+    } catch  {
+      case ex:IOException => Exceptions.printStackTrace(ex); null
+    }
 
-      val scalaLib = new File(scalaHomeDir, "lib") // NOI18N
+    val scalaLib = new File(scalaHomeDir, "lib") // NOI18N
 
-      // BootClassPath
-      argvList += "-Xbootclasspath/a:" + makeClassPath(Array(
-          "scala-library.jar",
-          "scala-reflect.jar",
-          "scala-compiler.jar",
-          "jline.jar"
-        ), scalaLib)   
+    // BootClassPath
+    argvList += "-Xbootclasspath/a:" + mkClassPath(Array(
+        "scala-library.jar",
+        "scala-reflect.jar",
+        "scala-compiler.jar",
+        "jline.jar"
+      ), scalaLib)   
             
-      // Classpath
-      argvList += "-classpath" // NOI18N
+    // Classpath
+    argvList += "-classpath" // NOI18N
 
 
 //            argvList.add(computeScalaClassPath(
 //                    descriptor eq null ? null : descriptor.getClassPath(), scalaLib));
             
-      argvList += computeScalaClassPath(null, scalaLib)
+    argvList += computeScalaClassPath(null, scalaLib)
             
-      argvList += "-Dscala.home=" + scalaHomeDir // NOI18N
+    argvList += "-Dscala.home=" + scalaHomeDir // NOI18N
             
-      /** 
-       * @Note:
-       * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why? 
-       * Also, from Scala-2.7.1, jline is used for scala shell, we should 
-       * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
-       */
-      argvList += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal" //NOI18N
+    /** 
+     * @Note:
+     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why? 
+     * Also, from Scala-2.7.1, jline is used for scala shell, we should 
+     * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
+     */
+    argvList += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal" //NOI18N
             
-      // TODO - turn off verifier?
+    // TODO - turn off verifier?
 
-      // Main class
-      argvList += SCALA_MAIN_CLASS // NOI18N
+    // Main class
+    argvList += SCALA_MAIN_CLASS // NOI18N
 
-      // Application arguments follow
-    }
+    // Application arguments follow
         
     argvList.toArray
   }
@@ -223,27 +221,15 @@ object ScalaExecution {
 //        return argvList;
 //    }
     
-  private def makeClassPath(jarNames: Array[String], dir: File) = {
-    val dirPath = dir.getAbsolutePath 
-    jarNames map (dirPath + File.separator + _) filter {fileName => 
-      try {
-        val file = new File(fileName)
-        (file ne null) && file.exists && file.canRead
-      } catch {
-        case ex: Throwable => false
-      }
-    } mkString File.pathSeparator
-  }
-  
-  def getJavaHome(): String = {
+
+  def getJavaHome: String = {
     System.getProperty("scala.java.home") match {  // NOI18N
       case null => System.getProperty("java.home") // NOI18N
       case x => x
     }
   }
 
-  def getScalaHome(): String = {
-    //String scalaHome = System.getProperty("scala.home"); // NOI18N
+  def getScalaHome: String = {
     System.getenv("SCALA_HOME") match { // NOI18N
       case null => 
         val d = new NotifyDescriptor.Message(
@@ -255,11 +241,11 @@ object ScalaExecution {
     }
   }
     
-  def getScala(): File = {
-    var scalaFo:FileObject = null;
-    val scalaHome = getScalaHome();
+  def getScala: File = {
+    var scalaFo:FileObject = null
+    val scalaHome = getScalaHome
     if (scalaHome ne null) {
-      val scalaHomeDir = new File(getScalaHome())
+      val scalaHomeDir = new File(getScalaHome)
       if (scalaHomeDir.exists && scalaHomeDir.isDirectory) {
         try {
           val scalaHomeFo = FileUtil.createData(scalaHomeDir)
@@ -298,14 +284,26 @@ object ScalaExecution {
 //        env.put("SCALA_HOME", getScalaHome());
 //    }
     
+  private def mkClassPath(jarNames: Array[String], dir: File) = {
+    val dirPath = dir.getAbsolutePath 
+    jarNames map (dirPath + File.separator + _) filter {fileName => 
+      try {
+        val file = new File(fileName)
+        (file ne null) && file.exists && file.canRead
+      } catch {
+        case ex: Throwable => false
+      }
+    } mkString File.pathSeparator
+  }
+  
   /** Package-private for unit test. */
-  def computeScalaClassPath(extraCp: String, scalaLib: File):String = {
-    val cp = new StringBuilder()
+  def computeScalaClassPath(extraCp: String, scalaLib: File): String = {
+    val sb = new StringBuilder()
     val libs = scalaLib.listFiles
 
     libs filter (_.getName.endsWith("jar")) foreach {lib => 
-      if (cp.length > 0) cp.append(File.pathSeparatorChar)
-      cp.append(lib.getAbsolutePath)
+      if (sb.length > 0) sb.append(File.pathSeparatorChar)
+      sb.append(lib.getAbsolutePath)
     }
 
     // Add in user-specified jars passed via SCALA_EXTRA_CLASSPATH
@@ -333,16 +331,16 @@ object ScalaExecution {
     }
 
     if (!p.isEmpty) {
-      if (cp.length > 0) {
-        cp.append(File.pathSeparatorChar)
+      if (sb.length > 0) {
+        sb.append(File.pathSeparatorChar)
       }
       //if (File.pathSeparatorChar != ':' && extraCp.indexOf(File.pathSeparatorChar) == -1 &&
       //        extraCp.indexOf(':') != -1) {
       //    extraCp = extraCp.replace(':', File.pathSeparatorChar);
       //}
-      cp.append(p)
+      sb.append(p)
     }
-    if (Utilities.isWindows)  "\"" + cp.toString + "\""  else cp.toString // NOI18N
+    if (Utilities.isWindows)  "\"" + sb.toString + "\""  else sb.toString // NOI18N
   }
      
 }

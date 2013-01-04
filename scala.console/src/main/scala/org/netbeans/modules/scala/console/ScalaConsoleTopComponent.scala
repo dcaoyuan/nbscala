@@ -173,6 +173,11 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
       return
     }
 
+    val scalaName = scalaFile.getName
+    val scalaArgs = if (scalaName.equals("scala") || scalaName.equalsIgnoreCase("scala.bat") || scalaName.equalsIgnoreCase("scala.exe")) { // NOI18N
+      ScalaExecution.getScalaArgs(scalaHome)
+    } else Array[String]()
+    
     val taReadline = new TextAreaReadline(textPane, 
                                           " " + NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "ScalaConsoleWelcome") + " " + "scala.home=" + scalaHome + "\n",
                                           pipeIn) // NOI18N
@@ -182,9 +187,6 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
     val out = new PrintWriter(new PrintStream(taReadline))
     val err = new PrintWriter(new PrintStream(taReadline))
 
-    val cmdName = scalaFile.getName
-    val scalaArgs = ScalaExecution.getScalaArgs(scalaHome, cmdName)
-    
     var builder: ExternalProcessBuilder = null
     log.info("==== Scala console args ====")
     for (arg <- scalaArgs) {
@@ -309,7 +311,7 @@ object ScalaConsoleTopComponent {
    * path to the icon used by the component and its open action
    */
   val ICON_PATH = "org/netbeans/modules/scala/console/resources/scala16x16.png" // NOI18N
-  val PREFERRED_ID = "SBTTopComponent" // NOI18N
+  val PREFERRED_ID = "ScalaConsoleTopComponent" // NOI18N
 
   /**
    * Gets default instance. Do not use directly: reserved for *.settings files
@@ -317,7 +319,7 @@ object ScalaConsoleTopComponent {
    * non-deserialized instance. To obtain the singleton instance, use
    * {@link findInstance}.
    */
-  def getDefault() = synchronized {instance}
+  def getDefault = synchronized {instance}
   
   /**
    * Obtain the IrbTopComponent instance. Never call {@link #getDefault}
