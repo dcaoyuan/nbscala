@@ -51,10 +51,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bundle.namespace>${project.groupId}.${project.artifactId}</bundle.namespace>
-        <scala.version>2.10.0-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
-        <netbeans.version>RELEASE72</netbeans.version>
         <brandingToken>nbscala</brandingToken>
         <deploy.version>snapshots</deploy.version>
+
+        <netbeans.version>RELEASE72</netbeans.version>
+
+        <scala.version>2.10.0-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
+        <sbt.version>0.13.0-20130112-052135</sbt.version>
         
         <!-- module versions -->
         <libs.scala.version>2.10.0.2</libs.scala.version>
@@ -90,6 +93,16 @@
             <name>JBoss.org Maven repository</name>
             <url>http://repository.jboss.org/nexus/content/groups/public</url>
         </repository>  
+
+        <repository>
+            <id>Typesafe releases</id>
+            <url>http://repo.typesafe.com/typesafe/ivy-releases</url>
+        </repository>
+        <repository>
+            <id>Typesafe snapshots</id>
+            <url>http://repo.typesafe.com/typesafe/ivy-snapshots</url>
+        </repository>
+        
     </repositories>
   
     <dependencies>
@@ -171,7 +184,8 @@
                             <arg>-deprecation</arg>
                             <arg>-dependencyfile</arg>
                             <arg>${project.build.directory}/.scala_dependencies</arg>
-                            <arg>-Xmax-classfile-name</arg><arg>143</arg> <!-- to avoid 'error: File name too long' in Linux/ecryptfs -->
+                            <arg>-Xmax-classfile-name</arg>
+                            <arg>143</arg> <!-- to avoid 'error: File name too long' in Linux/ecryptfs -->
                         </args>
                         <compilerPlugins>
                             <complierPlugin>

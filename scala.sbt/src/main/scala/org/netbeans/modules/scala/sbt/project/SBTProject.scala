@@ -124,5 +124,5 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
 }
 
 object SBTProject {
-  private lazy val SBT_ICON = ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/resources/sbtProject.png")
+  private lazy val SBT_ICON = ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/resources/sbt.png")
 }
