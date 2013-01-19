@@ -23,8 +23,10 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * @author Caoyuan Deng
  */
-class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: PipedInputStream) extends OutputStream with KeyListener {
+class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedInputStream) extends OutputStream with KeyListener {
 
+  def this(area: JTextComponent) = this(area, null, null)
+    
   var startPos:Int = 0
   var currentLine:String = _
     
@@ -34,8 +36,8 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
   val resultStyle = new SimpleAttributeSet()
 
   val completeCombo = new JComboBox[String]()
-  var start: Int = _
-  var end: Int = _
+  var completeStart: Int = _
+  var completeEnd: Int = _
     
   val pipedPrintOut = new PrintStream(new PipedOutputStream(pipedIn))
   //ConsoleLineReader.createConsoleLineReader
@@ -79,8 +81,6 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
     append(message, messageStyle)
   }
   
-  def this(area: JTextComponent) = this(area, null, null)
-    
   override 
   def keyPressed(event: KeyEvent) {
     val code = event.getKeyCode
@@ -106,13 +106,13 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
   }
   
   override 
-  def keyReleased(event:KeyEvent) {}
+  def keyReleased(event: KeyEvent) {}
     
   override 
-  def keyTyped(event:KeyEvent) {}
+  def keyTyped(event: KeyEvent) {}
     
   override 
-  def write(b:Int) {
+  def write(b: Int) {
     writeString("" + b)
   }
     
@@ -126,22 +126,28 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
     writeString(new String(b))
   }
   
+  def writeString(str: String) {
+    val style = if (str.startsWith("> ")) {
+      resultStyle
+    } else {
+      outputStyle
+    }
+    
+    startPos = area.getDocument.getLength
+    append(startPos, str, style)
+    area.setCaretPosition(startPos)
+  }
+  
   def append(str: String, style: AttributeSet) {
+    append(area.getDocument.getLength, str, style)
+  }
+  
+  def append(startPos: Int, str: String, style: AttributeSet) {
     try {
-      area.getDocument.insertString(area.getDocument.getLength, str, style)
+      area.getDocument.insertString(startPos, str, style)
     } catch  {
       case ex: BadLocationException => // just ignore
     }
-  }
-  
-  def writeString(str: String) {
-    if (str.startsWith("=>")) {
-      append(str, resultStyle)
-    } else {
-      append(str, outputStyle)
-    }
-    area.setCaretPosition(area.getDocument.getLength)
-    startPos = area.getDocument.getLength
   }
   
   protected def completeAction(event: KeyEvent) {
@@ -174,14 +180,14 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
     //  return
     //}
         
-    start = startPos //+ position
-    end = area.getCaretPosition
+    completeStart = startPos //+ position
+    completeEnd = area.getCaretPosition
         
     val pos = area.getCaret.getMagicCaretPosition
         
     // bit risky if someone changes completor, but useful for method calls
     val cutoff = 0//bufstr.substring(position).lastIndexOf('.') + 1
-    start += cutoff
+    completeStart += cutoff
         
     val candicateSize = math.max(10, candidates.size)
     completePopup.getList.setVisibleRowCount(candicateSize)
@@ -204,7 +210,7 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
     
   protected def upAction(event: KeyEvent) {
     event.consume
-        
+    pipedPrintOut.println("tasks")
     if (completePopup.isVisible()) {
       val selected = completeCombo.getSelectedIndex() - 1
       if (selected < 0) return
@@ -213,7 +219,7 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
     }
         
     //if (! ConsoleLineReader.history.next) // at end
-      currentLine = getLine
+    currentLine = getLine
     //else
     //  ConsoleLineReader.history.previous // undo check
         
@@ -226,9 +232,9 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
   }
     
   protected def downAction(event: KeyEvent) {
-    event.consume();
+    event.consume
         
-    if (completePopup.isVisible()) {
+    if (completePopup.isVisible) {
       val selected = completeCombo.getSelectedIndex + 1
       if (selected == completeCombo.getItemCount) return
       completeCombo.setSelectedIndex(selected)
@@ -271,7 +277,7 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
         
     if (completePopup.isVisible) {
       if (completeCombo.getSelectedItem ne null)
-        replaceText(start, end, completeCombo.getSelectedItem.asInstanceOf[String])
+        replaceText(completeStart, completeEnd, completeCombo.getSelectedItem.asInstanceOf[String])
       completePopup.setVisible(false)
       return
     }
@@ -284,8 +290,9 @@ class TextAreaOutputStream(area: JTextComponent, message: String, pipedIn: Piped
     //ConsoleLineReader.history.addToHistory(inputStr)
     //ConsoleLineReader.history.moveToEnd
         
-    area.setCaretPosition(area.getDocument.getLength)
-    startPos = area.getDocument.getLength
+    val len = area.getDocument.getLength
+    area.setCaretPosition(len)
+    startPos = len
 
 //    notify
 //        synchronized (inEditing) {

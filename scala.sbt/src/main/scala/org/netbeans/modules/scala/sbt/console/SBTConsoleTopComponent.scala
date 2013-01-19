@@ -174,7 +174,7 @@ final class SBTConsoleTopComponent private () extends TopComponent {
 
     val (executable, args) = SBTExecution.getArgs(sbtHome)
     
-    val pipedTextAreaOut = new TextAreaOutputStream(
+    val pipedTextAreaOut = new ConsoleOutputStream(
       textPane, 
       " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
       pipeIn) // NOI18N
