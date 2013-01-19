@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>org-netbeans-libs-sbt</artifactId>
-    <version>${libs.scala.version}</version>
+    <version>${libs.sbt.version}</version>
     <name>org-netbeans-libs-sbt</name>
     <packaging>nbm</packaging>
     
@@ -245,7 +245,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nbscala-libs-local</artifactId>
-            <version>${project.version}</version>
+            <version>1.0</version>
             <type>pom</type>
             <scope>provided</scope>
         </dependency>

@@ -3,6 +3,7 @@ package org.netbeans.modules.scala.sbt.console
 import java.awt.Color
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
+import java.io.IOException
 import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
@@ -29,25 +30,35 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     
   private var startPos = 0
   private var currentLine: String = _
-    
-  val promptStyle = new SimpleAttributeSet()
-  val inputStyle  = new SimpleAttributeSet()
-  val outputStyle = new SimpleAttributeSet()
-  val resultStyle = new SimpleAttributeSet()
+  
+  val defaultFg = Color.WHITE
+  val defaultBg = Color.BLACK
+  area.setForeground(defaultFg)
+  area.setBackground(defaultBg)
+  val sequenceStyle = new SimpleAttributeSet()
+  val defaultStyle  = new SimpleAttributeSet()
+  StyleConstants.setForeground(sequenceStyle, defaultFg)     
+  StyleConstants.setBackground(sequenceStyle, defaultBg)     
+  StyleConstants.setForeground(defaultStyle, defaultFg)     
+  StyleConstants.setBackground(defaultStyle, defaultBg)
+  
+  var currentStyle = defaultStyle
 
-  val completeCombo = new JComboBox[String]()
-  var completeStart: Int = _
-  var completeEnd: Int = _
+  private val completeCombo = new JComboBox[String]()
+  private var completeStart: Int = _
+  private var completeEnd: Int = _
     
-  val pipedPrintOut = new PrintStream(new PipedOutputStream(pipedIn))
+  private val pipedOut = new PrintStream(new PipedOutputStream(pipedIn))
+  
+  private val doc = area.getDocument
   //ConsoleLineReader.createConsoleLineReader
         
   area.addKeyListener(myKeyListener)
         
   // No editing before startPos
-  area.getDocument match {
-    case doc: AbstractDocument =>
-      doc.setDocumentFilter(new DocumentFilter() {
+  doc match {
+    case styleDoc: AbstractDocument =>
+      styleDoc.setDocumentFilter(new DocumentFilter() {
           override 
           def insertString(fb: DocumentFilter.FilterBypass, offset: Int, str: String, attr: AttributeSet) {
             if (offset >= startPos) super.insertString(fb, offset, str, attr)
@@ -65,11 +76,6 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
         })
   }
   
-  StyleConstants.setForeground(promptStyle, new Color(0xa4, 0x00, 0x00))    
-  StyleConstants.setForeground(inputStyle, new Color(0x20, 0x4a, 0x87))      
-  StyleConstants.setForeground(outputStyle, Color.darkGray)     
-  StyleConstants.setItalic(resultStyle, true)
-  StyleConstants.setForeground(resultStyle, new Color(0x20, 0x4a, 0x87))
         
   completeCombo.setRenderer(new DefaultListCellRenderer()) // no silly ticks!
   val completePopup = new BasicComboPopup(completeCombo)
@@ -83,7 +89,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
   
   override 
   def write(b: Int) {
-    writeString(String.valueOf(b))
+    writeString(Character.toString(b.toChar))
   }
     
   override 
@@ -97,20 +103,20 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
   }
   
   private def writeString(str: String) {
-    val style = if (str.startsWith("> ")) {
-      resultStyle
-    } else {
-      outputStyle
-    }
-    append(str, style)
+    //val style = if (str.startsWith("> ")) {
+    //  resultStyle
+    //} else {
+    //  outputStyle
+    //}
+    append(str, currentStyle)
     
-    startPos = area.getDocument.getLength
+    startPos = doc.getLength
     area.setCaretPosition(startPos)
   }
   
   private def append(str: String, style: AttributeSet) {
     try {
-      area.getDocument.insertString(area.getDocument.getLength, str, style)
+      doc.insertString(doc.getLength, str, style)
     } catch  {
       case ex: BadLocationException => // just ignore
     }
@@ -176,7 +182,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     
   protected def upAction(event: KeyEvent) {
     event.consume
-    pipedPrintOut.println("tasks")
+    pipedOut.println("tasks")
     if (completePopup.isVisible()) {
       val selected = completeCombo.getSelectedIndex() - 1
       if (selected < 0) return
@@ -223,8 +229,8 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     
   protected def replaceText(start: Int , end: Int , replacement: String) {
     try {
-      area.getDocument.remove(start, end - start)
-      area.getDocument.insertString(start, replacement, inputStyle)
+      doc.remove(start, end - start)
+      doc.insertString(start, replacement, sequenceStyle)
     } catch {
       case ex: BadLocationException => // Ifnore
     }
@@ -232,7 +238,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     
   protected def getLine(): String = {
     try {
-      area.getText(startPos, area.getDocument.getLength - startPos)
+      area.getText(startPos, doc.getLength - startPos)
     } catch {
       case ex: BadLocationException => null // Ifnore
     }
@@ -242,8 +248,10 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     event.consume
         
     if (completePopup.isVisible) {
-      if (completeCombo.getSelectedItem ne null)
+      if (completeCombo.getSelectedItem ne null) {
         replaceText(completeStart, completeEnd, completeCombo.getSelectedItem.asInstanceOf[String])
+      }
+      
       completePopup.setVisible(false)
       return
     }
@@ -251,12 +259,12 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     append("\n", null)
         
     val inputStr = getLine.trim
-    pipedPrintOut.println(inputStr)
+    pipedOut.println(inputStr)
         
     //ConsoleLineReader.history.addToHistory(inputStr)
     //ConsoleLineReader.history.moveToEnd
         
-    val len = area.getDocument.getLength
+    val len = doc.getLength
     area.setCaretPosition(len)
     startPos = len
 
@@ -298,4 +306,80 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     def keyTyped(event: KeyEvent) {}
   }
     
+}
+
+class AnsiConsoleOutputStream(os: ConsoleOutputStream) extends AnsiOutputStream(os) {
+  import AnsiConsoleOutputStream._
+  
+  @throws(classOf[IOException])
+  override
+  protected def processSetForegroundColor(color: Int) {
+    StyleConstants.setForeground(os.sequenceStyle, ANSI_COLOR_MAP(color))
+    os.currentStyle = os.sequenceStyle
+  }
+
+  @throws(classOf[IOException])
+  override
+  protected def processSetBackgroundColor(color: Int) {
+    StyleConstants.setBackground(os.sequenceStyle, ANSI_COLOR_MAP(color))
+    os.currentStyle = os.sequenceStyle
+  }
+  
+  @throws(classOf[IOException])
+  override
+  protected def processDefaultTextColor {
+    StyleConstants.setForeground(os.sequenceStyle, os.defaultFg)
+    os.currentStyle = os.sequenceStyle
+  }
+
+  @throws(classOf[IOException])
+  override
+  protected def processDefaultBackgroundColor {
+    StyleConstants.setBackground(os.sequenceStyle, os.defaultBg)
+    os.currentStyle = os.sequenceStyle
+  }
+
+  @throws(classOf[IOException])
+  override
+  protected def processSetAttribute(attribute: Int) {
+    import Ansi._
+    
+    attribute match {
+      case ATTRIBUTE_CONCEAL_ON =>
+        //write("\u001B[8m")
+        //concealOn = true
+      case ATTRIBUTE_INTENSITY_BOLD =>
+        StyleConstants.setBold(os.sequenceStyle, true)
+      case ATTRIBUTE_INTENSITY_NORMAL =>
+        StyleConstants.setBold(os.sequenceStyle, false)
+      case ATTRIBUTE_UNDERLINE =>
+        StyleConstants.setUnderline(os.sequenceStyle, true)
+      case ATTRIBUTE_UNDERLINE_OFF =>
+        StyleConstants.setUnderline(os.sequenceStyle, false)
+      case ATTRIBUTE_NEGATIVE_ON =>
+      case ATTRIBUTE_NEGATIVE_Off =>
+      case _ =>
+    }
+    
+    os.currentStyle = os.sequenceStyle
+  }
+	
+  @throws(classOf[IOException])
+  override
+  protected def processAttributeRest() {
+    os.currentStyle = os.defaultStyle
+//    if (concealOn) {
+//      write("\u001B[0m")
+//      concealOn = false
+//    }
+//    closeAttributes
+  }
+
+
+}
+
+object AnsiConsoleOutputStream {
+  private val ANSI_COLOR_MAP = Array(
+    Color.BLACK, Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN, Color.WHITE
+  )
 }

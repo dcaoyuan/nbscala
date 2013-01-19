@@ -173,10 +173,11 @@ final class SBTConsoleTopComponent private () extends TopComponent {
 
     val (executable, args) = SBTExecution.getArgs(sbtHome)
     
-    val consoleOut = new ConsoleOutputStream(
-      textPane, 
-      " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
-      pipeIn)
+    val consoleOut = new AnsiConsoleOutputStream(new ConsoleOutputStream(
+        textPane, 
+        " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
+        pipeIn)
+    )
     
     val in = new InputStreamReader(pipeIn)
     val out = new PrintWriter(new PrintStream(consoleOut))

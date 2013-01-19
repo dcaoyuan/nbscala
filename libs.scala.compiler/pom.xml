@@ -33,7 +33,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nbscala-libs-local</artifactId>
-            <version>${project.version}</version>
+            <version>1.0</version>
             <type>pom</type>
             <scope>provided</scope>
         </dependency>
