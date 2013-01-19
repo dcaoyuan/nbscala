@@ -98,7 +98,6 @@ final class SBTConsoleTopComponent private () extends TopComponent {
 
     textPane = new JTextPane()
     textPane.getDocument.putProperty("mimeType", mimeType)
-
     textPane.setMargin(new Insets(8, 8, 8, 8))
     textPane.setCaretColor(new Color(0xa4, 0x00, 0x00))
     textPane.setBackground(new Color(0xf2, 0xf2, 0xf2))
@@ -174,13 +173,14 @@ final class SBTConsoleTopComponent private () extends TopComponent {
 
     val (executable, args) = SBTExecution.getArgs(sbtHome)
     
-    val pipedTextAreaOut = new ConsoleOutputStream(
+    val consoleOut = new ConsoleOutputStream(
       textPane, 
       " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
-      pipeIn) // NOI18N
+      pipeIn)
+    
     val in = new InputStreamReader(pipeIn)
-    val out = new PrintWriter(new PrintStream(pipedTextAreaOut))
-    val err = new PrintWriter(new PrintStream(pipedTextAreaOut))
+    val out = new PrintWriter(new PrintStream(consoleOut))
+    val err = new PrintWriter(new PrintStream(consoleOut))
 
     var builder: ExternalProcessBuilder = new ExternalProcessBuilder(executable)
     log.info("==== Sbt console args ====")
@@ -339,10 +339,8 @@ object SBTConsoleTopComponent {
   class ResolvableHelper extends Serializable {
     def readResolve: AnyRef = getDefault
   }
-
   
   private class CustomInputOutput(input: Reader, out: PrintWriter, err: PrintWriter) extends InputOutput {
-
     private var closed: Boolean = false
 
     override

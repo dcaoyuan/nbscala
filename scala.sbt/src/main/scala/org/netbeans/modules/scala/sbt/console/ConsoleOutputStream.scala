@@ -23,12 +23,12 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * @author Caoyuan Deng
  */
-class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedInputStream) extends OutputStream with KeyListener {
+class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedInputStream) extends OutputStream {
 
   def this(area: JTextComponent) = this(area, null, null)
     
-  var startPos:Int = 0
-  var currentLine:String = _
+  private var startPos = 0
+  private var currentLine: String = _
     
   val promptStyle = new SimpleAttributeSet()
   val inputStyle  = new SimpleAttributeSet()
@@ -42,7 +42,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
   val pipedPrintOut = new PrintStream(new PipedOutputStream(pipedIn))
   //ConsoleLineReader.createConsoleLineReader
         
-  area.addKeyListener(this)
+  area.addKeyListener(myKeyListener)
         
   // No editing before startPos
   area.getDocument match {
@@ -82,38 +82,8 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
   }
   
   override 
-  def keyPressed(event: KeyEvent) {
-    val code = event.getKeyCode
-        
-    code match {
-      case KeyEvent.VK_TAB        => completeAction(event)
-      case KeyEvent.VK_LEFT       => backAction(event)
-      case KeyEvent.VK_BACK_SPACE => backAction(event)
-      case KeyEvent.VK_UP         => upAction(event)
-      case KeyEvent.VK_DOWN       => downAction(event)
-      case KeyEvent.VK_ENTER      => enterAction(event)
-      case KeyEvent.VK_HOME       => event.consume; area.setCaretPosition(startPos)  
-      case _ => // Ignore
-    }
-        
-    if (completePopup.isVisible &&
-        code != KeyEvent.VK_TAB &&
-        code != KeyEvent.VK_UP  &&
-        code != KeyEvent.VK_DOWN
-    ) {
-      completePopup.setVisible(false)
-    }
-  }
-  
-  override 
-  def keyReleased(event: KeyEvent) {}
-    
-  override 
-  def keyTyped(event: KeyEvent) {}
-    
-  override 
   def write(b: Int) {
-    writeString("" + b)
+    writeString(String.valueOf(b))
   }
     
   override 
@@ -126,25 +96,21 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     writeString(new String(b))
   }
   
-  def writeString(str: String) {
+  private def writeString(str: String) {
     val style = if (str.startsWith("> ")) {
       resultStyle
     } else {
       outputStyle
     }
+    append(str, style)
     
     startPos = area.getDocument.getLength
-    append(startPos, str, style)
     area.setCaretPosition(startPos)
   }
   
-  def append(str: String, style: AttributeSet) {
-    append(area.getDocument.getLength, str, style)
-  }
-  
-  def append(startPos: Int, str: String, style: AttributeSet) {
+  private def append(str: String, style: AttributeSet) {
     try {
-      area.getDocument.insertString(startPos, str, style)
+      area.getDocument.insertString(area.getDocument.getLength, str, style)
     } catch  {
       case ex: BadLocationException => // just ignore
     }
@@ -298,6 +264,38 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
 //        synchronized (inEditing) {
 //            inEditing.notify();
 //        }
+  }
+  
+  object myKeyListener extends KeyListener {
+    override 
+    def keyPressed(event: KeyEvent) {
+      val code = event.getKeyCode
+      code match {
+        case KeyEvent.VK_TAB        => completeAction(event)
+        case KeyEvent.VK_LEFT       => backAction(event)
+        case KeyEvent.VK_BACK_SPACE => backAction(event)
+        case KeyEvent.VK_UP         => upAction(event)
+        case KeyEvent.VK_DOWN       => downAction(event)
+        case KeyEvent.VK_ENTER      => enterAction(event)
+        case KeyEvent.VK_HOME       => event.consume; area.setCaretPosition(startPos)  
+        case _ => // Ignore
+      }
+        
+      if (
+        completePopup.isVisible &&
+        code != KeyEvent.VK_TAB &&
+        code != KeyEvent.VK_UP  &&
+        code != KeyEvent.VK_DOWN
+      ) {
+        completePopup.setVisible(false)
+      }
+    }
+  
+    override 
+    def keyReleased(event: KeyEvent) {}
+    
+    override 
+    def keyTyped(event: KeyEvent) {}
   }
     
 }
