@@ -12,6 +12,7 @@ import javax.swing.text.BadLocationException
 import org.netbeans.api.extexecution.ExecutionDescriptor
 import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.extexecution.ExternalProcessBuilder
+import org.netbeans.api.project.Project
 import org.netbeans.api.project.ui.OpenProjects
 import org.openide.ErrorManager
 import org.openide.filesystems.FileUtil
@@ -24,7 +25,7 @@ import org.openide.windows._
  *
  * @author Caoyuan Deng
  */
-final class SBTConsoleTopComponent private () extends TopComponent {
+final class SBTConsoleTopComponent(project: Project) extends TopComponent {
   import SBTConsoleTopComponent._
   
   private var finished: Boolean = true
@@ -33,8 +34,8 @@ final class SBTConsoleTopComponent private () extends TopComponent {
   private val log = Logger.getLogger(getClass.getName)
 
   initComponents
-  setName(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "CTL_SBTConsoleTopComponent"))
-  setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent"))
+  setName("SBT " + project.getProjectDirectory.getName)
+  setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " " + project.getProjectDirectory.getPath)
   setIcon(ImageUtilities.loadImage(ICON_PATH, true))
  
   private def initComponents() {
@@ -42,7 +43,7 @@ final class SBTConsoleTopComponent private () extends TopComponent {
   }            
 
   override
-  def getPersistenceType = TopComponent.PERSISTENCE_ALWAYS
+  def getPersistenceType = TopComponent.PERSISTENCE_NEVER
 
   override
   def componentOpened() {
@@ -87,11 +88,11 @@ final class SBTConsoleTopComponent private () extends TopComponent {
   /**
    * replaces this in object stream
    */
-  override
-  def writeReplace: AnyRef = new ResolvableHelper()
+  //override
+  //def writeReplace: AnyRef = new ResolvableHelper()
 
   override
-  protected def preferredID = PREFERRED_ID
+  protected def preferredID = toPreferredId(project)
 
   def createTerminal {
     val pipeIn = new PipedInputStream()
@@ -183,7 +184,7 @@ final class SBTConsoleTopComponent private () extends TopComponent {
     val out = new PrintWriter(new PrintStream(consoleOut))
     val err = new PrintWriter(new PrintStream(consoleOut))
 
-    var builder: ExternalProcessBuilder = new ExternalProcessBuilder(executable)
+    var builder = new ExternalProcessBuilder(executable)
     log.info("==== Sbt console args ====")
     log.info(executable)
     for (arg <- args) {
@@ -193,8 +194,7 @@ final class SBTConsoleTopComponent private () extends TopComponent {
     log.info("==== End of Sbt console args ====");
 
     builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
-    val pwd = getMainProjectWorkPath
-    val workPath = pwd.getPath
+    val pwd = FileUtil.toFile(project.getProjectDirectory)
     builder = builder.workingDirectory(pwd)
 
     var execDescriptor = new ExecutionDescriptor()
@@ -299,7 +299,7 @@ final class SBTConsoleTopComponent private () extends TopComponent {
 }
 
 object SBTConsoleTopComponent {
-  private lazy val instance = new SBTConsoleTopComponent()
+  //private lazy val instance = new SBTConsoleTopComponent()
   
   /**
    * path to the icon used by the component and its open action
@@ -307,39 +307,39 @@ object SBTConsoleTopComponent {
   val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png" // NOI18N
   val PREFERRED_ID = "SBTConsoleTopComponent" // NOI18N
 
+  private def toPreferredId(project: Project) = PREFERRED_ID + project.getProjectDirectory.getPath.replace('/', '_')
+  
   /**
    * Gets default instance. Do not use directly: reserved for *.settings files
    * only, i.e. deserialization routines; otherwise you could get a
    * non-deserialized instance. To obtain the singleton instance, use
    * {@link findInstance}.
    */
-  def getDefault = synchronized {instance}
+  //def getDefault = synchronized {instance}
   
   /**
    * Obtain the IrbTopComponent instance. Never call {@link #getDefault}
    * directly!
    */
-  def findInstance() = synchronized {
-    val win = WindowManager.getDefault().findTopComponent(PREFERRED_ID)
+  def findInstance(project: Project) = {
+     val win = WindowManager.getDefault().findTopComponent(PREFERRED_ID + toPreferredId(project))
     win match {
       case null =>
-        ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                    "Cannot find SBTConsoleTopComponent component. It will not be located properly in the window system.")
-        instance
+        new SBTConsoleTopComponent(project)
       case x: SBTConsoleTopComponent => x
       case _ =>
         ErrorManager.getDefault.log(ErrorManager.WARNING,
                                     "There seem to be multiple components with the '" + PREFERRED_ID + 
                                     "' ID. That is a potential source of errors and unexpected behavior.")
-        instance
+        null
     } 
     
   }
   
-  @SerialVersionUID(1L)
-  class ResolvableHelper extends Serializable {
-    def readResolve: AnyRef = getDefault
-  }
+  //@SerialVersionUID(1L)
+  //class ResolvableHelper extends Serializable {
+  //  def readResolve: AnyRef = getDefault
+  //}
   
   private class CustomInputOutput(input: Reader, out: PrintWriter, err: PrintWriter) extends InputOutput {
     private var closed: Boolean = false
@@ -371,28 +371,22 @@ object SBTConsoleTopComponent {
     def isFocusTaken = false
 
     override
-    def select() {
-    }
+    def select() {}
 
     override
-    def setErrSeparated(value: Boolean) {
-    }
+    def setErrSeparated(value: Boolean) {}
 
     override
-    def setErrVisible(value: Boolean) {
-    }
+    def setErrVisible(value: Boolean) {}
 
     override
-    def setFocusTaken(value: Boolean) {
-    }
+    def setFocusTaken(value: Boolean) {}
 
     override
-    def setInputVisible(value: Boolean) {
-    }
+    def setInputVisible(value: Boolean) {}
 
     override
-    def setOutputVisible(value: Boolean) {
-    }
+    def setOutputVisible(value: Boolean) {}
   }
   
   private class CustomOutputWriter(pw: PrintWriter) extends OutputWriter(pw) {
@@ -405,8 +399,7 @@ object SBTConsoleTopComponent {
 
     @throws(classOf[IOException])
     override
-    def reset() {
-    }
+    def reset() {}
   }
 
 }

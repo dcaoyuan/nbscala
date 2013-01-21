@@ -14,9 +14,9 @@ class SBTConsoleAction extends AbstractAction(NbBundle.getMessage(classOf[SBTCon
   putValue(javax.swing.Action.SMALL_ICON, new ImageIcon(ImageUtilities.loadImage(SBTConsoleTopComponent.ICON_PATH, true)))
     
   def actionPerformed(evt: ActionEvent) {
-    val win = SBTConsoleTopComponent.findInstance
-    win.open
-    win.requestActive
+    //val win = SBTConsoleTopComponent.findInstance
+    //win.open
+    //win.requestActive
   }
     
 }

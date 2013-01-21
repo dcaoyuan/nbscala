@@ -37,7 +37,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
         data match {
           case SECOND_ESC_CHAR =>
             state = LOOKING_FOR_NEXT_ARG
-          case  SECOND_OSC_CHAR =>
+          case SECOND_OSC_CHAR =>
             state = LOOKING_FOR_OSC_COMMAND
           case _ =>
             reset(false)
