@@ -77,7 +77,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
   }
   
         
-  completeCombo.setRenderer(new DefaultListCellRenderer()) // no silly ticks!
+  completeCombo.setRenderer(new DefaultListCellRenderer())
   val completePopup = new BasicComboPopup(completeCombo)
         
   if (message ne null) {
@@ -103,11 +103,6 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
   }
   
   private def writeString(str: String) {
-    //val style = if (str.startsWith("> ")) {
-    //  resultStyle
-    //} else {
-    //  outputStyle
-    //}
     append(str, currentStyle)
     
     startPos = doc.getLength
