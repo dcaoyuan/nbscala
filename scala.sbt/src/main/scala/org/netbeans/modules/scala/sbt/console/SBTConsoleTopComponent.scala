@@ -191,7 +191,7 @@ final class SBTConsoleTopComponent(project: Project) extends TopComponent {
       log.info(arg)
       builder = builder.addArgument(arg)
     }
-    log.info("==== End of Sbt console args ====");
+    log.info("==== End of Sbt console args ====")
 
     builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
     val pwd = FileUtil.toFile(project.getProjectDirectory)

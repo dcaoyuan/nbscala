@@ -141,10 +141,10 @@ object SBTExecution {
     val executable = getJavaHome + File.separator + "bin" + File.separator + "java" // NOI18N   
     // XXX Do I need java.exe on Windows?
 
-    args += "-Xmx512m"
+    args += "-Xmx512M"
     args += "-Xss1M"
     args += "-XX:+CMSClassUnloadingEnabled"
-    args += "-XX:MaxPermSize=384M"
+    args += "-XX:MaxPermSize=256M"
             
     /** 
      * @Note:
@@ -152,7 +152,7 @@ object SBTExecution {
      * Also, from Scala-2.7.1, jline is used for scala shell, we should 
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
      */
-    args += "-Djline.terminal=jline.UnsupportedTerminal" //NOI18N
+    //args += "-Djline.terminal=jline.UnsupportedTerminal" //NOI18N
             
     // TODO - turn off verifier?
 
