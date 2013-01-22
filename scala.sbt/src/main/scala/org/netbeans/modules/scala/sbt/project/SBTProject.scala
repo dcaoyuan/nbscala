@@ -97,6 +97,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
 
       override
       def getActions(arg0: Boolean): Array[Action] = Array(
+        new SBTConsoleAction(project),
         CommonProjectActions.newFileAction,
         CommonProjectActions.copyProjectAction,
         CommonProjectActions.deleteProjectAction,

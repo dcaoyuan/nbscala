@@ -6,6 +6,7 @@ import java.awt.Insets
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io._
+import java.util.logging.Level
 import java.util.logging.Logger
 import javax.swing._
 import javax.swing.text.BadLocationException
@@ -16,6 +17,7 @@ import org.netbeans.api.project.Project
 import org.netbeans.api.project.ui.OpenProjects
 import org.openide.ErrorManager
 import org.openide.filesystems.FileUtil
+import org.openide.loaders.InstanceDataObject
 import org.openide.util.Exceptions
 import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
@@ -25,7 +27,7 @@ import org.openide.windows._
  *
  * @author Caoyuan Deng
  */
-final class SBTConsoleTopComponent(project: Project) extends TopComponent {
+final class SBTConsoleTopComponent private (project: Project) extends TopComponent {
   import SBTConsoleTopComponent._
   
   private var finished: Boolean = true
@@ -35,12 +37,18 @@ final class SBTConsoleTopComponent(project: Project) extends TopComponent {
 
   initComponents
   setName("SBT " + project.getProjectDirectory.getName)
-  setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " " + project.getProjectDirectory.getPath)
+  setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
   setIcon(ImageUtilities.loadImage(ICON_PATH, true))
  
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
   }            
+
+  /**
+   * @Note this id will be escaped by PersistenceManager and for findTopCompoment(id)
+   */
+  override
+  protected val preferredID = toPreferredId(project)
 
   override
   def getPersistenceType = TopComponent.PERSISTENCE_NEVER
@@ -91,16 +99,12 @@ final class SBTConsoleTopComponent(project: Project) extends TopComponent {
   //override
   //def writeReplace: AnyRef = new ResolvableHelper()
 
-  override
-  protected def preferredID = toPreferredId(project)
-
-  def createTerminal {
+  private def createTerminal {
     val pipeIn = new PipedInputStream()
 
     textPane = new JTextPane()
     textPane.getDocument.putProperty("mimeType", mimeType)
     textPane.setMargin(new Insets(8, 8, 8, 8))
-    textPane.setCaretColor(new Color(0xa4, 0x00, 0x00))
     textPane.setBackground(new Color(0xf2, 0xf2, 0xf2))
     textPane.setForeground(new Color(0xa4, 0x00, 0x00))
 
@@ -273,6 +277,107 @@ final class SBTConsoleTopComponent(project: Project) extends TopComponent {
     } else false
   }
 
+}
+
+object SBTConsoleTopComponent {
+  private val log = Logger.getLogger(this.getClass.getName)
+  
+  /**
+   * path to the icon used by the component and its open action
+   */
+  val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png" 
+  
+  private val compName = "SBTConsole"
+  private val idEscape = try {
+    val x = classOf[InstanceDataObject].getDeclaredMethod("escapeAndCut", classOf[String])
+    x.setAccessible(true)
+    x
+  } catch {
+    case ex: Exception => null
+  }
+  private val idUnescape = try {
+    val x = classOf[InstanceDataObject].getDeclaredMethod("unescape", classOf[String])
+    x.setAccessible(true)
+    x
+  } catch {
+    case ex: Exception => null
+  }
+
+  /**
+   * @see org.netbeans.core.windows.persistence.PersistenceManager
+   */
+  private def toPreferredId(project: Project) = {
+    compName + project.getProjectDirectory.getPath
+  }
+
+  /**
+   * @see org.netbeans.core.windows.persistence.PersistenceManager
+   */
+  private def toEscapedPreferredId(project: Project) = {
+    escape(compName + project.getProjectDirectory.getPath)
+  }
+  
+  /** 
+   * compute filename in the same manner as InstanceDataObject.create
+   * [PENDING] in next version this should be replaced by public support
+   * likely from FileUtil
+   * @see issue #17142
+   * 
+   */
+  private def escape(name: String) = {
+    if (idEscape != null) {
+      try {
+        idEscape.invoke(null, name).asInstanceOf[String]
+      } catch {
+        case ex: Exception => log.log(Level.INFO, "Escape support failed", ex); name
+      }
+    } else name
+  }
+    
+  /** 
+   * compute filename in the same manner as InstanceDataObject.create
+   * [PENDING] in next version this should be replaced by public support
+   * likely from FileUtil
+   * @see issue #17142
+   */
+  private def unescape(name: String) = {
+    if (idUnescape != null) {
+      try {
+        idUnescape.invoke(null, name).asInstanceOf[String]
+      } catch {
+        case ex: Exception => log.log(Level.INFO, "Escape support failed", ex); name
+      }
+    } else name
+  }
+  
+  /**
+   * Obtain the SBTConsoleTopComponent instance by project
+   */
+  def findInstance(project: Project) = {
+    val id = toEscapedPreferredId(project)
+    WindowManager.getDefault.findTopComponent(id) match {
+      case null => 
+        val tc = new SBTConsoleTopComponent(project)
+        SwingUtilities.invokeLater(new Runnable() {
+            def run {
+              val mode = WindowManager.getDefault.findMode("output")
+              if (mode != null) {
+                mode.dockInto(tc)
+              }
+            }
+          }
+        )
+        tc
+      case x: SBTConsoleTopComponent => x
+      case _ =>
+        ErrorManager.getDefault.log(ErrorManager.WARNING,
+                                    "There seem to be multiple components with the '" + id + 
+                                    "' ID. That is a potential source of errors and unexpected behavior.")
+        null
+    } 
+  }
+  
+  
   private def getMainProjectWorkPath: File = {
     var pwd: File = null
     val mainProject = OpenProjects.getDefault.getMainProject
@@ -296,46 +401,6 @@ final class SBTConsoleTopComponent(project: Project) extends TopComponent {
     pwd
   }
 
-}
-
-object SBTConsoleTopComponent {
-  //private lazy val instance = new SBTConsoleTopComponent()
-  
-  /**
-   * path to the icon used by the component and its open action
-   */
-  val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png" // NOI18N
-  val PREFERRED_ID = "SBTConsoleTopComponent" // NOI18N
-
-  private def toPreferredId(project: Project) = PREFERRED_ID + project.getProjectDirectory.getPath.replace('/', '_')
-  
-  /**
-   * Gets default instance. Do not use directly: reserved for *.settings files
-   * only, i.e. deserialization routines; otherwise you could get a
-   * non-deserialized instance. To obtain the singleton instance, use
-   * {@link findInstance}.
-   */
-  //def getDefault = synchronized {instance}
-  
-  /**
-   * Obtain the IrbTopComponent instance. Never call {@link #getDefault}
-   * directly!
-   */
-  def findInstance(project: Project) = {
-     val win = WindowManager.getDefault().findTopComponent(PREFERRED_ID + toPreferredId(project))
-    win match {
-      case null =>
-        new SBTConsoleTopComponent(project)
-      case x: SBTConsoleTopComponent => x
-      case _ =>
-        ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                    "There seem to be multiple components with the '" + PREFERRED_ID + 
-                                    "' ID. That is a potential source of errors and unexpected behavior.")
-        null
-    } 
-    
-  }
-  
   //@SerialVersionUID(1L)
   //class ResolvableHelper extends Serializable {
   //  def readResolve: AnyRef = getDefault

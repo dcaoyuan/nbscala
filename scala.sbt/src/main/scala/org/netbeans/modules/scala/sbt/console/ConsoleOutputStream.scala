@@ -35,6 +35,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
   val defaultBg = Color.BLACK
   area.setForeground(defaultFg)
   area.setBackground(defaultBg)
+  area.setCaretColor(defaultFg)
   val sequenceStyle = new SimpleAttributeSet()
   val defaultStyle  = new SimpleAttributeSet()
   StyleConstants.setForeground(sequenceStyle, defaultFg)     
