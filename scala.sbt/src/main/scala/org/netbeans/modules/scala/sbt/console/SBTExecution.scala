@@ -151,8 +151,9 @@ object SBTExecution {
      * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why? 
      * Also, from Scala-2.7.1, jline is used for scala shell, we should 
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
+     * And jline may cause terminal unresponsed after netbeans quited.
      */
-    //args += "-Djline.terminal=jline.UnsupportedTerminal" //NOI18N
+    args += "-Djline.terminal=jline.UnsupportedTerminal" //NOI18N
             
     // TODO - turn off verifier?
 
