@@ -1,5 +1,6 @@
 package org.netbeans.modules.scala.sbt.project
 
+import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
 import org.netbeans.spi.project.ActionProvider
 import org.openide.util.Lookup
 
@@ -8,9 +9,11 @@ import org.openide.util.Lookup
  * Used for predefined project actions, @see org.netbeans.spi.project.ActionProvider
  */
 class SBTActionProvider(project: SBTProject) extends ActionProvider {
-  def getSupportedActions() = {
-    Array[String]()
-  }
+  import SBTActionProvider._
+  
+  def getSupportedActions() = Array[String](
+    COMMAND_SBT_CONSOLE
+  )
   
   @throws(classOf[IllegalArgumentException])
   def isActionEnabled(command: String, context: Lookup): Boolean = {
@@ -18,7 +21,17 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   }
   
   def invokeAction(command: String, context: Lookup) {
-    if (command.equalsIgnoreCase("Open SBT Console")){
+    command.toLowerCase match {
+      case COMMAND_SBT_CONSOLE =>
+        val win = SBTConsoleTopComponent.findInstance(project)
+        if (win != null) {
+          win.open
+          win.requestActive
+        }
     }
   }
+}
+
+object SBTActionProvider {
+  val COMMAND_SBT_CONSOLE = "sbt-console"
 }
