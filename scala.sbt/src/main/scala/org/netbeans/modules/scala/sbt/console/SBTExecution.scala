@@ -145,7 +145,10 @@ object SBTExecution {
     args += "-Xss1M"
     args += "-XX:+CMSClassUnloadingEnabled"
     args += "-XX:MaxPermSize=256M"
-            
+        
+
+    args += "-Dsbt.log.noformat=true"
+    
     /** 
      * @Note:
      * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why? 
