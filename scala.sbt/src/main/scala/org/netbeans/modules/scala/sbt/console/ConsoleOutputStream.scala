@@ -8,7 +8,6 @@ import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.io.PrintStream
-
 import javax.swing.DefaultListCellRenderer
 import javax.swing.JComboBox
 import javax.swing.plaf.basic.BasicComboPopup
@@ -28,9 +27,11 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
 
   def this(area: JTextComponent) = this(area, null, null)
     
+  /** buffer which will be used for the next line */
+  private val buf = new StringBuffer(1000)
   private var startPos = 0
   private var currentLine: String = _
-  
+
   val defaultFg = Color.WHITE
   val defaultBg = Color.BLACK
   area.setForeground(defaultFg)
@@ -76,7 +77,6 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
           }
         })
   }
-  
         
   completeCombo.setRenderer(new DefaultListCellRenderer())
   val completePopup = new BasicComboPopup(completeCombo)
@@ -88,24 +88,88 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     append(message, messageStyle)
   }
   
-  override 
-  def write(b: Int) {
-    writeString(Character.toString(b.toChar))
+  @throws(classOf[IOException])
+  override
+  def close() {
+    flush
+    handleClose
   }
-    
-  override 
-  def write(b: Array[Byte], off: Int, len: Int) {
-    writeString(new String(b, off, len))
+
+  /**
+   * This method is called when the stream is closed and it allows
+   * entensions of this class to do additional tasks.
+   * For example, closing an underlying stream, etc.
+   * The default implementation does nothing.
+   */
+  @throws(classOf[IOException])
+  protected def handleClose() {}
+
+  @throws(classOf[IOException])
+  override
+  def flush() {
+    flushLines(true)
   }
-    
-  override 
+
+  @throws(classOf[IOException])
+  override
   def write(b: Array[Byte]) {
-    writeString(new String(b))
+    write(b, 0, b.length)
+  }
+
+  @throws(classOf[IOException])
+  override
+  def write(b: Array[Byte], offset: Int, length: Int) {
+    buf.append(new String (b, offset, length))
+    // will usually contain at least one newline
+    flushLines(false)
+  }
+
+  @throws(classOf[IOException])
+  override
+  def write(b: Int) {
+    buf.append(b.toChar)
+    if (b.toChar == '\n') {
+      flushLines(false)
+    }
+  }
+
+  @throws(classOf[IOException])
+  private def flushLines(flushEverything: Boolean) {
+    var breakMain = false
+    while (!breakMain) {
+      var breakInner = false
+      val len = buf.length
+      var i = 0
+      while (i < len && !breakInner) {
+        if (buf.charAt(i) == '\n') {
+          val end = if (i > 0 && buf.charAt(i - 1) == '\r') { // for Windows
+            i - 1
+          } else {
+            i
+          }
+          val line = buf.substring(0, end) + "\n"
+          flushLine(line)
+          buf.delete(0, i + 1)
+          breakInner = true
+        }
+        i += 1
+      }
+      breakMain = true
+    }
+    
+    if (flushEverything) {
+      flushLine(buf.substring(0, buf.length))
+      buf.delete(0, buf.length)
+    }
+  }
+    
+  @throws(classOf[IOException])
+  private def flushLine(l: String) {
+    writeString(l)
   }
   
   private def writeString(str: String) {
     append(str, currentStyle)
-    
     startPos = doc.getLength
     area.setCaretPosition(startPos)
   }
@@ -187,7 +251,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     }
         
     //if (! ConsoleLineReader.history.next) // at end
-    currentLine = getLine
+    currentLine = getInputLine
     //else
     //  ConsoleLineReader.history.previous // undo check
         
@@ -223,7 +287,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     //replaceText(startPos, area.getDocument.getLength, oldLine)
   }
     
-  protected def replaceText(start: Int , end: Int , replacement: String) {
+  protected def replaceText(start: Int, end: Int, replacement: String) {
     try {
       doc.remove(start, end - start)
       doc.insertString(start, replacement, sequenceStyle)
@@ -232,7 +296,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
     }
   }
     
-  protected def getLine(): String = {
+  protected def getInputLine(): String = {
     try {
       area.getText(startPos, doc.getLength - startPos)
     } catch {
@@ -254,7 +318,7 @@ class ConsoleOutputStream(area: JTextComponent, message: String, pipedIn: PipedI
         
     append("\n", null)
         
-    val inputStr = getLine.trim
+    val inputStr = getInputLine.trim
     pipedOut.println(inputStr)
         
     //ConsoleLineReader.history.addToHistory(inputStr)
@@ -370,8 +434,6 @@ class AnsiConsoleOutputStream(os: ConsoleOutputStream) extends AnsiOutputStream(
 //    }
 //    closeAttributes
   }
-
-
 }
 
 object AnsiConsoleOutputStream {
