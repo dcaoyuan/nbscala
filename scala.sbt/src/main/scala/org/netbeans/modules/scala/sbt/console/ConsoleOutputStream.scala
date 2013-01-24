@@ -41,6 +41,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
   val defaultStyle  = new SimpleAttributeSet()
   
   val infoStyle = new SimpleAttributeSet()
+  val warnStyle = new SimpleAttributeSet()
   val errorStyle = new SimpleAttributeSet()
   val successStyle = new SimpleAttributeSet()
   val linkStyle = new SimpleAttributeSet()
@@ -51,6 +52,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
   StyleConstants.setBackground(defaultStyle, defaultBg)
 
   StyleConstants.setForeground(infoStyle, defaultFg)
+  StyleConstants.setForeground(warnStyle, Color.ORANGE)
   StyleConstants.setForeground(errorStyle, Color.RED)
   StyleConstants.setForeground(successStyle, Color.GREEN)
 
@@ -198,6 +200,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
   protected def parseLine(line: String): ArrayBuffer[(String, AttributeSet)] = {
     val texts = new ArrayBuffer[(String, AttributeSet)]()
     val (textRest, style) = if (line.startsWith(ERROR_PREFIX)) {
+      
       val m = rERROR_WITH_FILE.matcher(line)
       if (m.matches && m.groupCount >= 3) {
         texts += (("[", currentStyle))
@@ -220,18 +223,51 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
         val textRest = line.substring(ERROR_PREFIX.length, line.length)
         (textRest, errorStyle)
       }
+      
+    } else if (line.startsWith(WARN_PREFIX)) {
+      
+      val m = rWARN_WITH_FILE.matcher(line)
+      if (m.matches && m.groupCount >= 3) {
+        texts += (("[", currentStyle))
+        texts += (("warn", warnStyle))
+        texts += (("] ", currentStyle))
+        val textRest = line.substring(WARN_PREFIX.length + 1, line.length)
+        val fileName = m.group(1)
+        val lineNo = m.group(2)
+        val linkStyle = new SimpleAttributeSet()
+        StyleConstants.setForeground(linkStyle, linkFg)
+        StyleConstants.setUnderline(linkStyle, true)
+        linkStyle.addAttribute("file", fileName)
+        linkStyle.addAttribute("line", lineNo)
+        
+        (textRest, linkStyle)
+      } else {
+        texts += (("[", currentStyle))
+        texts += (("warn", warnStyle))
+        texts += (("]", currentStyle))
+        val textRest = line.substring(WARN_PREFIX.length, line.length)
+        
+        (textRest, warnStyle)
+      }
+      
     } else if (line.startsWith(INFO_PREFIX)) {
+      
       texts += (("[", currentStyle))
       texts += (("info", infoStyle))
       texts += (("]", currentStyle))
       val textRest = line.substring(INFO_PREFIX.length, line.length)
+      
       (textRest, currentStyle)
+      
     } else if (line.startsWith(SUCCESS_PREFIX)) {
+      
       texts += (("[", currentStyle))
       texts += (("success", successStyle))
       texts += (("]", currentStyle))
       val textRest = line.substring(SUCCESS_PREFIX.length, line.length)
+      
       (textRest, currentStyle)
+      
     } else {
       (line, currentStyle)
     }
@@ -434,6 +470,7 @@ object ConsoleOutputStream {
   val linkFg = Color.BLUE
 
   private val INFO_PREFIX    = "[info]"
+  private val WARN_PREFIX    = "[warn]"
   private val ERROR_PREFIX   = "[error]"
   private val SUCCESS_PREFIX = "[success]"
   
@@ -447,6 +484,7 @@ object ConsoleOutputStream {
   private val STD_SUFFIX = FILE + SEP + LINE + ROL
   
   private val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + STD_SUFFIX)
+  private val rWARN_WITH_FILE = Pattern.compile("\\Q" + WARN_PREFIX + "\\E" + STD_SUFFIX)
 }
 
 class AnsiConsoleOutputStream(os: ConsoleOutputStream) extends AnsiOutputStream(os) {
