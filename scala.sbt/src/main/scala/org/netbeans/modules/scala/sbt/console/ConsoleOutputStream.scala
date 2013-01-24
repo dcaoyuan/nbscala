@@ -228,6 +228,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
         texts += (("error", errorStyle))
         texts += (("] ", currentStyle))
         val textRest = line.substring(ERROR_PREFIX.length + 1, line.length)
+        
         val fileName = m.group(1)
         val lineNo = m.group(2)
         val linkStyle = new SimpleAttributeSet()
@@ -242,6 +243,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
         texts += (("error", errorStyle))
         texts += (("]", currentStyle))
         val textRest = line.substring(ERROR_PREFIX.length, line.length)
+        
         (textRest, errorStyle)
       }
       
@@ -253,6 +255,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
         texts += (("warn", warnStyle))
         texts += (("] ", currentStyle))
         val textRest = line.substring(WARN_PREFIX.length + 1, line.length)
+        
         val fileName = m.group(1)
         val lineNo = m.group(2)
         val linkStyle = new SimpleAttributeSet()
@@ -569,11 +572,6 @@ class AnsiConsoleOutputStream(os: ConsoleOutputStream) extends AnsiOutputStream(
   override
   protected def processAttributeRest() {
     os.currentStyle = os.defaultStyle
-//    if (concealOn) {
-//      write("\u001B[0m")
-//      concealOn = false
-//    }
-//    closeAttributes
   }
 }
 
