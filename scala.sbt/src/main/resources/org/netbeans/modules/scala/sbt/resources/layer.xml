@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
 <filesystem>
-    
-
+    <folder name="Editors">
+        <folder name="text">
+            <folder name="x-sbt">
+                <folder name="HyperlinkProviders">
+                    <file name="ConsoleHyperlinkProvider.instance">
+                        <attr name="instanceClass"  
+                              stringvalue="org.netbeans.modules.scala.sbt.console.ConsoleHyperlinkProvider"/>
+                        <attr name="instanceOf" 
+                              stringvalue="org.netbeans.lib.editor.hyperlink.spi.HyperlinkProvider"/>
+                    </file>
+                
+                </folder>
+            </folder>
+        </folder>
+    </folder>  
 </filesystem>
