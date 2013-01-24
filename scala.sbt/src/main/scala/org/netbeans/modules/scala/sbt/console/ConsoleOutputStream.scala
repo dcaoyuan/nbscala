@@ -20,6 +20,7 @@ import javax.swing.text.JTextComponent
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.SyncVar
 
 /**
  * @author Caoyuan Deng
@@ -31,6 +32,8 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
     
   /** buffer which will be used for the next line */
   private val buf = new StringBuffer(1000)
+  private val captureBuf = new StringBuffer(1000)
+  private val notUnderCaptureOut = {val x = new SyncVar[Boolean]; x.put(true); x}
   private var startPos = 0
   private var currentLine: String = _
 
@@ -103,6 +106,16 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
     append(welcome, messageStyle)
   }
   
+  def runSbtCommand(command: String): String = {
+    notUnderCaptureOut.take // take away, also means setting to underCaptureOut
+    pipedOut.println(command)
+    notUnderCaptureOut.get  // wait here until notUnderCaptureOut is put again
+    
+    val out = captureBuf.toString
+    captureBuf.delete(0, captureBuf.length)
+    out
+  }
+  
   @throws(classOf[IOException])
   override
   def close() {
@@ -134,7 +147,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
   @throws(classOf[IOException])
   override
   def write(b: Array[Byte], offset: Int, length: Int) {
-    buf.append(new String (b, offset, length))
+    buf.append(new String(b, offset, length))
     // will usually contain at least one newline
     flushLines(false)
   }
@@ -184,9 +197,17 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
   }
   
   private def writeLine(line: String) {
-    for ((text, style) <- parseLine(line)) append(text, style)
-    startPos = doc.getLength
-    area.setCaretPosition(startPos)
+    if (!notUnderCaptureOut.isSet) {
+      if (line != "> ") {
+        captureBuf.append(line)
+      } else {
+        notUnderCaptureOut.put(true)
+      }
+    } else {
+      for ((text, style) <- parseLine(line)) append(text, style)
+      startPos = doc.getLength
+      area.setCaretPosition(startPos)
+    }
   }
   
   private def append(str: String, style: AttributeSet) {
@@ -338,9 +359,10 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
     
   protected def upAction(event: KeyEvent) {
     event.consume
-    pipedOut.println("tasks")
+    val resp = runSbtCommand("eclipse")
+    println(resp)
     if (completePopup.isVisible()) {
-      val selected = completeCombo.getSelectedIndex() - 1
+      val selected = completeCombo.getSelectedIndex - 1
       if (selected < 0) return
       completeCombo.setSelectedIndex(selected)
       return
