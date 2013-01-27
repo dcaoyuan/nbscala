@@ -7,6 +7,8 @@ import org.openide.util.Lookup
 /**
  * 
  * Used for predefined project actions, @see org.netbeans.spi.project.ActionProvider
+ * 
+ * @author Caoyuan Deng
  */
 class SBTActionProvider(project: SBTProject) extends ActionProvider {
   import SBTActionProvider._
@@ -23,10 +25,10 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   def invokeAction(command: String, context: Lookup) {
     command.toLowerCase match {
       case COMMAND_SBT_CONSOLE =>
-        val win = SBTConsoleTopComponent.findInstance(project)
-        if (win != null) {
-          win.open
-          win.requestActive
+        SBTConsoleTopComponent.findInstance(project){tc =>
+          tc.open
+          tc.requestActive
+          None
         }
     }
   }

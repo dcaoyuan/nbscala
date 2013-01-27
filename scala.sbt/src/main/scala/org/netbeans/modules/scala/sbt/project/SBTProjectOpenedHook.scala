@@ -1,37 +1,31 @@
 package org.netbeans.modules.scala.sbt.project
 
-import javax.swing.SwingUtilities
+import org.netbeans.api.java.classpath.ClassPath
+import org.netbeans.api.java.classpath.GlobalPathRegistry
 import org.netbeans.api.project.Project
-import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
+import org.netbeans.modules.scala.sbt.classpath.SBTClassPathProvider
 import org.netbeans.spi.project.ui.ProjectOpenedHook
 
+/**
+ * 
+ * @author Caoyuan Deng
+ */
 class SBTProjectOpenedHook(project: Project) extends ProjectOpenedHook {
+  private var classpaths: Array[ClassPath] = _
   
   override
   protected def projectOpened() {
-    SwingUtilities.invokeLater(new Runnable() {
-        def run {
-          val tc = SBTConsoleTopComponent.findInstance(project)
-          if (tc != null) {
-            tc.open
-            tc.requestActive
-          }
-        }
-      }
+    val cpProvider = project.getLookup.lookup(classOf[SBTClassPathProvider])
+    classpaths = Array(
+      cpProvider.getClassPath(ClassPath.COMPILE)
     )
-    //IvyLibraryController ivyLibraryController = project.getLookup().lookup(IvyLibraryController.class);
-    //ivyLibraryController.triggerIvyResolution();
-    //classpaths = new ClassPath[]{
-    //            cpProvider.getClassPath(ClassPathScope.COMPILE),
-    //            cpProvider.getClassPath(ClassPathScope.COMPILE_TEST)
-    //        };
-    //GlobalPathRegistry.getDefault().register(ClassPath.COMPILE, classpaths);
-//      
+    
+    GlobalPathRegistry.getDefault.register(ClassPath.COMPILE, classpaths)
   }
 
   override
   protected def projectClosed() {
-    //GlobalPathRegistry.getDefault().unregister(ClassPath.COMPILE, classpaths);
-    //IOTabProvider.getInstance().unregister(project);
+    GlobalPathRegistry.getDefault.unregister(ClassPath.COMPILE, classpaths)
+    //close sbt console
   }
 }

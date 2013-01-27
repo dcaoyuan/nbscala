@@ -23,6 +23,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.SyncVar
 
 /**
+ *
  * @author Caoyuan Deng
  */
 class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedInputStream) extends OutputStream {

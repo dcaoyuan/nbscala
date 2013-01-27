@@ -2,7 +2,6 @@ package org.netbeans.modules.scala.sbt.console
 
 import java.awt.Color
 import java.awt.Cursor
-import java.awt.EventQueue
 import java.awt.Font
 import java.awt.Insets
 import java.awt.Toolkit
@@ -45,11 +44,13 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   private var textPane: JTextPane = _
   private val mimeType = "text/x-sbt"
   private val log = Logger.getLogger(getClass.getName)
+  
 
   initComponents
   setName("SBT " + project.getProjectDirectory.getName)
   setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
   setIcon(ImageUtilities.loadImage(ICON_PATH, true))
+  var console: ConsoleOutputStream = createTerminal
  
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
@@ -70,7 +71,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
       // Start a new one
       finished = false
       removeAll
-      createTerminal
+      console = createTerminal
     }
   }
 
@@ -110,7 +111,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   //override
   //def writeReplace: AnyRef = new ResolvableHelper()
 
-  private def createTerminal {
+  private def createTerminal: ConsoleOutputStream = {
     val pipeIn = new PipedInputStream()
 
     textPane = new JTextPane()
@@ -184,16 +185,16 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     val sbtHome = SBTExecution.getSbtHome
     val sbtLaunchJar = SBTExecution.getSbtJar(sbtHome)
     if (sbtLaunchJar == null) {
-      return
+      return null
     }
 
     val (executable, args) = SBTExecution.getArgs(sbtHome)
     
-    val consoleOut = new AnsiConsoleOutputStream(new ConsoleOutputStream(
-        textPane, 
-        " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
-        pipeIn)
-    )
+    console = new ConsoleOutputStream(
+      textPane, 
+      " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
+      pipeIn)
+    val consoleOut = new AnsiConsoleOutputStream(console)
     
     val in = new InputStreamReader(pipeIn)
     val out = new PrintWriter(new PrintStream(consoleOut))
@@ -238,6 +239,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     textPane.addMouseListener(MyMouseListener)
     textPane.addMouseMotionListener(MyMouseListener)
+    console
   }
 
   override
@@ -296,7 +298,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
       val mouseX = e.getX
       val mouseY = e.getY
       // Ensure that this is done after the textpane's own mouse listener
-      EventQueue.invokeLater(new Runnable() {
+      SwingUtilities.invokeLater(new Runnable() {
           def run() {
             // Attempt to force the mouse click to appear on the last line of the text input
             var pos = textPane.getDocument.getEndPosition.getOffset - 1
@@ -352,7 +354,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
                     val lineSet = ed.getLineSet
                     val line = lineSet.getOriginal(lineNo - 1) // the lineSet is indiced from 0
                     if (!line.isDeleted) {
-                      EventQueue.invokeLater(new Runnable() {
+                      SwingUtilities.invokeLater(new Runnable() {
                           override
                           def run() {
                             line.show(Line.ShowOpenType.REUSE, Line.ShowVisibilityType.FOCUS, -1)
@@ -488,28 +490,32 @@ object SBTConsoleTopComponent {
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def findInstance(project: Project) = {
+  def findInstance(project: Project)(action: SBTConsoleTopComponent => Option[Any]) = {
     val id = toEscapedPreferredId(project)
-    WindowManager.getDefault.findTopComponent(id) match {
-      case null => 
-        val tc = new SBTConsoleTopComponent(project)
-        SwingUtilities.invokeLater(new Runnable() {
-            def run {
+    //val result = new SyncVar[AnyRef]
+    SwingUtilities.invokeLater(new Runnable() {
+        def run {
+          WindowManager.getDefault.findTopComponent(id) match {
+            case null => 
+              val tc = new SBTConsoleTopComponent(project)
               val mode = WindowManager.getDefault.findMode("output")
               if (mode != null) {
                 mode.dockInto(tc)
               }
-            }
-          }
-        )
-        tc
-      case x: SBTConsoleTopComponent => x
-      case _ =>
-        ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                    "There seem to be multiple components with the '" + id + 
-                                    "' ID. That is a potential source of errors and unexpected behavior.")
-        null
-    } 
+              action(tc)
+            case tc: SBTConsoleTopComponent => 
+              tc
+              action(tc)
+            case _ =>
+              ErrorManager.getDefault.log(ErrorManager.WARNING,
+                                          "There seem to be multiple components with the '" + id + 
+                                          "' ID. That is a potential source of errors and unexpected behavior.")
+              null
+              None
+          } 
+        }
+      })
+    //result.take
   }
   
   private def getMainProjectWorkPath: File = {

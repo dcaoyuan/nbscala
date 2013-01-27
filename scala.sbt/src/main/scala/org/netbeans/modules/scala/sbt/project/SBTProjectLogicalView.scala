@@ -15,6 +15,10 @@ import org.openide.util.Exceptions
 import org.openide.util.lookup.Lookups
 import org.openide.util.lookup.ProxyLookup
 
+/**
+ * 
+ * @author Caoyuan Deng
+ */
 class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
 
   override

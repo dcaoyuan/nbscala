@@ -52,6 +52,10 @@ import org.openide.util.Exceptions
 import org.openide.util.Utilities
 import scala.collection.mutable.ArrayBuffer
 
+/**
+ *
+ * @author Caoyuan Deng
+ */
 object SBTExecution {
 
   val SBT_MAIN_CLASS = "sbt.xMain" // NOI18N <- Change
