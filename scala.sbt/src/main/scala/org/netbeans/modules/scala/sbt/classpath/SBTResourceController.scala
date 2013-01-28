@@ -24,8 +24,10 @@ import scala.collection.mutable.ArrayBuffer
 
 
 case class LibraryEntry(
-  mainSrcs: Array[FileObject], 
-  testSrcs: Array[FileObject], 
+  mainJavaSrcs: Array[FileObject], 
+  testJavaSrcs: Array[FileObject], 
+  mainScalaSrcs: Array[FileObject], 
+  testScalaSrcs: Array[FileObject], 
   mainCps:  Array[FileObject], 
   testCps:  Array[FileObject]
 )
@@ -98,8 +100,10 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
   }
   
   private def parseClasspathXml(file: File): LibraryEntry = {
-    val mainSrcs = new ArrayBuffer[FileObject]()
-    val testSrcs = new ArrayBuffer[FileObject]()
+    val mainJavaSrcs = new ArrayBuffer[FileObject]()
+    val testJavaSrcs = new ArrayBuffer[FileObject]()
+    val mainScalaSrcs = new ArrayBuffer[FileObject]()
+    val testScalaSrcs = new ArrayBuffer[FileObject]()
     val mainCps = new ArrayBuffer[FileObject]()
     val testCps = new ArrayBuffer[FileObject]()
 
@@ -114,10 +118,19 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
               val isForTest = path.contains("test")
               val src = projectDir.getFileObject(path)
               if (src != null) {
+                val isJava = (src.getPath.split("/") find (_ == "java") isDefined)
                 if (isForTest) {
-                  testSrcs += src
+                  if (isJava) {
+                    testJavaSrcs += src
+                  } else {
+                    testScalaSrcs += src
+                  }
                 } else {
-                  mainSrcs += src
+                  if (isJava) {
+                    mainJavaSrcs += src
+                  } else {
+                    mainScalaSrcs += src
+                  }
                 }
               }
               val output = (entry \ "@output").text.trim
@@ -143,8 +156,8 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
           }
         }
     }
-
-    LibraryEntry(mainSrcs.toArray, testSrcs.toArray, mainCps.toArray, testCps.toArray)
+    
+    LibraryEntry(mainJavaSrcs.toArray, testJavaSrcs.toArray, mainScalaSrcs.toArray, testScalaSrcs.toArray, mainCps.toArray, testCps.toArray)
   }
 
   def addPropertyChangeListener(propertyChangeListener: PropertyChangeListener) {
@@ -160,8 +173,15 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
       tpe match {
         case ClassPath.COMPILE => libraryEntry.mainCps ++ libraryEntry.testCps
         case ClassPath.EXECUTE => libraryEntry.mainCps ++ libraryEntry.testCps
-        case ClassPath.SOURCE => libraryEntry.mainSrcs ++ libraryEntry.testSrcs
-        case ClassPath.BOOT => libraryEntry.mainCps filter {cp => cp.getName.startsWith("scala-library") && cp.getExt == "jar"}
+        case ClassPath.SOURCE => libraryEntry.mainJavaSrcs ++ libraryEntry.testJavaSrcs ++ libraryEntry.mainScalaSrcs ++ libraryEntry.mainScalaSrcs
+        case ClassPath.BOOT => libraryEntry.mainCps filter {cp =>
+            val name = cp.getName
+            cp.getExt == "jar" && (
+              name.startsWith("scala-library")  ||
+              name.startsWith("scala-compiler") ||  // necessary?
+              name.startsWith("scala-reflect")      // necessary?
+            )
+          }
         case _ => Array()
       }
     } else {
@@ -173,9 +193,9 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
     if (libraryEntry != null) {
       tpe match {
         case ProjectConstants.SOURCES_TYPE_JAVA =>
-          if (test) libraryEntry.testSrcs else libraryEntry.mainSrcs
+          if (test) libraryEntry.testJavaSrcs else libraryEntry.mainJavaSrcs
         case ProjectConstants.SOURCES_TYPE_SCALA =>
-          if (test) libraryEntry.testSrcs else libraryEntry.mainSrcs
+          if (test) libraryEntry.testScalaSrcs else libraryEntry.mainScalaSrcs
         case _ => Array()
       }
     } else {
@@ -248,7 +268,7 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
   private def firePropertyChange(propertyName: String, oldValue: Object, newValue: Object) {
     if ((oldValue == null && newValue != null) ||
         (oldValue != null && !oldValue.equals(newValue))) {
-      pcs.firePropertyChange(propertyName, oldValue, newValue);
+      pcs.firePropertyChange(propertyName, oldValue, newValue)
     }
   }
 }

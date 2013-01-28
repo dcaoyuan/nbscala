@@ -4,6 +4,7 @@ import java.awt.Image
 import javax.swing.Action
 import org.netbeans.spi.project.ui.LogicalViewProvider
 import org.netbeans.spi.project.ui.support.CommonProjectActions
+import org.netbeans.spi.project.ui.support.NodeFactorySupport
 import org.netbeans.spi.project.ui.support.ProjectSensitiveActions
 import org.openide.loaders.DataFolder
 import org.openide.loaders.DataObjectNotFoundException
@@ -41,7 +42,10 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
 
   private final class ProjectNode(node: Node, project: SBTProject) extends FilterNode(
     node, 
-    new FilterNode.Children(node), 
+    NodeFactorySupport.createCompositeChildren(
+      project, 
+      "Projects/org-netbeans-modules-scala-sbt/Nodes"),
+    //new FilterNode.Children(node), 
     new ProxyLookup(Lookups.singleton(project), node.getLookup)
   ) {
 

@@ -13,6 +13,10 @@ import org.openide.util.Lookup
 class SBTActionProvider(project: SBTProject) extends ActionProvider {
   import SBTActionProvider._
   
+  /**
+   * also @see ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, "Sbt", null) in
+   * SBTProjectLogicalView.getActions
+   */
   def getSupportedActions() = Array[String](
     COMMAND_SBT_CONSOLE
   )

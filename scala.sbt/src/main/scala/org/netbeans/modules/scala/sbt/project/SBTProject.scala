@@ -20,6 +20,7 @@ import org.openide.util.lookup.Lookups
  */
 class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   private lazy val lookup: Lookup = Lookups.fixed(
+    this,
     new Info(),
     new SBTProjectLogicalView(this),
     new SBTResourceController(this, true),
