@@ -21,6 +21,11 @@ class SBTSources(project: Project) extends Sources with SourceGroupModifierImple
   override 
   def getSourceGroups(tpe: String): Array[SourceGroup] = {
     tpe match {
+      case Sources.TYPE_GENERIC =>
+        // It's necessary for project's PhysicalView (in Files window), 
+        // @see org.netbeans.modules.project.ui.PhysicalView#createNodesForProject(Project)
+        val projectDir = project.getProjectDirectory
+        Array(GenericSources.group(project, projectDir, projectDir.getNameExt, projectDir.getNameExt, null, null))
       case ProjectConstants.SOURCES_TYPE_JAVA =>
         val groups = new ArrayBuffer[SourceGroup]()
         maybeAddGroup(groups, tpe, false)
@@ -57,6 +62,8 @@ class SBTSources(project: Project) extends Sources with SourceGroupModifierImple
         if (test) ProjectConstants.NAME_JAVATESTSOURCE else ProjectConstants.NAME_JAVASOURCE
       case ProjectConstants.SOURCES_TYPE_SCALA =>
         if (test) ProjectConstants.NAME_SCALATESTSOURCE else ProjectConstants.NAME_SCALASOURCE
+      case ProjectConstants.ARTIFACT_TYPE_JAR =>
+        ProjectConstants.NAME_ARTIFACT_JAR
       case _ => 
         ProjectConstants.NAME_OTHERSOURCE
     }
@@ -66,6 +73,8 @@ class SBTSources(project: Project) extends Sources with SourceGroupModifierImple
         if (test) NbBundle.getMessage(classOf[SBTSources], "SG_Test_JavaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_JavaSources")
       case ProjectConstants.SOURCES_TYPE_SCALA =>
         if (test) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ScalaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ScalaSources")
+      case ProjectConstants.ARTIFACT_TYPE_JAR =>
+        NbBundle.getMessage(classOf[SBTSources], "SG_ArtifactJars")
       case _ =>
         NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
     }

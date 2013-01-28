@@ -41,6 +41,8 @@ object SBTNodeFactory {
       for (sg <- javasgs) theKeys.add(sg)
       val scalasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_SCALA)
       for (sg <- scalasgs) theKeys.add(sg)
+      val jarsgs = sources.getSourceGroups(ProjectConstants.ARTIFACT_TYPE_JAR)
+      for (sg <- jarsgs) theKeys.add(sg)
       
       theKeys
     }

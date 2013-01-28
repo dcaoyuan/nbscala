@@ -23,7 +23,7 @@ import org.openide.util.lookup.ProxyLookup
  * 
  * @author Caoyuan Deng
  */
-class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
+class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
 
   override
   def createLogicalView: Node = {
@@ -43,7 +43,7 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
     }
   }
 
-  private final class ProjectNode(node: Node, project: SBTProject) extends AbstractNode(
+  private final class ProjectNode(node: Node, project: Project) extends AbstractNode(
     NodeFactorySupport.createCompositeChildren(project, 
                                                "Projects/org-netbeans-modules-scala-sbt/Nodes"),
     new ProxyLookup(Lookups.singleton(project), node.getLookup)

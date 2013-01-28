@@ -71,6 +71,7 @@ object ProjectConstants {
   val NAME_JAVATESTSOURCE = "82JavaTestSourceRoot"
   val NAME_SCALASOURCE = "91ScalaSourceRoot"
   val NAME_SCALATESTSOURCE = "92ScalaTestSourceRoot"
+  val NAME_ARTIFACT_JAR = "95ArtifactJar"
   val NAME_OTHERSOURCE = "99OtherSourceRoot"
   
   trait FileType 
