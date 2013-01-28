@@ -23,7 +23,7 @@ class SourcesNodeFactory extends NodeFactory {
 }
 
 object SourcesNodeFactory {
-  private val RP = new RequestProcessor(classOf[SBTNodeFactory])
+  private val RP = new RequestProcessor(classOf[SourcesNodeFactory])
   
   private class SourcesNodeList(project: Project) extends NodeList[SourceGroup] with ChangeListener {
     private val changeSupport = new ChangeSupport(this)
@@ -41,8 +41,6 @@ object SourcesNodeFactory {
       for (sg <- javasgs) theKeys.add(sg)
       val scalasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_SCALA)
       for (sg <- scalasgs) theKeys.add(sg)
-      val jarsgs = sources.getSourceGroups(ProjectConstants.ARTIFACT_TYPE_JAR)
-      for (sg <- jarsgs) theKeys.add(sg)
       
       theKeys
     }
