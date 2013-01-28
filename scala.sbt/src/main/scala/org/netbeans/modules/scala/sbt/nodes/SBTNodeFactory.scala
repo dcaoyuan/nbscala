@@ -30,15 +30,19 @@ object SBTNodeFactory {
       
     override
     def keys: java.util.List[SourceGroup] = {
-      val list = new java.util.ArrayList[SourceGroup]()
+      if (project.getProjectDirectory == null || !project.getProjectDirectory.isValid) {
+        return java.util.Collections.emptyList()
+      }
+
+      val theKeys = new java.util.ArrayList[SourceGroup]()
       
       val sources = ProjectUtils.getSources(project)
       val javasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_JAVA)
-      for (sg <- javasgs) list.add(sg)
+      for (sg <- javasgs) theKeys.add(sg)
       val scalasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_SCALA)
-      for (sg <- scalasgs) list.add(sg)
+      for (sg <- scalasgs) theKeys.add(sg)
       
-      list
+      theKeys
     }
         
     override
