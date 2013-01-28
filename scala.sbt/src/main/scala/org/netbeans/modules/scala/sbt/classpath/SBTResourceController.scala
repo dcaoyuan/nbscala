@@ -168,11 +168,11 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
     pcs.removePropertyChangeListener(propertyChangeListener)
   }
 
-  def getResolvedLibraries(tpe: String): Array[FileObject] = {
+  def getResolvedLibraries(scope: String): Array[FileObject] = {
     if (libraryEntry != null) {
-      tpe match {
-        case ClassPath.COMPILE => libraryEntry.mainCps ++ libraryEntry.testCps
-        case ClassPath.EXECUTE => libraryEntry.mainCps ++ libraryEntry.testCps
+      scope match {
+        case ClassPath.COMPILE => libraryEntry.mainCps //++ libraryEntry.testCps
+        case ClassPath.EXECUTE => libraryEntry.mainCps //++ libraryEntry.testCps
         case ClassPath.SOURCE => libraryEntry.mainJavaSrcs ++ libraryEntry.testJavaSrcs ++ libraryEntry.mainScalaSrcs ++ libraryEntry.mainScalaSrcs
         case ClassPath.BOOT => libraryEntry.mainCps filter {cp =>
             val name = cp.getName

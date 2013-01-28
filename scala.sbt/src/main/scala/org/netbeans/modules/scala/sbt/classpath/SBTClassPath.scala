@@ -19,7 +19,7 @@ import org.openide.util.Exceptions
  *
  * @author Caoyuan Deng
  */
-final class SBTClassPath(project: Project, tpe: String) extends ClassPathImplementation with PropertyChangeListener {
+final class SBTClassPath(project: Project, scope: String) extends ClassPathImplementation with PropertyChangeListener {
 
   private val pcs = new PropertyChangeSupport(this)
   private val sbtController = project.getLookup.lookup(classOf[SBTResourceController])
@@ -30,11 +30,11 @@ final class SBTClassPath(project: Project, tpe: String) extends ClassPathImpleme
       java.util.Collections.emptyList()
     } else {
       val result = new java.util.ArrayList[PathResourceImplementation]()
-      if (tpe == ClassPath.BOOT) {
+      if (scope == ClassPath.BOOT) {
         result.addAll(getJavaBootResources)
       }
 
-      for (fo <- sbtController.getResolvedLibraries(tpe)) {
+      for (fo <- sbtController.getResolvedLibraries(scope)) {
         try {
           FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
           val root = if (FileUtil.isArchiveFile(fo)) {

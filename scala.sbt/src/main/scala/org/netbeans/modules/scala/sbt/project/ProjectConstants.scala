@@ -67,10 +67,11 @@ object ProjectConstants {
   val COMMAND_DEBUG_FIX = "debug.fix" // NOI18N
   
   val SOURCES_TYPE_SCALA = "scala"
-  val NAME_JAVASOURCE = "81JavaSourceRoot"
-  val NAME_SCALASOURCE = "82ScalaSourceRoot"
-  val NAME_JAVATESTSOURCE = "91JavaTestSourceRoot"
-  val NAME_SCALATESTSOURCE = "92ScalaTestSourceRoot"
+  
+  val NAME_SCALASOURCE = "81ScalaSourceRoot"
+  val NAME_JAVASOURCE = "82JavaSourceRoot"
+  val NAME_SCALATESTSOURCE = "91ScalaTestSourceRoot"
+  val NAME_JAVATESTSOURCE = "92JavaTestSourceRoot"
   val NAME_OTHERSOURCE = "95OtherSourceRoot"
   val NAME_ARTIFACT_JAR = "98ArtifactJar"
   

@@ -36,6 +36,10 @@
                     org.netbeans.modules.scala.sbt.nodes.SourcesNodeFactory
                     <attr intvalue="139" name="position"/>
                 </file>
+                <file name="org-netbeans-modules-scala-sbt-nodes-LibrariesNodeFactory.instance">
+                    org.netbeans.modules.scala.sbt.nodes.LibrariesNodeFactory
+                    <attr intvalue="139" name="position"/>
+                </file>
             </folder>
         </folder>
     </folder>    
