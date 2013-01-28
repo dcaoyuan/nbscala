@@ -62,8 +62,6 @@ class SBTSources(project: Project) extends Sources with SourceGroupModifierImple
         if (test) ProjectConstants.NAME_JAVATESTSOURCE else ProjectConstants.NAME_JAVASOURCE
       case ProjectConstants.SOURCES_TYPE_SCALA =>
         if (test) ProjectConstants.NAME_SCALATESTSOURCE else ProjectConstants.NAME_SCALASOURCE
-      case ProjectConstants.ARTIFACT_TYPE_JAR =>
-        ProjectConstants.NAME_ARTIFACT_JAR
       case _ => 
         ProjectConstants.NAME_OTHERSOURCE
     }
@@ -73,8 +71,6 @@ class SBTSources(project: Project) extends Sources with SourceGroupModifierImple
         if (test) NbBundle.getMessage(classOf[SBTSources], "SG_Test_JavaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_JavaSources")
       case ProjectConstants.SOURCES_TYPE_SCALA =>
         if (test) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ScalaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ScalaSources")
-      case ProjectConstants.ARTIFACT_TYPE_JAR =>
-        NbBundle.getMessage(classOf[SBTSources], "SG_ArtifactJars")
       case _ =>
         NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
     }
