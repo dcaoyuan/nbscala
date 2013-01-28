@@ -56,7 +56,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
   StyleConstants.setBackground(defaultStyle, defaultBg)
 
   StyleConstants.setForeground(infoStyle, defaultFg)
-  StyleConstants.setForeground(warnStyle, Color.ORANGE)
+  StyleConstants.setForeground(warnStyle, new Color(0xB9, 0x7C, 0x00))
   StyleConstants.setForeground(errorStyle, Color.RED)
   StyleConstants.setForeground(successStyle, Color.GREEN)
 
@@ -461,7 +461,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
     def keyPressed(event: KeyEvent) {
       val code = event.getKeyCode
       code match {
-        case KeyEvent.VK_TAB        => completeAction(event)
+        case KeyEvent.VK_TAB        => //completeAction(event)
         case KeyEvent.VK_LEFT       => backAction(event)
         case KeyEvent.VK_BACK_SPACE => backAction(event)
         case KeyEvent.VK_UP         => upAction(event)

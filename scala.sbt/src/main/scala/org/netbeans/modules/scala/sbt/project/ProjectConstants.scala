@@ -68,11 +68,11 @@ object ProjectConstants {
   
   val SOURCES_TYPE_SCALA = "scala"
   val NAME_JAVASOURCE = "81JavaSourceRoot"
-  val NAME_JAVATESTSOURCE = "82JavaTestSourceRoot"
-  val NAME_SCALASOURCE = "91ScalaSourceRoot"
+  val NAME_SCALASOURCE = "82ScalaSourceRoot"
+  val NAME_JAVATESTSOURCE = "91JavaTestSourceRoot"
   val NAME_SCALATESTSOURCE = "92ScalaTestSourceRoot"
-  val NAME_ARTIFACT_JAR = "95ArtifactJar"
-  val NAME_OTHERSOURCE = "99OtherSourceRoot"
+  val NAME_OTHERSOURCE = "95OtherSourceRoot"
+  val NAME_ARTIFACT_JAR = "98ArtifactJar"
   
   trait FileType 
   case object SOURCE extends FileType
