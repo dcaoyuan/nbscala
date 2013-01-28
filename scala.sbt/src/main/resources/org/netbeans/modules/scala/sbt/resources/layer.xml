@@ -32,8 +32,8 @@
                 </file>-->
             </folder>
             <folder name="Nodes">
-                <file name="org-netbeans-modules-scala-sbt-nodes-SBTNodeFactory.instance">
-                    org.netbeans.modules.scala.sbt.nodes.SBTNodeFactory
+                <file name="org-netbeans-modules-scala-sbt-nodes-SourceNodeFactory.instance">
+                    org.netbeans.modules.scala.sbt.nodes.SourceNodeFactory
                     <attr intvalue="139" name="position"/>
                 </file>
             </folder>

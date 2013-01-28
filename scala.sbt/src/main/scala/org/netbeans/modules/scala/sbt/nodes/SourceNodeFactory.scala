@@ -13,8 +13,8 @@ import org.openide.nodes.Node
 import org.openide.util.ChangeSupport
 import org.openide.util.RequestProcessor
 
-class SBTNodeFactory extends NodeFactory {
-  import SBTNodeFactory._
+class SourceNodeFactory extends NodeFactory {
+  import SourceNodeFactory._
   
   override
   def createNodes(project: Project): NodeList[_] = {
@@ -22,7 +22,7 @@ class SBTNodeFactory extends NodeFactory {
   }
 }
 
-object SBTNodeFactory {
+object SourceNodeFactory {
   private val RP = new RequestProcessor(classOf[SBTNodeFactory])
   
   private class SourcesNodeList(project: Project) extends NodeList[SourceGroup] with ChangeListener {
