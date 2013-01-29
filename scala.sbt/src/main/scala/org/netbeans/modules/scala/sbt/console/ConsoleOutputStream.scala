@@ -303,7 +303,7 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
   
   // ----- mouse actions
   
-  protected def completeAction(event: KeyEvent) {
+  protected def tabAction(event: KeyEvent) {
     //if (ConsoleLineReader.completor eq null) {
     //  return
     //}

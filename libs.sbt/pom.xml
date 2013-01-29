@@ -15,7 +15,7 @@
     
     <dependencies>
         <!-- myself -->
-        <dependency>
+<!--        <dependency>
             <groupId>org.scala-sbt</groupId>
             <artifactId>actions</artifactId>
             <version>${sbt.version}</version>
@@ -65,11 +65,11 @@
             <artifactId>compiler-integration</artifactId>
             <version>${sbt.version}</version>
         </dependency>
-        <!--dependency>
+        dependency>
             <groupId>org.scala-sbt</groupId>
             <artifactId>compiler-interface-bin</artifactId>
             <version>${sbt.version}</version>
-        </dependency-->
+        </dependency
         <dependency>
             <groupId>org.scala-sbt</groupId>
             <artifactId>compiler-ivy-integration</artifactId>
@@ -206,20 +206,13 @@
             <version>${sbt.version}</version>
         </dependency>
         
-        <!-- We can depend on this only when only wrapper the sbt shell -->
-<!--        <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>sbt-launch</artifactId>
-            <version>${sbt.version}</version>
-        </dependency>-->
-
         <dependency>
             <groupId>org.scalaz</groupId>
             <artifactId>scalaz-core_2.10</artifactId>
             <version>6.0.4</version>
         </dependency>
 
-        <!-- transitive dependencies from sbt -->
+         transitive dependencies from sbt 
         <dependency>
             <groupId>org.scala-tools.testing</groupId>
             <artifactId>test-interface</artifactId>
@@ -239,12 +232,19 @@
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
             <version>1.0</version>
-        </dependency>
+        </dependency>-->
                 
+        <!-- We need only to depend on this, when wrap the sbt shell only -->
+        <dependency>
+            <groupId>org.scala-sbt</groupId>
+            <artifactId>sbt-launch</artifactId>
+            <version>${sbt.version}</version>
+        </dependency>
+
         <!-- needed to ensure, the libs are deployed in the repostiory previous anything else -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>nbscala-libs-local</artifactId>
+            <artifactId>org-netbeans-libs-scala-local</artifactId>
             <version>1.0</version>
             <type>pom</type>
             <scope>provided</scope>

@@ -9,10 +9,10 @@
     </parent>
 
     <groupId>org.netbeans.modules</groupId>
-    <artifactId>nbscala-libs-local</artifactId>
+    <artifactId>org-netbeans-libs-scala-local</artifactId>
     <packaging>pom</packaging>
     <version>1.0</version>
-    <name>Scala Support for NetBeans - Local libs</name>
+    <name>org-netbeans-libs-scala-local</name>
     <description>Install local jars ie. scala runtime jars to local repository. 
     The contain the original libraries with some patch
     TODO: Patch description.</description>
@@ -79,6 +79,21 @@
                             <groupId>org.scala-lang.plugins</groupId>
                             <artifactId>continuations</artifactId>
                             <version>${scala.version}</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>install-scala-sbt-launch</id>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+                        <configuration>
+                            <file>${project.basedir}/lib/sbt/sbt-launch.jar</file>
+                            <groupId>org.scala-sbt</groupId>
+                            <artifactId>sbt-launch</artifactId>
+                            <version>${sbt.version}</version>
                             <packaging>jar</packaging>
                         </configuration>
                     </execution>

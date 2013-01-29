@@ -32,7 +32,7 @@
         <!-- needed to ensure, the libs are deployed in the repostiory before anything else -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>nbscala-libs-local</artifactId>
+            <artifactId>org-netbeans-libs-scala-local</artifactId>
             <version>1.0</version>
             <type>pom</type>
             <scope>provided</scope>

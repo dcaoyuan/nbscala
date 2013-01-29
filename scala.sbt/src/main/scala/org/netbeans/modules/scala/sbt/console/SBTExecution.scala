@@ -150,9 +150,7 @@ object SBTExecution {
     args += "-XX:+CMSClassUnloadingEnabled"
     args += "-XX:MaxPermSize=256M"
         
-
     args += "-Dsbt.log.noformat=true"
-    
     /** 
      * @Note:
      * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why? 
@@ -166,7 +164,7 @@ object SBTExecution {
 
     // Main class
     args += "-jar"
-    args += getSbtJar(sbtHome).getAbsolutePath // NOI18N
+    args += getSbtLaunchJar(sbtHome).getAbsolutePath // NOI18N
 
     // Application arguments follow
         
@@ -181,36 +179,18 @@ object SBTExecution {
   }
 
   def getSbtHome: String = {
-//    System.getenv("SCALA_HOME") match { // NOI18N
-//      case null => 
-//        val d = new NotifyDescriptor.Message(
-//          "SCALA_HOME environment variable may not be set, or is invalid.\n" +
-//          "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
-//        DialogDisplayer.getDefault().notify(d)
-//        null
-//      case home => System.setProperty("scala.home", home); home
-//    }
-    System.getProperty("user.home", "~") + File.separator + "myapps" + File.separator + "sbt"
-  }
-    
-  def getEmbeddedSbtJar: File = {
-    val sbtJars = InstalledFileLocator.getDefault.locateAll("modules/ext/org.scala-sbt",  "org.netbeans.libs.sbt", false).iterator
-    while (sbtJars.hasNext) {
-      val jar = sbtJars.next
-      val name = jar.getName
-      if (name.startsWith("sbt-launch") && name.endsWith(".jar")) {
-        return jar
-      }
-    } 
-    
-    null
-  }
-  
-  def getSbtJar(sbtHome: String): File = {
-    val jar = sbtHome match {
+    //System.getProperty("user.home", "~") + File.separator + "myapps" + File.separator + "sbt"
+    System.getProperty("netbeans.sbt.home") match {
       case null => null
+      case x => x
+    }
+  }
+    
+  def getSbtLaunchJar(sbtHome: String = null): File = {
+    sbtHome match {
+      case null | "" => getEmbeddedSbtLaunchJar
       case _ => 
-        new File(sbtHome) match {
+        val jar = new File(sbtHome) match {
           case homeDir if (homeDir.exists && homeDir.isDirectory) =>
             try {
               val homeFo = FileUtil.createData(homeDir)
@@ -221,19 +201,30 @@ object SBTExecution {
             }
           case _ => null
         }
-    }
-    
-    if (jar ne null) {
-      FileUtil.toFile(jar)
-    } else {
-      val msg = new NotifyDescriptor.Message(
-        "Can not found" + sbtHome + "/bin/sbt-launch.jar\n" +
-        "Please set proper sbt home first!", NotifyDescriptor.INFORMATION_MESSAGE)
-      DialogDisplayer.getDefault().notify(msg)
-      null
+        if (jar ne null) {
+          FileUtil.toFile(jar)
+        } else {
+          val msg = new NotifyDescriptor.Message(
+            "Can not found" + sbtHome + "/bin/sbt-launch.jar\n" +
+            "Please set proper sbt home first!", NotifyDescriptor.INFORMATION_MESSAGE)
+          DialogDisplayer.getDefault().notify(msg)
+          null
+        }
     }
   }
+  
+  private def getEmbeddedSbtLaunchJar: File = {
+    val sbtDir = InstalledFileLocator.getDefault.locate("modules/ext/org.scala-sbt",  "org.netbeans.libs.sbt", false)
+    if (sbtDir != null && sbtDir.exists && sbtDir.isDirectory) {
+      sbtDir.listFiles find {jar =>
+        val name = jar.getName
+        (name == "sbt-launch" || name.startsWith("sbt-launch-")) && name.endsWith(".jar")
+      } foreach {return _}
+    }
     
+    null
+  }
+  
   /**
    * Add settings in the environment appropriate for running Scala:
    * add the given directory into the path, and set up SCALA_HOME

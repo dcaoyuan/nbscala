@@ -183,7 +183,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     validate
 
     val sbtHome = SBTExecution.getSbtHome
-    val sbtLaunchJar = SBTExecution.getSbtJar(sbtHome)
+    val sbtLaunchJar = SBTExecution.getSbtLaunchJar(sbtHome)
     if (sbtLaunchJar == null) {
       return null
     }
