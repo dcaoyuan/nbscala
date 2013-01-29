@@ -117,6 +117,10 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
     out
   }
   
+  def exitSbt {
+    pipedOut.println("exit")   
+  }
+ 
   @throws(classOf[IOException])
   override
   def close() {

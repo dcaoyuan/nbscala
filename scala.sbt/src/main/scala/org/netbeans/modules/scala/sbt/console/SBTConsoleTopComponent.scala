@@ -77,7 +77,9 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
   override
   def componentClosed() {
-    // Leave the terminal session running
+    if (console != null) {
+      console.exitSbt
+    }
   }
 
   override
@@ -225,6 +227,10 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
           SwingUtilities.invokeLater(new Runnable() {
               override
               def run() {
+                if (console != null) {
+                  console.exitSbt
+                }
+                
                 SBTConsoleTopComponent.this.close
                 SBTConsoleTopComponent.this.removeAll
                 textPane = null
