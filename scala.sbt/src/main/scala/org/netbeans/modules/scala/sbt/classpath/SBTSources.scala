@@ -22,14 +22,14 @@ import org.openide.util.NbBundle
 class SBTSources(project: Project) extends Sources with PropertyChangeListener {
   
   private val changeListeners = new EventListenerList
-  private val stateChangeEvent = new ChangeEvent(this)
+  private val changeEvent = new ChangeEvent(this)
   
   private var isSbtControllerListenerAdded = false
 
   override 
   def getSourceGroups(tpe: String): Array[SourceGroup] = {
     if (!isSbtControllerListenerAdded) {
-      val sbtController = project.getLookup.lookup(classOf[SBTResourceController])
+      val sbtController = project.getLookup.lookup(classOf[SBTController])
       if (sbtController != null) {
         isSbtControllerListenerAdded = true
         sbtController.addPropertyChangeListener(this)
@@ -58,7 +58,7 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
   }
 
   private def maybeAddGroup(groups: ArrayBuffer[SourceGroup], tpe: String, test: Boolean) {
-    val sbtController = project.getLookup.lookup(classOf[SBTResourceController])
+    val sbtController = project.getLookup.lookup(classOf[SBTController])
     val roots = if (sbtController != null) {
       sbtController.getSources(tpe, test)
     } else {
@@ -106,8 +106,8 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
 
   def propertyChange(evt: PropertyChangeEvent) {
     evt.getPropertyName match {
-      case SBTResourceController.SBT_LIBRARY_RESOLVED =>
-        for (l <- changeListeners.getListeners(classOf[ChangeListener])) l.stateChanged(stateChangeEvent)
+      case SBTController.SBT_LIBRARY_RESOLVED =>
+        for (l <- changeListeners.getListeners(classOf[ChangeListener])) l.stateChanged(changeEvent)
       case _ =>
     }
   }

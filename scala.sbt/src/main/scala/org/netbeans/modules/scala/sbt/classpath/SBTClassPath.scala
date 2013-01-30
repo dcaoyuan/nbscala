@@ -22,7 +22,7 @@ import org.openide.util.Exceptions
 final class SBTClassPath(project: Project, scope: String) extends ClassPathImplementation with PropertyChangeListener {
 
   private val pcs = new PropertyChangeSupport(this)
-  private val sbtController = project.getLookup.lookup(classOf[SBTResourceController])
+  private val sbtController = project.getLookup.lookup(classOf[SBTController])
   sbtController.addPropertyChangeListener(this)
 
   def getResources: java.util.List[PathResourceImplementation] = {
@@ -79,7 +79,7 @@ final class SBTClassPath(project: Project, scope: String) extends ClassPathImple
   }
 
   def propertyChange(evt: PropertyChangeEvent) {
-    if (SBTResourceController.SBT_LIBRARY_RESOLVED == evt.getPropertyName) {
+    if (SBTController.SBT_LIBRARY_RESOLVED == evt.getPropertyName) {
       pcs.firePropertyChange(ClassPathImplementation.PROP_RESOURCES, null, null)
     }
   }

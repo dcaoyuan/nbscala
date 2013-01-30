@@ -35,8 +35,8 @@ case class LibraryEntry(
  *
  * @author Caoyuan Deng
  */
-class SBTResourceController(project: Project, isEnabled$: Boolean) {
-  import SBTResourceController._
+class SBTController(project: Project, isEnabled$: Boolean) {
+  import SBTController._
 
   private var _sbtConsoleEnabled = false
   private val sbtResolver = new SBTResolver()
@@ -207,7 +207,7 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
 
     private val resolverTask = RequestProcessor.getDefault().create(new Runnable() {
         def run() {
-          val progressHandle = ProgressHandleFactory.createHandle(NbBundle.getMessage(classOf[SBTResourceController], "LBL_Resolving_Progress"))
+          val progressHandle = ProgressHandleFactory.createHandle(NbBundle.getMessage(classOf[SBTController], "LBL_Resolving_Progress"))
           progressHandle.start
           SBTConsoleTopComponent.findInstance(project){tc =>
             try {
@@ -275,11 +275,9 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
   }
 }
 
-object SBTResourceController {
+object SBTController {
   val DESCRIPTOR_CHANGE = "sbtDescriptorChange"
   val DESCRIPTOR_CONTENT_CHANGE = "sbtDescriptorContentChange"
   val SBT_ENABLE_STATE_CHANGE = "sbtEnableStateChange"
-  val SBT_LIBRARY_RESOLVED = "sbtLibraryResolved"
-  
-  val RP = new RequestProcessor()
+  val SBT_LIBRARY_RESOLVED = "sbtLibraryResolved"  
 }

@@ -6,7 +6,7 @@ import javax.swing.ImageIcon
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ProjectInformation
 import org.netbeans.modules.scala.sbt.classpath.SBTClassPathProvider
-import org.netbeans.modules.scala.sbt.classpath.SBTResourceController
+import org.netbeans.modules.scala.sbt.classpath.SBTController
 import org.netbeans.modules.scala.sbt.classpath.SBTSources
 import org.netbeans.spi.project.ProjectState
 import org.openide.filesystems.FileObject
@@ -22,7 +22,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   private lazy val lookup: Lookup = Lookups.fixed(
     this,
     new Info(),
-    new SBTResourceController(this, true),
+    new SBTController(this, true),
     new SBTProjectLogicalView(this),
     new SBTClassPathProvider(this),
     new SBTSources(this),
