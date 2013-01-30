@@ -14,7 +14,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   import SBTActionProvider._
   
   /**
-   * also @see ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, "Sbt", null) in
+   * also @see ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, "Open sbt", null) in
    * SBTProjectLogicalView.getActions
    */
   def getSupportedActions() = Array[String](
@@ -28,12 +28,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   
   def invokeAction(command: String, context: Lookup) {
     command.toLowerCase match {
-      case COMMAND_SBT_CONSOLE =>
-        SBTConsoleTopComponent.findInstance(project){tc =>
-          tc.open
-          tc.requestActive
-          None
-        }
+      case COMMAND_SBT_CONSOLE => SBTConsoleTopComponent.openInstance(project, false)()
     }
   }
 }

@@ -496,32 +496,68 @@ object SBTConsoleTopComponent {
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def findInstance(project: Project)(action: SBTConsoleTopComponent => Option[Any]) = {
+  def openInstance(project: Project, background: Boolean, command: String = null)(postAction: String => Unit = null) {
     val id = toEscapedPreferredId(project)
-    //val result = new SyncVar[AnyRef]
     SwingUtilities.invokeLater(new Runnable() {
         def run {
           WindowManager.getDefault.findTopComponent(id) match {
             case null => 
               val tc = new SBTConsoleTopComponent(project)
-              val mode = WindowManager.getDefault.findMode("output")
-              if (mode != null) {
-                mode.dockInto(tc)
+              if (!background) {
+                val mode = WindowManager.getDefault.findMode("output")
+                if (mode != null) {
+                  mode.dockInto(tc)
+                }
+                tc.open
+                tc.requestActive
               }
-              action(tc)
-            case tc: SBTConsoleTopComponent => 
-              tc
-              action(tc)
+              
+              val result = if (command != null) {
+                val ret = tc.console.runSbtCommand(command)
+                if (background) {
+                  tc.console.exitSbt
+                  tc.close
+                }
+                ret
+              } else {
+                null
+              }
+              
+              if (postAction != null) {
+                postAction(result)
+              }
+              
+            case tc: SBTConsoleTopComponent =>
+              if (!background) {
+                val mode = WindowManager.getDefault.findMode("output")
+                if (mode != null) {
+                  mode.dockInto(tc)
+                }
+                tc.open
+                tc.requestActive
+              }
+              
+              val result = if (command != null) {
+                tc.console.runSbtCommand(command)
+              } else {
+                null
+              }
+            
+              if (postAction != null) {
+                postAction(result)
+              }
+              
             case _ =>
               ErrorManager.getDefault.log(ErrorManager.WARNING,
                                           "There seem to be multiple components with the '" + id + 
                                           "' ID. That is a potential source of errors and unexpected behavior.")
-              null
-              None
+              
+              if (postAction != null) {
+                postAction(null)
+              }
           } 
         }
       })
-    //result.take
   }
   
   private def getMainProjectWorkPath: File = {

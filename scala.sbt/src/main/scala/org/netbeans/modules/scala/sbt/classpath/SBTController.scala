@@ -209,18 +209,11 @@ class SBTController(project: Project, isEnabled$: Boolean) {
         def run() {
           val progressHandle = ProgressHandleFactory.createHandle(NbBundle.getMessage(classOf[SBTController], "LBL_Resolving_Progress"))
           progressHandle.start
-          SBTConsoleTopComponent.findInstance(project){tc =>
-            try {
-              val ret = tc.console.runSbtCommand("eclipse")
-              println(ret)
-              isUnderResolving = false
-              pcs.firePropertyChange(SBT_LIBRARY_RESOLVED, null, null)
-              Option(ret)
-            } catch {
-              case ex: IOException => ErrorManager.getDefault.notify(ex); None
-            } finally {
-              progressHandle.finish
-            }
+          SBTConsoleTopComponent.openInstance(project, true, "eclipse"){result =>
+            isUnderResolving = false
+            pcs.firePropertyChange(SBT_LIBRARY_RESOLVED, null, null)
+            progressHandle.finish
+            println(result)
           }
         }
       }

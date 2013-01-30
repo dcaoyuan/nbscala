@@ -51,7 +51,7 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
 
     override
     def getActions(arg0: Boolean): Array[Action] = Array(
-      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, "Open Sbt", null),
+      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, "Open sbt", null),
       CommonProjectActions.newFileAction,
       CommonProjectActions.copyProjectAction,
       CommonProjectActions.deleteProjectAction,
