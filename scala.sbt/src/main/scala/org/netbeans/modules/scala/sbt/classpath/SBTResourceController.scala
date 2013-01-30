@@ -9,7 +9,6 @@ import java.net.MalformedURLException
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.progress.ProgressHandleFactory
 import org.netbeans.api.project.Project
-import org.netbeans.api.project.ProjectManager
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.openide.ErrorManager
@@ -46,6 +45,7 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
   private val lock = new Object()
   private var _descriptorFile: FileObject = _
   private var _libraryEntry: LibraryEntry = _
+  private var isUnderResolving = false
 
   isEnabled = isEnabled$
   addPropertyChangeListener(sbtResolver)
@@ -207,15 +207,17 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
 
     private val resolverTask = RequestProcessor.getDefault().create(new Runnable() {
         def run() {
-          lock synchronized {
-            val progressHandle = ProgressHandleFactory.createHandle(NbBundle.getMessage(classOf[SBTResourceController], "LBL_Resolving_Progress"));
+          val progressHandle = ProgressHandleFactory.createHandle(NbBundle.getMessage(classOf[SBTResourceController], "LBL_Resolving_Progress"))
+          progressHandle.start
+          SBTConsoleTopComponent.findInstance(project){tc =>
             try {
-              SBTConsoleTopComponent.findInstance(project){tc =>
-                Option(tc.console.runSbtCommand("eclipse"))
-              }
+              val ret = tc.console.runSbtCommand("eclipse")
+              println(ret)
+              isUnderResolving = false
               pcs.firePropertyChange(SBT_LIBRARY_RESOLVED, null, null)
+              Option(ret)
             } catch {
-              case ex: IOException => ErrorManager.getDefault.notify(ex)
+              case ex: IOException => ErrorManager.getDefault.notify(ex); None
             } finally {
               progressHandle.finish
             }
@@ -233,10 +235,10 @@ class SBTResourceController(project: Project, isEnabled$: Boolean) {
     }
 
     def triggerResolution {
-      SBTConsoleTopComponent.findInstance(project){tc =>
-        Option(tc.console.runSbtCommand("eclipse"))
+      if (!isUnderResolving) {
+        isUnderResolving = true
+        resolverTask.run
       }
-      //resolverTask.schedule(300)
     }
   }
 
@@ -278,4 +280,6 @@ object SBTResourceController {
   val DESCRIPTOR_CONTENT_CHANGE = "sbtDescriptorContentChange"
   val SBT_ENABLE_STATE_CHANGE = "sbtEnableStateChange"
   val SBT_LIBRARY_RESOLVED = "sbtLibraryResolved"
+  
+  val RP = new RequestProcessor()
 }

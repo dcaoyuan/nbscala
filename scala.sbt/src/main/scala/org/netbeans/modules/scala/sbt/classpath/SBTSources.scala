@@ -2,12 +2,15 @@ package org.netbeans.modules.scala.sbt.classpath
 
 import scala.collection.mutable.ArrayBuffer
 
+import java.beans.PropertyChangeEvent
+import java.beans.PropertyChangeListener
+import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
+import javax.swing.event.EventListenerList
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.SourceGroup
 import org.netbeans.api.project.Sources
-import org.netbeans.spi.project.SourceGroupModifierImplementation
 import org.netbeans.spi.project.support.GenericSources
 import org.openide.filesystems.FileObject
 import org.openide.util.NbBundle
@@ -16,10 +19,23 @@ import org.openide.util.NbBundle
  * 
  * @author Caoyuan Deng
  */
-class SBTSources(project: Project) extends Sources with SourceGroupModifierImplementation {
+class SBTSources(project: Project) extends Sources with PropertyChangeListener {
   
+  private val changeListeners = new EventListenerList
+  private val stateChangeEvent = new ChangeEvent(this)
+  
+  private var isSbtControllerListenerAdded = false
+
   override 
   def getSourceGroups(tpe: String): Array[SourceGroup] = {
+    if (!isSbtControllerListenerAdded) {
+      val sbtController = project.getLookup.lookup(classOf[SBTResourceController])
+      if (sbtController != null) {
+        isSbtControllerListenerAdded = true
+        sbtController.addPropertyChangeListener(this)
+      }
+    }
+    
     tpe match {
       case Sources.TYPE_GENERIC =>
         // It's necessary for project's PhysicalView (in Files window), 
@@ -79,27 +95,20 @@ class SBTSources(project: Project) extends Sources with SourceGroupModifierImple
   }
 
   override 
-  def addChangeListener(listener: ChangeListener) {
-    // XXX listen to creation/deletion of roots
+  def addChangeListener(l: ChangeListener) {
+    changeListeners.add(classOf[ChangeListener], l)
   }
 
   override 
-  def removeChangeListener(listener: ChangeListener ) {}
+  def removeChangeListener(l: ChangeListener) {
+    changeListeners.remove(classOf[ChangeListener], l)
+  }
 
-  override 
-  def createSourceGroup(tpe: String, hint: String): SourceGroup = {
-    // XXX this looks weird, cannot tell where something is created..
-    if (!canCreateSourceGroup(tpe, hint)) {
-      return null
+  def propertyChange(evt: PropertyChangeEvent) {
+    evt.getPropertyName match {
+      case SBTResourceController.SBT_LIBRARY_RESOLVED =>
+        for (l <- changeListeners.getListeners(classOf[ChangeListener])) l.stateChanged(stateChangeEvent)
+      case _ =>
     }
-    val groups = new ArrayBuffer[SourceGroup]()
-    maybeAddGroup(groups, tpe, ProjectConstants.SOURCES_HINT_TEST == hint)
-    if (groups.isEmpty) null else groups(0)
-  }
-
-  override 
-  def canCreateSourceGroup(tpe: String, hint: String): Boolean = {
-    (ProjectConstants.SOURCES_TYPE_JAVA == tpe  || ProjectConstants.SOURCES_TYPE_SCALA == tpe) &&
-    (ProjectConstants.SOURCES_HINT_MAIN == hint || ProjectConstants.SOURCES_HINT_TEST == hint)
   }
 }
