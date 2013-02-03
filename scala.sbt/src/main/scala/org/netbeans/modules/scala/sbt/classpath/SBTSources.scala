@@ -58,17 +58,17 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
     }
   }
 
-  private def maybeAddGroup(groups: ArrayBuffer[SourceGroup], tpe: String, test: Boolean) {
+  private def maybeAddGroup(groups: ArrayBuffer[SourceGroup], tpe: String, isTest: Boolean) {
     val sbtController = project.getLookup.lookup(classOf[SBTController])
     val roots = if (sbtController != null) {
-      sbtController.getSources(tpe, test) map FileUtil.toFileObject
+      sbtController.getSources(tpe, isTest) map FileUtil.toFileObject
     } else {
       // best try
       tpe match {
         case ProjectConstants.SOURCES_TYPE_JAVA =>
-          Array(project.getProjectDirectory.getFileObject("src/" + (if (test) "test" else "main") + "/java"))
+          Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/java"))
         case ProjectConstants.SOURCES_TYPE_SCALA =>
-          Array(project.getProjectDirectory.getFileObject("src/" + (if (test) "test" else "main") + "/scala"))
+          Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/scala"))
         case _ => 
           Array[FileObject]()
       }
@@ -76,23 +76,23 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
     
     val name = tpe match {
       case ProjectConstants.SOURCES_TYPE_JAVA =>
-        if (test) ProjectConstants.NAME_JAVATESTSOURCE else ProjectConstants.NAME_JAVASOURCE
+        if (isTest) ProjectConstants.NAME_JAVATESTSOURCE else ProjectConstants.NAME_JAVASOURCE
       case ProjectConstants.SOURCES_TYPE_SCALA =>
-        if (test) ProjectConstants.NAME_SCALATESTSOURCE else ProjectConstants.NAME_SCALASOURCE
+        if (isTest) ProjectConstants.NAME_SCALATESTSOURCE else ProjectConstants.NAME_SCALASOURCE
       case _ => 
         ProjectConstants.NAME_OTHERSOURCE
     }
     
     val displayName = tpe match {
       case ProjectConstants.SOURCES_TYPE_JAVA =>
-        if (test) NbBundle.getMessage(classOf[SBTSources], "SG_Test_JavaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_JavaSources")
+        if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_JavaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_JavaSources")
       case ProjectConstants.SOURCES_TYPE_SCALA =>
-        if (test) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ScalaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ScalaSources")
+        if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ScalaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ScalaSources")
       case _ =>
         NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
     }
     
-    groups ++= {for (root <- roots) yield GenericSources.group(project, root, name, displayName, null, null)}
+    groups ++= {for (root <- roots if root != null) yield GenericSources.group(project, root, name, displayName, null, null)}
   }
 
   override 

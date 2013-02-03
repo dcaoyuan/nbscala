@@ -3,6 +3,8 @@ package org.netbeans.modules.scala.sbt.classpath
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
+import java.net.URI
+import java.net.URL
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.java.platform.JavaPlatformManager
 import org.netbeans.api.project.FileOwnerQuery
@@ -41,7 +43,8 @@ final class SBTClassPath(project: Project, scope: String) extends ClassPathImple
             FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
             FileUtil.getArchiveRoot(fo).toURL
           } else {
-            file.toURI.toURL
+            // file is a classes *folder* and may not exist, we must add a slash at the end.
+            URI.create(file.toURI + "/").toURL
           }
           result.add(ClassPathSupport.createResource(rootUrl))
         } catch {

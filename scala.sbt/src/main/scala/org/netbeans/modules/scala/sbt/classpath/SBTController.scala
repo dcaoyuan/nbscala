@@ -141,7 +141,7 @@ class SBTController(project: Project, isEnabled$: Boolean) {
                 }
               }
               
-              val output = (entry \ "@output").text.trim + File.separator // classes folder
+              val output = (entry \ "@output").text.trim // classes folder
               val outputDir = if (isProject) {
                 new File(output)
               } else {
@@ -163,10 +163,10 @@ class SBTController(project: Project, isEnabled$: Boolean) {
               
             case "lib" =>
               val path = (entry \ "@path").text.trim
-              val isForTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
+              val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
               val libFile = new File(path)
               if (libFile.exists) {
-                if (isForTest) {
+                if (isTest) {
                   testCps += libFile
                 } else {
                   mainCps += libFile

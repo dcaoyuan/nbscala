@@ -83,10 +83,15 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
         }
       }
 
-      sourceRoots find (x => (x eq fo) || FileUtil.isParentOf(x, fo)) foreach {return SOURCE}
-      testSourceRoots find (x => (x eq fo) || FileUtil.isParentOf(x, fo)) foreach {return TEST_SOURCE}
-      
-      UNKNOWN
+      def contains(root: FileObject) = (root eq fo) || FileUtil.isParentOf(root, fo)
+      sourceRoots find contains match {
+        case None =>
+          testSourceRoots find contains match {
+            case None => UNKNOWN
+            case _ => TEST_SOURCE
+          }
+        case _ => SOURCE
+      }
     } finally {
       rlock.unlock
     }
