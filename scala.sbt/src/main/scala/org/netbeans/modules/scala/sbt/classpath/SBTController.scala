@@ -236,7 +236,7 @@ class SBTController(project: Project, isEnabled$: Boolean) {
         def run() {
           val progressHandle = ProgressHandleFactory.createHandle(NbBundle.getMessage(classOf[SBTController], "LBL_Resolving_Progress"))
           progressHandle.start
-          SBTConsoleTopComponent.openInstance(project, true, "eclipse gen-for-netbeans=true"){result =>
+          SBTConsoleTopComponent.openInstance(project, true, "eclipse gen-netbeans=true"){result =>
             isUnderResolving = false
             pcs.firePropertyChange(SBT_LIBRARY_RESOLVED, null, null)
             progressHandle.finish
