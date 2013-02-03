@@ -45,7 +45,7 @@ class SBTController(project: Project, isEnabled$: Boolean) {
   private val lock = new Object()
   private var _descriptorFile: FileObject = _
   private var _libraryEntry: LibraryEntry = _
-  private var isUnderResolving = false
+  @volatile private var isUnderResolving = false
 
   isEnabled = isEnabled$
   addPropertyChangeListener(sbtResolver)
@@ -276,12 +276,9 @@ class SBTController(project: Project, isEnabled$: Boolean) {
 
     override
     def fileRenamed(fe: FileRenameEvent) {
-      descriptorFile = fe.getFile
+      //descriptorFile = fe.getFile
     }
   }
-
-  @volatile
-  private var areRewritingProjectProperties = false
 
   private def equal(o1: Object, o2: Object): Boolean = {
     if (o1 == null) o2 == null else o1.equals(o2)
@@ -289,7 +286,7 @@ class SBTController(project: Project, isEnabled$: Boolean) {
 
   private def firePropertyChange(propertyName: String, oldValue: Object, newValue: Object) {
     if ((oldValue == null && newValue != null) ||
-        (oldValue != null && !oldValue.equals(newValue))) {
+        (oldValue != null && oldValue != newValue)) {
       pcs.firePropertyChange(propertyName, oldValue, newValue)
     }
   }
