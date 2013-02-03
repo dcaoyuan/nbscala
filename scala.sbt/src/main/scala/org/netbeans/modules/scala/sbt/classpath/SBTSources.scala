@@ -13,6 +13,7 @@ import org.netbeans.api.project.SourceGroup
 import org.netbeans.api.project.Sources
 import org.netbeans.spi.project.support.GenericSources
 import org.openide.filesystems.FileObject
+import org.openide.filesystems.FileUtil
 import org.openide.util.NbBundle
 
 /**
@@ -60,7 +61,7 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
   private def maybeAddGroup(groups: ArrayBuffer[SourceGroup], tpe: String, test: Boolean) {
     val sbtController = project.getLookup.lookup(classOf[SBTController])
     val roots = if (sbtController != null) {
-      sbtController.getSources(tpe, test)
+      sbtController.getSources(tpe, test) map FileUtil.toFileObject
     } else {
       // best try
       tpe match {
@@ -91,7 +92,7 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
         NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
     }
     
-    groups ++= {for (root <- roots if root != null) yield GenericSources.group(project, root, name, displayName, null, null)}
+    groups ++= {for (root <- roots) yield GenericSources.group(project, root, name, displayName, null, null)}
   }
 
   override 

@@ -40,7 +40,9 @@ private class ScopesChildren(project: Project, scope: String) extends Children.K
 
   private def setKeys {
     val sbtController = project.getLookup.lookup(classOf[SBTController])
-    val artifacts = sbtController.getResolvedLibraries(scope) filter (FileUtil.isArchiveFile(_)) map {fo =>
+    val artifacts = sbtController.getResolvedLibraries(scope) map FileUtil.toFileObject filter {fo => 
+      fo != null && FileUtil.isArchiveFile(fo)
+    } map {fo =>
       ArtifactInfo(fo.getNameExt, "", "", FileUtil.toFile(fo), null, null)
     }
     

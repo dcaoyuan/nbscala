@@ -34,15 +34,16 @@ final class SBTClassPath(project: Project, scope: String) extends ClassPathImple
         result.addAll(getJavaBootResources)
       }
 
-      for (fo <- sbtController.getResolvedLibraries(scope)) {
+      for (file <- sbtController.getResolvedLibraries(scope)) {
+        val fo = FileUtil.toFileObject(file)
         try {
-          FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
-          val root = if (FileUtil.isArchiveFile(fo)) {
-            FileUtil.getArchiveRoot(fo)
+          val rootUrl = if (fo != null && FileUtil.isArchiveFile(fo)) {
+            FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
+            FileUtil.getArchiveRoot(fo).toURL
           } else {
-            fo
+            file.toURI.toURL
           }
-          result.add(ClassPathSupport.createResource(root.toURL))
+          result.add(ClassPathSupport.createResource(rootUrl))
         } catch {
           case ex: FileStateInvalidException => Exceptions.printStackTrace(ex)
         }
@@ -79,8 +80,9 @@ final class SBTClassPath(project: Project, scope: String) extends ClassPathImple
   }
 
   def propertyChange(evt: PropertyChangeEvent) {
-    if (SBTController.SBT_LIBRARY_RESOLVED == evt.getPropertyName) {
-      pcs.firePropertyChange(ClassPathImplementation.PROP_RESOURCES, null, null)
+    evt.getPropertyName match {
+      case SBTController.SBT_LIBRARY_RESOLVED => pcs.firePropertyChange(ClassPathImplementation.PROP_RESOURCES, null, null)
+      case _ =>
     }
   }
 
