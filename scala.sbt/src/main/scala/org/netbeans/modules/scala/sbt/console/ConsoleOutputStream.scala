@@ -504,17 +504,16 @@ object ConsoleOutputStream {
   private val ERROR_PREFIX   = "[error]"
   private val SUCCESS_PREFIX = "[success]"
   
-  private val WINDOWS_DRIVE = "(?:[a_zA_Z]:[\\\\/])"
-  private val FILE_CHAR = "[^\\[\\]\\:\\\"]" // \s is allowd
-  private val FILE = "((?:" + FILE_CHAR + "*))"
-  private val FILE_WIN = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + ".*))"
-  private val LINE = "(([1-9][0-9]*))"
-  private val ROL = ".*\\s?"
-  private val SEP = "\\:"
-  private val STD_SUFFIX = FILE + SEP + LINE + ROL
+  private val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
+  private val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
+  private val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
+  private val LINE = "(([1-9][0-9]*))"  // line number
+  private val ROL = ".*\\s?"            // rest of line
+  private val SEP = "\\:"               // seperator between file path and line number
+  private val STD_SUFFIX = FILE + SEP + LINE + ROL  // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
   
-  private val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + STD_SUFFIX)
-  private val rWARN_WITH_FILE = Pattern.compile("\\Q" + WARN_PREFIX + "\\E" + STD_SUFFIX)
+  private val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+  private val rWARN_WITH_FILE =  Pattern.compile("\\Q" + WARN_PREFIX  + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
 }
 
 class AnsiConsoleOutputStream(os: ConsoleOutputStream) extends AnsiOutputStream(os) {
