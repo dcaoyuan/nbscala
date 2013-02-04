@@ -4,7 +4,6 @@ import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
 import java.net.URI
-import java.net.URL
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.java.platform.JavaPlatformManager
 import org.netbeans.api.project.FileOwnerQuery
