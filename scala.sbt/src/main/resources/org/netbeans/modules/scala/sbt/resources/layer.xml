@@ -40,6 +40,12 @@
                     org.netbeans.modules.scala.sbt.nodes.LibrariesNodeFactory
                     <attr intvalue="139" name="position"/>
                 </file>
+
+                <!-- register JavaType source node factory here, since this factory class can be shared by 
+                other project, it won't be registered by @NodeFactory.Registration -->
+                <file name="org-netbeans-modules-java-api-common-project-ui-JavaSourceNodeFactory.instance">
+                    <attr name="position" intvalue="200"/>
+                </file>
             </folder>
         </folder>
     </folder>    
