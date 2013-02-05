@@ -88,7 +88,18 @@ To debug:
 
     mvn nbm:run-ide -Pdebug-ide
 
+Build-Run-Cycle: (after changed module was successfuly built)
+	
+    mvn nbm:cluster nbm:run-ide
+
+Build-Debug-Cycle: (after changed module was successfuly built)
+
+    mvn nbm:cluster nbm:run-ide -Pdebug-ide
+
 ## Project Details
 
-The Project targets version 2.9.x of the scala release.
+The Project targets version 2.10.x of the scala release.
 
+## Sbt Integration
+
+See [https://github.com/dcaoyuan/nbscala/wiki/SbtIntegrationInNetBeans]()
