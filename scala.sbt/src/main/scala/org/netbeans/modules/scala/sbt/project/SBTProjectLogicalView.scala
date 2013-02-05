@@ -16,6 +16,7 @@ import org.openide.nodes.AbstractNode
 import org.openide.nodes.Children
 import org.openide.nodes.Node
 import org.openide.util.Exceptions
+import org.openide.util.NbBundle
 import org.openide.util.lookup.Lookups
 import org.openide.util.lookup.ProxyLookup
 
@@ -51,7 +52,8 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
 
     override
     def getActions(arg0: Boolean): Array[Action] = Array(
-      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, "Open sbt", null),
+      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_OpenSbtAction"), null),
+      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_RELOAD,  NbBundle.getMessage(classOf[SBTActionProvider], "CTL_ReloadSbtAction"), null),
       CommonProjectActions.newFileAction,
       CommonProjectActions.copyProjectAction,
       CommonProjectActions.deleteProjectAction,
