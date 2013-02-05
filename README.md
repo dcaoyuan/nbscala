@@ -102,4 +102,4 @@ The Project targets version 2.10.x of the scala release.
 
 ## Sbt Integration
 
-See [https://github.com/dcaoyuan/nbscala/wiki/SbtIntegrationInNetBeans]()
+See [https://github.com/dcaoyuan/nbscala/wiki/SbtIntegrationInNetBeans](https://github.com/dcaoyuan/nbscala/wiki/SbtIntegrationInNetBeans)
