@@ -12,6 +12,7 @@ import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.project.Project
 import org.netbeans.spi.project.ui.support.NodeFactory
 import org.netbeans.spi.project.ui.support.NodeList
+import org.openide.nodes.AbstractNode
 import org.openide.nodes.Children
 import org.openide.nodes.Node
 import org.openide.util.ChangeSupport
@@ -31,20 +32,23 @@ object LibrariesNodeFactory {
   private val TEST_LIBRARIES = "TestLibs" //NOI18N
   
   private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
-
     
   private class LibrariesNodeList(project: Project) extends NodeList[String] with PropertyChangeListener {
 
     private val changeSupport = new ChangeSupport(this)
 
     def keys: java.util.List[String] = {
-      val result = new java.util.ArrayList[String]()
-      result.add(LIBRARIES)
+      if (project.getProjectDirectory == null || !project.getProjectDirectory.isValid) {
+        return java.util.Collections.emptyList()
+      }
+
+      val theKeys = new java.util.ArrayList[String]()
+      theKeys.add(LIBRARIES)
       val addTestSources = false // @TODO
       if (addTestSources) {
-        result.add(TEST_LIBRARIES)
+        theKeys.add(TEST_LIBRARIES)
       }
-      result
+      theKeys
     }
 
     def addChangeListener(l: ChangeListener) {
@@ -57,16 +61,10 @@ object LibrariesNodeFactory {
 
     def node(key: String): Node = {
       key match {
-        case LIBRARIES =>
-          //Libraries Node
-          new LibrariesNode(project)
-        case TEST_LIBRARIES =>
-          new LibrariesNode(project)
-        case _ => 
-          assert(false, "No node for key: " + key)
-          null
+        case LIBRARIES => new LibrariesNode(project)
+        case TEST_LIBRARIES => new LibrariesNode(project)
+        case _ => assert(false, "No node for key: " + key); null
       }
-            
     }
 
     def addNotify() {}
@@ -84,8 +82,7 @@ object LibrariesNodeFactory {
         
   }
   
-  
-  class LibrariesNode(project: Project) extends AbstractFolderNode(new LibrariesChildren(project)) {
+  class LibrariesNode(project: Project) extends AbstractNode(new LibrariesChildren(project)) {
 
     private val NODE_NAME = NbBundle.getMessage(classOf[LibrariesNodeFactory], "CTL_LibrariesNode")
     //static final RequestProcessor rp = new RequestProcessor();
@@ -97,21 +94,24 @@ object LibrariesNodeFactory {
     def getName: String = NODE_NAME
 
     override
-    protected def getBadge: Image = ICON_LIB_BADGE
+    def getIcon(tpe: Int) = getIcon(false, tpe)
+
+    override
+    def getOpenedIcon(tpe: Int) = getIcon(true, tpe)
+
+    private def getIcon(opened: Boolean, tpe: Int) = ImageUtilities.mergeImages(Icons.getFolderIcon(opened), getBadge, 7, 7)
+    private def getBadge: Image = ICON_LIB_BADGE
 
     override
     def canCopy = false
 
     override
     def getActions(context: Boolean): Array[Action] = {
-      Array(new ForceResolveAction())
+      Array(/* new ForceResolveAction() */)
     }
 
     private class ForceResolveAction extends AbstractAction {
-
-      def ForceResolveAction() {
-        putValue(Action.NAME, NbBundle.getMessage(classOf[LibrariesNodeFactory], "BTN_Force_Resolve"))
-      }
+      putValue(Action.NAME, NbBundle.getMessage(classOf[LibrariesNodeFactory], "BTN_Force_Resolve"))
 
       def actionPerformed(event: ActionEvent) {
         //SBTResourceController sbtController = project.getLookup().lookup(classOf[SBTResourceController])
@@ -120,7 +120,7 @@ object LibrariesNodeFactory {
     }
   }
   
-  private class LibrariesChildren(project: Project) extends Children.Keys[String]  {
+  private class LibrariesChildren(project: Project) extends Children.Keys[String] {
 
     setKeys()
 
@@ -130,7 +130,7 @@ object LibrariesNodeFactory {
     }
 
     private def setKeys() {
-      setKeys(Array(ClassPath.COMPILE, ClassPath.EXECUTE))
+      setKeys(Array(ClassPath.COMPILE/* , ClassPath.EXECUTE */))
     }
   }
 

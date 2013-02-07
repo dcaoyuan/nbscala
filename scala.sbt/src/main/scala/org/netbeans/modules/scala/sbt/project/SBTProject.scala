@@ -27,7 +27,8 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
     new SBTClassPathProvider(this),
     new SBTSources(this),
     new SBTProjectOpenedHook(this),
-    new SBTActionProvider(this)
+    new SBTActionProvider(this),
+    new SBTDepProjectProvider(this)
   )
 
   override

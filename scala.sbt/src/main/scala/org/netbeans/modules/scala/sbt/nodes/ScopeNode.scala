@@ -6,20 +6,28 @@ import javax.swing.SwingUtilities
 import org.netbeans.api.project.Project
 import org.netbeans.modules.scala.sbt.classpath.SBTController
 import org.openide.filesystems.FileUtil
+import org.openide.nodes.AbstractNode
 import org.openide.nodes.Children
 import org.openide.nodes.Node
+import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 
-class ScopeNode(project: Project, scope: String) extends AbstractFolderNode(new ScopesChildren(project, scope)) {
+class ScopeNode(project: Project, scope: String) extends AbstractNode(new ScopesChildren(project, scope)) {
 
   override
   def getDisplayName = NbBundle.getMessage(classOf[ScopeNode], "CTL_Scope_" + scope)
 
   override
   def getName = scope
+  
+  override
+  def getIcon(tpe: Int) = getIcon(false, tpe)
 
   override
-  protected def getBadge = Icons.ICON_LIBARARIES_BADGE
+  def getOpenedIcon(tpe: Int) = getIcon(true, tpe)
+
+  private def getIcon(opened: Boolean, tpe: Int) = ImageUtilities.mergeImages(Icons.getFolderIcon(opened), getBadge, 7, 7)
+  private def getBadge = Icons.ICON_LIBARARIES_BADGE
 }
 
 private class ScopesChildren(project: Project, scope: String) extends Children.Keys[ArtifactInfo] with PropertyChangeListener {

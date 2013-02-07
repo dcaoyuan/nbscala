@@ -229,6 +229,14 @@ class SBTController(project: Project, isEnabled$: Boolean) {
       Array()
     }
   }
+  
+  def getDependenciesProjects: Array[File] = {
+    if (libraryEntry != null) {
+      libraryEntry.depPrjs
+    } else {
+      Array()
+    }
+  }
 
   private class SBTResolver extends PropertyChangeListener {
 
