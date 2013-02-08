@@ -55,11 +55,20 @@ object DepProjectsNodeFactory {
       changeSupport.removeChangeListener(l)
     }
 
+    /**
+     * return null if node for this key doesn't exist currently
+     */
     def node(key: String): Node = {
-      try {
-        new DepProjectNode(project)
-      } catch {
-        case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
+      val provider = project.getLookup.lookup(classOf[SBTDepProjectProvider])
+      val depProjects = provider.getSubprojects
+      if (depProjects.size == 0) {
+        null 
+      } else {
+        try {
+          new DepProjectNode(depProjects)
+        } catch {
+          case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
+        }
       }
     }
 
@@ -77,7 +86,7 @@ object DepProjectsNodeFactory {
     }
   }
   
-  private class DepProjectNode(project: Project) extends AbstractNode(new DepProjectsChildren(project)) {
+  private class DepProjectNode(depProjects: java.util.Set[_ <: Project]) extends AbstractNode(new DepProjectsChildren(depProjects)) {
     private val NODE_NAME = NbBundle.getMessage(classOf[DepProjectsNodeFactory], "CTL_DepProjectsNode")
 
     override
@@ -99,11 +108,10 @@ object DepProjectsNodeFactory {
     def getActions(context: Boolean): Array[Action] = Array[Action]()
   }
   
-  private class DepProjectsChildren(project: Project) extends Children.Keys[Project] with PropertyChangeListener {
-
+  private class DepProjectsChildren(depProjects: java.util.Set[_ <: Project]) extends Children.Keys[Project] with PropertyChangeListener {
     private val changeSupport = new ChangeSupport(this)
 
-    setKeys()
+    setKeys(depProjects)
 
     override
     protected def createNodes(key: Project): Array[Node] = {
@@ -120,11 +128,6 @@ object DepProjectsNodeFactory {
             }
           )
       }
-    }
-
-    private def setKeys() {
-      val provider = project.getLookup.lookup(classOf[SBTDepProjectProvider])
-      setKeys(provider.getSubprojects)
     }
 
     def addChangeListener(l: ChangeListener) {

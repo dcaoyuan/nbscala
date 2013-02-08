@@ -38,16 +38,16 @@ object SourcesNodeFactory {
       
       val sources = ProjectUtils.getSources(project)
       val javasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_JAVA)
-      for (sg <- javasgs) theKeys.add(sg)
+      javasgs foreach theKeys.add
       val scalasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_SCALA)
-      for (sg <- scalasgs) theKeys.add(sg)
+      scalasgs foreach theKeys.add
       
       theKeys
     }
         
     override
-    def node(group: SourceGroup): Node = {
-      PackageView.createPackageView(group)
+    def node(key: SourceGroup): Node = {
+      PackageView.createPackageView(key)
     }
         
     override
