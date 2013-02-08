@@ -10,6 +10,7 @@ import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.project.Project
+import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.netbeans.spi.project.ui.support.NodeFactory
 import org.netbeans.spi.project.ui.support.NodeList
 import org.openide.nodes.AbstractNode
@@ -22,9 +23,7 @@ import org.openide.util.NbBundle
 class LibrariesNodeFactory extends NodeFactory {
   import LibrariesNodeFactory._
   
-  def createNodes(project: Project): NodeList[_] = {
-    new LibrariesNodeList(project)
-  }
+  def createNodes(project: Project): NodeList[_] = new LibrariesNodeList(project)
 }
 
 object LibrariesNodeFactory {
@@ -83,15 +82,14 @@ object LibrariesNodeFactory {
   }
   
   class LibrariesNode(project: Project) extends AbstractNode(new LibrariesChildren(project)) {
-
-    private val NODE_NAME = NbBundle.getMessage(classOf[LibrariesNodeFactory], "CTL_LibrariesNode")
+    private val DISPLAY_NAME = NbBundle.getMessage(classOf[LibrariesNodeFactory], "CTL_LibrariesNode")
     //static final RequestProcessor rp = new RequestProcessor();
 
     override
-    def getDisplayName: String = NODE_NAME
+    def getDisplayName: String = DISPLAY_NAME
 
     override
-    def getName: String = NODE_NAME
+    def getName: String = ProjectConstants.NAME_DEP_LIBRARIES
 
     override
     def getIcon(tpe: Int) = getIcon(false, tpe)

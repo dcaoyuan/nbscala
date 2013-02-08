@@ -17,9 +17,7 @@ class SourcesNodeFactory extends NodeFactory {
   import SourcesNodeFactory._
   
   override
-  def createNodes(project: Project): NodeList[_] = {
-    new SourcesNodeList(project)
-  }
+  def createNodes(project: Project): NodeList[_] = new SourcesNodeList(project)
 }
 
 object SourcesNodeFactory {
@@ -41,6 +39,10 @@ object SourcesNodeFactory {
       javasgs foreach theKeys.add
       val scalasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_SCALA)
       scalasgs foreach theKeys.add
+      
+      java.util.Collections.sort(theKeys, new java.util.Comparator[SourceGroup]() {
+          def compare(o1: SourceGroup, o2: SourceGroup) = o1.getName.compareTo(o2.getName)
+        })
       
       theKeys
     }

@@ -7,6 +7,7 @@ import javax.swing.Action
 import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
+import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.netbeans.modules.scala.sbt.project.SBTDepProjectProvider
 import org.netbeans.modules.scala.sbt.project.SBTProject
 import org.netbeans.spi.project.ui.support.NodeFactory
@@ -25,9 +26,7 @@ import org.openide.util.NbBundle
 class DepProjectsNodeFactory extends NodeFactory {
   import DepProjectsNodeFactory._
   
-  def createNodes(project: Project): NodeList[_] = {
-    new DepProjectsNodeList(project)
-  }
+  def createNodes(project: Project): NodeList[_] = new DepProjectsNodeList(project)
 }
 
 object DepProjectsNodeFactory {
@@ -87,13 +86,13 @@ object DepProjectsNodeFactory {
   }
   
   private class DepProjectNode(depProjects: java.util.Set[_ <: Project]) extends AbstractNode(new DepProjectsChildren(depProjects)) {
-    private val NODE_NAME = NbBundle.getMessage(classOf[DepProjectsNodeFactory], "CTL_DepProjectsNode")
+    private val DISPLAY_NAME = NbBundle.getMessage(classOf[DepProjectsNodeFactory], "CTL_DepProjectsNode")
 
     override
-    def getDisplayName: String = NODE_NAME
+    def getDisplayName: String = DISPLAY_NAME
 
     override
-    def getName: String = NODE_NAME
+    def getName: String = ProjectConstants.NAME_DEP_PROJECTS
 
     override
     def getIcon(tpe: Int) = getIcon(false, tpe)
