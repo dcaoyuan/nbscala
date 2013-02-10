@@ -30,7 +30,14 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   
   def invokeAction(command: String, context: Lookup) {
     command.toLowerCase match {
-      case COMMAND_SBT_CONSOLE => SBTConsoleTopComponent.openInstance(project, false)()
+      case COMMAND_SBT_CONSOLE => 
+        val projectChain = project.getProjectChain match {
+          case root :: rest =>
+            val commands = rest map ("project " + _.getName)
+            SBTConsoleTopComponent.openInstance(root, false, commands)()
+          case _ => // should not happen
+        }
+        
       case COMMAND_SBT_RELOAD => 
         val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
         sbtResolver.triggerSbtResolution

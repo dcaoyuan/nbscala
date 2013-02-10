@@ -56,14 +56,17 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   /**
    * Top parent project or myself
    */
-  def getRootProject: SBTProject = {
-    getRootProject(this, this)
-  }
+  def getRootProject: SBTProject = getProjectChain.head
   
-  private def getRootProject(project: SBTProject, lastFound: SBTProject): SBTProject = {
+  def getProjectChain: List[SBTProject] = getProjectChain(this, List(this))
+  
+  // @todo the project's real name in sbt
+  def getName = getLookup.lookup(classOf[ProjectInformation]).getName
+  
+  private def getProjectChain(project: SBTProject, lastFound: List[SBTProject]): List[SBTProject] = {
     project.getMasterProject match {
       case None => lastFound
-      case Some(x) => getRootProject(x, x)
+      case Some(x) => getProjectChain(x, x :: lastFound)
     }
   }
   

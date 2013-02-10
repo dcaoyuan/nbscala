@@ -496,66 +496,39 @@ object SBTConsoleTopComponent {
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def openInstance(project: Project, background: Boolean, command: String = null)(postAction: String => Unit = null) {
+  def openInstance(project: Project, background: Boolean, commands: List[String])(postAction: String => Unit = null) {
     val id = toEscapedPreferredId(project)
     SwingUtilities.invokeLater(new Runnable() {
         def run {
-          WindowManager.getDefault.findTopComponent(id) match {
-            case null => 
-              val tc = new SBTConsoleTopComponent(project)
-              if (!background) {
-                val mode = WindowManager.getDefault.findMode("output")
-                if (mode != null) {
-                  mode.dockInto(tc)
-                }
-                tc.open
-                tc.requestActive
-              }
-              
-              val result = if (command != null) {
-                val ret = tc.console.runSbtCommand(command)
-                if (background) {
-                  tc.console.exitSbt
-                  tc.close
-                }
-                ret
-              } else {
-                null
-              }
-              
-              if (postAction != null) {
-                postAction(result)
-              }
-              
-            case tc: SBTConsoleTopComponent =>
-              if (!background) {
-                val mode = WindowManager.getDefault.findMode("output")
-                if (mode != null) {
-                  mode.dockInto(tc)
-                }
-                tc.open
-                tc.requestActive
-              }
-              
-              val result = if (command != null) {
-                tc.console.runSbtCommand(command)
-              } else {
-                null
-              }
-            
-              if (postAction != null) {
-                postAction(result)
-              }
-              
+          val (tc, newCreated) = WindowManager.getDefault.findTopComponent(id) match {
+            case null => (new SBTConsoleTopComponent(project), true)
+            case tc: SBTConsoleTopComponent => (tc, false)
             case _ =>
               ErrorManager.getDefault.log(ErrorManager.WARNING,
                                           "There seem to be multiple components with the '" + id + 
                                           "' ID. That is a potential source of errors and unexpected behavior.")
+              (null, false)
+          }
+          
+          if (!background) {
+            val mode = WindowManager.getDefault.findMode("output")
+            if (mode != null) {
+              mode.dockInto(tc)
+            }
+            tc.open
+            tc.requestActive
+          }
               
-              if (postAction != null) {
-                postAction(null)
-              }
-          } 
+          val results = commands map tc.console.runSbtCommand
+
+          if (background && !newCreated) {
+            tc.console.exitSbt
+            tc.close
+          }
+              
+          if (postAction != null) {
+            postAction(results.lastOption getOrElse null)
+          }
         }
       })
   }
