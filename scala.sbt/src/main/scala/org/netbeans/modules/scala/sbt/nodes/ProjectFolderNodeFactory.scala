@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener
 import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
+import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.netbeans.spi.project.ui.support.NodeFactory
 import org.netbeans.spi.project.ui.support.NodeList
 import org.openide.filesystems.FileObject
@@ -46,7 +47,7 @@ object ProjectFolderNodeFactory {
      * return null if node for this key doesn't exist currently
      */
     def node(key: String): Node = {
-      project.getProjectDirectory.getFileObject(PROJECT_FOLDER_NAME) match {
+      project.getProjectDirectory.getFileObject(ProjectConstants.PROJECT_FOLDER_NAME) match {
         case projectFolder: FileObject if projectFolder.isFolder =>
           try {
             DataObject.find(projectFolder) match {

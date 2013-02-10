@@ -4,7 +4,7 @@ import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import javax.swing.SwingUtilities
 import org.netbeans.api.project.Project
-import org.netbeans.modules.scala.sbt.classpath.SBTController
+import org.netbeans.modules.scala.sbt.classpath.SBTResolver
 import org.openide.filesystems.FileUtil
 import org.openide.nodes.AbstractNode
 import org.openide.nodes.Children
@@ -41,14 +41,14 @@ private class ScopesChildren(project: Project, scope: String) extends Children.K
 
   def propertyChange(evt: PropertyChangeEvent) {
     evt.getPropertyName match {
-      case SBTController.SBT_LIBRARY_RESOLVED => setKeys
+      case SBTResolver.SBT_LIBRARY_RESOLVED => setKeys
       case _ =>
     }
   }
 
   private def setKeys {
-    val sbtController = project.getLookup.lookup(classOf[SBTController])
-    val artifacts = sbtController.getResolvedLibraries(scope) map FileUtil.toFileObject filter {fo => 
+    val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
+    val artifacts = sbtResolver.getResolvedLibraries(scope) map FileUtil.toFileObject filter {fo => 
       fo != null && FileUtil.isArchiveFile(fo)
     } map {fo =>
       ArtifactInfo(fo.getNameExt, "", "", FileUtil.toFile(fo), null, null)

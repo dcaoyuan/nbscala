@@ -9,7 +9,7 @@ import java.io.IOException
 import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ProjectManager
-import org.netbeans.modules.scala.sbt.classpath.SBTController
+import org.netbeans.modules.scala.sbt.classpath.SBTResolver
 import org.netbeans.spi.project.SubprojectProvider
 import org.openide.filesystems.FileUtil
 import org.openide.util.Exceptions
@@ -23,9 +23,9 @@ class SBTDepProjectProvider(project: SBTProject) extends SubprojectProvider {
 
   private def loadProjects: java.util.Set[_ <: Project] = {
     val depProjects = new java.util.HashSet[SBTProject]()
-    val sbtController = project.getLookup.lookup(classOf[SBTController])
+    val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
     try {
-      val projectFos = sbtController.getDependenciesProjects map FileUtil.toFileObject
+      val projectFos = sbtResolver.getDependenciesProjects map FileUtil.toFileObject
       for (projectFo <- projectFos) {
         ProjectManager.getDefault.findProject(projectFo) match {
           case depProject: SBTProject => depProjects.add(depProject)

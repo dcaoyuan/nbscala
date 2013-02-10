@@ -68,6 +68,8 @@ object ProjectConstants {
   
   val SOURCES_TYPE_SCALA = "scala"
   
+  val PROJECT_FOLDER_NAME = "project"
+  
   val NAME_SCALASOURCE      = "81ScalaSourceRoot"
   val NAME_SCALATESTSOURCE  = "82ScalaTestSourceRoot"
   val NAME_JAVATESTSOURCE   = "91JavaTestSourceRoot"

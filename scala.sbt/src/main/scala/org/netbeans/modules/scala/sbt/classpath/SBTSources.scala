@@ -30,10 +30,10 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
   override 
   def getSourceGroups(tpe: String): Array[SourceGroup] = {
     if (!isSbtControllerListenerAdded) {
-      val sbtController = project.getLookup.lookup(classOf[SBTController])
-      if (sbtController != null) {
+      val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
+      if (sbtResolver != null) {
         isSbtControllerListenerAdded = true
-        sbtController.addPropertyChangeListener(this)
+        sbtResolver.addPropertyChangeListener(this)
       }
     }
     
@@ -59,9 +59,9 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
   }
 
   private def maybeAddGroup(groups: ArrayBuffer[SourceGroup], tpe: String, isTest: Boolean) {
-    val sbtController = project.getLookup.lookup(classOf[SBTController])
-    val roots = if (sbtController != null) {
-      sbtController.getSources(tpe, isTest) map FileUtil.toFileObject
+    val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
+    val roots = if (sbtResolver != null) {
+      sbtResolver.getSources(tpe, isTest) map FileUtil.toFileObject
     } else {
       // best try
       tpe match {
@@ -107,7 +107,7 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
 
   def propertyChange(evt: PropertyChangeEvent) {
     evt.getPropertyName match {
-      case SBTController.SBT_LIBRARY_RESOLVED =>
+      case SBTResolver.SBT_LIBRARY_RESOLVED =>
         for (l <- changeListeners.getListeners(classOf[ChangeListener])) l.stateChanged(changeEvent)
       case _ =>
     }

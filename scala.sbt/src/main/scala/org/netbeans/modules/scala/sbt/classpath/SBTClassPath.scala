@@ -23,11 +23,11 @@ import org.openide.util.Exceptions
 final class SBTClassPath(project: Project, scope: String) extends ClassPathImplementation with PropertyChangeListener {
 
   private val pcs = new PropertyChangeSupport(this)
-  private val sbtController = project.getLookup.lookup(classOf[SBTController])
-  sbtController.addPropertyChangeListener(this)
+  private val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
+  sbtResolver.addPropertyChangeListener(this)
 
   def getResources: java.util.List[PathResourceImplementation] = {
-    if (!sbtController.isEnabled) {
+    if (!sbtResolver.isEnabled) {
       java.util.Collections.emptyList()
     } else {
       val result = new java.util.ArrayList[PathResourceImplementation]()
@@ -35,7 +35,7 @@ final class SBTClassPath(project: Project, scope: String) extends ClassPathImple
         result.addAll(getJavaBootResources)
       }
 
-      for (file <- sbtController.getResolvedLibraries(scope)) {
+      for (file <- sbtResolver.getResolvedLibraries(scope)) {
         val fo = FileUtil.toFileObject(file)
         try {
           val rootUrl = if (fo != null && FileUtil.isArchiveFile(fo)) {
@@ -83,7 +83,7 @@ final class SBTClassPath(project: Project, scope: String) extends ClassPathImple
 
   def propertyChange(evt: PropertyChangeEvent) {
     evt.getPropertyName match {
-      case SBTController.SBT_LIBRARY_RESOLVED => pcs.firePropertyChange(ClassPathImplementation.PROP_RESOURCES, null, null)
+      case SBTResolver.SBT_LIBRARY_RESOLVED => pcs.firePropertyChange(ClassPathImplementation.PROP_RESOURCES, null, null)
       case _ =>
     }
   }

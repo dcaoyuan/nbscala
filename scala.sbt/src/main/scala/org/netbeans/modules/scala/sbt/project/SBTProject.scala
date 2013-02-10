@@ -5,8 +5,9 @@ import javax.swing.Icon
 import javax.swing.ImageIcon
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ProjectInformation
+import org.netbeans.api.project.ProjectManager
 import org.netbeans.modules.scala.sbt.classpath.SBTClassPathProvider
-import org.netbeans.modules.scala.sbt.classpath.SBTController
+import org.netbeans.modules.scala.sbt.classpath.SBTResolver
 import org.netbeans.modules.scala.sbt.classpath.SBTSources
 import org.netbeans.spi.project.ProjectState
 import org.openide.filesystems.FileObject
@@ -22,7 +23,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   private lazy val lookup: Lookup = Lookups.fixed(
     this,
     new Info(),
-    new SBTController(this, true),
+    new SBTResolver(this, true),
     new SBTProjectLogicalView(this),
     new SBTClassPathProvider(this),
     new SBTSources(this),
@@ -36,6 +37,35 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
 
   override
   def getLookup: Lookup = lookup
+  
+  def getMasterProject: Option[SBTProject] = {
+    projectDir.getParent match {
+      case parentDir: FileObject if parentDir.isFolder =>
+        parentDir.getFileObject(ProjectConstants.PROJECT_FOLDER_NAME) match {
+          case projectFolder: FileObject if projectFolder.isFolder =>
+            ProjectManager.getDefault.findProject(parentDir) match {
+              case x: SBTProject => Some(x)
+              case _ => None
+            }
+          case _ => None
+        }
+      case _ => None
+    }
+  }
+  
+  /**
+   * Top parent project or myself
+   */
+  def getRootProject: SBTProject = {
+    getRootProject(this, this)
+  }
+  
+  private def getRootProject(project: SBTProject, lastFound: SBTProject): SBTProject = {
+    project.getMasterProject match {
+      case None => lastFound
+      case Some(x) => getRootProject(x, x)
+    }
+  }
   
   private final class Info extends ProjectInformation {
 
