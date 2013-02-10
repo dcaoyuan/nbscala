@@ -15,6 +15,7 @@ import javax.swing.text.BadLocationException
 import org.netbeans.api.extexecution.ExecutionDescriptor
 import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.extexecution.ExternalProcessBuilder
+import org.netbeans.api.progress.ProgressHandleFactory
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ui.OpenProjects
 import org.openide.DialogDisplayer
@@ -65,25 +66,42 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   override
   def getPersistenceType = TopComponent.PERSISTENCE_NEVER
 
+  override 
+  def open() {
+    /**
+     * @Note
+     * mode.dockInto(this) seems will close this first if this.isOpened()
+     * So, when call open(), try to check if it was already opened, if true,
+     * no need to call open() again
+     */
+    val mode = WindowManager.getDefault.findMode("output")
+    if (mode != null) {
+      mode.dockInto(this)
+    }
+    super.open
+  }
+  
   override
-  def componentOpened() {
+  protected def componentOpened() {
     if (finished) {
       // Start a new one
       finished = false
       removeAll
       console = createTerminal
     }
+    super.componentOpened
   }
 
   override
-  def componentClosed() {
+  protected def componentClosed() {
     if (console != null) {
       console.exitSbt
     }
+    super.componentClosed
   }
 
   override
-  def componentActivated() {
+  protected def componentActivated() {
     // Make the caret visible. See comment under componentDeactivated.
     if (textPane != null) {
       val caret = textPane.getCaret
@@ -91,10 +109,11 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
         caret.setVisible(true)
       }
     }
+    super.componentActivated
   }
 
   override
-  def componentDeactivated() {
+  protected def componentDeactivated() {
     // I have to turn off the caret when the window loses focus. Text components
     // normally do this by themselves, but the TextAreaReadline component seems
     // to mess around with the editable property of the text pane, and
@@ -104,6 +123,23 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
       if (caret != null) {
         caret.setVisible(false)
       }
+    }
+    super.componentDeactivated
+  }
+  
+  override
+  def requestFocus() {
+    if (textPane != null) {
+      textPane.requestFocus
+    }
+  }
+
+  override
+  def requestFocusInWindow: Boolean = {
+    if (textPane != null) {
+      textPane.requestFocusInWindow
+    } else {
+      false
     }
   }
 
@@ -246,20 +282,6 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     textPane.addMouseListener(MyMouseListener)
     textPane.addMouseMotionListener(MyMouseListener)
     console
-  }
-
-  override
-  def requestFocus() {
-    if (textPane != null) {
-      textPane.requestFocus
-    }
-  }
-
-  override
-  def requestFocusInWindow: Boolean = {
-    if (textPane != null) {
-      textPane.requestFocusInWindow
-    } else false
   }
 
   object MyMouseListener extends MouseAdapter {
@@ -496,13 +518,18 @@ object SBTConsoleTopComponent {
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def openInstance(project: Project, background: Boolean, commands: List[String])(postAction: String => Unit = null) {
+  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String => Unit = null) {
     val id = toEscapedPreferredId(project)
-    SwingUtilities.invokeLater(new Runnable() {
+    val RP = RequestProcessor.getDefault.create(new Runnable() {
         def run {
-          val (tc, newCreated) = WindowManager.getDefault.findTopComponent(id) match {
-            case null => (new SBTConsoleTopComponent(project), true)
-            case tc: SBTConsoleTopComponent => (tc, false)
+          val progressHandle = ProgressHandleFactory.createHandle(message)
+          progressHandle.start
+          
+          val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(id) match {
+            case null => 
+              (new SBTConsoleTopComponent(project), true)
+            case tc: SBTConsoleTopComponent => 
+              (tc, false)
             case _ =>
               ErrorManager.getDefault.log(ErrorManager.WARNING,
                                           "There seem to be multiple components with the '" + id + 
@@ -510,18 +537,14 @@ object SBTConsoleTopComponent {
               (null, false)
           }
           
-          if (!background) {
-            val mode = WindowManager.getDefault.findMode("output")
-            if (mode != null) {
-              mode.dockInto(tc)
-            }
-            tc.open
-            tc.requestActive
-          }
+          //if (!background) {
+          if (!tc.isOpened) tc.open
+          if (!background)  tc.requestActive
+          //}
               
           val results = commands map tc.console.runSbtCommand
 
-          if (background && !newCreated) {
+          if (background && !isNewCreated) {
             tc.console.exitSbt
             tc.close
           }
@@ -529,8 +552,12 @@ object SBTConsoleTopComponent {
           if (postAction != null) {
             postAction(results.lastOption getOrElse null)
           }
+          
+          progressHandle.finish
         }
       })
+    
+    RP.run
   }
   
   private def getMainProjectWorkPath: File = {

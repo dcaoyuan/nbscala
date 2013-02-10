@@ -47,5 +47,5 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
 
 object SBTActionProvider {
   val COMMAND_SBT_CONSOLE = "sbt-console"
-  val COMMAND_SBT_RELOAD = "sbt-reload"
+  val COMMAND_SBT_RELOAD  = "sbt-reload"
 }

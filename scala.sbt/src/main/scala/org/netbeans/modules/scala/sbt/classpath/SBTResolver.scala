@@ -74,7 +74,13 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
   def triggerSbtResolution {
     if (!isUnderResolving) {
       isUnderResolving = true
-      resolverTask.run
+      val rootProject = project.getRootProject
+      val commands = List("eclipse gen-netbeans=true skip-parents=false")
+      val showMessage = NbBundle.getMessage(classOf[SBTResolver], "LBL_Resolving_Progress")
+      SBTConsoleTopComponent.openInstance(rootProject, true, commands, showMessage){result =>
+        isUnderResolving = false
+        pcs.firePropertyChange(SBT_LIBRARY_RESOLVED, null, null)
+      }
     }
   }
 
@@ -118,8 +124,8 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
   }
 
   private def parseClasspathXml(file: File): LibraryEntry = {
-    val mainJavaSrcs = new ArrayBuffer[File]()
-    val testJavaSrcs = new ArrayBuffer[File]()
+    val mainJavaSrcs  = new ArrayBuffer[File]()
+    val testJavaSrcs  = new ArrayBuffer[File]()
     val mainScalaSrcs = new ArrayBuffer[File]()
     val testScalaSrcs = new ArrayBuffer[File]()
     val mainCps = new ArrayBuffer[File]()
@@ -128,69 +134,73 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
 
     val projectFo = project.getProjectDirectory
     val projectDir = FileUtil.toFile(projectFo)
-    val classpath = scala.xml.XML.loadFile(file)
-    classpath match {
-      case <classpath>{ entries @ _* }</classpath> =>
-        for (entry @ <classpathentry>{ _* }</classpathentry> <- entries) {
-          (entry \ "@kind").text match {
-            case "src" =>
-              val path = (entry \ "@path").text.trim
-              val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
-              val isProject = !((entry \ "@exported") isEmpty)
-              val srcFo = projectFo.getFileObject(path)
-              if (srcFo != null && !isProject) {
-                val isJava = srcFo.getPath.split("/") find (_ == "java") isDefined
-                val srcDir = FileUtil.toFile(srcFo)
-                if (isTest) {
-                  if (isJava) {
-                    testJavaSrcs += srcDir
+    try {
+      val classpath = scala.xml.XML.loadFile(file)
+      classpath match {
+        case <classpath>{ entries @ _* }</classpath> =>
+          for (entry @ <classpathentry>{ _* }</classpathentry> <- entries) {
+            (entry \ "@kind").text match {
+              case "src" =>
+                val path = (entry \ "@path").text.trim
+                val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
+                val isProject = !((entry \ "@exported") isEmpty)
+                val srcFo = projectFo.getFileObject(path)
+                if (srcFo != null && !isProject) {
+                  val isJava = srcFo.getPath.split("/") find (_ == "java") isDefined
+                  val srcDir = FileUtil.toFile(srcFo)
+                  if (isTest) {
+                    if (isJava) {
+                      testJavaSrcs += srcDir
+                    } else {
+                      testScalaSrcs += srcDir
+                    }
                   } else {
-                    testScalaSrcs += srcDir
+                    if (isJava) {
+                      mainJavaSrcs += srcDir
+                    } else {
+                      mainScalaSrcs += srcDir
+                    }
                   }
+                }
+              
+                val output = (entry \ "@output").text.trim // classes folder
+                val outputDir = if (isProject) {
+                  new File(output)
                 } else {
-                  if (isJava) {
-                    mainJavaSrcs += srcDir
-                  } else {
-                    mainScalaSrcs += srcDir
-                  }
+                  new File(projectDir, output)
                 }
-              }
-              
-              val output = (entry \ "@output").text.trim // classes folder
-              val outputDir = if (isProject) {
-                new File(output)
-              } else {
-                new File(projectDir, output)
-              }
-              if (isTest) {
-                testCps += outputDir
-              } else {
-                mainCps += outputDir
-              }
-              
-              if (isProject) {
-                val base = (entry \ "@base").text.trim
-                val baseDir = new File(base)
-                if (baseDir.exists) {
-                  depPrjs += baseDir
-                }
-              }
-              
-            case "lib" =>
-              val path = (entry \ "@path").text.trim
-              val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
-              val libFile = new File(path)
-              if (libFile.exists) {
                 if (isTest) {
-                  testCps += libFile
+                  testCps += outputDir
                 } else {
-                  mainCps += libFile
+                  mainCps += outputDir
                 }
-              }
               
-            case _ =>
+                if (isProject) {
+                  val base = (entry \ "@base").text.trim
+                  val baseDir = new File(base)
+                  if (baseDir.exists) {
+                    depPrjs += baseDir
+                  }
+                }
+              
+              case "lib" =>
+                val path = (entry \ "@path").text.trim
+                val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
+                val libFile = new File(path)
+                if (libFile.exists) {
+                  if (isTest) {
+                    testCps += libFile
+                  } else {
+                    mainCps += libFile
+                  }
+                }
+              
+              case _ =>
+            }
           }
-        }
+      }
+    } catch {
+      case ex: Exception => 
     }
     
     LibraryEntry(mainJavaSrcs  map FileUtil.normalizeFile toArray,
