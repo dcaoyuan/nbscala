@@ -31,11 +31,9 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   def invokeAction(command: String, context: Lookup) {
     command.toLowerCase match {
       case COMMAND_SBT_CONSOLE => 
-        (project.getProjectChain match {
-            case root :: Nil  => (root, List("project " + root.getName))
-            case root :: rest => (root, rest map ("project " + _.getName))
-          }
-        ) match {case (root, commands) => SBTConsoleTopComponent.openInstance(root, false, commands)()}
+        val rootProject = project.getRootProject
+        val commands = List("project " + project.getName)
+        SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
         
       case COMMAND_SBT_RELOAD => 
         val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
