@@ -28,10 +28,6 @@ object SourcesNodeFactory {
       
     override
     def keys: java.util.List[SourceGroup] = {
-      if (project.getProjectDirectory == null || !project.getProjectDirectory.isValid) {
-        return java.util.Collections.emptyList()
-      }
-
       val theKeys = new java.util.ArrayList[SourceGroup]()
       
       val sources = ProjectUtils.getSources(project)

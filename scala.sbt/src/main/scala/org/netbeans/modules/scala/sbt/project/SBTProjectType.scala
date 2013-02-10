@@ -26,7 +26,7 @@ class SBTProjectType extends ProjectFactory {
 
   override
   def isProject(projectDirectory: FileObject) = {
-    !isMavenProject(projectDirectory) && 
+    !isMavenProject(projectDirectory) && !isProjectFolder(projectDirectory)
     (getSbtDefinitionFiles(projectDirectory).length > 0 || hasStdScalaSrcDir(projectDirectory))
   }
 
@@ -52,6 +52,10 @@ object SBTProjectType {
   
   def isMavenProject(projectDirectory: FileObject): Boolean = {
     projectDirectory.getFileObject("pom.xml") != null
+  }
+  
+  def isProjectFolder(projectDirectory: FileObject) = {
+    projectDirectory.getNameExt != "project" 
   }
   
   def hasStdScalaSrcDir(projectDirectory: FileObject): Boolean = {

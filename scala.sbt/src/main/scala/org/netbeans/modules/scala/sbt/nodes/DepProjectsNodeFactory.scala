@@ -37,10 +37,6 @@ object DepProjectsNodeFactory {
     private val changeSupport = new ChangeSupport(this)
 
     def keys: java.util.List[String] = {
-      if (project.getProjectDirectory == null || !project.getProjectDirectory.isValid) {
-        return java.util.Collections.emptyList()
-      }
-
       val theKeys = new java.util.ArrayList[String]()
       theKeys.add(DEP_PROJECTS)
       theKeys

@@ -44,6 +44,10 @@
                     org.netbeans.modules.scala.sbt.nodes.DepProjectsNodeFactory
                     <attr intvalue="141" name="position"/>
                 </file>
+                <file name="org-netbeans-modules-scala-sbt-nodes-ProjectFolderNodeFactory.instance">
+                    org.netbeans.modules.scala.sbt.nodes.ProjectFolderNodeFactory
+                    <attr intvalue="142" name="position"/>
+                </file>
             </folder>
         </folder>
     </folder>    
