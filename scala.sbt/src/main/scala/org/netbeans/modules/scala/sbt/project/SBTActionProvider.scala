@@ -31,12 +31,11 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   def invokeAction(command: String, context: Lookup) {
     command.toLowerCase match {
       case COMMAND_SBT_CONSOLE => 
-        val projectChain = project.getProjectChain match {
-          case root :: rest =>
-            val commands = rest map ("project " + _.getName)
-            SBTConsoleTopComponent.openInstance(root, false, commands)()
-          case _ => // should not happen
-        }
+        (project.getProjectChain match {
+            case root :: Nil  => (root, List("project " + root.getName))
+            case root :: rest => (root, rest map ("project " + _.getName))
+          }
+        ) match {case (root, commands) => SBTConsoleTopComponent.openInstance(root, false, commands)()}
         
       case COMMAND_SBT_RELOAD => 
         val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])

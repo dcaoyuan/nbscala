@@ -27,10 +27,13 @@ import org.openide.loaders.DataObject
 import org.openide.loaders.DataObjectNotFoundException
 import org.openide.loaders.InstanceDataObject
 import org.openide.text.Line
+import org.openide.util.Cancellable
 import org.openide.util.Exceptions
 import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 import org.openide.util.RequestProcessor
+import org.openide.util.Task
+import org.openide.util.TaskListener
 import org.openide.util.UserQuestionException
 import org.openide.windows._
 
@@ -356,7 +359,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     }
     
     private def openFile(file: File, lineNo: Int) {
-      RP.post(new Runnable() {
+      FileOpenRP.post(new Runnable() {
           override 
           def run() {
             try {
@@ -445,7 +448,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
 object SBTConsoleTopComponent {
   private val log = Logger.getLogger(this.getClass.getName)
-  private val RP = new RequestProcessor(classOf[SBTConsoleTopComponent])
+  private val FileOpenRP = new RequestProcessor(classOf[SBTConsoleTopComponent])
   
   /**
    * path to the icon used by the component and its open action
@@ -453,21 +456,6 @@ object SBTConsoleTopComponent {
   val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png" 
   
   private val compName = "SBTConsole"
-  private val idEscape = try {
-    val x = classOf[InstanceDataObject].getDeclaredMethod("escapeAndCut", classOf[String])
-    x.setAccessible(true)
-    x
-  } catch {
-    case ex: Exception => null
-  }
-  private val idUnescape = try {
-    val x = classOf[InstanceDataObject].getDeclaredMethod("unescape", classOf[String])
-    x.setAccessible(true)
-    x
-  } catch {
-    case ex: Exception => null
-  }
-
   /**
    * @see org.netbeans.core.windows.persistence.PersistenceManager
    */
@@ -479,68 +467,38 @@ object SBTConsoleTopComponent {
    * @see org.netbeans.core.windows.persistence.PersistenceManager
    */
   private def toEscapedPreferredId(project: Project) = {
-    escape(compName + project.getProjectDirectory.getPath)
+    TopComponentId.escape(compName + project.getProjectDirectory.getPath)
   }
   
-  /** 
-   * compute filename in the same manner as InstanceDataObject.create
-   * [PENDING] in next version this should be replaced by public support
-   * likely from FileUtil
-   * @see issue #17142
-   * 
-   */
-  private def escape(name: String) = {
-    if (idEscape != null) {
-      try {
-        idEscape.invoke(null, name).asInstanceOf[String]
-      } catch {
-        case ex: Exception => log.log(Level.INFO, "Escape support failed", ex); name
-      }
-    } else name
-  }
-    
-  /** 
-   * compute filename in the same manner as InstanceDataObject.create
-   * [PENDING] in next version this should be replaced by public support
-   * likely from FileUtil
-   * @see issue #17142
-   */
-  private def unescape(name: String) = {
-    if (idUnescape != null) {
-      try {
-        idUnescape.invoke(null, name).asInstanceOf[String]
-      } catch {
-        case ex: Exception => log.log(Level.INFO, "Escape support failed", ex); name
-      }
-    } else name
-  }
-  
+
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
   def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String => Unit = null) {
-    val id = toEscapedPreferredId(project)
-    val RP = RequestProcessor.getDefault.create(new Runnable() {
+    var task: RequestProcessor#Task = null
+    val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
+        def cancel(): Boolean = if (task != null) task.cancel else false
+      })
+    
+    task = RequestProcessor.getDefault.create(new Runnable() {
         def run {
-          val progressHandle = ProgressHandleFactory.createHandle(message)
           progressHandle.start
           
-          val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(id) match {
+          val tcId = toEscapedPreferredId(project)
+          val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
             case null => 
               (new SBTConsoleTopComponent(project), true)
             case tc: SBTConsoleTopComponent => 
               (tc, false)
             case _ =>
               ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                          "There seem to be multiple components with the '" + id + 
+                                          "There seem to be multiple components with the '" + tcId + 
                                           "' ID. That is a potential source of errors and unexpected behavior.")
               (null, false)
           }
           
-          //if (!background) {
           if (!tc.isOpened) tc.open
           if (!background)  tc.requestActive
-          //}
               
           val results = commands map tc.console.runSbtCommand
 
@@ -552,12 +510,17 @@ object SBTConsoleTopComponent {
           if (postAction != null) {
             postAction(results.lastOption getOrElse null)
           }
-          
+        }
+      })
+    
+    task.addTaskListener(new TaskListener() {
+        def taskFinished(task: Task) {
           progressHandle.finish
         }
       })
     
-    RP.run
+    // XXX when used task.schedule(0), I got Window System API is required to be called from AWT thread only
+    task.run
   }
   
   private def getMainProjectWorkPath: File = {
@@ -647,6 +610,60 @@ object SBTConsoleTopComponent {
     @throws(classOf[IOException])
     override
     def reset() {}
+  }
+
+}
+
+object TopComponentId {
+  private val log = Logger.getLogger(getClass.getName)
+  
+  private val idEscape = try {
+    val x = classOf[InstanceDataObject].getDeclaredMethod("escapeAndCut", classOf[String])
+    x.setAccessible(true)
+    x
+  } catch {
+    case ex: Exception => null
+  }
+  
+  private val idUnescape = try {
+    val x = classOf[InstanceDataObject].getDeclaredMethod("unescape", classOf[String])
+    x.setAccessible(true)
+    x
+  } catch {
+    case ex: Exception => null
+  }
+
+  /** 
+   * compute filename in the same manner as InstanceDataObject.create
+   * [PENDING] in next version this should be replaced by public support
+   * likely from FileUtil
+   * @see issue #17142
+   * 
+   */
+  def escape(name: String) = {
+    if (idEscape != null) {
+      try {
+        idEscape.invoke(null, name).asInstanceOf[String]
+      } catch {
+        case ex: Exception => log.log(Level.INFO, "Escape support failed", ex); name
+      }
+    } else name
+  }
+    
+  /** 
+   * compute filename in the same manner as InstanceDataObject.create
+   * [PENDING] in next version this should be replaced by public support
+   * likely from FileUtil
+   * @see issue #17142
+   */
+  def unescape(name: String) = {
+    if (idUnescape != null) {
+      try {
+        idUnescape.invoke(null, name).asInstanceOf[String]
+      } catch {
+        case ex: Exception => log.log(Level.INFO, "Escape support failed", ex); name
+      }
+    } else name
   }
 
 }

@@ -20,7 +20,6 @@ import javax.swing.text.JTextComponent
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.SyncVar
 
 /**
  *
@@ -107,6 +106,8 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
   
   def runSbtCommand(command: String): String = synchronized {
     pipedOut.println(command)
+    writeLine(command)
+    writeLine("\n") // cause the followed output to print after a new begun line
     ""
   }
   
@@ -194,6 +195,9 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
     writeLine(line)
   }
   
+  /**
+   * Write a line string to doc, to start a new line, the line string has to include a "\n" in line
+   */
   private def writeLine(line: String) {
     for ((text, style) <- parseLine(line)) append(text, style)
     startPos = doc.getLength
