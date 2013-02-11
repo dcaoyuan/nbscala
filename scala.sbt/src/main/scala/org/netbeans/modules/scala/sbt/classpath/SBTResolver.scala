@@ -6,7 +6,6 @@ import java.io.File
 import java.io.IOException
 import java.net.MalformedURLException
 import org.netbeans.api.java.classpath.ClassPath
-import org.netbeans.api.progress.ProgressHandleFactory
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.netbeans.modules.scala.sbt.project.SBTProject
@@ -17,14 +16,13 @@ import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileRenameEvent
 import org.openide.filesystems.FileUtil
 import org.openide.util.NbBundle
-import org.openide.util.RequestProcessor
 import scala.collection.mutable.ArrayBuffer
 
 case class LibraryEntry(
-  mainJavaSrcs:   Array[File], 
-  testJavaSrcs:   Array[File], 
-  mainScalaSrcs:  Array[File], 
-  testScalaSrcs:  Array[File], 
+  mainJavaSrcs:   Array[(File, File)], 
+  testJavaSrcs:   Array[(File, File)], 
+  mainScalaSrcs:  Array[(File, File)], 
+  testScalaSrcs:  Array[(File, File)], 
   mainCps:        Array[File], 
   testCps:        Array[File],
   depPrjs:        Array[File]
@@ -44,21 +42,6 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
   private var _descriptorFile: FileObject = _
   private var _libraryEntry: LibraryEntry = _
   @volatile private var isUnderResolving = false
-
-  private lazy val resolverTask = RequestProcessor.getDefault.create(new Runnable() {
-      def run() {
-        val progressHandle = ProgressHandleFactory.createHandle(NbBundle.getMessage(classOf[SBTResolver], "LBL_Resolving_Progress"))
-        progressHandle.start
-        val rootProject = project.getRootProject
-        SBTConsoleTopComponent.openInstance(rootProject, true, List("eclipse gen-netbeans=true skip-parents=false")){result =>
-          isUnderResolving = false
-          pcs.firePropertyChange(SBT_LIBRARY_RESOLVED, null, null)
-          progressHandle.finish
-          println(result)
-        }
-      }
-    }
-  )
 
   isEnabled = isEnabled$
   
@@ -124,10 +107,10 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
   }
 
   private def parseClasspathXml(file: File): LibraryEntry = {
-    val mainJavaSrcs  = new ArrayBuffer[File]()
-    val testJavaSrcs  = new ArrayBuffer[File]()
-    val mainScalaSrcs = new ArrayBuffer[File]()
-    val testScalaSrcs = new ArrayBuffer[File]()
+    val mainJavaSrcs  = new ArrayBuffer[(File, File)]()
+    val testJavaSrcs  = new ArrayBuffer[(File, File)]()
+    val mainScalaSrcs = new ArrayBuffer[(File, File)]()
+    val testScalaSrcs = new ArrayBuffer[(File, File)]()
     val mainCps = new ArrayBuffer[File]()
     val testCps = new ArrayBuffer[File]()
     val depPrjs = new ArrayBuffer[File]()
@@ -143,39 +126,43 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
               case "src" =>
                 val path = (entry \ "@path").text.trim
                 val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
-                val isProject = !((entry \ "@exported") isEmpty)
+                val isDepProject = !((entry \ "@exported") isEmpty)
+                
                 val srcFo = projectFo.getFileObject(path)
-                if (srcFo != null && !isProject) {
-                  val isJava = srcFo.getPath.split("/") find (_ == "java") isDefined
-                  val srcDir = FileUtil.toFile(srcFo)
-                  if (isTest) {
-                    if (isJava) {
-                      testJavaSrcs += srcDir
-                    } else {
-                      testScalaSrcs += srcDir
-                    }
-                  } else {
-                    if (isJava) {
-                      mainJavaSrcs += srcDir
-                    } else {
-                      mainScalaSrcs += srcDir
-                    }
-                  }
-                }
-              
+
                 val output = (entry \ "@output").text.trim // classes folder
-                val outputDir = if (isProject) {
+                val outDir = if (isDepProject) {
                   new File(output)
                 } else {
                   new File(projectDir, output)
                 }
-                if (isTest) {
-                  testCps += outputDir
-                } else {
-                  mainCps += outputDir
+
+                if (srcFo != null && !isDepProject) {
+                  val isJava = srcFo.getPath.split("/") find (_ == "java") isDefined
+                  val srcDir = FileUtil.toFile(srcFo)
+                  val srcs = if (isTest) {
+                    if (isJava) {
+                      testJavaSrcs
+                    } else {
+                      testScalaSrcs
+                    }
+                  } else {
+                    if (isJava) {
+                      mainJavaSrcs
+                    } else {
+                      mainScalaSrcs
+                    }
+                  }
+                  srcs += srcDir -> outDir
                 }
               
-                if (isProject) {
+                if (isTest) {
+                  testCps += outDir
+                } else {
+                  mainCps += outDir
+                }
+              
+                if (isDepProject) {
                   val base = (entry \ "@base").text.trim
                   val baseDir = new File(base)
                   if (baseDir.exists) {
@@ -203,10 +190,10 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
       case ex: Exception => 
     }
     
-    LibraryEntry(mainJavaSrcs  map FileUtil.normalizeFile toArray,
-                 testJavaSrcs  map FileUtil.normalizeFile toArray,
-                 mainScalaSrcs map FileUtil.normalizeFile toArray,
-                 testScalaSrcs map FileUtil.normalizeFile toArray,
+    LibraryEntry(mainJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                 testJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                 mainScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                 testScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
                  mainCps map FileUtil.normalizeFile toArray,
                  testCps map FileUtil.normalizeFile toArray,
                  depPrjs map FileUtil.normalizeFile toArray)
@@ -225,7 +212,7 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
       scope match {
         case ClassPath.COMPILE => libraryEntry.mainCps //++ libraryEntry.testCps
         case ClassPath.EXECUTE => libraryEntry.mainCps //++ libraryEntry.testCps
-        case ClassPath.SOURCE => libraryEntry.mainJavaSrcs ++ libraryEntry.testJavaSrcs ++ libraryEntry.mainScalaSrcs ++ libraryEntry.mainScalaSrcs
+        case ClassPath.SOURCE => libraryEntry.mainJavaSrcs ++ libraryEntry.testJavaSrcs ++ libraryEntry.mainScalaSrcs ++ libraryEntry.mainScalaSrcs map (_._1)
         case ClassPath.BOOT => libraryEntry.mainCps filter {cp =>
             val name = cp.getName
             name.endsWith(".jar") && (
@@ -241,7 +228,7 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
     }
   }
 
-  def getSources(tpe: String, test: Boolean): Array[File] = {
+  def getSources(tpe: String, test: Boolean): Array[(File, File)] = {
     if (libraryEntry != null) {
       tpe match {
         case ProjectConstants.SOURCES_TYPE_JAVA =>

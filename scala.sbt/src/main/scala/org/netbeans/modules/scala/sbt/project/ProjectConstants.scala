@@ -76,7 +76,7 @@ object ProjectConstants {
   val NAME_JAVASOURCE       = "92JavaSourceRoot"
   val NAME_DEP_PROJECTS     = "95DepProjects"
   val NAME_DEP_LIBRARIES    = "96DepLibraries"
-  val NAME_OTHERSOURCE      = "98OtherSourceRoot"
+  val NAME_OTHERSOURCE      = "98OtherSourceRoot"  
   
   trait FileType 
   case object SOURCE extends FileType

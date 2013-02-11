@@ -58,7 +58,7 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
     }
   }
   
-  private def getFileType(fo: FileObject): FileType = {
+  def getFileType(fo: FileObject): FileType = {
     rlock.lock
     try {
       if (sourceRoots == null) {

@@ -61,7 +61,7 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
   private def maybeAddGroup(groups: ArrayBuffer[SourceGroup], tpe: String, isTest: Boolean) {
     val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
     val roots = if (sbtResolver != null) {
-      sbtResolver.getSources(tpe, isTest) map FileUtil.toFileObject
+      sbtResolver.getSources(tpe, isTest) map (x => FileUtil.toFileObject(x._1))
     } else {
       // best try
       tpe match {
