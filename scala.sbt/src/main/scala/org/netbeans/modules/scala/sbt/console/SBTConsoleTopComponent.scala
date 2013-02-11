@@ -32,8 +32,6 @@ import org.openide.util.Exceptions
 import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 import org.openide.util.RequestProcessor
-import org.openide.util.Task
-import org.openide.util.TaskListener
 import org.openide.util.UserQuestionException
 import org.openide.windows._
 
@@ -475,52 +473,47 @@ object SBTConsoleTopComponent {
    * Obtain the SBTConsoleTopComponent instance by project
    */
   def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String => Unit = null) {
-    var task: RequestProcessor#Task = null
     val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
-        def cancel(): Boolean = if (task != null) task.cancel else false
-      })
+        def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
+      }
+    )
     
-    task = RequestProcessor.getDefault.create(new Runnable() {
-        def run {
-          progressHandle.start
+    val runnableTask = new Runnable() {
+      def run {
+        progressHandle.start
           
-          val tcId = toEscapedPreferredId(project)
-          val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
-            case null => 
-              (new SBTConsoleTopComponent(project), true)
-            case tc: SBTConsoleTopComponent => 
-              (tc, false)
-            case _ =>
-              ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                          "There seem to be multiple components with the '" + tcId + 
-                                          "' ID. That is a potential source of errors and unexpected behavior.")
-              (null, false)
-          }
+        val tcId = toEscapedPreferredId(project)
+        val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
+          case null => 
+            (new SBTConsoleTopComponent(project), true)
+          case tc: SBTConsoleTopComponent => 
+            (tc, false)
+          case _ =>
+            ErrorManager.getDefault.log(ErrorManager.WARNING,
+                                        "There seem to be multiple components with the '" + tcId + 
+                                        "' ID. That is a potential source of errors and unexpected behavior.")
+            (null, false)
+        }
           
-          if (!tc.isOpened) tc.open
-          if (!background)  tc.requestActive
+        if (!tc.isOpened) tc.open
+        if (!background)  tc.requestActive
               
-          val results = commands map tc.console.runSbtCommand
+        val results = commands map tc.console.runSbtCommand
 
-          if (background && !isNewCreated) {
-            tc.console.exitSbt
-            tc.close
-          }
+        if (background && !isNewCreated) {
+          tc.console.exitSbt
+          tc.close
+        }
               
-          if (postAction != null) {
-            postAction(results.lastOption getOrElse null)
-          }
+        if (postAction != null) {
+          postAction(results.lastOption getOrElse null)
         }
-      })
-    
-    task.addTaskListener(new TaskListener() {
-        def taskFinished(task: Task) {
-          progressHandle.finish
-        }
-      })
-    
-    // XXX when used task.schedule(0), I got Window System API is required to be called from AWT thread only
-    task.run
+          
+        progressHandle.finish
+      }
+    }
+      
+    SwingUtilities.invokeLater(runnableTask)
   }
   
   private def getMainProjectWorkPath: File = {

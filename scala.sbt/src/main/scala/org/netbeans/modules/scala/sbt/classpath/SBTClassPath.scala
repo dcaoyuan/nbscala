@@ -8,6 +8,7 @@ import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.java.platform.JavaPlatformManager
 import org.netbeans.api.project.FileOwnerQuery
 import org.netbeans.api.project.Project
+import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.java.classpath.ClassPathImplementation
 import org.netbeans.spi.java.classpath.PathResourceImplementation
 import org.netbeans.spi.java.classpath.support.ClassPathSupport

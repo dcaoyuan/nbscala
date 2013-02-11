@@ -21,9 +21,7 @@ import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 
 class LibrariesNodeFactory extends NodeFactory {
-  import LibrariesNodeFactory._
-  
-  def createNodes(project: Project): NodeList[_] = new LibrariesNodeList(project)
+  def createNodes(project: Project): NodeList[_] = new LibrariesNodeFactory.LibrariesNodeList(project)
 }
 
 object LibrariesNodeFactory {
@@ -79,7 +77,6 @@ object LibrariesNodeFactory {
   
   class LibrariesNode(project: Project) extends AbstractNode(new LibrariesChildren(project)) {
     private val DISPLAY_NAME = NbBundle.getMessage(classOf[LibrariesNodeFactory], "CTL_LibrariesNode")
-    //static final RequestProcessor rp = new RequestProcessor();
 
     override
     def getDisplayName: String = DISPLAY_NAME

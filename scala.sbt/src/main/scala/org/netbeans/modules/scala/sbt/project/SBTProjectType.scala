@@ -47,7 +47,16 @@ class SBTProjectType extends ProjectFactory {
 
 object SBTProjectType {
   def getSbtDefinitionFiles(projectDirectory: FileObject): Array[FileObject] = {
-    projectDirectory.getChildren filter (x => x.isData && x.getExt == "sbt")
+    def isSbtFile(f: FileObject) = f.isData && (f.getExt == "sbt" || f.getExt == "scala")
+    
+    (projectDirectory.getChildren filter isSbtFile) ++ {
+      val sbtProjectFolder = projectDirectory.getFileObject("project")
+      if (sbtProjectFolder != null && sbtProjectFolder.isFolder) {
+        sbtProjectFolder.getChildren filter isSbtFile
+      } else {
+        Array[FileObject]()
+      }
+    }
   }
   
   def isMavenProject(projectDirectory: FileObject): Boolean = {

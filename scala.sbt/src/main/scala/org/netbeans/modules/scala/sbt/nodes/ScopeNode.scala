@@ -4,7 +4,7 @@ import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import javax.swing.SwingUtilities
 import org.netbeans.api.project.Project
-import org.netbeans.modules.scala.sbt.classpath.SBTResolver
+import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.openide.filesystems.FileUtil
 import org.openide.nodes.AbstractNode
 import org.openide.nodes.Children

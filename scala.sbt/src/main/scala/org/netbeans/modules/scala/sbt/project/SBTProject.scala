@@ -7,7 +7,6 @@ import org.netbeans.api.project.Project
 import org.netbeans.api.project.ProjectInformation
 import org.netbeans.api.project.ProjectManager
 import org.netbeans.modules.scala.sbt.classpath.SBTClassPathProvider
-import org.netbeans.modules.scala.sbt.classpath.SBTResolver
 import org.netbeans.modules.scala.sbt.classpath.SBTSources
 import org.netbeans.modules.scala.sbt.queries.SBTSourceForBinaryQuery
 import org.netbeans.spi.project.ProjectState
@@ -31,6 +30,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
     new SBTProjectOpenedHook(this),
     new SBTActionProvider(this),
     new SBTDepProjectProvider(this),
+    new SBTSubProjectProvider(this),
     new SBTSourceForBinaryQuery(this)
   )
 
@@ -62,13 +62,17 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   
   def getProjectChain: List[SBTProject] = getProjectChain(this, List(this))
   
-  // @todo the project's real name in sbt
-  def getName = getLookup.lookup(classOf[ProjectInformation]).getName
+  def getName = {
+    getLookup.lookup(classOf[SBTResolver]) match {
+      case null => getLookup.lookup(classOf[ProjectInformation]).getName
+      case x => x.getName
+    }
+  }
   
-  private def getProjectChain(project: SBTProject, lastFound: List[SBTProject]): List[SBTProject] = {
+  private def getProjectChain(project: SBTProject, chain: List[SBTProject]): List[SBTProject] = {
     project.getMasterProject match {
-      case None => lastFound
-      case Some(x) => getProjectChain(x, x :: lastFound)
+      case None => chain
+      case Some(x) => getProjectChain(x, x :: chain)
     }
   }
   

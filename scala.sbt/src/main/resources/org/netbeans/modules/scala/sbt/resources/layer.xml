@@ -32,23 +32,27 @@
                 </file>-->
             </folder>
             <folder name="Nodes">
+                <file name="org-netbeans-modules-scala-sbt-nodes-AggProjectsNodeFactory.instance">
+                    org.netbeans.modules.scala.sbt.nodes.AggProjectsNodeFactory
+                    <attr intvalue="139" name="position"/>
+                </file>
                 <file name="org-netbeans-modules-scala-sbt-nodes-SourcesNodeFactory.instance">
                     org.netbeans.modules.scala.sbt.nodes.SourcesNodeFactory
-                    <attr intvalue="139" name="position"/>
+                    <attr intvalue="140" name="position"/>
                 </file>
                 <file name="org-netbeans-modules-scala-sbt-nodes-LibrariesNodeFactory.instance">
                     org.netbeans.modules.scala.sbt.nodes.LibrariesNodeFactory
-                    <attr intvalue="140" name="position"/>
+                    <attr intvalue="141" name="position"/>
                 </file>
                 <file name="org-netbeans-modules-scala-sbt-nodes-DepProjectsNodeFactory.instance">
                     org.netbeans.modules.scala.sbt.nodes.DepProjectsNodeFactory
-                    <attr intvalue="141" name="position"/>
+                    <attr intvalue="142" name="position"/>
                 </file>
                 <file name="org-netbeans-modules-scala-sbt-nodes-ProjectFolderNodeFactory.instance">
                     org.netbeans.modules.scala.sbt.nodes.ProjectFolderNodeFactory
-                    <attr intvalue="142" name="position"/>
+                    <attr intvalue="143" name="position"/>
                 </file>
             </folder>
         </folder>
-    </folder>    
+    </folder>
 </filesystem>

@@ -11,6 +11,7 @@ import javax.swing.event.EventListenerList
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.SourceGroup
 import org.netbeans.api.project.Sources
+import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.project.support.GenericSources
 import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileUtil

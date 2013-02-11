@@ -1,6 +1,5 @@
 package org.netbeans.modules.scala.sbt.project
 
-import org.netbeans.modules.scala.sbt.classpath.SBTResolver
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
 import org.netbeans.spi.project.ActionProvider
 import org.openide.util.Lookup

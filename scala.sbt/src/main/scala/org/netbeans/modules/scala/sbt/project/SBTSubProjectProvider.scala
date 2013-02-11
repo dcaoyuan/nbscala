@@ -12,7 +12,7 @@ import org.openide.util.Exceptions
  * 
  * @author Caoyuan Deng
  */
-class SBTDepProjectProvider(project: SBTProject) extends SubprojectProvider {
+class SBTSubProjectProvider(project: SBTProject) extends SubprojectProvider {
   private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
   
   override
@@ -21,12 +21,12 @@ class SBTDepProjectProvider(project: SBTProject) extends SubprojectProvider {
   }
 
   private def loadProjects: java.util.Set[_ <: Project] = {
-    val depProjects = new java.util.HashSet[SBTProject]()
+    val subProjects = new java.util.HashSet[SBTProject]()
     try {
-      val projectFos = sbtResolver.getDependenciesProjects map FileUtil.toFileObject
+      val projectFos = sbtResolver.getAggregateProjects map FileUtil.toFileObject
       for (projectFo <- projectFos) {
         ProjectManager.getDefault.findProject(projectFo) match {
-          case x: SBTProject => depProjects.add(x)
+          case x: SBTProject => subProjects.add(x)
           case _ =>
         }
       }
@@ -35,7 +35,7 @@ class SBTDepProjectProvider(project: SBTProject) extends SubprojectProvider {
       case ex: IllegalArgumentException => Exceptions.printStackTrace(ex)
     }
     
-    java.util.Collections.unmodifiableSet(depProjects)
+    java.util.Collections.unmodifiableSet(subProjects)
   }
 
   override

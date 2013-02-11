@@ -14,10 +14,7 @@ import org.openide.util.ChangeSupport
 import org.openide.util.RequestProcessor
 
 class SourcesNodeFactory extends NodeFactory {
-  import SourcesNodeFactory._
-  
-  override
-  def createNodes(project: Project): NodeList[_] = new SourcesNodeList(project)
+  def createNodes(project: Project): NodeList[_] = new SourcesNodeFactory.SourcesNodeList(project)
 }
 
 object SourcesNodeFactory {

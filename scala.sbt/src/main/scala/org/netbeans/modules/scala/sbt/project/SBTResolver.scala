@@ -1,4 +1,4 @@
-package org.netbeans.modules.scala.sbt.classpath
+package org.netbeans.modules.scala.sbt.project
 
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
@@ -7,8 +7,6 @@ import java.io.IOException
 import java.net.MalformedURLException
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
-import org.netbeans.modules.scala.sbt.project.ProjectConstants
-import org.netbeans.modules.scala.sbt.project.SBTProject
 import org.openide.ErrorManager
 import org.openide.filesystems.FileChangeAdapter
 import org.openide.filesystems.FileEvent
@@ -18,14 +16,16 @@ import org.openide.filesystems.FileUtil
 import org.openide.util.NbBundle
 import scala.collection.mutable.ArrayBuffer
 
-case class LibraryEntry(
+case class ProjectContext(
+  name: String,
   mainJavaSrcs:   Array[(File, File)], 
   testJavaSrcs:   Array[(File, File)], 
   mainScalaSrcs:  Array[(File, File)], 
   testScalaSrcs:  Array[(File, File)], 
   mainCps:        Array[File], 
   testCps:        Array[File],
-  depPrjs:        Array[File]
+  depPrjs:        Array[File],
+  aggPrjs:        Array[File]
 )
 
 /**
@@ -40,7 +40,7 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
   private final val descriptorFileListener = new DescriptorFileListener
   private val lock = new Object()
   private var _descriptorFile: FileObject = _
-  private var _libraryEntry: LibraryEntry = _
+  private var _projectContext: ProjectContext = _
   @volatile private var isUnderResolving = false
 
   isEnabled = isEnabled$
@@ -60,18 +60,18 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
       val rootProject = project.getRootProject
       val commands = List("eclipse gen-netbeans=true skip-parents=false")
       val showMessage = NbBundle.getMessage(classOf[SBTResolver], "LBL_Resolving_Progress")
-      SBTConsoleTopComponent.openInstance(rootProject, true, commands, showMessage){result =>
+      SBTConsoleTopComponent.openInstance(rootProject, false, commands, showMessage){result =>
         isUnderResolving = false
         pcs.firePropertyChange(SBT_LIBRARY_RESOLVED, null, null)
       }
     }
   }
 
-  def libraryEntry = {
-    if (_libraryEntry == null) {
+  def projectContext = {
+    if (_projectContext == null) {
       descriptorFile = getDescriptorFile
     }
-    _libraryEntry
+    _projectContext
   }
   
   private def descriptorFile: FileObject = _descriptorFile
@@ -84,7 +84,7 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
         }
         file.addFileChangeListener(descriptorFileListener)
 
-        _libraryEntry = parseClasspathXml(FileUtil.toFile(file))
+        _projectContext = parseClasspathXml(FileUtil.toFile(file))
       
         firePropertyChange(DESCRIPTOR_CHANGE, oldFile, file)
       } catch {
@@ -106,7 +106,8 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
     }
   }
 
-  private def parseClasspathXml(file: File): LibraryEntry = {
+  private def parseClasspathXml(file: File): ProjectContext = {
+    var name: String = null
     val mainJavaSrcs  = new ArrayBuffer[(File, File)]()
     val testJavaSrcs  = new ArrayBuffer[(File, File)]()
     val mainScalaSrcs = new ArrayBuffer[(File, File)]()
@@ -114,13 +115,15 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
     val mainCps = new ArrayBuffer[File]()
     val testCps = new ArrayBuffer[File]()
     val depPrjs = new ArrayBuffer[File]()
+    val aggPrjs = new ArrayBuffer[File]()
 
     val projectFo = project.getProjectDirectory
     val projectDir = FileUtil.toFile(projectFo)
     try {
       val classpath = scala.xml.XML.loadFile(file)
       classpath match {
-        case <classpath>{ entries @ _* }</classpath> =>
+        case context @ <classpath>{ entries @ _* }</classpath> =>
+          name = (context \ "@name").text.trim
           for (entry @ <classpathentry>{ _* }</classpathentry> <- entries) {
             (entry \ "@kind").text match {
               case "src" =>
@@ -181,7 +184,14 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
                     mainCps += libFile
                   }
                 }
-              
+                
+              case "agg" =>
+                val base = (entry \ "@base").text.trim
+                val baseFile = new File(base)
+                if (baseFile.exists) {
+                  aggPrjs += baseFile
+                }
+                
               case _ =>
             }
           }
@@ -190,13 +200,15 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
       case ex: Exception => 
     }
     
-    LibraryEntry(mainJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
-                 testJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
-                 mainScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
-                 testScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
-                 mainCps map FileUtil.normalizeFile toArray,
-                 testCps map FileUtil.normalizeFile toArray,
-                 depPrjs map FileUtil.normalizeFile toArray)
+    ProjectContext(name,
+                   mainJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                   testJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                   mainScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                   testScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                   mainCps map FileUtil.normalizeFile toArray,
+                   testCps map FileUtil.normalizeFile toArray,
+                   depPrjs map FileUtil.normalizeFile toArray,
+                   aggPrjs map FileUtil.normalizeFile toArray)
   }
 
   def addPropertyChangeListener(propertyChangeListener: PropertyChangeListener) {
@@ -207,13 +219,21 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
     pcs.removePropertyChangeListener(propertyChangeListener)
   }
 
+  def getName: String = {
+    if (projectContext != null) {
+      projectContext.name 
+    } else {
+      null
+    }
+  }
+  
   def getResolvedLibraries(scope: String): Array[File] = {
-    if (libraryEntry != null) {
+    if (projectContext != null) {
       scope match {
-        case ClassPath.COMPILE => libraryEntry.mainCps //++ libraryEntry.testCps
-        case ClassPath.EXECUTE => libraryEntry.mainCps //++ libraryEntry.testCps
-        case ClassPath.SOURCE => libraryEntry.mainJavaSrcs ++ libraryEntry.testJavaSrcs ++ libraryEntry.mainScalaSrcs ++ libraryEntry.mainScalaSrcs map (_._1)
-        case ClassPath.BOOT => libraryEntry.mainCps filter {cp =>
+        case ClassPath.COMPILE => projectContext.mainCps //++ libraryEntry.testCps
+        case ClassPath.EXECUTE => projectContext.mainCps //++ libraryEntry.testCps
+        case ClassPath.SOURCE => projectContext.mainJavaSrcs ++ projectContext.testJavaSrcs ++ projectContext.mainScalaSrcs ++ projectContext.mainScalaSrcs map (_._1)
+        case ClassPath.BOOT => projectContext.mainCps filter {cp =>
             val name = cp.getName
             name.endsWith(".jar") && (
               name.startsWith("scala-library")  ||
@@ -229,12 +249,12 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
   }
 
   def getSources(tpe: String, test: Boolean): Array[(File, File)] = {
-    if (libraryEntry != null) {
+    if (projectContext != null) {
       tpe match {
         case ProjectConstants.SOURCES_TYPE_JAVA =>
-          if (test) libraryEntry.testJavaSrcs else libraryEntry.mainJavaSrcs
+          if (test) projectContext.testJavaSrcs else projectContext.mainJavaSrcs
         case ProjectConstants.SOURCES_TYPE_SCALA =>
-          if (test) libraryEntry.testScalaSrcs else libraryEntry.mainScalaSrcs
+          if (test) projectContext.testScalaSrcs else projectContext.mainScalaSrcs
         case _ => Array()
       }
     } else {
@@ -243,8 +263,16 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
   }
   
   def getDependenciesProjects: Array[File] = {
-    if (libraryEntry != null) {
-      libraryEntry.depPrjs
+    if (projectContext != null) {
+      projectContext.depPrjs
+    } else {
+      Array()
+    }
+  }
+
+  def getAggregateProjects: Array[File] = {
+    if (projectContext != null) {
+      projectContext.aggPrjs
     } else {
       Array()
     }

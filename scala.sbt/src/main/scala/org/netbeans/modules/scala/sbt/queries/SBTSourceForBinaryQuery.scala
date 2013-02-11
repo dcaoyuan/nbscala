@@ -15,9 +15,9 @@ import org.netbeans.api.java.queries.JavadocForBinaryQuery
 import org.netbeans.api.java.queries.SourceForBinaryQuery
 import org.netbeans.api.java.queries.SourceForBinaryQuery.Result
 import org.netbeans.api.project.Project
-import org.netbeans.modules.scala.sbt.classpath.SBTResolver
 import org.netbeans.modules.scala.sbt.nodes.ArtifactInfo
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
+import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.java.queries.JavadocForBinaryQueryImplementation
 import scala.collection.mutable
 

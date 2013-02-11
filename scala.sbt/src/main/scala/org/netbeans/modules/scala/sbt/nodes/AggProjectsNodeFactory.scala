@@ -8,8 +8,8 @@ import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
-import org.netbeans.modules.scala.sbt.project.SBTDepProjectProvider
 import org.netbeans.modules.scala.sbt.project.SBTProject
+import org.netbeans.modules.scala.sbt.project.SBTSubProjectProvider
 import org.netbeans.spi.project.ui.support.NodeFactory
 import org.netbeans.spi.project.ui.support.NodeList
 import org.openide.loaders.DataObject
@@ -23,12 +23,12 @@ import org.openide.util.Exceptions
 import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 
-class DepProjectsNodeFactory extends NodeFactory {
-  def createNodes(project: Project): NodeList[_] = new DepProjectsNodeFactory.ProjectsNodeList(project)
+class AggProjectsNodeFactory extends NodeFactory {
+  def createNodes(project: Project): NodeList[_] = new AggProjectsNodeFactory.ProjectsNodeList(project)
 }
 
-object DepProjectsNodeFactory {
-  private val DEP_PROJECTS = "dep-projects"
+object AggProjectsNodeFactory {
+  private val AGG_PROJECTS = "agg-projects"
   private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
     
   private class ProjectsNodeList(project: Project) extends NodeList[String] with PropertyChangeListener {
@@ -36,7 +36,7 @@ object DepProjectsNodeFactory {
 
     def keys: java.util.List[String] = {
       val theKeys = new java.util.ArrayList[String]()
-      theKeys.add(DEP_PROJECTS)
+      theKeys.add(AGG_PROJECTS)
       theKeys
     }
 
@@ -52,7 +52,7 @@ object DepProjectsNodeFactory {
      * return null if node for this key doesn't exist currently
      */
     def node(key: String): Node = {
-      val provider = project.getLookup.lookup(classOf[SBTDepProjectProvider])
+      val provider = project.getLookup.lookup(classOf[SBTSubProjectProvider])
       val projects = provider.getSubprojects
       if (projects.size == 0) {
         null 
@@ -80,7 +80,7 @@ object DepProjectsNodeFactory {
   }
   
   private class ProjectNode(projects: java.util.Set[_ <: Project]) extends AbstractNode(new ProjectsChildren(projects)) {
-    private val DISPLAY_NAME = NbBundle.getMessage(classOf[DepProjectsNodeFactory], "CTL_DepProjectsNode")
+    private val DISPLAY_NAME = NbBundle.getMessage(classOf[AggProjectsNodeFactory], "CTL_AggProjectsNode")
 
     override
     def getDisplayName: String = DISPLAY_NAME
@@ -101,10 +101,10 @@ object DepProjectsNodeFactory {
     def getActions(context: Boolean): Array[Action] = Array[Action]()
   }
   
-  private class ProjectsChildren(projects: java.util.Set[_ <: Project]) extends Children.Keys[Project] with PropertyChangeListener {
+  private class ProjectsChildren(depProjects: java.util.Set[_ <: Project]) extends Children.Keys[Project] with PropertyChangeListener {
     private val changeSupport = new ChangeSupport(this)
 
-    setKeys(projects)
+    setKeys(depProjects)
 
     override
     protected def createNodes(key: Project): Array[Node] = {
@@ -136,6 +136,7 @@ object DepProjectsNodeFactory {
           }
         })
     }
+        
   }
   
 }

@@ -15,16 +15,16 @@ import org.openide.nodes.FilterNode
 import org.openide.nodes.Node
 import org.openide.util.ChangeSupport
 import org.openide.util.Exceptions
+import org.openide.util.NbBundle
 
 class ProjectFolderNodeFactory extends NodeFactory {
-  import ProjectFolderNodeFactory._
-  
-  def createNodes(project: Project): NodeList[_] = new ProjectFolderNodeList(project)
+  def createNodes(project: Project): NodeList[_] = new ProjectFolderNodeFactory.ProjectFolderNodeList(project)
 }
 
 object ProjectFolderNodeFactory {
   private val PROJECT_FOLDER = "project-folder"
   private val PROJECT_FOLDER_NAME = "project"
+  private val DISPLAY_NAME = NbBundle.getMessage(classOf[ProjectFolderNodeFactory], "CTL_ProjectFolder")
     
   private class ProjectFolderNodeList(project: Project) extends NodeList[String] with PropertyChangeListener {
     private val changeSupport = new ChangeSupport(this)
@@ -52,7 +52,10 @@ object ProjectFolderNodeFactory {
           try {
             DataObject.find(projectFolder) match {
               case null => null
-              case dobj => new FilterNode(dobj.getNodeDelegate)
+              case dobj => 
+                new FilterNode(dobj.getNodeDelegate) {
+                  override def getDisplayName = DISPLAY_NAME
+                }
             }
           } catch {
             case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
