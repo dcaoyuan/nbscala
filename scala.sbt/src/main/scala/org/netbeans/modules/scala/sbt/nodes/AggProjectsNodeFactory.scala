@@ -8,8 +8,8 @@ import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
+import org.netbeans.modules.scala.sbt.project.SBTAggProjectProvider
 import org.netbeans.modules.scala.sbt.project.SBTProject
-import org.netbeans.modules.scala.sbt.project.SBTSubProjectProvider
 import org.netbeans.spi.project.ui.support.NodeFactory
 import org.netbeans.spi.project.ui.support.NodeList
 import org.openide.loaders.DataObject
@@ -52,7 +52,7 @@ object AggProjectsNodeFactory {
      * return null if node for this key doesn't exist currently
      */
     def node(key: String): Node = {
-      val provider = project.getLookup.lookup(classOf[SBTSubProjectProvider])
+      val provider = project.getLookup.lookup(classOf[SBTAggProjectProvider])
       val projects = provider.getSubprojects
       if (projects.size == 0) {
         null 

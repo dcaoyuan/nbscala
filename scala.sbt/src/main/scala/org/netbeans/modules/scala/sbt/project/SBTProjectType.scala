@@ -25,15 +25,19 @@ class SBTProjectType extends ProjectFactory {
   import SBTProjectType._
 
   override
-  def isProject(projectDirectory: FileObject) = {
-    !isMavenProject(projectDirectory) && !isProjectFolder(projectDirectory)
-    (getSbtDefinitionFiles(projectDirectory).length > 0 || hasStdScalaSrcDir(projectDirectory))
+  def isProject(projectDir: FileObject) = {
+    !isMavenProject(projectDir) && !isProjectFolder(projectDir) && !isUnderSrcFolder(projectDir) &&
+    (hasSbtProjectDefinition(projectDir) || hasStdScalaSrcDir(projectDir))
   }
 
   @throws(classOf[IOException])  
   override
   def loadProject(dir: FileObject, state: ProjectState): Project = {
-    if (isProject(dir)) new SBTProject(dir, state) else null
+    if (isProject(dir)) {
+      new SBTProject(dir, state)
+    } else {
+      null
+    }
   }
 
   @throws(classOf[IOException])
@@ -46,28 +50,33 @@ class SBTProjectType extends ProjectFactory {
 }
 
 object SBTProjectType {
-  def getSbtDefinitionFiles(projectDirectory: FileObject): Array[FileObject] = {
-    def isSbtFile(f: FileObject) = f.isData && (f.getExt == "sbt" || f.getExt == "scala")
+  
+  def hasSbtProjectDefinition(projectDir: FileObject): Boolean = {
+    val sbtProjectFolder = projectDir.getFileObject("project")
     
-    (projectDirectory.getChildren filter isSbtFile) ++ {
-      val sbtProjectFolder = projectDirectory.getFileObject("project")
-      if (sbtProjectFolder != null && sbtProjectFolder.isFolder) {
-        sbtProjectFolder.getChildren filter isSbtFile
-      } else {
-        Array[FileObject]()
-      }
+    val containsSbtFile = projectDir.getChildren find (f => f.isData && f.getExt == "sbt") isDefined
+    
+    val containsSbtProjectFolder = if (sbtProjectFolder != null && sbtProjectFolder.isFolder) {
+      sbtProjectFolder.getChildren find (f => f.isData && (f.getExt == "sbt" || f.getExt == "scala")) isDefined
+    } else {
+      false
     }
+    containsSbtFile || containsSbtProjectFolder
   }
   
-  def isMavenProject(projectDirectory: FileObject): Boolean = {
-    projectDirectory.getFileObject("pom.xml") != null
+  def isMavenProject(projectDir: FileObject): Boolean = {
+    projectDir.getFileObject("pom.xml") != null
   }
   
-  def isProjectFolder(projectDirectory: FileObject) = {
-    projectDirectory.getNameExt != "project" 
+  def isProjectFolder(projectDir: FileObject) = {
+    projectDir.getNameExt == "project" 
   }
   
-  def hasStdScalaSrcDir(projectDirectory: FileObject): Boolean = {
-    projectDirectory.getFileObject("src/main/scala") != null
+  def isUnderSrcFolder(projectDir: FileObject) = {
+    projectDir.getPath.split("/") find (_ == "src") isDefined
+  }
+  
+  def hasStdScalaSrcDir(projectDir: FileObject): Boolean = {
+    projectDir.getFileObject("src/main/scala") != null
   }
 }

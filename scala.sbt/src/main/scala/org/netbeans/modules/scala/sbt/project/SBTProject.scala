@@ -30,10 +30,10 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
     new SBTProjectOpenedHook(this),
     new SBTActionProvider(this),
     new SBTDepProjectProvider(this),
-    new SBTSubProjectProvider(this),
+    new SBTAggProjectProvider(this),
     new SBTSourceForBinaryQuery(this)
   )
-
+  
   override
   def getProjectDirectory = projectDir
 
@@ -62,17 +62,22 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   
   def getProjectChain: List[SBTProject] = getProjectChain(this, List(this))
   
-  def getName = {
-    getLookup.lookup(classOf[SBTResolver]) match {
-      case null => getLookup.lookup(classOf[ProjectInformation]).getName
-      case x => x.getName
-    }
-  }
-  
   private def getProjectChain(project: SBTProject, chain: List[SBTProject]): List[SBTProject] = {
     project.getMasterProject match {
       case None => chain
       case Some(x) => getProjectChain(x, x :: chain)
+    }
+  }
+  
+  def getName = {
+    val resolvedName = getLookup.lookup(classOf[SBTResolver]) match {
+      case null => null
+      case resolver => resolver.getName 
+    }
+    if (resolvedName != null) {
+      resolvedName
+    } else {
+      getLookup.lookup(classOf[ProjectInformation]).getName
     }
   }
   
