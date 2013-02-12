@@ -279,7 +279,6 @@ class SBTResolver(project: SBTProject) {
 
     override
     def fileChanged(fe: FileEvent) {
-      println("file changed")
       descriptorFile = fe.getFile
     }
 
