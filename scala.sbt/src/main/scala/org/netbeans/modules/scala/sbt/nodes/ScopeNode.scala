@@ -30,7 +30,29 @@ class ScopeNode(project: Project, scope: String) extends AbstractNode(new Scopes
   private def getBadge = Icons.ICON_LIBARARIES_BADGE
 }
 
-private class ScopesChildren(project: Project, scope: String) extends Children.Keys[ArtifactInfo] with PropertyChangeListener {
+private class ScopesChildren(project: Project, scope: String) extends Children.Keys[ArtifactInfo] {
+  private lazy val sbtResolver = {
+    val x = project.getLookup.lookup(classOf[SBTResolver])
+    
+    x.addPropertyChangeListener(new PropertyChangeListener() {
+        def propertyChange(evt: PropertyChangeEvent) {
+          evt.getPropertyName match {
+            case SBTResolver.DESCRIPTOR_CHANGE => 
+              // The caller holds ProjectManager.mutex() read lock
+              SwingUtilities.invokeLater(new Runnable() {
+                  def run() {
+                    setKeys
+                  }
+                })
+
+            case _ =>
+          }
+        }
+      }
+    )
+    
+    x
+  }
 
   setKeys
 
@@ -39,15 +61,7 @@ private class ScopesChildren(project: Project, scope: String) extends Children.K
     Array(new ArtifactNode(key, project))
   }
 
-  def propertyChange(evt: PropertyChangeEvent) {
-    evt.getPropertyName match {
-      case SBTResolver.SBT_LIBRARY_RESOLVED => setKeys
-      case _ =>
-    }
-  }
-
   private def setKeys {
-    val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
     val artifacts = sbtResolver.getResolvedLibraries(scope) map FileUtil.toFileObject filter {fo => 
       fo != null && FileUtil.isArchiveFile(fo)
     } map {fo =>

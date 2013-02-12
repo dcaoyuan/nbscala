@@ -4,10 +4,8 @@ import scala.collection.mutable.ArrayBuffer
 
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
-import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
-import javax.swing.event.EventListenerList
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.SourceGroup
 import org.netbeans.api.project.Sources
@@ -15,29 +13,34 @@ import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.project.support.GenericSources
 import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileUtil
+import org.openide.util.ChangeSupport
 import org.openide.util.NbBundle
 
 /**
  * 
  * @author Caoyuan Deng
  */
-class SBTSources(project: Project) extends Sources with PropertyChangeListener {
-  
-  private val changeListeners = new EventListenerList
-  private val changeEvent = new ChangeEvent(this)
-  
+class SBTSources(project: Project) extends Sources {
+  private val changeSupport = new ChangeSupport(this)
+  private lazy val sbtResolver = {
+    val x = project.getLookup.lookup(classOf[SBTResolver])
+
+    x.addPropertyChangeListener(new PropertyChangeListener() {
+        def propertyChange(evt: PropertyChangeEvent) {
+          evt.getPropertyName match {
+            case SBTResolver.DESCRIPTOR_CHANGE => 
+              changeSupport.fireChange
+            case _ =>
+          }
+        }
+      })
+    
+    x
+  }  
   private var isSbtControllerListenerAdded = false
 
   override 
   def getSourceGroups(tpe: String): Array[SourceGroup] = {
-    if (!isSbtControllerListenerAdded) {
-      val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
-      if (sbtResolver != null) {
-        isSbtControllerListenerAdded = true
-        sbtResolver.addPropertyChangeListener(this)
-      }
-    }
-    
     tpe match {
       case Sources.TYPE_GENERIC =>
         // It's necessary for project's PhysicalView (in Files window), 
@@ -98,19 +101,11 @@ class SBTSources(project: Project) extends Sources with PropertyChangeListener {
 
   override 
   def addChangeListener(l: ChangeListener) {
-    changeListeners.add(classOf[ChangeListener], l)
+    changeSupport.addChangeListener(l)
   }
 
   override 
   def removeChangeListener(l: ChangeListener) {
-    changeListeners.remove(classOf[ChangeListener], l)
-  }
-
-  def propertyChange(evt: PropertyChangeEvent) {
-    evt.getPropertyName match {
-      case SBTResolver.SBT_LIBRARY_RESOLVED =>
-        for (l <- changeListeners.getListeners(classOf[ChangeListener])) l.stateChanged(changeEvent)
-      case _ =>
-    }
+    changeSupport.removeChangeListener(l)
   }
 }

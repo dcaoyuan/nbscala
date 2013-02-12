@@ -36,7 +36,7 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
         override
         def propertyChange(evt: PropertyChangeEvent) {
           evt.getPropertyName match {
-            case SBTResolver.SBT_LIBRARY_RESOLVED =>
+            case SBTResolver.DESCRIPTOR_CHANGE =>
               map synchronized {
                 map.values foreach (_.fireChanged)
                 map.clear

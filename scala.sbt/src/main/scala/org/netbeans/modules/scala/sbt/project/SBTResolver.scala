@@ -32,37 +32,33 @@ case class ProjectContext(
  *
  * @author Caoyuan Deng
  */
-class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
+class SBTResolver(project: SBTProject) {
   import SBTResolver._
 
-  private var _sbtConsoleEnabled = false
+  @volatile private var _isResolvedOrResolving = false
   private final val pcs = new PropertyChangeSupport(this)
   private final val descriptorFileListener = new DescriptorFileListener
   private val lock = new Object()
   private var _descriptorFile: FileObject = _
   private var _projectContext: ProjectContext = _
-  @volatile private var isUnderResolving = false
 
-  isEnabled = isEnabled$
-  
-  def isEnabled = _sbtConsoleEnabled
-  def isEnabled_=(enableState: Boolean) {
-    val oldEnableState = _sbtConsoleEnabled
-    _sbtConsoleEnabled = enableState
-    if (oldEnableState != _sbtConsoleEnabled) {
-      pcs.firePropertyChange(SBT_ENABLE_STATE_CHANGE, oldEnableState, _sbtConsoleEnabled)
+  def isResolvedOrResolving = _isResolvedOrResolving
+  def isResolvedOrResolving_=(b: Boolean) {
+    val oldvalue = _isResolvedOrResolving
+    _isResolvedOrResolving = b
+    if (oldvalue != _isResolvedOrResolving) {
+      pcs.firePropertyChange(SBT_RESOLVED_STATE_CHANGE, oldvalue, _isResolvedOrResolving)
     }
   }
 
   def triggerSbtResolution {
-    if (!isUnderResolving) {
-      isUnderResolving = true
+    if (!_isResolvedOrResolving) {
+      _isResolvedOrResolving = true
       val rootProject = project.getRootProject
       val commands = List("eclipse gen-netbeans=true skip-parents=false")
       val showMessage = NbBundle.getMessage(classOf[SBTResolver], "LBL_Resolving_Progress")
       SBTConsoleTopComponent.openInstance(rootProject, false, commands, showMessage){result =>
-        isUnderResolving = false
-        pcs.firePropertyChange(SBT_LIBRARY_RESOLVED, null, null)
+        pcs.firePropertyChange(SBT_RESOLVED, null, null)
       }
     }
   }
@@ -99,6 +95,7 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
     project.getProjectDirectory.getFileObject(DescriptorFileName) match {
       case null => 
         // create an empty descriptor file to avoid infinite loop to triggerSbtResolution
+        // we'll listen to this emptyDescriptor file
         val emptyDescFile = project.getProjectDirectory.createData(DescriptorFileName)
         triggerSbtResolution
         emptyDescFile
@@ -282,7 +279,7 @@ class SBTResolver(project: SBTProject, isEnabled$: Boolean) {
 
     override
     def fileChanged(fe: FileEvent) {
-      pcs.firePropertyChange(DESCRIPTOR_CONTENT_CHANGE, null, null)
+      pcs.firePropertyChange(DESCRIPTOR_CHANGE, null, null)
     }
 
     override
@@ -312,7 +309,6 @@ object SBTResolver {
   val DescriptorFileName = ".classpath_nb"
   
   val DESCRIPTOR_CHANGE = "sbtDescriptorChange"
-  val DESCRIPTOR_CONTENT_CHANGE = "sbtDescriptorContentChange"
-  val SBT_ENABLE_STATE_CHANGE = "sbtEnableStateChange"
-  val SBT_LIBRARY_RESOLVED = "sbtLibraryResolved"  
+  val SBT_RESOLVED_STATE_CHANGE = "sbtResolvedStateChange"
+  val SBT_RESOLVED = "sbtResolved"  
 }

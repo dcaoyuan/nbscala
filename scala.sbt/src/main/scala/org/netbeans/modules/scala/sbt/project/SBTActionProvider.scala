@@ -36,6 +36,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         
       case COMMAND_SBT_RELOAD => 
         val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
+        sbtResolver.isResolvedOrResolving = false
         sbtResolver.triggerSbtResolution
     }
   }

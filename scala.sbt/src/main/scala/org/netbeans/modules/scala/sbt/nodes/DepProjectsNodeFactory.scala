@@ -3,15 +3,18 @@ package org.netbeans.modules.scala.sbt.nodes
 import java.awt.Image
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
+import java.io.IOException
 import javax.swing.Action
 import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
+import org.netbeans.api.project.ProjectManager
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
-import org.netbeans.modules.scala.sbt.project.SBTDepProjectProvider
 import org.netbeans.modules.scala.sbt.project.SBTProject
+import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.project.ui.support.NodeFactory
 import org.netbeans.spi.project.ui.support.NodeList
+import org.openide.filesystems.FileUtil
 import org.openide.loaders.DataObject
 import org.openide.loaders.DataObjectNotFoundException
 import org.openide.nodes.AbstractNode
@@ -31,9 +34,31 @@ object DepProjectsNodeFactory {
   private val DEP_PROJECTS = "dep-projects"
   private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
     
-  private class ProjectsNodeList(project: Project) extends NodeList[String] with PropertyChangeListener {
+  private class ProjectsNodeList(project: Project) extends NodeList[String] {
     private val changeSupport = new ChangeSupport(this)
-
+    private lazy val sbtResolver = {
+      val x = project.getLookup.lookup(classOf[SBTResolver])
+      
+      x.addPropertyChangeListener(new PropertyChangeListener() {
+          def propertyChange(evt: PropertyChangeEvent) {
+            evt.getPropertyName match {
+              case SBTResolver.DESCRIPTOR_CHANGE => 
+                // The caller holds ProjectManager.mutex() read lock
+                SwingUtilities.invokeLater(new Runnable() {
+                    def run() {
+                      changeSupport.fireChange
+                    }
+                  })
+                
+              case _ =>
+            }
+          }
+        }
+      )
+      
+      x
+    }
+    
     def keys: java.util.List[String] = {
       val theKeys = new java.util.ArrayList[String]()
       theKeys.add(DEP_PROJECTS)
@@ -52,13 +77,25 @@ object DepProjectsNodeFactory {
      * return null if node for this key doesn't exist currently
      */
     def node(key: String): Node = {
-      val provider = project.getLookup.lookup(classOf[SBTDepProjectProvider])
-      val projects = provider.getSubprojects
-      if (projects.size == 0) {
+      val depProjects = new java.util.HashSet[SBTProject]()
+      try {
+        val projectFos = sbtResolver.getDependenciesProjects map FileUtil.toFileObject
+        for (projectFo <- projectFos) {
+          ProjectManager.getDefault.findProject(projectFo) match {
+            case x: SBTProject => depProjects.add(x)
+            case _ =>
+          }
+        }
+      } catch {
+        case ex: IOException => Exceptions.printStackTrace(ex)
+        case ex: IllegalArgumentException => Exceptions.printStackTrace(ex)
+      }
+    
+      if (depProjects.size == 0) {
         null 
       } else {
         try {
-          new ProjectNode(projects)
+          new ProjectNode(java.util.Collections.unmodifiableSet(depProjects))
         } catch {
           case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
         }
@@ -68,15 +105,6 @@ object DepProjectsNodeFactory {
     def addNotify() {}
 
     def removeNotify() {}
-
-    def propertyChange(evt: PropertyChangeEvent) {
-      // The caller holds ProjectManager.mutex() read lock
-      SwingUtilities.invokeLater(new Runnable() {
-          def run() {
-            changeSupport.fireChange
-          }
-        })
-    }
   }
   
   private class ProjectNode(projects: java.util.Set[_ <: Project]) extends AbstractNode(new ProjectsChildren(projects)) {

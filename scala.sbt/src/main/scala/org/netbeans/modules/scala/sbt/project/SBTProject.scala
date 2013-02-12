@@ -23,14 +23,12 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   private lazy val lookup: Lookup = Lookups.fixed(
     this,
     new Info(),
-    new SBTResolver(this, true),
+    new SBTResolver(this),
     new SBTProjectLogicalView(this),
     new SBTClassPathProvider(this),
     new SBTSources(this),
     new SBTProjectOpenedHook(this),
     new SBTActionProvider(this),
-    new SBTDepProjectProvider(this),
-    new SBTAggProjectProvider(this),
     new SBTSourceForBinaryQuery(this)
   )
   
