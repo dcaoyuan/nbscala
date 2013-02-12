@@ -75,14 +75,16 @@ class SBTResolver(project: SBTProject) {
     if (file != null && file.isData) { 
       try {
         val oldFile = _descriptorFile
+        _descriptorFile = file
         if (oldFile != null && oldFile != file) {
           oldFile.removeFileChangeListener(descriptorFileListener)
           file.addFileChangeListener(descriptorFileListener)
         }
         
+        val oldContext = _projectContext
         _projectContext = parseClasspathXml(FileUtil.toFile(file))
       
-        pcs.firePropertyChange(DESCRIPTOR_CHANGE, oldFile, file)
+        pcs.firePropertyChange(DESCRIPTOR_CHANGE, oldContext, _projectContext)
       } catch {
         case ex: MalformedURLException => ErrorManager.getDefault.notify(ex)
         case ex: Exception => ErrorManager.getDefault.notify(ex)
@@ -92,11 +94,11 @@ class SBTResolver(project: SBTProject) {
   
   @throws(classOf[IOException])
   private def loadDescriptorFile: FileObject = synchronized {
-    project.getProjectDirectory.getFileObject(DescriptorFileName) match {
+    project.getProjectDirectory.getFileObject(DESCRIPTOR_FILE_NAME) match {
       case null => 
         // create an empty descriptor file to avoid infinite loop to triggerSbtResolution
         // we'll listen to this emptyDescriptor file
-        val emptyDescFile = project.getProjectDirectory.createData(DescriptorFileName)
+        val emptyDescFile = project.getProjectDirectory.createData(DESCRIPTOR_FILE_NAME)
         triggerSbtResolution
         emptyDescFile
       case fo => fo
@@ -299,7 +301,7 @@ class SBTResolver(project: SBTProject) {
 }
 
 object SBTResolver {
-  val DescriptorFileName = ".classpath_nb"
+  val DESCRIPTOR_FILE_NAME = ".classpath_nb"
   
   val DESCRIPTOR_CHANGE = "sbtDescriptorChange"
   val SBT_RESOLVED_STATE_CHANGE = "sbtResolvedStateChange"
