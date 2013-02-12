@@ -35,12 +35,12 @@ case class ProjectContext(
 class SBTResolver(project: SBTProject) {
   import SBTResolver._
 
-  @volatile private var _isResolvedOrResolving = false
   private final val pcs = new PropertyChangeSupport(this)
   private final val descriptorFileListener = new DescriptorFileListener
   private val lock = new Object()
   private var _descriptorFile: FileObject = _
   private var _projectContext: ProjectContext = _
+  @volatile private var _isResolvedOrResolving = false
 
   def isResolvedOrResolving = _isResolvedOrResolving
   def isResolvedOrResolving_=(b: Boolean) {
@@ -63,26 +63,26 @@ class SBTResolver(project: SBTProject) {
     }
   }
 
-  def projectContext = {
+  def projectContext = synchronized {
     if (_projectContext == null) {
-      descriptorFile = getDescriptorFile
+      descriptorFile = loadDescriptorFile
     }
     _projectContext
   }
   
   private def descriptorFile: FileObject = _descriptorFile
-  private def descriptorFile_=(file: FileObject) {
+  private def descriptorFile_=(file: FileObject): Unit = synchronized {
     if (file != null && file.isData) { 
       try {
         val oldFile = _descriptorFile
-        if (oldFile != null) {
+        if (oldFile != null && oldFile != file) {
           oldFile.removeFileChangeListener(descriptorFileListener)
+          file.addFileChangeListener(descriptorFileListener)
         }
-        file.addFileChangeListener(descriptorFileListener)
-
+        
         _projectContext = parseClasspathXml(FileUtil.toFile(file))
       
-        firePropertyChange(DESCRIPTOR_CHANGE, oldFile, file)
+        pcs.firePropertyChange(DESCRIPTOR_CHANGE, oldFile, file)
       } catch {
         case ex: MalformedURLException => ErrorManager.getDefault.notify(ex)
         case ex: Exception => ErrorManager.getDefault.notify(ex)
@@ -91,7 +91,7 @@ class SBTResolver(project: SBTProject) {
   }
   
   @throws(classOf[IOException])
-  private def getDescriptorFile: FileObject = {
+  private def loadDescriptorFile: FileObject = synchronized {
     project.getProjectDirectory.getFileObject(DescriptorFileName) match {
       case null => 
         // create an empty descriptor file to avoid infinite loop to triggerSbtResolution
@@ -279,7 +279,8 @@ class SBTResolver(project: SBTProject) {
 
     override
     def fileChanged(fe: FileEvent) {
-      pcs.firePropertyChange(DESCRIPTOR_CHANGE, null, null)
+      println("file changed")
+      descriptorFile = fe.getFile
     }
 
     override
@@ -295,13 +296,6 @@ class SBTResolver(project: SBTProject) {
 
   private def equal(o1: Object, o2: Object): Boolean = {
     if (o1 == null) o2 == null else o1.equals(o2)
-  }
-
-  private def firePropertyChange(propertyName: String, oldValue: Object, newValue: Object) {
-    if ((oldValue == null && newValue != null) ||
-        (oldValue != null && oldValue != newValue)) {
-      pcs.firePropertyChange(propertyName, oldValue, newValue)
-    }
   }
 }
 

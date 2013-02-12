@@ -27,20 +27,12 @@ object ProjectFolderNodeFactory {
   private val DISPLAY_NAME = NbBundle.getMessage(classOf[ProjectFolderNodeFactory], "CTL_ProjectFolder")
     
   private class ProjectFolderNodeList(project: Project) extends NodeList[String] with PropertyChangeListener {
-    private val changeSupport = new ChangeSupport(this)
+    private val cs = new ChangeSupport(this)
 
     def keys: java.util.List[String] = {
       val theKeys = new java.util.ArrayList[String]()
       theKeys.add(PROJECT_FOLDER)
       theKeys
-    }
-
-    def addChangeListener(l: ChangeListener) {
-      changeSupport.addChangeListener(l)
-    }
-
-    def removeChangeListener(l: ChangeListener) {
-      changeSupport.removeChangeListener(l)
     }
 
     /**
@@ -64,15 +56,27 @@ object ProjectFolderNodeFactory {
       }
     }
 
-    def addNotify() {}
+    def addNotify() {
+      
+    }
 
-    def removeNotify() {}
+    def removeNotify() {
+      
+    }
+    
+    def addChangeListener(l: ChangeListener) {
+      cs.addChangeListener(l)
+    }
+
+    def removeChangeListener(l: ChangeListener) {
+      cs.removeChangeListener(l)
+    }
 
     def propertyChange(evt: PropertyChangeEvent) {
       // The caller holds ProjectManager.mutex() read lock
       SwingUtilities.invokeLater(new Runnable() {
           def run() {
-            changeSupport.fireChange
+            cs.fireChange
           }
         })
     }

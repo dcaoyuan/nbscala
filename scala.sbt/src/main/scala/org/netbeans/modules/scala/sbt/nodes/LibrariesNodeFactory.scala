@@ -31,8 +31,7 @@ object LibrariesNodeFactory {
   private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
     
   private class LibrariesNodeList(project: Project) extends NodeList[String] with PropertyChangeListener {
-
-    private val changeSupport = new ChangeSupport(this)
+    private val cs = new ChangeSupport(this)
 
     def keys: java.util.List[String] = {
       val theKeys = new java.util.ArrayList[String]()
@@ -44,14 +43,6 @@ object LibrariesNodeFactory {
       theKeys
     }
 
-    def addChangeListener(l: ChangeListener) {
-      changeSupport.addChangeListener(l)
-    }
-
-    def removeChangeListener(l: ChangeListener) {
-      changeSupport.removeChangeListener(l)
-    }
-
     def node(key: String): Node = {
       key match {
         case LIBRARIES => new LibrariesNode(project)
@@ -60,15 +51,27 @@ object LibrariesNodeFactory {
       }
     }
 
-    def addNotify() {}
+    def addNotify() {
+      
+    }
 
-    def removeNotify() {}
+    def removeNotify() {
+      
+    }
+
+    def addChangeListener(l: ChangeListener) {
+      cs.addChangeListener(l)
+    }
+
+    def removeChangeListener(l: ChangeListener) {
+      cs.removeChangeListener(l)
+    }
 
     def propertyChange(evt: PropertyChangeEvent) {
       // The caller holds ProjectManager.mutex() read lock
       SwingUtilities.invokeLater(new Runnable() {
           def run() {
-            changeSupport.fireChange
+            cs.fireChange
           }
         })
     }

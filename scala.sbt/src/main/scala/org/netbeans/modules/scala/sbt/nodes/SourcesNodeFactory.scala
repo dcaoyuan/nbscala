@@ -1,27 +1,32 @@
 package org.netbeans.modules.scala.sbt.nodes
 
-import javax.swing.event.ChangeEvent
+import java.beans.PropertyChangeEvent
+import java.beans.PropertyChangeListener
+import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ProjectUtils
 import org.netbeans.api.project.SourceGroup
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
+import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.java.project.support.ui.PackageView
 import org.netbeans.spi.project.ui.support.NodeFactory
 import org.netbeans.spi.project.ui.support.NodeList
 import org.openide.nodes.Node
 import org.openide.util.ChangeSupport
-import org.openide.util.RequestProcessor
 
 class SourcesNodeFactory extends NodeFactory {
   def createNodes(project: Project): NodeList[_] = new SourcesNodeFactory.SourcesNodeList(project)
 }
 
 object SourcesNodeFactory {
-  private val RP = new RequestProcessor(classOf[SourcesNodeFactory])
-  
-  private class SourcesNodeList(project: Project) extends NodeList[SourceGroup] with ChangeListener {
-    private val changeSupport = new ChangeSupport(this)
+  private class SourcesNodeList(project: Project) extends NodeList[SourceGroup] with PropertyChangeListener {
+    private val cs = new ChangeSupport(this)
+    private lazy val sbtResolver = {
+      val x = project.getLookup.lookup(classOf[SBTResolver])
+      x.addPropertyChangeListener(this)
+      x
+    }
       
     override
     def keys: java.util.List[SourceGroup] = {
@@ -45,37 +50,37 @@ object SourcesNodeFactory {
       PackageView.createPackageView(key)
     }
         
-    override
     def addNotify() {
-      val srcs = ProjectUtils.getSources(project)
-      srcs.addChangeListener(this)
+      // addNotify will be called only when if node(key) returns non-null and node is 
+      // thus we won't sbtResolver.addPropertyChangeListener(this) here
     }
-        
-    override
+
     def removeNotify() {
-      val srcs = ProjectUtils.getSources(project)
-      srcs.removeChangeListener(this)
+      sbtResolver.removePropertyChangeListener(this)
     }
 
     override
     def addChangeListener(l: ChangeListener) {
-      changeSupport.addChangeListener(l)
+      cs.addChangeListener(l)
     }
 
     override
     def removeChangeListener(l: ChangeListener) {
-      changeSupport.removeChangeListener(l)
+      cs.removeChangeListener(l)
     }
 
-    override
-    def stateChanged(arg0: ChangeEvent) {
-      //#167372 break the stack trace chain to prevent deadlocks.
-      RP.post(new Runnable() {
-          def run {
-            changeSupport.fireChange
-          }
-        }
-      )
+    def propertyChange(evt: PropertyChangeEvent) {
+      evt.getPropertyName match {
+        case SBTResolver.DESCRIPTOR_CHANGE => 
+          // The caller holds ProjectManager.mutex() read lock
+          SwingUtilities.invokeLater(new Runnable() {
+              def run() {
+                keys
+                cs.fireChange
+              }
+            })
+        case _ =>
+      }
     }
   }
 }

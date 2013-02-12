@@ -18,6 +18,7 @@ import org.openide.filesystems.FileUtil
 import org.openide.loaders.DataObject
 import org.openide.loaders.DataObjectNotFoundException
 import org.openide.nodes.AbstractNode
+import org.openide.nodes.ChildFactory
 import org.openide.nodes.Children
 import org.openide.nodes.FilterNode
 import org.openide.nodes.Node
@@ -34,29 +35,11 @@ object AggProjectsNodeFactory {
   private val AGG_PROJECTS = "agg-projects"
   private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
     
-  private class ProjectsNodeList(project: Project) extends NodeList[String] {
-    private val changeSupport = new ChangeSupport(this)
-
+  private class ProjectsNodeList(project: Project) extends NodeList[String] with PropertyChangeListener {
+    private val cs = new ChangeSupport(this)
     private lazy val sbtResolver = {
       val x = project.getLookup.lookup(classOf[SBTResolver])
-      
-      x.addPropertyChangeListener(new PropertyChangeListener() {
-          def propertyChange(evt: PropertyChangeEvent) {
-            evt.getPropertyName match {
-              case SBTResolver.DESCRIPTOR_CHANGE => 
-                // The caller holds ProjectManager.mutex() read lock
-                SwingUtilities.invokeLater(new Runnable() {
-                    def run() {
-                      changeSupport.fireChange
-                    }
-                  })
-                
-              case _ =>
-            }
-          }
-        }
-      )
-      
+      x.addPropertyChangeListener(this)
       x
     }
 
@@ -66,49 +49,54 @@ object AggProjectsNodeFactory {
       theKeys
     }
 
-    def addChangeListener(l: ChangeListener) {
-      changeSupport.addChangeListener(l)
-    }
-
-    def removeChangeListener(l: ChangeListener) {
-      changeSupport.removeChangeListener(l)
-    }
-
     /**
      * return null if node for this key doesn't exist currently
      */
     def node(key: String): Node = {
-      val aggProjects = new java.util.HashSet[SBTProject]()
-      try {
-        val projectFos = sbtResolver.getAggregateProjects map FileUtil.toFileObject
-        for (projectFo <- projectFos) {
-          ProjectManager.getDefault.findProject(projectFo) match {
-            case x: SBTProject => aggProjects.add(x)
-            case _ =>
-          }
-        }
-      } catch {
-        case ex: IOException => Exceptions.printStackTrace(ex)
-        case ex: IllegalArgumentException => Exceptions.printStackTrace(ex)
-      }
-    
-      if (aggProjects.size == 0) {
+      if (sbtResolver.getAggregateProjects.length == 0) {
         null 
       } else {
         try {
-          new ProjectNode(java.util.Collections.unmodifiableSet(aggProjects))
+          new ProjectNode(project)
         } catch {
           case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
         }
       }
     }
 
-    def addNotify() {}
+    def addNotify() {
+      // addNotify will be called only when if node(key) returns non-null and node is 
+      // thus we won't sbtResolver.addPropertyChangeListener(this) here
+    }
 
-    def removeNotify() {}
+    def removeNotify() {
+      sbtResolver.removePropertyChangeListener(this)
+    }
+
+    def addChangeListener(l: ChangeListener) {
+      cs.addChangeListener(l)
+    }
+
+    def removeChangeListener(l: ChangeListener) {
+      cs.removeChangeListener(l)
+    }
+    
+    def propertyChange(evt: PropertyChangeEvent) {
+      evt.getPropertyName match {
+        case SBTResolver.DESCRIPTOR_CHANGE => 
+          // The caller holds ProjectManager.mutex() read lock
+          SwingUtilities.invokeLater(new Runnable() {
+              def run() {
+                keys
+                cs.fireChange
+              }
+            })
+        case _ =>
+      }
+    }
   }
   
-  private class ProjectNode(projects: java.util.Set[_ <: Project]) extends AbstractNode(new ProjectsChildren(projects)) {
+  private class ProjectNode(project: Project) extends AbstractNode(Children.create(new ProjectsChildFactory(project), true)) {
     private val DISPLAY_NAME = NbBundle.getMessage(classOf[AggProjectsNodeFactory], "CTL_AggProjectsNode")
 
     override
@@ -130,42 +118,70 @@ object AggProjectsNodeFactory {
     def getActions(context: Boolean): Array[Action] = Array[Action]()
   }
   
-  private class ProjectsChildren(depProjects: java.util.Set[_ <: Project]) extends Children.Keys[Project] with PropertyChangeListener {
-    private val changeSupport = new ChangeSupport(this)
+  private class ProjectsChildFactory(parentProject: Project) extends ChildFactory.Detachable[Project] with PropertyChangeListener {
+    private lazy val sbtResolver = {
+      val x = parentProject.getLookup.lookup(classOf[SBTResolver])
+      x.addPropertyChangeListener(this)
+      x
+    }
 
-    setKeys(depProjects)
-
+    override 
+    protected def createKeys(toPopulate: java.util.List[Project]): Boolean = {
+      val toSort = new java.util.TreeMap[String, Project]()
+      try {
+        val projectFos = sbtResolver.getAggregateProjects map FileUtil.toFileObject
+        for (projectFo <- projectFos) {
+          ProjectManager.getDefault.findProject(projectFo) match {
+            case x: SBTProject => toSort.put(x.getName, x)
+            case _ =>
+          }
+        }
+      } catch {
+        case ex: IOException => Exceptions.printStackTrace(ex)
+        case ex: IllegalArgumentException => Exceptions.printStackTrace(ex)
+      }
+      
+      toPopulate.addAll(toSort.values)
+      true
+    }
+    
     override
-    protected def createNodes(key: Project): Array[Node] = {
+    protected def createNodeForKey(key: Project): Node = {
       DataObject.find(key.getProjectDirectory) match {
-        case null => 
-          Array()
+        case null => null
         case depProjectFolder =>
-          Array(new FilterNode(depProjectFolder.getNodeDelegate) {
-              override def getIcon(tpe: Int) = SBTProject.SBT_ICON
-              override def getOpenedIcon(tpe: Int) = SBTProject.SBT_ICON
-            }
-          )
+          new FilterNode(depProjectFolder.getNodeDelegate) {
+            override def getIcon(tpe: Int) = SBTProject.SBT_ICON
+            override def getOpenedIcon(tpe: Int) = SBTProject.SBT_ICON
+          }
       }
     }
 
-    def addChangeListener(l: ChangeListener) {
-      changeSupport.addChangeListener(l)
+    override 
+    protected def addNotify() {
+      // addNotify will be called only when if node(key) returns non-null and node is 
+      // thus we won't sbtResolver.addPropertyChangeListener(this) here
+      super.addNotify
     }
 
-    def removeChangeListener(l: ChangeListener) {
-      changeSupport.removeChangeListener(l)
+    override
+    protected def removeNotify() {
+      sbtResolver.removePropertyChangeListener(this)
+      super.removeNotify
     }
-
+    
     def propertyChange(evt: PropertyChangeEvent) {
-      // The caller holds ProjectManager.mutex() read lock
-      SwingUtilities.invokeLater(new Runnable() {
-          def run() {
-            changeSupport.fireChange
-          }
-        })
+      evt.getPropertyName match {
+        case SBTResolver.DESCRIPTOR_CHANGE => 
+          // The caller holds ProjectManager.mutex() read lock
+          SwingUtilities.invokeLater(new Runnable() {
+              def run() {
+                ProjectsChildFactory.this.refresh(true)
+              }
+            })
+        case _ =>
+      }
     }
-        
   }
   
 }
