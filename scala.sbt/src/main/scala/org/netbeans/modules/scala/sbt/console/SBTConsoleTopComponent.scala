@@ -42,17 +42,15 @@ import org.openide.windows._
 final class SBTConsoleTopComponent private (project: Project) extends TopComponent {
   import SBTConsoleTopComponent._
   
-  private var finished: Boolean = true
   private var textPane: JTextPane = _
   private val mimeType = "text/x-sbt"
   private val log = Logger.getLogger(getClass.getName)
   
-
   initComponents
   setName("SBT " + project.getProjectDirectory.getName)
   setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
   setIcon(ImageUtilities.loadImage(ICON_PATH, true))
-  var console: ConsoleOutputStream = createTerminal
+  val console: ConsoleOutputStream = createTerminal
  
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
@@ -84,12 +82,6 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   
   override
   protected def componentOpened() {
-    if (finished) {
-      // Start a new one
-      finished = false
-      removeAll
-      console = createTerminal
-    }
     super.componentOpened
   }
 
@@ -229,11 +221,11 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     val (executable, args) = SBTExecution.getArgs(sbtHome)
     
-    console = new ConsoleOutputStream(
+    val consoleOs = new ConsoleOutputStream(
       textPane, 
       " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
       pipeIn)
-    val consoleOut = new AnsiConsoleOutputStream(console)
+    val consoleOut = new AnsiConsoleOutputStream(consoleOs)
     
     val in = new InputStreamReader(pipeIn)
     val out = new PrintWriter(new PrintStream(consoleOut))
@@ -259,13 +251,12 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     execDescriptor = execDescriptor.postExecution(new Runnable() {
         override
         def run() {
-          finished = true
           textPane.setEditable(false)
           SwingUtilities.invokeLater(new Runnable() {
               override
               def run() {
-                if (console != null) {
-                  console.exitSbt
+                if (consoleOs != null) {
+                  consoleOs.exitSbt
                 }
                 
                 SBTConsoleTopComponent.this.close
@@ -282,7 +273,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     textPane.addMouseListener(MyMouseListener)
     textPane.addMouseMotionListener(MyMouseListener)
-    console
+    consoleOs
   }
 
   object MyMouseListener extends MouseAdapter {
