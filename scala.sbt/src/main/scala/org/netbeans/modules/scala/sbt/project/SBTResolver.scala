@@ -38,6 +38,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
   private val projectDir = project.getProjectDirectory
   private var _projectContext: ProjectContext = _
   @volatile private var _isResolvedOrResolving = false
+  private var _isDescriptorFileMissed = false
 
   def isResolvedOrResolving = _isResolvedOrResolving
   def isResolvedOrResolving_=(b: Boolean) {
@@ -62,13 +63,16 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
 
   def projectContext = synchronized {
     if (_projectContext == null) {
-      dirWatcher.addChangeListener(projectDir, this)
       projectDir.getFileObject(DESCRIPTOR_FILE_NAME) match {
         case null => 
+          _isDescriptorFileMissed = true
+          dirWatcher.addChangeListener(projectDir, this)
           // set Empty one as soon as possible, so it can be cover by the one get via triggerSbtResolution laster
           _projectContext = EmptyContext 
           triggerSbtResolution
         case file =>
+          _isDescriptorFileMissed = false
+          dirWatcher.addChangeListener(projectDir, this)
           _projectContext = parseClasspathXml(FileUtil.toFile(file))
       }
     }
@@ -78,8 +82,9 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
   
   def stateChanged(evt: ChangeEvent) {
     evt match {
-      case FileAdded(file, time) if file.getParent == projectDir =>
+      case FileAdded(file, time) if file.getParent == projectDir && _isDescriptorFileMissed =>
         log.info("Got " + evt + ", " + file.getPath)
+        _isDescriptorFileMissed = false
         val oldContext = _projectContext
         _projectContext = parseClasspathXml(FileUtil.toFile(file))
         pcs.firePropertyChange(DESCRIPTOR_CHANGE, oldContext, _projectContext)

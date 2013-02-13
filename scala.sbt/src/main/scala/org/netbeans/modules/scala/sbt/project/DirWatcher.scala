@@ -30,7 +30,7 @@ class DirWatcher(fileName: String) extends TimerTask {
     try {
       for {
         folder <- folders
-        file <- folder.getData(false) if file.getNameExt == fileName
+        file = folder.getFileObject(fileName) if file != null
       } {
         file.lastModified.getTime match {
           case NOT_SURE =>
@@ -58,12 +58,12 @@ class DirWatcher(fileName: String) extends TimerTask {
 
       fileToLastModified.get(file) match {
         case None => // new file
-          for ((file, newTime) <- newFileToTime if file.canRead) {
+          for (newTime <- newFileToTime.get(file)) {
             fileToLastModified(file) = newTime
             fireChange(FileAdded(file, newTime))
           }
         case Some(oldTime)  => // modified file
-          for ((file, newTime) <- newFileToTime if file.canRead) {
+          for (newTime <- newFileToTime.get(file)) {
             if (oldTime < newTime) {
               fileToLastModified(file) = newTime
               fireChange(FileModified(file, newTime))
