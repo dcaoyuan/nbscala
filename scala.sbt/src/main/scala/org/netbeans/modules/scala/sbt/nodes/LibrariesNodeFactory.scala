@@ -1,10 +1,8 @@
 package org.netbeans.modules.scala.sbt.nodes
 
 import java.awt.Image
-import java.awt.event.ActionEvent
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
-import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
@@ -100,18 +98,7 @@ object LibrariesNodeFactory {
     def canCopy = false
 
     override
-    def getActions(context: Boolean): Array[Action] = {
-      Array(/* new ForceResolveAction() */)
-    }
-
-    private class ForceResolveAction extends AbstractAction {
-      putValue(Action.NAME, NbBundle.getMessage(classOf[LibrariesNodeFactory], "BTN_Force_Resolve"))
-
-      def actionPerformed(event: ActionEvent) {
-        //SBTResourceController sbtController = project.getLookup().lookup(classOf[SBTResourceController])
-        //sbtController.triggerResolution
-      }
-    }
+    def getActions(context: Boolean): Array[Action] = Array()
   }
   
   private class LibrariesChildren(project: Project) extends Children.Keys[String] {

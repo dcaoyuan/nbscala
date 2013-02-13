@@ -15,12 +15,10 @@ import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.project.ui.support.NodeFactory
 import org.netbeans.spi.project.ui.support.NodeList
 import org.openide.filesystems.FileUtil
-import org.openide.loaders.DataObject
 import org.openide.loaders.DataObjectNotFoundException
 import org.openide.nodes.AbstractNode
 import org.openide.nodes.ChildFactory
 import org.openide.nodes.Children
-import org.openide.nodes.FilterNode
 import org.openide.nodes.Node
 import org.openide.util.ChangeSupport
 import org.openide.util.Exceptions
@@ -146,16 +144,7 @@ object AggProjectsNodeFactory {
     }
     
     override
-    protected def createNodeForKey(key: Project): Node = {
-      DataObject.find(key.getProjectDirectory) match {
-        case null => null
-        case depProjectFolder =>
-          new FilterNode(depProjectFolder.getNodeDelegate) {
-            override def getIcon(tpe: Int) = SBTProject.SBT_ICON
-            override def getOpenedIcon(tpe: Int) = SBTProject.SBT_ICON
-          }
-      }
-    }
+    protected def createNodeForKey(key: Project): Node = new SubProjectNode(key)
 
     override 
     protected def addNotify() {
