@@ -1,8 +1,5 @@
 package org.netbeans.modules.scala.sbt.nodes
 
-import java.beans.PropertyChangeEvent
-import java.beans.PropertyChangeListener
-import javax.swing.SwingUtilities
 import org.netbeans.api.project.Project
 import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.openide.filesystems.FileUtil
@@ -31,12 +28,8 @@ class ScopeNode(project: Project, scope: String) extends AbstractNode(Children.c
   private def getBadge = Icons.ICON_LIBARARIES_BADGE
 }
 
-private class ScopesChildFactory(project: Project, scope: String) extends ChildFactory.Detachable[ArtifactInfo] with PropertyChangeListener {
-  private lazy val sbtResolver = {
-    val x = project.getLookup.lookup(classOf[SBTResolver])
-    x.addPropertyChangeListener(this)
-    x
-  }
+private class ScopesChildFactory(project: Project, scope: String) extends ChildFactory.Detachable[ArtifactInfo] {
+  private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
 
   override 
   protected def createKeys(toPopulate: java.util.List[ArtifactInfo]): Boolean = {
@@ -51,33 +44,5 @@ private class ScopesChildFactory(project: Project, scope: String) extends ChildF
   }
   
   override
-  protected def createNodeForKey(key: ArtifactInfo): Node = {
-    new ArtifactNode(key, project)
-  }
-
-  override 
-  protected def addNotify() {
-    // addNotify will be called only when if node(key) returns non-null and node is 
-    // thus we won't sbtResolver.addPropertyChangeListener(this) here
-    super.addNotify
-  }
-
-  override
-  protected def removeNotify() {
-    sbtResolver.removePropertyChangeListener(this)
-    super.removeNotify
-  }
-
-  def propertyChange(evt: PropertyChangeEvent) {
-    evt.getPropertyName match {
-      case SBTResolver.DESCRIPTOR_CHANGE => 
-        // The caller holds ProjectManager.mutex() read lock
-        SwingUtilities.invokeLater(new Runnable() {
-            def run() {
-              ScopesChildFactory.this.refresh(true)
-            }
-          })
-      case _ =>
-    }
-  }
+  protected def createNodeForKey(key: ArtifactInfo): Node = new ArtifactNode(key, project)
 }

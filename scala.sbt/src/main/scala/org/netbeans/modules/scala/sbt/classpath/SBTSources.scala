@@ -21,7 +21,7 @@ import org.openide.util.NbBundle
  * @author Caoyuan Deng
  */
 class SBTSources(project: Project) extends Sources {
-  private val changeSupport = new ChangeSupport(this)
+  private val cs = new ChangeSupport(this)
   private lazy val sbtResolver = {
     val x = project.getLookup.lookup(classOf[SBTResolver])
 
@@ -29,7 +29,7 @@ class SBTSources(project: Project) extends Sources {
         def propertyChange(evt: PropertyChangeEvent) {
           evt.getPropertyName match {
             case SBTResolver.DESCRIPTOR_CHANGE => 
-              changeSupport.fireChange
+              cs.fireChange
             case _ =>
           }
         }
@@ -63,7 +63,6 @@ class SBTSources(project: Project) extends Sources {
   }
 
   private def maybeAddGroup(groups: ArrayBuffer[SourceGroup], tpe: String, isTest: Boolean) {
-    val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
     val roots = if (sbtResolver != null) {
       sbtResolver.getSources(tpe, isTest) map (x => FileUtil.toFileObject(x._1))
     } else {
@@ -101,11 +100,11 @@ class SBTSources(project: Project) extends Sources {
 
   override 
   def addChangeListener(l: ChangeListener) {
-    changeSupport.addChangeListener(l)
+    cs.addChangeListener(l)
   }
 
   override 
   def removeChangeListener(l: ChangeListener) {
-    changeSupport.removeChangeListener(l)
+    cs.removeChangeListener(l)
   }
 }

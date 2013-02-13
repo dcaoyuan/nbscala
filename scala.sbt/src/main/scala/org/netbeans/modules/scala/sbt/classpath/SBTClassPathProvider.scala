@@ -53,8 +53,9 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
   }
 
   def propertyChange(evt: PropertyChangeEvent) {
-    if (ClassPathImplementation.PROP_RESOURCES == evt.getPropertyName) {
-      clearCache
+    evt.getPropertyName match {
+      case ClassPathImplementation.PROP_RESOURCES => clearCache
+      case _ =>
     }
   }
   

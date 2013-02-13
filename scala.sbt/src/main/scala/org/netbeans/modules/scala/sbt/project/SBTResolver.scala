@@ -4,6 +4,7 @@ import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
 import java.io.File
 import java.util.Timer
+import java.util.logging.Logger
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 import org.netbeans.api.java.classpath.ClassPath
@@ -31,6 +32,8 @@ case class ProjectContext(
 class SBTResolver(project: SBTProject) extends ChangeListener {
   import SBTResolver._
 
+  private val log = Logger.getLogger(getClass.getName)
+  
   private val pcs = new PropertyChangeSupport(this)
   private val projectDir = project.getProjectDirectory
   private var _projectContext: ProjectContext = _
@@ -76,13 +79,13 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
   def stateChanged(evt: ChangeEvent) {
     evt match {
       case FileAdded(file, time) if file.getParent == projectDir =>
-        println("Got " + evt + ", " + file.getPath)
+        log.info("Got " + evt + ", " + file.getPath)
         val oldContext = _projectContext
         _projectContext = parseClasspathXml(FileUtil.toFile(file))
         pcs.firePropertyChange(DESCRIPTOR_CHANGE, oldContext, _projectContext)
         
       case FileModified(file, time) if file.getParent == projectDir =>
-        println("Got " + evt + ", " + file.getPath)
+        log.info("Got " + evt + ", " + file.getPath)
         val oldContext = _projectContext
         _projectContext = parseClasspathXml(FileUtil.toFile(file))
         pcs.firePropertyChange(DESCRIPTOR_CHANGE, oldContext, _projectContext)
@@ -129,17 +132,9 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                   val isJava = srcFo.getPath.split("/") find (_ == "java") isDefined
                   val srcDir = FileUtil.toFile(srcFo)
                   val srcs = if (isTest) {
-                    if (isJava) {
-                      testJavaSrcs
-                    } else {
-                      testScalaSrcs
-                    }
+                    if (isJava) testJavaSrcs else testScalaSrcs
                   } else {
-                    if (isJava) {
-                      mainJavaSrcs
-                    } else {
-                      mainScalaSrcs
-                    }
+                    if (isJava) mainJavaSrcs else mainScalaSrcs
                   }
                   srcs += srcDir -> outDir
                 }
@@ -213,58 +208,33 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
   }
   
   def getResolvedLibraries(scope: String): Array[File] = {
-    if (projectContext != null) {
-      scope match {
-        case ClassPath.COMPILE => projectContext.mainCps //++ libraryEntry.testCps
-        case ClassPath.EXECUTE => projectContext.mainCps //++ libraryEntry.testCps
-        case ClassPath.SOURCE => projectContext.mainJavaSrcs ++ projectContext.testJavaSrcs ++ projectContext.mainScalaSrcs ++ projectContext.mainScalaSrcs map (_._1)
-        case ClassPath.BOOT => projectContext.mainCps filter {cp =>
-            val name = cp.getName
-            name.endsWith(".jar") && (name.startsWith("scala-library")  ||
-                                      name.startsWith("scala-compiler") ||  // necessary?
-                                      name.startsWith("scala-reflect")      // necessary?
-            )
-          }
-        case _ => Array()
-      }
-    } else {
-      Array()
+    scope match {
+      case ClassPath.COMPILE => projectContext.mainCps //++ libraryEntry.testCps
+      case ClassPath.EXECUTE => projectContext.mainCps //++ libraryEntry.testCps
+      case ClassPath.SOURCE => projectContext.mainJavaSrcs ++ projectContext.testJavaSrcs ++ projectContext.mainScalaSrcs ++ projectContext.mainScalaSrcs map (_._1)
+      case ClassPath.BOOT => projectContext.mainCps filter {cp =>
+          val name = cp.getName
+          name.endsWith(".jar") && (name.startsWith("scala-library")  ||
+                                    name.startsWith("scala-compiler") ||  // necessary?
+                                    name.startsWith("scala-reflect")      // necessary?
+          )
+        }
+      case _ => Array()
     }
   }
 
   def getSources(tpe: String, test: Boolean): Array[(File, File)] = {
-    if (projectContext != null) {
-      tpe match {
-        case ProjectConstants.SOURCES_TYPE_JAVA =>
-          if (test) projectContext.testJavaSrcs else projectContext.mainJavaSrcs
-        case ProjectConstants.SOURCES_TYPE_SCALA =>
-          if (test) projectContext.testScalaSrcs else projectContext.mainScalaSrcs
-        case _ => Array()
-      }
-    } else {
-      Array()
+    tpe match {
+      case ProjectConstants.SOURCES_TYPE_JAVA =>
+        if (test) projectContext.testJavaSrcs else projectContext.mainJavaSrcs
+      case ProjectConstants.SOURCES_TYPE_SCALA =>
+        if (test) projectContext.testScalaSrcs else projectContext.mainScalaSrcs
+      case _ => Array()
     }
   }
   
-  def getDependenciesProjects: Array[File] = {
-    if (projectContext != null) {
-      projectContext.depPrjs
-    } else {
-      Array()
-    }
-  }
-
-  def getAggregateProjects: Array[File] = {
-    if (projectContext != null) {
-      projectContext.aggPrjs
-    } else {
-      Array()
-    }
-  }
-
-  private def equal(o1: Object, o2: Object): Boolean = {
-    if (o1 == null) o2 == null else o1.equals(o2)
-  }
+  def getDependenciesProjects: Array[File] = projectContext.depPrjs
+  def getAggregateProjects: Array[File] = projectContext.aggPrjs
 }
 
 object SBTResolver {

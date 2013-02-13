@@ -1,10 +1,7 @@
 package org.netbeans.modules.scala.sbt.nodes
 
 import java.awt.Image
-import java.beans.PropertyChangeEvent
-import java.beans.PropertyChangeListener
 import javax.swing.Action
-import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.project.Project
@@ -28,7 +25,7 @@ object LibrariesNodeFactory {
   
   private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
     
-  private class LibrariesNodeList(project: Project) extends NodeList[String] with PropertyChangeListener {
+  private class LibrariesNodeList(project: Project) extends NodeList[String] {
     private val cs = new ChangeSupport(this)
 
     def keys: java.util.List[String] = {
@@ -64,16 +61,6 @@ object LibrariesNodeFactory {
     def removeChangeListener(l: ChangeListener) {
       cs.removeChangeListener(l)
     }
-
-    def propertyChange(evt: PropertyChangeEvent) {
-      // The caller holds ProjectManager.mutex() read lock
-      SwingUtilities.invokeLater(new Runnable() {
-          def run() {
-            cs.fireChange
-          }
-        })
-    }
-        
   }
   
   class LibrariesNode(project: Project) extends AbstractNode(new LibrariesChildren(project)) {

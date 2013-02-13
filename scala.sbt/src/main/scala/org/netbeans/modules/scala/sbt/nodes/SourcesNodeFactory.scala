@@ -1,8 +1,5 @@
 package org.netbeans.modules.scala.sbt.nodes
 
-import java.beans.PropertyChangeEvent
-import java.beans.PropertyChangeListener
-import javax.swing.SwingUtilities
 import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ProjectUtils
@@ -20,13 +17,9 @@ class SourcesNodeFactory extends NodeFactory {
 }
 
 object SourcesNodeFactory {
-  private class SourcesNodeList(project: Project) extends NodeList[SourceGroup] with PropertyChangeListener {
+  private class SourcesNodeList(project: Project) extends NodeList[SourceGroup] {
     private val cs = new ChangeSupport(this)
-    private lazy val sbtResolver = {
-      val x = project.getLookup.lookup(classOf[SBTResolver])
-      x.addPropertyChangeListener(this)
-      x
-    }
+    private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
       
     override
     def keys: java.util.List[SourceGroup] = {
@@ -46,17 +39,14 @@ object SourcesNodeFactory {
     }
         
     override
-    def node(key: SourceGroup): Node = {
-      PackageView.createPackageView(key)
-    }
+    def node(key: SourceGroup): Node = PackageView.createPackageView(key)
         
     def addNotify() {
-      // addNotify will be called only when if node(key) returns non-null and node is 
-      // thus we won't sbtResolver.addPropertyChangeListener(this) here
+
     }
 
     def removeNotify() {
-      sbtResolver.removePropertyChangeListener(this)
+      
     }
 
     override
@@ -67,20 +57,6 @@ object SourcesNodeFactory {
     override
     def removeChangeListener(l: ChangeListener) {
       cs.removeChangeListener(l)
-    }
-
-    def propertyChange(evt: PropertyChangeEvent) {
-      evt.getPropertyName match {
-        case SBTResolver.DESCRIPTOR_CHANGE => 
-          // The caller holds ProjectManager.mutex() read lock
-          SwingUtilities.invokeLater(new Runnable() {
-              def run() {
-                keys
-                cs.fireChange
-              }
-            })
-        case _ =>
-      }
     }
   }
 }

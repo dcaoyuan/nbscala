@@ -17,7 +17,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
    * also @see ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, "Open sbt", null) in
    * SBTProjectLogicalView.getActions
    */
-  def getSupportedActions() = Array[String](
+  def getSupportedActions() = Array(
     COMMAND_SBT_CONSOLE,
     COMMAND_SBT_RELOAD
   )

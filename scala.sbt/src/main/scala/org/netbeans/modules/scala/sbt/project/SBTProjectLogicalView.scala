@@ -1,7 +1,10 @@
 package org.netbeans.modules.scala.sbt.project
 
 import java.awt.Image
+import java.beans.PropertyChangeEvent
+import java.beans.PropertyChangeListener
 import javax.swing.Action
+import javax.swing.SwingUtilities
 import org.netbeans.api.project.FileOwnerQuery
 import org.netbeans.api.project.Project
 import org.netbeans.spi.java.project.support.ui.PackageView
@@ -25,7 +28,10 @@ import org.openide.util.lookup.ProxyLookup
  * @author Caoyuan Deng
  */
 class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
-
+  import SBTProjectLogicalView._
+  
+  private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
+    
   override
   def createLogicalView: Node = {
     try {
@@ -45,11 +51,12 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
   }
 
   private final class ProjectNode(node: Node, project: Project) extends AbstractNode(
-    NodeFactorySupport.createCompositeChildren(project, 
-                                               "Projects/org-netbeans-modules-scala-sbt/Nodes"),
+    NodeFactorySupport.createCompositeChildren(project, NODE_FACTORY_FOLDER_PATH),
     new ProxyLookup(Lookups.singleton(project), node.getLookup)
-  ) {
+  ) with PropertyChangeListener {
 
+    sbtResolver.addPropertyChangeListener(this)
+    
     override
     def getActions(arg0: Boolean): Array[Action] = Array(
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_OpenSbtAction"), null),
@@ -70,8 +77,27 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
     def getDisplayName: String = {
       project.getProjectDirectory.getName
     }
-  }
+    
+    override 
+    def destroy() {
+      sbtResolver.removePropertyChangeListener(this)
+      super.destroy
+    }
 
+    def propertyChange(evt: PropertyChangeEvent) {
+      evt.getPropertyName match {
+        case SBTResolver.DESCRIPTOR_CHANGE => 
+          // The caller holds ProjectManager.mutex() read lock
+          SwingUtilities.invokeLater(new Runnable() {
+              def run() {
+                ProjectNode.this.setChildren(NodeFactorySupport.createCompositeChildren(project, NODE_FACTORY_FOLDER_PATH))
+              }
+            })
+        case _ =>
+      }
+    }
+  }
+  
   /**
    * Try to find a given node in the logical view. If some node within the logical 
    * view tree has the supplied object in its lookup, it ought to be returned if 
@@ -104,5 +130,9 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
         
     null
   }
+  
+}
 
+object SBTProjectLogicalView {
+  val NODE_FACTORY_FOLDER_PATH = "Projects/org-netbeans-modules-scala-sbt/Nodes"
 }
