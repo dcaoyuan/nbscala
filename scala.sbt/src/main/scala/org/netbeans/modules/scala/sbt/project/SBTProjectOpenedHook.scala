@@ -26,6 +26,7 @@ class SBTProjectOpenedHook(project: Project) extends ProjectOpenedHook {
   override
   protected def projectClosed() {
     GlobalPathRegistry.getDefault.unregister(ClassPath.COMPILE, classpaths)
+    SBTResolver.dirWatcher.removeChangeListener(project.getLookup.lookup(classOf[SBTResolver]))
     //close sbt console
   }
 }

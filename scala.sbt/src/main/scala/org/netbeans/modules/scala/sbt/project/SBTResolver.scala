@@ -3,15 +3,11 @@ package org.netbeans.modules.scala.sbt.project
 import java.beans.PropertyChangeListener
 import java.beans.PropertyChangeSupport
 import java.io.File
-import java.io.IOException
-import java.net.MalformedURLException
+import java.util.Timer
+import javax.swing.event.ChangeEvent
+import javax.swing.event.ChangeListener
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
-import org.openide.ErrorManager
-import org.openide.filesystems.FileChangeAdapter
-import org.openide.filesystems.FileEvent
-import org.openide.filesystems.FileObject
-import org.openide.filesystems.FileRenameEvent
 import org.openide.filesystems.FileUtil
 import org.openide.util.NbBundle
 import scala.collection.mutable.ArrayBuffer
@@ -32,13 +28,11 @@ case class ProjectContext(
  *
  * @author Caoyuan Deng
  */
-class SBTResolver(project: SBTProject) {
+class SBTResolver(project: SBTProject) extends ChangeListener {
   import SBTResolver._
 
-  private final val pcs = new PropertyChangeSupport(this)
-  private final val descriptorFileListener = new DescriptorFileListener
-  private val lock = new Object()
-  private var _descriptorFile: FileObject = _
+  private val pcs = new PropertyChangeSupport(this)
+  private val projectDir = project.getProjectDirectory
   private var _projectContext: ProjectContext = _
   @volatile private var _isResolvedOrResolving = false
 
@@ -65,43 +59,35 @@ class SBTResolver(project: SBTProject) {
 
   def projectContext = synchronized {
     if (_projectContext == null) {
-      descriptorFile = loadDescriptorFile
+      dirWatcher.addChangeListener(projectDir, this)
+      projectDir.getFileObject(DESCRIPTOR_FILE_NAME) match {
+        case null => 
+          // set Empty one as soon as possible, so it can be cover by the one get via triggerSbtResolution laster
+          _projectContext = EmptyContext 
+          triggerSbtResolution
+        case file =>
+          _projectContext = parseClasspathXml(FileUtil.toFile(file))
+      }
     }
+    
     _projectContext
   }
   
-  private def descriptorFile: FileObject = _descriptorFile
-  private def descriptorFile_=(file: FileObject): Unit = synchronized {
-    if (file != null && file.isData) { 
-      try {
-        val oldFile = _descriptorFile
-        _descriptorFile = file
-        if (oldFile != null && oldFile != file) {
-          oldFile.removeFileChangeListener(descriptorFileListener)
-          file.addFileChangeListener(descriptorFileListener)
-        }
-        
+  def stateChanged(evt: ChangeEvent) {
+    evt match {
+      case FileAdded(file, time) if file.getParent == projectDir =>
+        println("Got " + evt + ", " + file.getPath)
         val oldContext = _projectContext
         _projectContext = parseClasspathXml(FileUtil.toFile(file))
-      
         pcs.firePropertyChange(DESCRIPTOR_CHANGE, oldContext, _projectContext)
-      } catch {
-        case ex: MalformedURLException => ErrorManager.getDefault.notify(ex)
-        case ex: Exception => ErrorManager.getDefault.notify(ex)
-      }
-    }
-  }
-  
-  @throws(classOf[IOException])
-  private def loadDescriptorFile: FileObject = synchronized {
-    project.getProjectDirectory.getFileObject(DESCRIPTOR_FILE_NAME) match {
-      case null => 
-        // create an empty descriptor file to avoid infinite loop to triggerSbtResolution
-        // we'll listen to this emptyDescriptor file
-        val emptyDescFile = project.getProjectDirectory.createData(DESCRIPTOR_FILE_NAME)
-        triggerSbtResolution
-        emptyDescFile
-      case fo => fo
+        
+      case FileModified(file, time) if file.getParent == projectDir =>
+        println("Got " + evt + ", " + file.getPath)
+        val oldContext = _projectContext
+        _projectContext = parseClasspathXml(FileUtil.toFile(file))
+        pcs.firePropertyChange(DESCRIPTOR_CHANGE, oldContext, _projectContext)
+      
+      case _ =>
     }
   }
 
@@ -234,10 +220,9 @@ class SBTResolver(project: SBTProject) {
         case ClassPath.SOURCE => projectContext.mainJavaSrcs ++ projectContext.testJavaSrcs ++ projectContext.mainScalaSrcs ++ projectContext.mainScalaSrcs map (_._1)
         case ClassPath.BOOT => projectContext.mainCps filter {cp =>
             val name = cp.getName
-            name.endsWith(".jar") && (
-              name.startsWith("scala-library")  ||
-              name.startsWith("scala-compiler") ||  // necessary?
-              name.startsWith("scala-reflect")      // necessary?
+            name.endsWith(".jar") && (name.startsWith("scala-library")  ||
+                                      name.startsWith("scala-compiler") ||  // necessary?
+                                      name.startsWith("scala-reflect")      // necessary?
             )
           }
         case _ => Array()
@@ -277,24 +262,6 @@ class SBTResolver(project: SBTProject) {
     }
   }
 
-  private class DescriptorFileListener extends FileChangeAdapter {
-
-    override
-    def fileChanged(fe: FileEvent) {
-      descriptorFile = fe.getFile
-    }
-
-    override
-    def fileDeleted(fe: FileEvent) {
-      descriptorFile = null
-    }
-
-    override
-    def fileRenamed(fe: FileRenameEvent) {
-      //descriptorFile = fe.getFile
-    }
-  }
-
   private def equal(o1: Object, o2: Object): Boolean = {
     if (o1 == null) o2 == null else o1.equals(o2)
   }
@@ -305,5 +272,21 @@ object SBTResolver {
   
   val DESCRIPTOR_CHANGE = "sbtDescriptorChange"
   val SBT_RESOLVED_STATE_CHANGE = "sbtResolvedStateChange"
-  val SBT_RESOLVED = "sbtResolved"  
+  val SBT_RESOLVED = "sbtResolved" 
+  
+  val EmptyContext = ProjectContext(null, 
+                                    Array[(File, File)](), 
+                                    Array[(File, File)](), 
+                                    Array[(File, File)](), 
+                                    Array[(File, File)](), 
+                                    Array[File](), 
+                                    Array[File](),
+                                    Array[File](),
+                                    Array[File]()
+  )
+  
+  val dirWatcher = new DirWatcher(DESCRIPTOR_FILE_NAME)
+  
+  private val timer = new Timer
+  timer.schedule(dirWatcher, 0, 2000)
 }
