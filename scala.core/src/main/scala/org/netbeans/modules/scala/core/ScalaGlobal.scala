@@ -516,7 +516,7 @@ object ScalaGlobal {
     // Should explictly set the pluginsDir, otherwise the default will be set to scala.home/misc
     // which may bring uncompitable verions of scala's runtime call
     // @see scala.tools.util.PathResolver.Defaults
-    val pluginJarsDir = InstalledFileLocator.getDefault.locate("modules/ext/org.scala-lang.plugins", "org.netbeans.libs.scala", false)
+    val pluginJarsDir = InstalledFileLocator.getDefault.locate("modules/ext/org.scala-lang.plugins", "org.netbeans.libs.scala.continuations", false)
     logger.info("Bundled plugin jars dir is: " + pluginJarsDir)
     settings.pluginsDir.value = if (pluginJarsDir ne null) pluginJarsDir.getAbsolutePath else ""
     settings.plugin.value = Nil
