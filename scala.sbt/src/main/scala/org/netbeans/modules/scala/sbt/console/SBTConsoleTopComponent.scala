@@ -240,7 +240,9 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     }
     log.info("==== End of Sbt console args ====")
 
-    builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
+    // XXX under Mac OS jdk7, the java.home is point to /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/jre
+    // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which cause the lack of javac
+    //builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
     val pwd = FileUtil.toFile(project.getProjectDirectory)
     builder = builder.workingDirectory(pwd)
 
