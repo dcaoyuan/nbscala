@@ -19,7 +19,10 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
    */
   def getSupportedActions() = Array(
     COMMAND_SBT_CONSOLE,
-    COMMAND_SBT_RELOAD
+    COMMAND_SBT_RELOAD,
+    COMMAND_BUILD,
+    COMMAND_REBUILD,
+    COMMAND_CLEAN
   )
   
   @throws(classOf[IllegalArgumentException])
@@ -28,7 +31,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   }
   
   def invokeAction(command: String, context: Lookup) {
-    command.toLowerCase match {
+    command match {
       case COMMAND_SBT_CONSOLE => 
         val rootProject = project.getRootProject
         val commands = List("project " + project.getName)
@@ -38,6 +41,27 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
         sbtResolver.isResolvedOrResolving = false
         sbtResolver.triggerSbtResolution
+        
+      case COMMAND_BUILD =>
+        val rootProject = project.getRootProject
+        val commands = List("project " + project.getName,
+                            "compile")
+        SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
+        
+      case COMMAND_REBUILD =>
+        val rootProject = project.getRootProject
+        val commands = List("project " + project.getName,
+                            "clean",
+                            "compile")
+        SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
+        
+      case COMMAND_CLEAN =>
+        val rootProject = project.getRootProject
+        val commands = List("project " + project.getName,
+                            "clean")
+        SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
+        
+      case _ =>
     }
   }
 }
@@ -45,4 +69,8 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
 object SBTActionProvider {
   val COMMAND_SBT_CONSOLE = "sbt-console"
   val COMMAND_SBT_RELOAD  = "sbt-reload"
+  
+  val COMMAND_BUILD   = ActionProvider.COMMAND_BUILD    // compile
+  val COMMAND_REBUILD = ActionProvider.COMMAND_REBUILD  // clean and compile
+  val COMMAND_CLEAN   = ActionProvider.COMMAND_CLEAN    // clean
 }
