@@ -356,8 +356,6 @@ class ConsoleOutputStream(area: JTextComponent, welcome: String, pipedIn: PipedI
     
   protected def upAction(event: KeyEvent) {
     event.consume
-    val resp = runSbtCommand("eclipse")
-    println(resp)
     if (completePopup.isVisible()) {
       val selected = completeCombo.getSelectedIndex - 1
       if (selected < 0) return

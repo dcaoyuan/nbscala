@@ -53,7 +53,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     if (!_isResolvedOrResolving) {
       _isResolvedOrResolving = true
       val rootProject = project.getRootProject
-      val commands = List("eclipse gen-netbeans=true skip-parents=false")
+      val commands = List("netbeans")
       val showMessage = NbBundle.getMessage(classOf[SBTResolver], "LBL_Resolving_Progress")
       SBTConsoleTopComponent.openInstance(rootProject, false, commands, showMessage){result =>
         pcs.firePropertyChange(SBT_RESOLVED, null, null)
