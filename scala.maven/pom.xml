@@ -9,6 +9,7 @@
 
     <artifactId>org-netbeans-modules-scala-maven</artifactId>
     <packaging>nbm</packaging>
+    <version>${scala.maven.version}</version>
 
     <name>org-netbeans-modules-scala-maven</name>
 
