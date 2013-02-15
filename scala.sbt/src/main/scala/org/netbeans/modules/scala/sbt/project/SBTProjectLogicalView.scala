@@ -81,6 +81,9 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
       project.getProjectDirectory.getName
     }
     
+    override
+    def getShortDescription = project.getProjectDirectory.getPath
+    
     override 
     def destroy() {
       sbtResolver.removePropertyChangeListener(this)
