@@ -38,6 +38,12 @@ class ArtifactNode(artifactInfo: ArtifactInfo, project: Project) extends Abstrac
   def getName: String = {
     artifactInfo.name + " " + artifactInfo.version
   }
+  
+  /**
+   * Tooltip
+   */
+  override 
+  def getShortDescription = if (artifactInfo.hasJar) artifactInfo.jarFile.getAbsolutePath else getDisplayName
 
   override
   def getIcon(tpe: Int): Image = {

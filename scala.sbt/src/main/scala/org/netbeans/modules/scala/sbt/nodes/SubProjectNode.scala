@@ -27,7 +27,13 @@ class SubProjectNode(project: Project) extends AbstractNode(Children.LEAF) {
   def getDisplayName: String = {
     project.getProjectDirectory.getName
   }
-    
+
+  /**
+   * Tooltip
+   */
+  override 
+  def getShortDescription = project.getProjectDirectory.getPath
+
   override
   def getPreferredAction = OpenAction
   
