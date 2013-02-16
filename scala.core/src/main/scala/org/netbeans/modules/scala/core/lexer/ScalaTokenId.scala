@@ -40,158 +40,175 @@
  */
 package org.netbeans.modules.scala.core.lexer
 
-import java.util.{Collection,
-                  HashMap,
-                  HashSet,
-                  Map}
-import org.netbeans.api.lexer.{InputAttributes,
-                               LanguagePath,
-                               Token,
-                               TokenId}
-import org.netbeans.spi.lexer.{LanguageHierarchy,
-                               Lexer,
-                               LexerRestartInfo}
+import org.netbeans.api.lexer.{
+  InputAttributes,
+  LanguagePath,
+  Token,
+  TokenId}
+import org.netbeans.spi.lexer.{
+  LanguageHierarchy,
+  Lexer,
+  LexerRestartInfo}
 import org.netbeans.modules.scala.core.ScalaMimeResolver
+import scala.collection.mutable
+
 /**
  * 
  * @author Caoyuan Deng
  */
-object ScalaTokenId extends Enumeration {
-  // Let type of enum's value the same as enum itself
-  type ScalaTokenId = V
-
-  // Extends Enumeration.Val to get custom enumeration value
-  class V(val name: String, val fixedText: String, val primaryCategory: String) extends Val(name) with TokenId {
-    override def ordinal = id
+class ScalaTokenId private (val ordinal: Int, val name: String, val fixedText: String, val primaryCategory: String) extends TokenId {
+  override 
+  def hashCode = ordinal
+  
+  override 
+  def equals(o: Any) = {
+    if (o == null) false
+    else if (o.isInstanceOf[ScalaTokenId]) {
+      o.asInstanceOf[ScalaTokenId].ordinal == this.ordinal
+    } else false
   }
-  object V {
-    def apply(name: String, fixedText: String, primaryCategory: String) = new V(name, fixedText, primaryCategory)
+  
+  override
+  def toString = name
+}
+
+object ScalaTokenId {
+  private var lastOrdinal = 0
+  private val values = new mutable.HashMap[String, ScalaTokenId]()
+
+  private def apply(name: String, fixedText: String, primaryCategory: String) = {
+    val x = new ScalaTokenId(lastOrdinal, name, fixedText, primaryCategory)
+    lastOrdinal += 1
+    values(name) = x
+    x
   }
+  
+  def tokenIdOf(name: String): Option[ScalaTokenId] = values.get(name)
 
-  val IGNORED = V("IGNORED", null, "ignored")
+  val IGNORED = ScalaTokenId("IGNORED", null, "ignored")
 
-  val Keyword = V("Keyword", null, "keyword")
+  val Keyword = ScalaTokenId("Keyword", null, "keyword")
 
-  val Identifier = V("Identifier", null, "identifier")
+  val Identifier = ScalaTokenId("Identifier", null, "identifier")
 
-  val DocCommentStart = V("DocCommentStart", null, "comment")
-  val DocCommentEnd = V("DocCommentEnd", null, "comment")
-  val DocCommentData = V("DocCommentData", null, "comment")
-  val BlockCommentStart = V("BlockCommentStart", null, "comment")
-  val BlockCommentEnd = V("BlockCommentEnd", null, "comment")
-  val BlockCommentData = V("BlockCommentData", null, "comment")
-  val CommentTag = V("CommentTag", null, "comment")
-  val LineComment = V("LineComment", null, "comment")
+  val DocCommentStart = ScalaTokenId("DocCommentStart", null, "comment")
+  val DocCommentEnd = ScalaTokenId("DocCommentEnd", null, "comment")
+  val DocCommentData = ScalaTokenId("DocCommentData", null, "comment")
+  val BlockCommentStart = ScalaTokenId("BlockCommentStart", null, "comment")
+  val BlockCommentEnd = ScalaTokenId("BlockCommentEnd", null, "comment")
+  val BlockCommentData = ScalaTokenId("BlockCommentData", null, "comment")
+  val CommentTag = ScalaTokenId("CommentTag", null, "comment")
+  val LineComment = ScalaTokenId("LineComment", null, "comment")
 
-  val Ws = V("Ws", null, "whitespace")
-  val Nl = V("Nl", null, "whitespace")
+  val Ws = ScalaTokenId("Ws", null, "whitespace")
+  val Nl = ScalaTokenId("Nl", null, "whitespace")
 
-  val IntegerLiteral = V("IntegerLiteral", null, "number")
-  val FloatingPointLiteral = V("FloatingPointLiteral", null, "number")
-  val CharacterLiteral = V("CharacterLiteral", null, "character")
-  val StringLiteral = V("StringLiteral", null, "string")
-  val SymbolLiteral = V("SymbolLiteral", null, "identifier")
+  val IntegerLiteral = ScalaTokenId("IntegerLiteral", null, "number")
+  val FloatingPointLiteral = ScalaTokenId("FloatingPointLiteral", null, "number")
+  val CharacterLiteral = ScalaTokenId("CharacterLiteral", null, "character")
+  val StringLiteral = ScalaTokenId("StringLiteral", null, "string")
+  val SymbolLiteral = ScalaTokenId("SymbolLiteral", null, "identifier")
 
-  val Operator = V("Operator", null, "operator")
-  val Separator = V("Separator", null, "separator")
-  val Error = V("Error", null, "error")
+  val Operator = ScalaTokenId("Operator", null, "operator")
+  val Separator = ScalaTokenId("Separator", null, "separator")
+  val Error = ScalaTokenId("Error", null, "error")
 
-  val LParen = V("LParen", "(", "separator")
-  val RParen = V("RParen", ")", "separator")
-  val LBrace = V("LBrace", "{", "separator")
-  val RBrace = V("RBrace", "}", "separator")
-  val LBracket = V("LBracket", "[", "separator")
-  val RBracket = V("RBracket", "]", "separator")
-  val Comma = V("Comma", ",", "separator")
-  val Dot = V("Dot", ".", "separator")
-  val Semicolon = V("Semicolon", ";", "separator")
-  val Bar = V("Bar", "|", "separator")
+  val LParen = ScalaTokenId("LParen", "(", "separator")
+  val RParen = ScalaTokenId("RParen", ")", "separator")
+  val LBrace = ScalaTokenId("LBrace", "{", "separator")
+  val RBrace = ScalaTokenId("RBrace", "}", "separator")
+  val LBracket = ScalaTokenId("LBracket", "[", "separator")
+  val RBracket = ScalaTokenId("RBracket", "]", "separator")
+  val Comma = ScalaTokenId("Comma", ",", "separator")
+  val Dot = ScalaTokenId("Dot", ".", "separator")
+  val Semicolon = ScalaTokenId("Semicolon", ";", "separator")
+  val Bar = ScalaTokenId("Bar", "|", "separator")
 
-  val XmlEmptyTagName = V("XmlEmptyTagName", null, "xml")
-  val XmlSTagName = V("XmlSTagName", null, "xml")
-  val XmlETagName = V("XmlETagName", null, "xml")
-  val XmlAttName = V("XmlAttName", null, "xml")
-  val XmlAttValue = V("XmlAttValue", null, "string")
-  val XmlLt = V("XmlLt", "<", "xml")
-  val XmlGt = V("XmlGt", ">", "xml")
-  val XmlLtSlash = V("XmlLtSlash", "</", "xml")
-  val XmlSlashGt = V("XmlSlashGt", "/>", "xml")
-  val XmlCharData = V("XmlCharData", null, "xmlchardata")
-  val XmlEq = V("XmlEq", "=", "separator")
-  val XmlComment = V("XmlComment", null, "comment")
-  val XmlWs = V("XmlWs", null, "whitespace")
-  val XmlCDStart = V("XmlCDStart", null, "comment")
-  val XmlCDEnd = V("XmlCDEnd", null, "comment")
-  val XmlCDData = V("XmlCDData", null, "xmlcddata")
+  val XmlEmptyTagName = ScalaTokenId("XmlEmptyTagName", null, "xml")
+  val XmlSTagName = ScalaTokenId("XmlSTagName", null, "xml")
+  val XmlETagName = ScalaTokenId("XmlETagName", null, "xml")
+  val XmlAttName = ScalaTokenId("XmlAttName", null, "xml")
+  val XmlAttValue = ScalaTokenId("XmlAttValue", null, "string")
+  val XmlLt = ScalaTokenId("XmlLt", "<", "xml")
+  val XmlGt = ScalaTokenId("XmlGt", ">", "xml")
+  val XmlLtSlash = ScalaTokenId("XmlLtSlash", "</", "xml")
+  val XmlSlashGt = ScalaTokenId("XmlSlashGt", "/>", "xml")
+  val XmlCharData = ScalaTokenId("XmlCharData", null, "xmlchardata")
+  val XmlEq = ScalaTokenId("XmlEq", "=", "separator")
+  val XmlComment = ScalaTokenId("XmlComment", null, "comment")
+  val XmlWs = ScalaTokenId("XmlWs", null, "whitespace")
+  val XmlCDStart = ScalaTokenId("XmlCDStart", null, "comment")
+  val XmlCDEnd = ScalaTokenId("XmlCDEnd", null, "comment")
+  val XmlCDData = ScalaTokenId("XmlCDData", null, "xmlcddata")
 
-  val Abstract = V("Abstract", "abstract", "keyword")
-  val Case = V("Case", "case", "keyword")
-  val Catch = V("Catch", "catch", "keyword")
-  val Class = V("Class", "class", "keyword")
-  val Def = V("Def", "def", "keyword")
-  val Do = V("Do", "do", "keyword")
-  val Else = V("Else", "else", "keyword")
-  val Extends = V("Extends", "extends", "keyword")
-  val False = V("False", "false", "keyword")
-  val Final = V("Final", "final", "keyword")
-  val Finally = V("Finally", "finally", "keyword")
-  val For = V("For", "for", "keyword")
-  val ForSome = V("ForSome", "forSome", "keyword")
-  val If = V("If", "if", "keyword")
-  val Implicit = V("Implicit", "implicit", "keyword")
-  val Import = V("Import", "import", "keyword")
-  val Lazy = V("Lazy", "lazy", "keyword")
-  val Match = V("Match", "match", "keyword")
-  val New = V("New", "new", "keyword")
-  val Null = V("Null", "null", "keyword")
-  val Object = V("Object", "object", "keyword")
-  val Override = V("Override", "override", "keyword")
-  val Package = V("Package", "package", "keyword")
-  val Private = V("Private", "private", "keyword")
-  val Protected = V("Protected", "protected", "keyword")
-  val Requires = V("Requires", "requires", "keyword")
-  val Return = V("Return", "return", "keyword")
-  val Sealed = V("Sealed", "sealed", "keyword")
-  val Super = V("Super", "super", "keyword")
-  val This = V("This", "this", "keyword")
-  val Throw = V("Throw", "throw", "keyword")
-  val Trait = V("Trait", "trait", "keyword")
-  val Try = V("Try", "try", "keyword")
-  val True = V("True", "true", "keyword")
-  val Type = V("Type", "type", "keyword")
-  val Val = V("Val", "val", "keyword")
-  val Var = V("Var", "var", "keyword")
-  val While = V("While", "while", "keyword")
-  val With = V("With", "with", "keyword")
-  val Yield = V("Yield", "yield", "keyword")
-  val Wild = V("Wild", "_", "s_keyword")
-  val RArrow = V("RArrow", null, "s_keyword") // "=>" or "\u21D2", no fixed
-  val LArrow = V("LArrow", null, "s_keyword") // "<-" or "\u2190", no fixed
-  val UBound = V("UBound", "<:", "s_keyword")
-  val VBound = V("VBound", "<%", "s_keyword")
-  val LBound = V("LBound", ">:", "s_keyword")
-  val Eq = V("Eq", "=", "s_keyword")
-  val Colon = V("Colon", ":", "s_keyword")
-  val Pound = V("Pound", "#", "s_keyword")
-  val At = V("At", "@", "s_keyword")
+  val Abstract = ScalaTokenId("Abstract", "abstract", "keyword")
+  val Case = ScalaTokenId("Case", "case", "keyword")
+  val Catch = ScalaTokenId("Catch", "catch", "keyword")
+  val Class = ScalaTokenId("Class", "class", "keyword")
+  val Def = ScalaTokenId("Def", "def", "keyword")
+  val Do = ScalaTokenId("Do", "do", "keyword")
+  val Else = ScalaTokenId("Else", "else", "keyword")
+  val Extends = ScalaTokenId("Extends", "extends", "keyword")
+  val False = ScalaTokenId("False", "false", "keyword")
+  val Final = ScalaTokenId("Final", "final", "keyword")
+  val Finally = ScalaTokenId("Finally", "finally", "keyword")
+  val For = ScalaTokenId("For", "for", "keyword")
+  val ForSome = ScalaTokenId("ForSome", "forSome", "keyword")
+  val If = ScalaTokenId("If", "if", "keyword")
+  val Implicit = ScalaTokenId("Implicit", "implicit", "keyword")
+  val Import = ScalaTokenId("Import", "import", "keyword")
+  val Lazy = ScalaTokenId("Lazy", "lazy", "keyword")
+  val Match = ScalaTokenId("Match", "match", "keyword")
+  val New = ScalaTokenId("New", "new", "keyword")
+  val Null = ScalaTokenId("Null", "null", "keyword")
+  val Object = ScalaTokenId("Object", "object", "keyword")
+  val Override = ScalaTokenId("Override", "override", "keyword")
+  val Package = ScalaTokenId("Package", "package", "keyword")
+  val Private = ScalaTokenId("Private", "private", "keyword")
+  val Protected = ScalaTokenId("Protected", "protected", "keyword")
+  val Requires = ScalaTokenId("Requires", "requires", "keyword")
+  val Return = ScalaTokenId("Return", "return", "keyword")
+  val Sealed = ScalaTokenId("Sealed", "sealed", "keyword")
+  val Super = ScalaTokenId("Super", "super", "keyword")
+  val This = ScalaTokenId("This", "this", "keyword")
+  val Throw = ScalaTokenId("Throw", "throw", "keyword")
+  val Trait = ScalaTokenId("Trait", "trait", "keyword")
+  val Try = ScalaTokenId("Try", "try", "keyword")
+  val True = ScalaTokenId("True", "true", "keyword")
+  val Type = ScalaTokenId("Type", "type", "keyword")
+  val Val = ScalaTokenId("Val", "val", "keyword")
+  val Var = ScalaTokenId("Var", "var", "keyword")
+  val While = ScalaTokenId("While", "while", "keyword")
+  val With = ScalaTokenId("With", "with", "keyword")
+  val Yield = ScalaTokenId("Yield", "yield", "keyword")
+  val Wild = ScalaTokenId("Wild", "_", "s_keyword")
+  val RArrow = ScalaTokenId("RArrow", null, "s_keyword") // "=>" or "\u21D2", no fixed
+  val LArrow = ScalaTokenId("LArrow", null, "s_keyword") // "<-" or "\u2190", no fixed
+  val UBound = ScalaTokenId("UBound", "<:", "s_keyword")
+  val VBound = ScalaTokenId("VBound", "<%", "s_keyword")
+  val LBound = ScalaTokenId("LBound", ">:", "s_keyword")
+  val Eq = ScalaTokenId("Eq", "=", "s_keyword")
+  val Colon = ScalaTokenId("Colon", ":", "s_keyword")
+  val Pound = ScalaTokenId("Pound", "#", "s_keyword")
+  val At = ScalaTokenId("At", "@", "s_keyword")
 
-  val GLOBAL_VAR = V("GLOBAL_VAR", null, "static")
-  val CONSTANT = V("CONSTANT", null, "constant")
-  val REGEXP_LITERAL = V("REGEXP_LITERAL", null, "regexp")
-  val STRING_BEGIN = V("STRING_BEGIN", null, "string")
-  val STRING_END = V("STRING_END", null, "string")
-  val REGEXP_BEGIN = V("REGEXP_BEGIN", null, "regexp") // or separator,
-  val REGEXP_END = V("REGEXP_END", null, "regexp")
+  val GLOBAL_VAR = ScalaTokenId("GLOBAL_VAR", null, "static")
+  val CONSTANT = ScalaTokenId("CONSTANT", null, "constant")
+  val REGEXP_LITERAL = ScalaTokenId("REGEXP_LITERAL", null, "regexp")
+  val STRING_BEGIN = ScalaTokenId("STRING_BEGIN", null, "string")
+  val STRING_END = ScalaTokenId("STRING_END", null, "string")
+  val REGEXP_BEGIN = ScalaTokenId("REGEXP_BEGIN", null, "regexp") // or separator,
+  val REGEXP_END = ScalaTokenId("REGEXP_END", null, "regexp")
   // Cheating: out of laziness just map all keywords returning from JRuby
   // into a single KEYWORD token; eventually I will have separate tokens
   // for each here such that the various helper methods for formatting,
   // smart indent, brace matching etc. can refer to specific keywords
-  val ANY_KEYWORD = V("ANY_KEYWORD", null, "keyword")
-  val ANY_OPERATOR = V("ANY_OPERATOR", null, "operator")
+  val ANY_KEYWORD = ScalaTokenId("ANY_KEYWORD", null, "keyword")
+  val ANY_OPERATOR = ScalaTokenId("ANY_OPERATOR", null, "operator")
 
-  val SEMI = V("SEMI", null, "operator")
+  val SEMI = ScalaTokenId("SEMI", null, "operator")
   // Non-unary operators which indicate a line continuation if used at the end of a line
-  val NONUNARY_OP = V("NONUNARY_OP", null, "operator")
+  val NONUNARY_OP = ScalaTokenId("NONUNARY_OP", null, "operator")
 
   /**
    * MIME type for Erlang. Don't change this without also consulting the various XML files
@@ -206,20 +223,35 @@ object ScalaTokenId extends Enumeration {
   val language = new LanguageHierarchy[TokenId] {
     protected def mimeType = ScalaMimeResolver.MIME_TYPE
 
-    protected def createTokenIds: Collection[TokenId] = {
-      val ids = new HashSet[TokenId]
-      values.foreach{ids add _.asInstanceOf[TokenId]}
+    protected def createTokenIds: java.util.Collection[TokenId] = {
+      val ids = new java.util.HashSet[TokenId]
+      values foreach (ids add _._2)
       ids
     }
     
     protected def createLexer(info: LexerRestartInfo[TokenId]): Lexer[TokenId] = ScalaLexer.create(info)
 
-    override protected def createTokenCategories: Map[String, Collection[TokenId]] = {
-      val cats = new HashMap[String, Collection[TokenId]]
+    override 
+    protected def createTokenCategories: java.util.Map[String, java.util.Collection[TokenId]] = {
+      val cats = new java.util.HashMap[String, java.util.Collection[TokenId]]
+      
+      for ((name, value) <- values) {
+        val category = value.primaryCategory
+        val tokenIds = cats.get(category) match {
+          case null => 
+            val x = new java.util.ArrayList[TokenId]()
+            cats.put(category, x)
+            x
+          case x => x
+        }
+        tokenIds.add(value)
+      }
+      
       cats
     }
 
-    override protected def embedding(token: Token[TokenId], languagePath: LanguagePath, inputAttributes: InputAttributes) = {
+    override 
+    protected def embedding(token: Token[TokenId], languagePath: LanguagePath, inputAttributes: InputAttributes) = {
       null // No embedding
     }
   }.language
