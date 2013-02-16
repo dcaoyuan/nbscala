@@ -197,12 +197,12 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
         builder = builder.addArgument(arg)
       }
     }
-    log.info("==== End of Scala console args ====");
+    log.info("==== End of Scala console args ====")
 
     // XXX under Mac OS jdk7, the java.home is point to /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/jre
     // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which cause the lack of javac
     //builder = builder.addEnvironmentVariable("JAVA_HOME", ScalaExecution.getJavaHome)
-    //.addEnvironmentVariable("SCALA_HOME", ScalaExecution.getScalaHome)
+    builder = builder.addEnvironmentVariable("SCALA_HOME", ScalaExecution.getScalaHome)
     builder = builder.workingDirectory(pwd)
 
     var execDescriptor = new ExecutionDescriptor()
