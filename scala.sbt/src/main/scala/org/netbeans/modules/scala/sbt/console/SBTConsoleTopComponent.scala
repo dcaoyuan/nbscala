@@ -50,7 +50,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   setName("SBT " + project.getProjectDirectory.getName)
   setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
   setIcon(ImageUtilities.loadImage(ICON_PATH, true))
-  val console: ConsoleOutputStream = createTerminal
+  var console: ConsoleOutputStream = _
  
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
@@ -82,6 +82,8 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   
   override
   protected def componentOpened() {
+    // always create a new terminal when is opened/reopend
+    console = createTerminal
     super.componentOpened
   }
 
@@ -89,7 +91,14 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   protected def componentClosed() {
     if (console != null) {
       console.exitSbt
+      try {
+        console.close
+      } catch {
+        case ex: Exception => // ignore
+      }
+      console == null
     }
+    textPane = null
     super.componentClosed
   }
 
@@ -221,11 +230,11 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     val (executable, args) = SBTExecution.getArgs(sbtHome)
     
-    val consoleOs = new ConsoleOutputStream(
+    val console = new ConsoleOutputStream(
       textPane, 
       " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
       pipeIn)
-    val consoleOut = new AnsiConsoleOutputStream(consoleOs)
+    val consoleOut = new AnsiConsoleOutputStream(console)
     
     val in = new InputStreamReader(pipeIn)
     val out = new PrintWriter(new PrintStream(consoleOut))
@@ -257,13 +266,12 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
           SwingUtilities.invokeLater(new Runnable() {
               override
               def run() {
-                if (consoleOs != null) {
-                  consoleOs.exitSbt
+                if (console != null) {
+                  console.exitSbt
                 }
                 
                 SBTConsoleTopComponent.this.close
                 SBTConsoleTopComponent.this.removeAll
-                textPane = null
               }
             })
         }
@@ -275,7 +283,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     textPane.addMouseListener(MyMouseListener)
     textPane.addMouseMotionListener(MyMouseListener)
-    consoleOs
+    console
   }
 
   object MyMouseListener extends MouseAdapter {
@@ -488,8 +496,13 @@ object SBTConsoleTopComponent {
             (null, false)
         }
           
-        if (!tc.isOpened) tc.open
-        if (!background)  tc.requestActive
+        if (!tc.isOpened) {
+          tc.open
+        }
+        
+        if (!background) {
+          tc.requestActive
+        }
               
         val results = commands map tc.console.runSbtCommand
 
