@@ -152,7 +152,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   //def writeReplace: AnyRef = new ResolvableHelper()
 
   private def createTerminal: ConsoleOutputStream = {
-    val pipeIn = new PipedInputStream()
+    val pipedIn = new PipedInputStream()
 
     textPane = new JTextPane()
     textPane.getDocument.putProperty("mimeType", mimeType)
@@ -229,16 +229,6 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     }
 
     val (executable, args) = SBTExecution.getArgs(sbtHome)
-    
-    val console = new ConsoleOutputStream(
-      textPane, 
-      " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
-      pipeIn)
-    val consoleOut = new AnsiConsoleOutputStream(console)
-    
-    val in = new InputStreamReader(pipeIn)
-    val out = new PrintWriter(new PrintStream(consoleOut))
-    val err = new PrintWriter(new PrintStream(consoleOut))
 
     var builder = new ExternalProcessBuilder(executable)
     log.info("==== Sbt console args ====")
@@ -254,12 +244,21 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     //builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
     val pwd = FileUtil.toFile(project.getProjectDirectory)
     builder = builder.workingDirectory(pwd)
-
+    
+    val console = new ConsoleOutputStream(
+      textPane, 
+      " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n",
+      pipedIn)
+    val consoleOut = new AnsiConsoleOutputStream(console)
+    
+    val in = new InputStreamReader(pipedIn)
+    val out = new PrintWriter(new PrintStream(consoleOut))
+    val err = new PrintWriter(new PrintStream(consoleOut))
+    val inputOutput = new CustomInputOutput(in, out, err)
+    
     var execDescriptor = new ExecutionDescriptor()
     .frontWindow(true).inputVisible(true)
-    .inputOutput(new CustomInputOutput(in, out, err))
-
-    execDescriptor = execDescriptor.postExecution(new Runnable() {
+    .inputOutput(inputOutput).postExecution(new Runnable() {
         override
         def run() {
           textPane.setEditable(false)
@@ -278,7 +277,6 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
       })
 
     val executionService = ExecutionService.newService(builder, execDescriptor, "Sbt Shell")
-
     executionService.run()
 
     textPane.addMouseListener(MyMouseListener)
@@ -565,7 +563,7 @@ object SBTConsoleTopComponent {
     def getErr: OutputWriter = new CustomOutputWriter(err)
 
     override
-    def getIn: Reader = return input
+    def getIn: Reader = input
 
     override
     def getOut: OutputWriter = new CustomOutputWriter(out)
