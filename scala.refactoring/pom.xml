@@ -195,7 +195,7 @@
         </dependency>
         
         <!-- maven transitive dependencies: <scope>runtime</scope> -->
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-masterfs</artifactId>
             <version>${netbeans.version}</version>
@@ -252,6 +252,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.modules.scala.refactoring/1</codeNameBase>
+                    <licenseName>CDDL-GPLV2</licenseName>
+                    <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                     </publicPackages>
                 </configuration>

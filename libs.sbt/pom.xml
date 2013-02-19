@@ -258,6 +258,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.libs.sbt/1</codeNameBase>
+                    <licenseName>BSD-style License</licenseName>
+                    <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                         <publicPackage>sbt</publicPackage>
                         <publicPackage>sbt.complete</publicPackage>

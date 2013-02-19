@@ -210,6 +210,16 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.modules.scala.debugger.projects/1</codeNameBase>
+                    <licenseName>CDDL-GPLV2</licenseName>
+                    <licenseFile>license.txt</licenseFile> 
+                    <moduleDependencies>
+                        <dependency>
+                            <id>org.netbeans.modules:org-netbeans-modules-debugger-jpda-ui</id>
+                            <type>impl</type>
+                            <explicitValue>org.netbeans.modules.debugger.jpda.ui/1 > 1.23</explicitValue>
+                        </dependency>
+                    </moduleDependencies>
                     <publicPackages>
                     </publicPackages>
                 </configuration>

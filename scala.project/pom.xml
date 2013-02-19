@@ -89,7 +89,7 @@
             <artifactId>org-netbeans-modules-java-sourceui</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-junit</artifactId>
             <version>${netbeans.version}</version>
@@ -181,13 +181,13 @@
         </dependency>
 
         <!-- maven transitive dependencies: <scope>runtime</scope> -->
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-junit</artifactId>
             <version>${netbeans.version}</version>
             <scope>runtime</scope>
         </dependency>-->
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
             <version>${netbeans.version}</version>
@@ -251,6 +251,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.modules.scala.project/1</codeNameBase>
+                    <licenseName>CDDL-GPLV2</licenseName>
+                    <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                         <publicPackage>org.netbeans.modules.scala.project.api</publicPackage>
                     </publicPackages>

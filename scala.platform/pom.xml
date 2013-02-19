@@ -78,6 +78,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.modules.scala.platform/1</codeNameBase>
+                    <licenseName>CDDL-GPLV2</licenseName>
+                    <licenseFile>license.txt</licenseFile>    
                     <publicPackages>
                         <publicPackage>org.netbeans.api.scala.platform</publicPackage>
                         <publicPackage>org.netbeans.spi.scala.platform</publicPackage>

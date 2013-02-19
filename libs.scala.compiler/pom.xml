@@ -46,6 +46,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.libs.scala.compiler/1</codeNameBase>
+                    <licenseName>BSD-style License</licenseName>
+                    <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                         <publicPackage>ch.epfl.lamp.compiler.msil</publicPackage>
                         <publicPackage>ch.epfl.lamp.compiler.msil.emit</publicPackage>

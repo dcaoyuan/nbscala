@@ -51,6 +51,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.libs.scala.continuations/1</codeNameBase>
+                    <licenseName>BSD-style License</licenseName>
+                    <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                         <publicPackage>scala.tools.selectivecps</publicPackage>
                     </publicPackages>

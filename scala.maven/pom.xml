@@ -97,6 +97,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.modules.scala.maven/1</codeNameBase>
+                    <licenseName>CDDL-GPLV2</licenseName>
+                    <licenseFile>license.txt</licenseFile>
                     <verifyRuntime>warn</verifyRuntime>
                 </configuration>
             </plugin>

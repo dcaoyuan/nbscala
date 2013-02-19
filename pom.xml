@@ -69,7 +69,7 @@
         <scala.core.version>1.6.0</scala.core.version>
         <scala.editor.version>1.6.0</scala.editor.version>
         <scala.console.version>1.6.0</scala.console.version>
-		<scala.maven.version>1.6.0</scala.maven.version>
+        <scala.maven.version>1.6.0</scala.maven.version>
         <scala.platform.version>1.6.0</scala.platform.version>
         <scala.sbt.version>1.6.0</scala.sbt.version>
         <scala.stdplatform.version>1.6.0</scala.stdplatform.version>
@@ -123,7 +123,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.9</version>
                     <extensions>true</extensions>
                     <configuration>
                         <brandingToken>${brandingToken}</brandingToken>

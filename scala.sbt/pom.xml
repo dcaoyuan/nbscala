@@ -124,6 +124,11 @@
             <artifactId>org-openide-loaders</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-lib-terminalemulator</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.netbeans.modules</groupId>
@@ -177,6 +182,16 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.modules.scala.sbt/1</codeNameBase>
+                    <licenseName>CDDL-GPLV2</licenseName>
+                    <licenseFile>license.txt</licenseFile>
+                    <moduleDependencies>
+                        <dependency>
+                            <id>org.netbeans.modules:org-netbeans-lib-terminalemulator</id>
+                            <type>impl</type>
+                            <explicitValue>org.netbeans.lib.terminalemulator > 1.20</explicitValue>
+                        </dependency>
+                    </moduleDependencies>
                     <publicPackages>
                     </publicPackages>
                 </configuration>

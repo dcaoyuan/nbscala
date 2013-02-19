@@ -231,7 +231,7 @@
         </dependency>
 
         <!-- maven transitive dependencies: <scope>runtime</scope> -->
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-editor-settings-storage</artifactId>
             <version>${netbeans.version}</version>
@@ -305,6 +305,28 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.modules.scala.editor/1</codeNameBase>
+                    <licenseName>CDDL-GPLV2</licenseName>
+                    <licenseFile>license.txt</licenseFile>
+                    <!-- to resolve the references to friend modules or private classes -->
+                    <moduleDependencies>
+                        <dependency>
+                            <id>org.netbeans.api:org-netbeans-modules-parsing-api</id>
+                            <type>impl</type>
+                        </dependency>
+                        <dependency>
+                            <id>org.netbeans.api:org-netbeans-modules-csl-api</id>
+                            <type>impl</type>
+                        </dependency>
+                        <dependency>
+                            <id>org.netbeans.modules:org-netbeans-modules-editor-settings-storage</id>
+                            <type>impl</type>
+                        </dependency>
+                        <dependency>
+                            <id>org.netbeans.modules:org-netbeans-modules-options-keymap</id>
+                            <type>impl</type>
+                        </dependency>
+                    </moduleDependencies>
                     <publicPackages>
                     </publicPackages>
                 </configuration>

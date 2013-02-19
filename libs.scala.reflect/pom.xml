@@ -41,6 +41,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>org.netbeans.libs.scala.reflect/1</codeNameBase>
+                    <licenseName>BSD-style License</licenseName>
+                    <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                         <publicPackage>scala.reflect.api</publicPackage>
                         <publicPackage>scala.reflect.internal</publicPackage>

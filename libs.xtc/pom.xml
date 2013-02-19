@@ -13,7 +13,7 @@
     <name>org-netbeans-libs-xtc</name>
     <packaging>nbm</packaging>
     <description>The XTC Libs
-    TODO: Describe and Link, where these are from</description>
+        TODO: Describe and Link, where these are from</description>
 
     <build>
         <plugins>
@@ -26,6 +26,9 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <codeNameBase>xtc/1</codeNameBase>
+                    <licenseName>LGPL version 2.1</licenseName>
+                    <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                         <publicPackage>xtc</publicPackage>
                         <publicPackage>xtc.lang</publicPackage>
