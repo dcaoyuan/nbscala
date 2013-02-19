@@ -113,7 +113,7 @@
             <version>${project.version}</version>
         </dependency>
         
-        <!-- The clusters platform, java, ide and nb represent a full fuctioning Netbeans IDE -->       
+        <!-- The clusters platform, java, ide and nb represent a full functioning Netbeans IDE -->       
         <dependency>
             <groupId>org.netbeans.cluster</groupId>
             <artifactId>platform</artifactId>
