@@ -158,7 +158,7 @@ object SBTExecution {
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"?
      * And jline may cause terminal unresponsed after netbeans quited.
      */
-    args += "-Djline.terminal=jline.UnixTerminal" //NOI18N
+    //args += "-Djline.terminal=jline.UnixTerminal" //NOI18N
             
     // TODO - turn off verifier?
 

@@ -263,5 +263,5 @@ object SBTResolver {
   val dirWatcher = new DirWatcher(DESCRIPTOR_FILE_NAME)
   
   private val timer = new Timer
-  timer.schedule(dirWatcher, 0, 2000)
+  timer.schedule(dirWatcher, 0, 1500)
 }
