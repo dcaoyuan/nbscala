@@ -9,6 +9,7 @@ import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.io.PrintStream
+import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.regex.Pattern
 import javax.swing.DefaultListCellRenderer
@@ -81,7 +82,7 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   //ConsoleLineReader.createConsoleLineReader
         
   area.setCaret(BlockCaret)
-  area.addKeyListener(teminalInput)
+  area.addKeyListener(terminalInput)
   
   private val docFilter = new DocumentFilter() {
     override 
@@ -123,8 +124,6 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   
   def runSbtCommand(command: String): String = synchronized {
     pipedOut.println(command)
-    //writeLine(command)
-    //writeLine("\n") // cause the followed output to print after a new begun line
     ""
   }
   
@@ -177,10 +176,8 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   protected[console] def doFlush {
     writeLines
     
-    if (buf.length > 0) {
-      writeLine(buf.substring(0, buf.length))
-      buf.delete(0, buf.length)
-    }
+    writeLastLine(buf.substring(0, buf.length))
+    buf.delete(0, buf.length)
   }
   
   @throws(classOf[IOException])
@@ -220,7 +217,7 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   }
   
   /**
-   * Write a line string to doc, to start a new line, the line string has to include a "\n" in line
+   * Write a line string to doc, to start a new line afterward, the line string should end with "\n"
    */
   private def writeLine(line: String) {
     if (line.length >= 6) {
@@ -228,30 +225,60 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     } else {
       overwrite(line, currentStyle)
     }
-
-    if (line.length > 0) { 
-      //promptPos = doc.getLength
-      area.setCaretPosition(doc.getLength)
-    } else {
-      // may from empty flush, we won't set caret to the end of doc
+  }
+  
+  /**
+   * It's usaully the line that is accepting user input, ie. the editable line, 
+   * we should process '\b' here (JTextPane just print ' ' for '\b')
+   */
+  private def writeLastLine(str: String) {
+    val sb = new StringBuilder(str.length)
+    val len = str.length
+    var extraBackspaces = 0
+    var i = 0
+    while (i < len) {
+      str.charAt(i) match {
+        case '\b' =>
+          if (sb.length > 0) {
+            sb.deleteCharAt(sb.length - 1)
+          } else {
+            extraBackspaces += 1
+          }
+        case c =>
+          sb.append(c)
+      }
+      i += 1
     }
+    
+    if (extraBackspaces > 0) {
+      val backLen = math.min(area.getCaretPosition, extraBackspaces)
+      try {
+        area.setCaretPosition(area.getCaretPosition - backLen)
+        doc.remove(area.getCaretPosition, backLen)
+      } catch {
+        case ex: BadLocationException => log.log(Level.SEVERE, ex.getMessage, ex)
+      }
+    }
+    
+    overwrite(sb.toString, currentStyle)
   }
   
   /**
    * @param string to overwrite
    * @param style
-   * @param from pos to append or overwrite to doc end
    */
   private def overwrite(str: String, style: AttributeSet) {
+    val from = area.getCaretPosition
+    val overwriteLen = math.min(str.length, doc.getLength - from)
     try {
-      val from = area.getCaretPosition
-      doc.remove(from, doc.getLength - from)
+      doc.remove(from, overwriteLen)
       doc.insertString(from, str, style)
+      area.setCaretPosition(from + str.length)
     } catch  {
-      case ex: BadLocationException => // just ignore
+      case ex: BadLocationException => log.log(Level.SEVERE, ex.getMessage, ex)
     }
   }
-  
+    
   protected def parseLine(line: String): ArrayBuffer[(String, AttributeSet)] = {
     val texts = new ArrayBuffer[(String, AttributeSet)]()
     val testRest_style = if (line.startsWith(ERROR_PREFIX)) {
@@ -358,10 +385,14 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     }
   }
 
-  object teminalInput extends TerminalInput with KeyListener {
-    System.getProperty("os.name").toLowerCase match {
-      case os if os.indexOf("windows") != -1 => terminalId = TerminalInput.JlineWindows
+  object terminalInput extends TerminalInput with KeyListener {
+
+    val isAnsi = System.getProperty("os.name").toLowerCase match {
+      case os if os.indexOf("windows") != -1 => 
+        terminalId = TerminalInput.JlineWindows
+        false
       case _ =>
+        true
     }
 
     override 
@@ -378,29 +409,24 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
         case VK_F1 | VK_F2 | VK_F3 | VK_F4 | VK_F5 | VK_F6 | VK_F7 | VK_F8 | VK_F9 | VK_F10 | VK_F11 | VK_F12 =>
         case VK_PAGE_DOWN | VK_PAGE_UP | VK_HOME | VK_END =>
         case VK_NUM_LOCK | VK_CAPS_LOCK =>
-        case VK_SHIFT | VK_CONTROL | VK_ALT => 
-        case VK_INSERT | VK_DELETE | VK_BACK_SPACE => 
-          evt.consume
+        case VK_SHIFT | VK_CONTROL | VK_ALT =>
+        case VK_INSERT =>
+        case VK_DELETE | VK_BACK_SPACE => 
         case VK_LEFT | VK_RIGHT => 
-          evt.consume
-        case VK_UP =>
-          evt.consume // will search history 
-        case VK_DOWN =>
-          evt.consume // will search history
-        case VK_TAB =>
-          evt.consume // will do completion
-        case VK_ENTER =>
-          evt.consume // will do entering command
+        case VK_UP =>     // search history
+        case VK_DOWN =>   // search history
+        case VK_TAB =>    // will do completion
+        case VK_ENTER =>  // do entering command
         case _ => 
-          evt.consume // consume it, will be handled by echo etc
       }
       
+      evt.consume // consume it, will be handled by echo etc
       keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
     }
   
     override 
     def keyReleased(evt: KeyEvent) {
-      //evt.consume
+      evt.consume
     }
     
     override 
@@ -596,6 +622,8 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
 }
 
 object ConsoleOutputStream {
+  private val log = Logger.getLogger(getClass.getName)
+  
   val defaultFg = Color.BLACK
   val defaultBg = Color.WHITE
   val linkFg = Color.BLUE
@@ -683,13 +711,14 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
     term.currentStyle = term.defaultStyle
   }
   
-  // @Note before do any ansi cursor command, we should flush first to keep the proper ansi command and string sequence
+  // @Note before do any ansi cursor command, we should flush first to keep the 
+  // proper caret position which is sensitive to the order of ansi command and chars to print
   
   override 
   protected def processCursorToColumn(col: Int) {
+    val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
+    val toPos = lineStart + col - 1
     try {
-      val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
-      val toPos = lineStart + col - 1
       term.doFlush 
       area.setCaretPosition(toPos)
     } catch {
