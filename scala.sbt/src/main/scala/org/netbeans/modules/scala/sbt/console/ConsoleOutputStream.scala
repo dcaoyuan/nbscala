@@ -173,13 +173,20 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     isWaitingUserInput = true
   }
   
+  @throws(classOf[IOException])
   protected[console] def doFlush {
-    getLines foreach writeLine
+    writeLines
     
     if (buf.length > 0) {
       writeLine(buf.substring(0, buf.length))
       buf.delete(0, buf.length)
     }
+  }
+  
+  @throws(classOf[IOException])
+  private def writeLines {
+    getLines foreach writeLine
+    linesBuf.clear
   }
 
   /**
@@ -187,7 +194,6 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
    * @return lines
    */
   private def getLines: ArrayBuffer[String] = {
-    linesBuf.clear
     val len = buf.length
     var newLineOffset = 0
     var readOffset = -1 // offset that has read to lines
