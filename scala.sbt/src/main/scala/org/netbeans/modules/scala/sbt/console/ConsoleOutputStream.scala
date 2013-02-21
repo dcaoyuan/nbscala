@@ -39,9 +39,10 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     
   /** buffer which will be used for the next line */
   private val buf = new StringBuffer(1000)
+  private val linesBuf = new ArrayBuffer[String]()
   private var promptPos = 0
   private var currentLine: String = _
-  private var isWaitingInputing = false
+  private var isWaitingUserInput = false
 
   area.setForeground(defaultFg)
   area.setBackground(defaultBg)
@@ -157,27 +158,23 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   override
   def write(b: Array[Byte], offset: Int, length: Int) {
     buf.append(new String(b, offset, length))
-    writeLines
   }
 
   @throws(classOf[IOException])
   override
   def write(b: Int) {
     buf.append(b.toChar)
-    if (b == '\n') {
-      writeLines
-    }
   }
   
   @throws(classOf[IOException])
   override
   def flush() {
     doFlush
-    isWaitingInputing = true
+    isWaitingUserInput = true
   }
   
   protected[console] def doFlush {
-    writeLines
+    getLines foreach writeLine
     
     if (buf.length > 0) {
       writeLine(buf.substring(0, buf.length))
@@ -185,54 +182,59 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     }
   }
 
-  @throws(classOf[IOException])
-  private def writeLines {
+  /**
+   * Read lines from buf, keep not-line-completed chars in buf
+   * @return lines
+   */
+  private def getLines: ArrayBuffer[String] = {
+    linesBuf.clear
     val len = buf.length
-    if (len > 0) {
-      var breakMain = false
-      while (!breakMain) {
-        var breakInner = false
-        var i = 0
-        while (i < len && !breakInner) {
-          if (buf.charAt(i) == '\n') {
-            val end = if (i > 0 && buf.charAt(i - 1) == '\r') { // for Windows
-              i - 1
-            } else {
-              i
-            }
-            val line = buf.substring(0, end) + "\n"
-            writeLine(line)
-            buf.delete(0, i + 1)
-            breakInner = true
-          }
-          i += 1
+    var newLineOffset = 0
+    var readOffset = -1 // offset that has read to lines
+    var i = 0
+    while (i < len) {
+      if (buf.charAt(i) == '\n') {
+        val line = if (i > 0 && buf.charAt(i - 1) == '\r') { 
+          buf.substring(newLineOffset, i) + "\n" // strip '\r' for Windows
+        } else {
+          buf.substring(newLineOffset, i + 1)
         }
-        breakMain = true
+        linesBuf += line
+        readOffset = i
+        newLineOffset = i + 1
       }
-      
-      isWaitingInputing = false
+      i += 1
     }
+    
+    if (readOffset >= 0) {
+      buf.delete(0, readOffset + 1)
+    }
+    
+    linesBuf
   }
   
   /**
    * Write a line string to doc, to start a new line, the line string has to include a "\n" in line
    */
   private def writeLine(line: String) {
-    if (line.length > 0) { // may be from empty flush
-      if (line.length >= 6) {
-        for ((text, style) <- parseLine(line)) overwrite(text, style)
-      } else {
-        overwrite(line, currentStyle)
-      }
+    if (line.length >= 6) {
+      for ((text, style) <- parseLine(line)) overwrite(text, style)
+    } else {
+      overwrite(line, currentStyle)
+    }
+
+    if (line.length > 0) { 
       //promptPos = doc.getLength
       area.setCaretPosition(doc.getLength)
+    } else {
+      // may from empty flush, we won't set caret to the end of doc
     }
   }
   
   /**
    * @param string to overwrite
    * @param style
-   * @param from pos to append or overwrite
+   * @param from pos to append or overwrite to doc end
    */
   private def overwrite(str: String, style: AttributeSet) {
     try {
@@ -482,7 +484,7 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
       evt.consume
       clearInputLine
       pipedOut.write("\033[A".getBytes)
-      isWaitingInputing = true
+      isWaitingUserInput = true
 
       if (completePopup.isVisible) {
         val selected = completeCombo.getSelectedIndex - 1
@@ -508,7 +510,7 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
       evt.consume
       clearInputLine
       pipedOut.write("\033[B".getBytes)
-      isWaitingInputing = true
+      isWaitingUserInput = true
         
       if (completePopup.isVisible) {
         val selected = completeCombo.getSelectedIndex + 1
@@ -675,12 +677,13 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
     term.currentStyle = term.defaultStyle
   }
   
+  // @Note before do any ansi cursor command, we should flush first to keep the proper ansi command and string sequence
+  
   override 
   protected def processCursorToColumn(col: Int) {
     try {
       val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
       val toPos = lineStart + col - 1
-      // before set caret position, we should flush to keep the ansi and string sequence order proper.
       term.doFlush 
       area.setCaretPosition(toPos)
     } catch {
@@ -698,6 +701,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
     try {
       eraseOption match {
         case 0 => 
+          term.doFlush
           val currPos = area.getCaretPosition
           doc.remove(currPos, doc.getLength - currPos)
         case _ =>
@@ -979,7 +983,7 @@ object AnsiConsoleOutputStream {
       val pos = lineElt.getStartOffset + (if (column > 0) column else 0)
       if (pos < 0) return 0
       if (pos > doc.getLength) return doc.getLength
-      pos;
+      pos
     } catch {
       case ex: Exception => throw new RuntimeException(ex)}
   }
