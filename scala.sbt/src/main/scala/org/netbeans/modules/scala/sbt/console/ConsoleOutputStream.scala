@@ -351,10 +351,13 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   }
 
   object teminalInput extends TerminalInput with KeyListener {
-    var specialKey: Option[KeyEvent] = None
-    
+    System.getProperty("os.name").toLowerCase match {
+      case os if os.indexOf("windows") != -1 => terminalId = TerminalInput.JlineWindows
+      case _ =>
+    }
+
     override 
-    def send(b: Array[Byte]) {
+    def write(b: Array[Byte]) {
       pipedOut.write(b)
     }
     
@@ -405,9 +408,9 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
       (if (e.isActionKey) TerminalInput.KEY_ACTION else 0)
     }
   }
-  
+    
   @deprecated("Need to re-do", "1.6.1")
-  object myKeyListener extends KeyListener {
+  object keyListener extends KeyListener {
     override 
     def keyPressed(evt: KeyEvent) {
       val code = evt.getKeyCode

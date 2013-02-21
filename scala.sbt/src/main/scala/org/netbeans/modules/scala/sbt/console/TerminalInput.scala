@@ -6,6 +6,8 @@ import java.util.Properties
 abstract class TerminalInput {
   import TerminalInput._
   
+  private var _terminalId = "VT320"
+  
   /** in vms mode, set by Terminal.VMS property */
   private var vms = false
 
@@ -125,7 +127,7 @@ abstract class TerminalInput {
    * Direct access to writing data ...
    * @param b
    */
-  def send(b: Array[Byte])
+  def write(b: Array[Byte])
 
   /**
    * Terminal is mouse-aware and requires (x,y) coordinates of
@@ -159,7 +161,7 @@ abstract class TerminalInput {
       (0x20 + y + 1).toByte
     )
 
-    send(b) // FIXME: writeSpecial here
+    write(b) // FIXME: writeSpecial here
   }
 
   /**
@@ -196,7 +198,7 @@ abstract class TerminalInput {
       (0x20 + y + 1).toByte
     )
     
-    send(b) // FIXME: writeSpecial here
+    write(b) // FIXME: writeSpecial here
     mousebut = 0
   }
 
@@ -221,7 +223,7 @@ abstract class TerminalInput {
     }
     val prefixes = Array("", "S", "C", "A")
     i = 0
-    while (i < 4) {
+    while (i < prefixes.length) {
       codes.getProperty(prefixes(i) + "PGUP") match {case null =>; case x => PrevScn(i) = unEscape(x)}
       codes.getProperty(prefixes(i) + "PGDOWN") match {case null =>; case x => NextScn(i) = unEscape(x)}
       codes.getProperty(prefixes(i) + "END") match {case null =>; case x => KeyEnd(i) = unEscape(x)}
@@ -247,7 +249,7 @@ abstract class TerminalInput {
    * for sending.
    * @param s the string to be sent
    */
-  private def send(s: String): Boolean = {
+  private def write(s: String): Boolean = {
     if (s == null) // aka the empty string.
       return true
     /* NOTE: getBytes() honours some locale, it *CONVERTS* the string.
@@ -262,7 +264,7 @@ abstract class TerminalInput {
       arr(i) = s.charAt(i).toByte
       i += 1
     }
-    send(arr)
+    write(arr)
 
     true
   }
@@ -280,7 +282,7 @@ abstract class TerminalInput {
    *
    * @param s the string to be sent
    */
-  private def sendSpecial(_s: String): Boolean = {
+  private def writeSpecial(_s: String): Boolean = {
     var s = _s
     if (s == null) {
       return true
@@ -306,7 +308,7 @@ abstract class TerminalInput {
       } // else keep 
     }
     
-    send(s)
+    write(s)
   }
 
   /**
@@ -336,47 +338,47 @@ abstract class TerminalInput {
       case KeyEvent.VK_PAUSE =>
         if (shift || control) sendTelnetCommand(243.toByte)
       case KeyEvent.VK_F1 =>
-        sendSpecial(fmap(1))
+        writeSpecial(fmap(1))
       case KeyEvent.VK_F2 =>
-        sendSpecial(fmap(2))
+        writeSpecial(fmap(2))
       case KeyEvent.VK_F3 =>
-        sendSpecial(fmap(3))
+        writeSpecial(fmap(3))
       case KeyEvent.VK_F4 =>
-        sendSpecial(fmap(4))
+        writeSpecial(fmap(4))
       case KeyEvent.VK_F5 =>
-        sendSpecial(fmap(5))
+        writeSpecial(fmap(5))
       case KeyEvent.VK_F6 =>
-        sendSpecial(fmap(6))
+        writeSpecial(fmap(6))
       case KeyEvent.VK_F7 =>
-        sendSpecial(fmap(7))
+        writeSpecial(fmap(7))
       case KeyEvent.VK_F8 =>
-        sendSpecial(fmap(8))
+        writeSpecial(fmap(8))
       case KeyEvent.VK_F9 =>
-        sendSpecial(fmap(9))
+        writeSpecial(fmap(9))
       case KeyEvent.VK_F10 =>
-        sendSpecial(fmap(10))
+        writeSpecial(fmap(10))
       case KeyEvent.VK_F11 =>
-        sendSpecial(fmap(11))
+        writeSpecial(fmap(11))
       case KeyEvent.VK_F12 =>
-        sendSpecial(fmap(12))
+        writeSpecial(fmap(12))
       case KeyEvent.VK_UP =>
-        sendSpecial(KeyUp(xind))
+        writeSpecial(KeyUp(xind))
       case KeyEvent.VK_DOWN =>
-        sendSpecial(KeyDown(xind))
+        writeSpecial(KeyDown(xind))
       case KeyEvent.VK_LEFT =>
-        sendSpecial(KeyLeft(xind))
+        writeSpecial(KeyLeft(xind))
       case KeyEvent.VK_RIGHT =>
-        sendSpecial(KeyRight(xind))
+        writeSpecial(KeyRight(xind))
       case KeyEvent.VK_PAGE_DOWN =>
-        sendSpecial(NextScn(xind))
+        writeSpecial(NextScn(xind))
       case KeyEvent.VK_PAGE_UP =>
-        sendSpecial(PrevScn(xind))
+        writeSpecial(PrevScn(xind))
       case KeyEvent.VK_INSERT =>
-        sendSpecial(Insert(xind))
+        writeSpecial(Insert(xind))
       case KeyEvent.VK_DELETE =>
-        sendSpecial(Remove(xind))
+        writeSpecial(Remove(xind))
       case KeyEvent.VK_BACK_SPACE =>
-        sendSpecial(BackSpace(xind))
+        writeSpecial(BackSpace(xind))
 //	if (localecho) {
 //	  if (BackSpace(xind) == "\b") {
 //	    putString("\b \b") // make the last Char 'deleted'
@@ -385,12 +387,12 @@ abstract class TerminalInput {
 //	  }
 //	}
       case KeyEvent.VK_HOME =>
-        sendSpecial(KeyHome(xind))
+        writeSpecial(KeyHome(xind))
       case KeyEvent.VK_END =>
-        sendSpecial(KeyEnd(xind))
+        writeSpecial(KeyEnd(xind))
       case KeyEvent.VK_NUM_LOCK =>
         if (vms && control) {
-          sendSpecial(PF1)
+          writeSpecial(PF1)
         }
         if (!control) {
           numlock = !numlock
@@ -417,15 +419,15 @@ abstract class TerminalInput {
 
     if (keyChar == '\t') {
       if (shift) {
-        send(TabKey(1))
+        write(TabKey(1))
       } else {
         if (control) {
-          send(TabKey(2))
+          write(TabKey(2))
         } else {
           if (alt) {
-            send(TabKey(3))
+            write(TabKey(3))
           } else {
-            send(TabKey(0))
+            write(TabKey(0))
           }
         }
       }
@@ -433,19 +435,19 @@ abstract class TerminalInput {
     }
     
     if (alt) {
-      send("" + (keyChar | 0x80).toChar)
+      write("" + (keyChar | 0x80).toChar)
       return
     }
 
     if ((keyCode == KeyEvent.VK_ENTER || keyChar == 10) && !control) {
-      send("\r")
+      write("\r")
       //if (localecho) putString("\r\n") // bad hack
       return
     }
 
     if (keyCode == 10 && !control) {
       System.out.println("Sending \\r")
-      send("\r")
+      write("\r")
       return
     }
 
@@ -455,65 +457,65 @@ abstract class TerminalInput {
     // if(((!vms && keyChar == '2') || keyChar == '@' || keyChar == ' ')
     //    && control)
     if ((!vms && keyChar == '2' || keyChar == ' ') && control)
-      send("" + 0.toChar)
+      write("" + 0.toChar)
 
     if (vms) {
       if (keyChar == 127 && !control) {
         if (shift)
-          sendSpecial(Insert(0))       //  VMS shift delete = insert
+          writeSpecial(Insert(0))       //  VMS shift delete = insert
         else
-          sendSpecial(Remove(0))       //  VMS delete = remove
+          writeSpecial(Remove(0))       //  VMS delete = remove
         return
       } else if (control)
         keyChar match {
           case '0' =>
-            sendSpecial(Numpad(0))
+            writeSpecial(Numpad(0))
             return
           case '1' =>
-            sendSpecial(Numpad(1))
+            writeSpecial(Numpad(1))
             return
           case '2' =>
-            sendSpecial(Numpad(2))
+            writeSpecial(Numpad(2))
             return
           case '3' =>
-            sendSpecial(Numpad(3))
+            writeSpecial(Numpad(3))
             return
           case '4' =>
-            sendSpecial(Numpad(4))
+            writeSpecial(Numpad(4))
             return
           case '5' =>
-            sendSpecial(Numpad(5))
+            writeSpecial(Numpad(5))
             return
           case '6' =>
-            sendSpecial(Numpad(6))
+            writeSpecial(Numpad(6))
             return
           case '7' =>
-            sendSpecial(Numpad(7))
+            writeSpecial(Numpad(7))
             return
           case '8' =>
-            sendSpecial(Numpad(8))
+            writeSpecial(Numpad(8))
             return
           case '9' =>
-            sendSpecial(Numpad(9))
+            writeSpecial(Numpad(9))
             return
           case '.' =>
-            sendSpecial(KPPeriod)
+            writeSpecial(KPPeriod)
             return
           case '-' =>
           case 31 =>
-            sendSpecial(KPMinus)
+            writeSpecial(KPMinus)
             return
           case '+' =>
-            sendSpecial(KPComma)
+            writeSpecial(KPComma)
             return
           case 10 =>
-            sendSpecial(KPEnter)
+            writeSpecial(KPEnter)
             return
           case '/' =>
-            sendSpecial(PF2)
+            writeSpecial(PF2)
             return
           case '*' =>
-            sendSpecial(PF3)
+            writeSpecial(PF3)
             return
             /* NUMLOCK handled in keyPressed */
           case _ =>
@@ -543,47 +545,47 @@ abstract class TerminalInput {
     }
 
     if (keyCode == KeyEvent.VK_ESCAPE) {
-      sendSpecial(Escape(xind))
+      writeSpecial(Escape(xind))
       return
     }
 
     if ((modifiers & KEY_ACTION) != 0) {
       keyCode match {
         case KeyEvent.VK_NUMPAD0 =>
-          sendSpecial(Numpad(0))
+          writeSpecial(Numpad(0))
           return
         case KeyEvent.VK_NUMPAD1 =>
-          sendSpecial(Numpad(1))
+          writeSpecial(Numpad(1))
           return
         case KeyEvent.VK_NUMPAD2 =>
-          sendSpecial(Numpad(2))
+          writeSpecial(Numpad(2))
           return
         case KeyEvent.VK_NUMPAD3 =>
-          sendSpecial(Numpad(3))
+          writeSpecial(Numpad(3))
           return
         case KeyEvent.VK_NUMPAD4 =>
-          sendSpecial(Numpad(4))
+          writeSpecial(Numpad(4))
           return
         case KeyEvent.VK_NUMPAD5 =>
-          sendSpecial(Numpad(5))
+          writeSpecial(Numpad(5))
           return
         case KeyEvent.VK_NUMPAD6 =>
-          sendSpecial(Numpad(6))
+          writeSpecial(Numpad(6))
           return
         case KeyEvent.VK_NUMPAD7 =>
-          sendSpecial(Numpad(7))
+          writeSpecial(Numpad(7))
           return
         case KeyEvent.VK_NUMPAD8 =>
-          sendSpecial(Numpad(8))
+          writeSpecial(Numpad(8))
           return
         case KeyEvent.VK_NUMPAD9 =>
-          sendSpecial(Numpad(9))
+          writeSpecial(Numpad(9))
           return
         case KeyEvent.VK_DECIMAL =>
-          sendSpecial(NUMDot(xind))
+          writeSpecial(NUMDot(xind))
           return
         case KeyEvent.VK_ADD =>
-          sendSpecial(NUMPlus(xind))
+          writeSpecial(NUMPlus(xind))
           return
       }
     }
@@ -591,51 +593,80 @@ abstract class TerminalInput {
     keyChar match {
       case 8 | 127 | '\r' | '\n' =>
       case _ =>
-        send("" + keyChar)
+        write("" + keyChar)
     }
   }
 
   
   /**
-   * Set the terminal id used to identify this terminal.
-   * @param terminalID the id string
+   * Terminal id used to identify this terminal.
    */
-  def setToScoansi {
-
-    FunctionKey(1)  = "\u001b[M"
-    FunctionKey(2)  = "\u001b[N"
-    FunctionKey(3)  = "\u001b[O"
-    FunctionKey(4)  = "\u001b[P"
-    FunctionKey(5)  = "\u001b[Q"
-    FunctionKey(6)  = "\u001b[R"
-    FunctionKey(7)  = "\u001b[S"
-    FunctionKey(8)  = "\u001b[T"
-    FunctionKey(9)  = "\u001b[U"
-    FunctionKey(10) = "\u001b[V"
-    FunctionKey(11) = "\u001b[W"
-    FunctionKey(12) = "\u001b[X"
-    FunctionKey(13) = "\u001b[Y"
-    FunctionKey(14) = "?"
-    FunctionKey(15) = "\u001b[a"
-    FunctionKey(16) = "\u001b[b"
-    FunctionKey(17) = "\u001b[c"
-    FunctionKey(18) = "\u001b[d"
-    FunctionKey(19) = "\u001b[e"
-    FunctionKey(20) = "\u001b[f"
-    PrevScn(0) = "\u001b[I"
-    PrevScn(1) = "\u001b[I"
-    PrevScn(2) = "\u001b[I"
-    PrevScn(3) = "\u001b[I"
-    NextScn(0) = "\u001b[G"
-    NextScn(1) = "\u001b[G"
-    NextScn(2) = "\u001b[G"
-    NextScn(3) = "\u001b[G"
-    // more theoretically.
+  def terminalId = _terminalId
+  def terminalId_=(id: String) {
+    _terminalId = id
+    
+    id match {
+      case ScoAnsi =>
+        FunctionKey(1)  = "\u001b[M"
+        FunctionKey(2)  = "\u001b[N"
+        FunctionKey(3)  = "\u001b[O"
+        FunctionKey(4)  = "\u001b[P"
+        FunctionKey(5)  = "\u001b[Q"
+        FunctionKey(6)  = "\u001b[R"
+        FunctionKey(7)  = "\u001b[S"
+        FunctionKey(8)  = "\u001b[T"
+        FunctionKey(9)  = "\u001b[U"
+        FunctionKey(10) = "\u001b[V"
+        FunctionKey(11) = "\u001b[W"
+        FunctionKey(12) = "\u001b[X"
+        FunctionKey(13) = "\u001b[Y"
+        FunctionKey(14) = "?"
+        FunctionKey(15) = "\u001b[a"
+        FunctionKey(16) = "\u001b[b"
+        FunctionKey(17) = "\u001b[c"
+        FunctionKey(18) = "\u001b[d"
+        FunctionKey(19) = "\u001b[e"
+        FunctionKey(20) = "\u001b[f"
+        PrevScn(0) = "\u001b[I"
+        PrevScn(1) = "\u001b[I"
+        PrevScn(2) = "\u001b[I"
+        PrevScn(3) = "\u001b[I"
+        NextScn(0) = "\u001b[G"
+        NextScn(1) = "\u001b[G"
+        NextScn(2) = "\u001b[G"
+        NextScn(3) = "\u001b[G"
+        // more theoretically.
+        
+      case JlineWindows =>
+        // @see jline.WindowsTerminal
+        // SPECIAL_KEY_INDICATOR = 224, ie. '\u00E0', which will be sendSpecical convert to "-32" (bad)
+        // So, we'll use NUMPAD_KEY_INDICATOR = 0 as the special key indicator for jline windows termnial. 
+        val prefixes = Array("", "S", "C", "A")
+        var i = 0
+        while (i < prefixes.length) {
+          KeyLeft(i)  = "\u0000K" // 75 -> K
+          KeyRight(i) = "\u0000M" // 77 -> M
+          KeyUp(i)    = "\u0000H" // 72 -> H
+          KeyDown(i)  = "\u0000P" // 80 -> P
+          Remove(i)   = "\u0000S" // 83 -> S
+          KeyHome(i)  = "\u0000G" // 71 -> G
+          KeyEnd(i)   = "\u0000O" // 79 -> O
+          PrevScn(i)  = "\u0000I" // 73 -> I
+          NextScn(i)  = "\u0000Q" // 81 -> Q
+          Insert(i)   = "\u0000R" // 82 -> R
+          Escape(i)   = "\u0000\u0000" // 0
+          i += 1
+        }
+        
+      case _ =>
+    }
   }
 
 }
 
 object TerminalInput {
+  val ScoAnsi = "scoansi"
+  val JlineWindows = "jlinewindows"
   
   val KEY_CONTROL = 0x01
   val KEY_SHIFT   = 0x02
@@ -654,7 +685,7 @@ object TerminalInput {
     var cmd = ""
     while ({idx = tmp.indexOf('\\', oldidx); idx >= 0} && {idx += 1; idx <= tmp.length}) {
       cmd += tmp.substring(oldidx, idx - 1)
-      if (idx == tmp.length()) return cmd
+      if (idx == tmp.length) return cmd
       
       tmp.charAt(idx) match {
         case 'b' =>
@@ -689,10 +720,10 @@ object TerminalInput {
       }
       oldidx = {idx += 1; idx}
     }
-    if (oldidx <= tmp.length()) cmd += tmp.substring(oldidx)
+    if (oldidx <= tmp.length) cmd += tmp.substring(oldidx)
     
     cmd
   }
-  
+
   
 }
