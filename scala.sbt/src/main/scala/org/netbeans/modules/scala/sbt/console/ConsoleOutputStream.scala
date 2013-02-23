@@ -129,30 +129,35 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   @throws(classOf[IOException])
   override
   def write(b: Array[Byte]) {
-    write(b, 0, b.length)
+    isWaitingUserInput = false
+    buf.append(new String(b, 0, b.length))
   }
 
   @throws(classOf[IOException])
   override
   def write(b: Array[Byte], offset: Int, length: Int) {
+    isWaitingUserInput = false
     buf.append(new String(b, offset, length))
   }
 
   @throws(classOf[IOException])
   override
   def write(b: Int) {
+    isWaitingUserInput = false
     buf.append(b.toChar)
   }
   
   @throws(classOf[IOException])
   override
   def flush() {
-    doFlush()
-    isWaitingUserInput = true
+    isWaitingUserInput = doFlush()
   }
   
-  @throws(classOf[IOException])
-  protected[console] def doFlush(withAction: () => Unit = () => ()) {
+  /**
+   * @param an afterward action
+   * @return if is waiting user input, ie. the rest non-teminated line is not empty.
+   */
+  protected[console] def doFlush(withAction: () => Unit = () => ()): Boolean = {
     val (lines, rest) = readLines
     try {
       writeLines(lines)
@@ -165,6 +170,8 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     } catch {
       case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
     }
+    
+    rest.length > 0
   }
   
   /**
@@ -639,7 +646,7 @@ object AnsiConsoleOutputStream {
     while (line <= lineEnd) {
       try {
         val li = doc.getDefaultRootElement.getElement(line)
-        doc.insertString(li.getStartOffset(), " ", li.getAttributes());
+        doc.insertString(li.getStartOffset, " ", li.getAttributes)
       } catch {
         case ex: Exception => log.warning(ex.getMessage)
       }
@@ -651,16 +658,16 @@ object AnsiConsoleOutputStream {
    * Indents the lines between the given document positions (positions, NOT LINE NUMBERS !)
    */
   def unindentLines(doc: Document, fromPos: Int, toPos: Int) {
-    val lineStart = getLineNumber( doc, fromPos);
-    val lineEnd = getLineNumber( doc, toPos );
+    val lineStart = getLineNumber( doc, fromPos)
+    val lineEnd = getLineNumber( doc, toPos )
 
     var line = lineStart
     while (line <= lineEnd) {
       try {
-        val li = doc.getDefaultRootElement().getElement(line);
-        val ci = doc.getText(li.getStartOffset(), 1).charAt(0);
+        val li = doc.getDefaultRootElement().getElement(line)
+        val ci = doc.getText(li.getStartOffset, 1).charAt(0)
         if(Character.isWhitespace(ci) && ci !='\n') {
-          doc.remove(li.getStartOffset(), 1)
+          doc.remove(li.getStartOffset, 1)
         }
       } catch {
         case ex: Exception => log.warning(ex.getMessage)
@@ -681,8 +688,8 @@ object AnsiConsoleOutputStream {
     var line = lineStart
     while (line <= lineEnd) {
       try {
-        val li = doc.getDefaultRootElement().getElement(line);
-        doc.insertString(li.getStartOffset(), "//", li.getAttributes());
+        val li = doc.getDefaultRootElement.getElement(line);
+        doc.insertString(li.getStartOffset, "//", li.getAttributes)
       } catch {
         case ex: Exception => log.warning(ex.getMessage)
       }
@@ -695,17 +702,17 @@ object AnsiConsoleOutputStream {
    * reverse operation of commentOut. This only removes // at the beginning
    */
   def unCommentOutLines(doc: Document, fromPos: Int, toPos: Int) {
-    val lineStart = getLineNumber( doc, fromPos);
-    val lineEnd = getLineNumber( doc, toPos );
+    val lineStart = getLineNumber( doc, fromPos)
+    val lineEnd = getLineNumber( doc, toPos )
 
     var line = lineStart
     while (line <= lineEnd) {
       try {
         val li = doc.getDefaultRootElement.getElement(line)
-        if(li.getEndOffset()-li.getStartOffset()>1) {
-          if(doc.getText(li.getStartOffset(), 2).equals("//"))
+        if(li.getEndOffset()-li.getStartOffset>1) {
+          if(doc.getText(li.getStartOffset, 2).equals("//"))
           {
-            doc.remove(li.getStartOffset(), 2);
+            doc.remove(li.getStartOffset, 2)
           }
         }
       } catch {
@@ -882,7 +889,7 @@ object AnsiConsoleOutputStream {
    * @param column zero based
    */
   def getDocPositionFor(doc: Document, line: Int, column: Int): Int = {
-    if (line < 0) return -1;
+    if (line < 0) return -1
     val map = doc.getDefaultRootElement
     val lineElt = map.getElement(line)
     try {
