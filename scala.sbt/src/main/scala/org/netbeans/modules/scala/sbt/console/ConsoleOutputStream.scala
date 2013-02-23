@@ -1,6 +1,7 @@
 package org.netbeans.modules.scala.sbt.console
 
 import java.awt.Color
+import java.awt.EventQueue
 import java.awt.Point
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -128,7 +129,7 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   }
   
   def exitSbt {
-    pipedOut.println("exit")   
+    runSbtCommand("exit")   
   }
  
   @throws(classOf[IOException])
@@ -168,15 +169,34 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   @throws(classOf[IOException])
   override
   def flush() {
-    doFlush    
+    doFlush()
     isWaitingUserInput = true
   }
   
   @throws(classOf[IOException])
-  protected[console] def doFlush {
-    writeLines(readLines)
-    
-    writeLastLine(readLastLine)
+  protected[console] def doFlush(postAction: () => Unit = () => ()) {
+    if (EventQueue.isDispatchThread) {
+      try {
+        writeLines(readLines)
+        writeLastLine(readLastLine)
+        postAction()
+      } catch {
+        case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
+      }
+    } else {
+      EventQueue.invokeLater(new Runnable() {
+          def run {
+            try {
+              writeLines(readLines)
+              writeLastLine(readLastLine)
+              postAction()
+            } catch {
+              case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
+            }
+          }
+        }
+      )
+    }
   }
   
   @throws(classOf[IOException])
@@ -252,29 +272,23 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     }
   }
   
+  @throws(classOf[BadLocationException])
   private def backCursor(num: Int) {
     val backNum = math.min(area.getCaretPosition, num)
-    try {
-      area.setCaretPosition(area.getCaretPosition - backNum)
-    } catch {
-      case ex: BadLocationException => log.log(Level.SEVERE, ex.getMessage, ex)
-    }
+    area.setCaretPosition(area.getCaretPosition - backNum)
   }
   
   /**
    * @param string to overwrite
    * @param style
    */
+  @throws(classOf[BadLocationException])
   private def overwrite(str: String, style: AttributeSet) {
     val from = area.getCaretPosition
     val overwriteLen = math.min(doc.getLength - from, str.length)
-    try {
-      doc.remove(from, overwriteLen)
-      doc.insertString(from, str, style)
-      area.setCaretPosition(from + str.length)
-    } catch  {
-      case ex: BadLocationException => log.log(Level.SEVERE, ex.getMessage, ex)
-    }
+    doc.remove(from, overwriteLen)
+    doc.insertString(from, str, style)
+    area.setCaretPosition(from + str.length)
   }
     
   protected def parseLine(line: String): ArrayBuffer[(String, AttributeSet)] = {
@@ -399,23 +413,34 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     def keyPressed(evt: KeyEvent) {
       import KeyEvent._
 
-      evt.getKeyCode match {
-        case VK_PAUSE =>
-        case VK_F1 | VK_F2 | VK_F3 | VK_F4 | VK_F5 | VK_F6 | VK_F7 | VK_F8 | VK_F9 | VK_F10 | VK_F11 | VK_F12 =>
-        case VK_PAGE_DOWN | VK_PAGE_UP | VK_HOME | VK_END =>
-        case VK_NUM_LOCK | VK_CAPS_LOCK =>
-        case VK_SHIFT | VK_CONTROL | VK_ALT =>
-        case VK_INSERT =>
-        case VK_DELETE | VK_BACK_SPACE =>
-        case VK_LEFT | VK_RIGHT        =>
-        case VK_UP    =>    // search history
-        case VK_DOWN  =>    // search history
-        case VK_TAB   =>    // do completion
-        case VK_ENTER =>    // enter command
-        case _ => 
+      val consumeIt = evt.getKeyCode match {
+        case VK_PAUSE => true
+        case VK_F1 | VK_F2 | VK_F3 | VK_F4 | VK_F5 | VK_F6 | VK_F7 | VK_F8 | VK_F9 | VK_F10 | VK_F11 | VK_F12 => true
+        case VK_PAGE_DOWN | VK_PAGE_UP | VK_HOME | VK_END => true
+        case VK_NUM_LOCK | VK_CAPS_LOCK => true
+        case VK_SHIFT | VK_CONTROL | VK_ALT => true
+        case VK_INSERT => true
+        case VK_DELETE | VK_BACK_SPACE => true
+        case VK_LEFT | VK_RIGHT        => true
+        
+        case VK_UP    => true   // search history
+        case VK_DOWN  => true   // search history
+        case VK_TAB   => true   // do completion
+        case VK_ENTER => true   // enter command
+          
+        case VK_V => 
+          // we need more carefully implementation for Paste action, since should 
+          // also move the cursor of backed jline to proper position and send chars in clipboard.
+          true
+          
+        case (VK_C | VK_A) if evt.isMetaDown => false // copy keys
+        
+        case _ => true
       }
       
-      evt.consume // consume it, will be handled by echo etc
+      if (consumeIt) {
+        evt.consume // consume it, will be handled by echo etc
+      }
       keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
     }
   
@@ -647,35 +672,30 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   private val area = term.area
   private val doc = area.getDocument.asInstanceOf[StyledDocument]
   
-  @throws(classOf[IOException])
   override
   protected def processSetForegroundColor(color: Int) {
     StyleConstants.setForeground(term.sequenceStyle, ANSI_COLOR_MAP(color))
     term.currentStyle = term.sequenceStyle
   }
 
-  @throws(classOf[IOException])
   override
   protected def processSetBackgroundColor(color: Int) {
     StyleConstants.setBackground(term.sequenceStyle, ANSI_COLOR_MAP(color))
     term.currentStyle = term.sequenceStyle
   }
   
-  @throws(classOf[IOException])
   override
   protected def processDefaultTextColor {
     StyleConstants.setForeground(term.sequenceStyle, ConsoleOutputStream.defaultFg)
     term.currentStyle = term.sequenceStyle
   }
 
-  @throws(classOf[IOException])
   override
   protected def processDefaultBackgroundColor {
     StyleConstants.setBackground(term.sequenceStyle, ConsoleOutputStream.defaultBg)
     term.currentStyle = term.sequenceStyle
   }
 
-  @throws(classOf[IOException])
   override
   protected def processSetAttribute(attribute: Int) {
     import Ansi._
@@ -700,7 +720,6 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
     term.currentStyle = term.sequenceStyle
   }
 	
-  @throws(classOf[IOException])
   override
   protected def processAttributeRest() {
     term.currentStyle = term.defaultStyle
@@ -708,16 +727,13 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   
   // @Note before do any ansi cursor command, we should flush first to keep the 
   // proper caret position which is sensitive to the order of ansi command and chars to print
-  
+  @throws(classOf[BadLocationException])
   override 
   protected def processCursorToColumn(col: Int) {
-    val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
-    val toPos = lineStart + col - 1
-    try {
-      term.doFlush 
+    term.doFlush{() => 
+      val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
+      val toPos = lineStart + col - 1
       area.setCaretPosition(toPos)
-    } catch {
-      case ex: Exception => log.warning(ex.getMessage)
     }
   }
   
@@ -726,18 +742,16 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
    * end of screen. If n is one, clear from cursor to beginning of the screen. 
    * If n is two, clear entire screen (and moves cursor to upper left on MS-DOS ANSI.SYS).
    */
+  @throws(classOf[BadLocationException])
   override 
   protected def processEraseScreen(eraseOption: Int) {
-    try {
-      eraseOption match {
-        case 0 => 
-          term.doFlush
+    eraseOption match {
+      case 0 => 
+        term.doFlush{() =>
           val currPos = area.getCaretPosition
           doc.remove(currPos, doc.getLength - currPos)
-        case _ =>
-      }
-    } catch {
-      case ex: Exception => log.warning(ex.getMessage)
+        }
+      case _ =>
     }
   }
 
