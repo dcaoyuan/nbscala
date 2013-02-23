@@ -637,7 +637,7 @@ abstract class TerminalInput {
         NextScn(3) = "\u001b[G"
         // more theoretically.
         
-      case JlineWindows =>
+      case JLineWindows =>
         // @see jline.WindowsTerminal
         // SPECIAL_KEY_INDICATOR = 224, ie. '\u00E0', which will be sendSpecical convert to "-32" (bad)
         // So, we'll use NUMPAD_KEY_INDICATOR = 0 as the special key indicator for jline windows termnial. 
@@ -666,7 +666,7 @@ abstract class TerminalInput {
 
 object TerminalInput {
   val ScoAnsi = "scoansi"
-  val JlineWindows = "jlinewindows"
+  val JLineWindows = "jlinewindows"
   
   val KEY_CONTROL = 0x01
   val KEY_SHIFT   = 0x02

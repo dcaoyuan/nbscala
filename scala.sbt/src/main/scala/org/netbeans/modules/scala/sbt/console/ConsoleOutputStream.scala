@@ -168,29 +168,28 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   @throws(classOf[IOException])
   override
   def flush() {
-    doFlush
+    doFlush    
     isWaitingUserInput = true
   }
   
   @throws(classOf[IOException])
   protected[console] def doFlush {
-    writeLines
+    writeLines(readLines)
     
-    writeLastLine(buf.substring(0, buf.length))
-    buf.delete(0, buf.length)
+    writeLastLine(readLastLine)
   }
   
   @throws(classOf[IOException])
-  private def writeLines {
-    getLines foreach writeLine
-    linesBuf.clear
+  private def writeLines(lines: ArrayBuffer[String]) {
+    lines foreach writeLine
+    lines.clear
   }
 
   /**
    * Read lines from buf, keep not-line-completed chars in buf
    * @return lines
    */
-  private def getLines: ArrayBuffer[String] = {
+  private def readLines: ArrayBuffer[String] = {
     val len = buf.length
     var newLineOffset = 0
     var readOffset = -1 // offset that has read to lines
@@ -216,6 +215,12 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     linesBuf
   }
   
+  private def readLastLine: String = {
+    val line = buf.substring(0, buf.length)
+    buf.delete(0, buf.length)
+    line
+  }
+  
   /**
    * Write a line string to doc, to start a new line afterward, the line string should end with "\n"
    */
@@ -228,39 +233,32 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   }
   
   /**
-   * It's usaully the line that is accepting user input, ie. the editable line, 
-   * we should process '\b' here (JTextPane just print ' ' for '\b')
+   * The last line is usaully the line that is accepting user input, ie. an editable 
+   * line, we should process '\b' here (JTextPane just print ' ' for '\b')
+   * @Note The '\b' from JLine, is actually a back cursor, which works with 
+   * followed overwriting in combination for non-ansi terminal to move cursor.
    */
   private def writeLastLine(str: String) {
-    val sb = new StringBuilder(str.length)
     val len = str.length
-    var extraBackspaces = 0
     var i = 0
     while (i < len) {
       str.charAt(i) match {
         case '\b' =>
-          if (sb.length > 0) {
-            sb.deleteCharAt(sb.length - 1)
-          } else {
-            extraBackspaces += 1
-          }
+          backCursor(1)
         case c =>
-          sb.append(c)
+          overwrite("" + c, currentStyle)
       }
       i += 1
     }
-    
-    if (extraBackspaces > 0) {
-      val backLen = math.min(area.getCaretPosition, extraBackspaces)
-      try {
-        area.setCaretPosition(area.getCaretPosition - backLen)
-        doc.remove(area.getCaretPosition, backLen)
-      } catch {
-        case ex: BadLocationException => log.log(Level.SEVERE, ex.getMessage, ex)
-      }
+  }
+  
+  private def backCursor(num: Int) {
+    val backNum = math.min(area.getCaretPosition, num)
+    try {
+      area.setCaretPosition(area.getCaretPosition - backNum)
+    } catch {
+      case ex: BadLocationException => log.log(Level.SEVERE, ex.getMessage, ex)
     }
-    
-    overwrite(sb.toString, currentStyle)
   }
   
   /**
@@ -269,7 +267,7 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
    */
   private def overwrite(str: String, style: AttributeSet) {
     val from = area.getCaretPosition
-    val overwriteLen = math.min(str.length, doc.getLength - from)
+    val overwriteLen = math.min(doc.getLength - from, str.length)
     try {
       doc.remove(from, overwriteLen)
       doc.insertString(from, str, style)
@@ -387,12 +385,9 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
 
   object terminalInput extends TerminalInput with KeyListener {
 
-    val isAnsi = System.getProperty("os.name").toLowerCase match {
-      case os if os.indexOf("windows") != -1 => 
-        terminalId = TerminalInput.JlineWindows
-        false
+    System.getProperty("os.name").toLowerCase match {
+      case os if os.indexOf("windows") != -1 => terminalId = TerminalInput.JLineWindows
       case _ =>
-        true
     }
 
     override 
@@ -411,12 +406,12 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
         case VK_NUM_LOCK | VK_CAPS_LOCK =>
         case VK_SHIFT | VK_CONTROL | VK_ALT =>
         case VK_INSERT =>
-        case VK_DELETE | VK_BACK_SPACE => 
-        case VK_LEFT | VK_RIGHT => 
-        case VK_UP =>     // search history
-        case VK_DOWN =>   // search history
-        case VK_TAB =>    // will do completion
-        case VK_ENTER =>  // do entering command
+        case VK_DELETE | VK_BACK_SPACE =>
+        case VK_LEFT | VK_RIGHT        =>
+        case VK_UP    =>    // search history
+        case VK_DOWN  =>    // search history
+        case VK_TAB   =>    // do completion
+        case VK_ENTER =>    // enter command
         case _ => 
       }
       
@@ -770,7 +765,7 @@ object AnsiConsoleOutputStream {
         val li = doc.getDefaultRootElement.getElement(line)
         doc.insertString(li.getStartOffset(), " ", li.getAttributes());
       } catch {
-        case ex: Exception => ex.printStackTrace
+        case ex: Exception => log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -792,7 +787,7 @@ object AnsiConsoleOutputStream {
           doc.remove(li.getStartOffset(), 1)
         }
       } catch {
-        case ex: Exception => ex.printStackTrace
+        case ex: Exception => log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -813,7 +808,7 @@ object AnsiConsoleOutputStream {
         val li = doc.getDefaultRootElement().getElement(line);
         doc.insertString(li.getStartOffset(), "//", li.getAttributes());
       } catch {
-        case ex: Exception => ex.printStackTrace
+        case ex: Exception => log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -838,7 +833,7 @@ object AnsiConsoleOutputStream {
           }
         }
       } catch {
-        case ex: Exception => ex.printStackTrace
+        case ex: Exception => log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -985,7 +980,7 @@ object AnsiConsoleOutputStream {
           if (h < 0) h = 0
           vp.setViewPosition(new Point(0, h))
         } catch {
-          case ex: Exception => ex.printStackTrace
+          case ex: Exception => log.warning(ex.getMessage)
         }
       case _ =>
         new Throwable("parent of textpane is not a viewport !").printStackTrace
@@ -1002,7 +997,7 @@ object AnsiConsoleOutputStream {
       val pt2 = new Point((pt1.getX + dim.getWidth).toInt, (pt1.getY + dim.getHeight).toInt)
       pos(1) = textPane.viewToModel(pt2)
     } catch {
-      case ex: Exception => ex.printStackTrace
+      case ex: Exception => log.warning(ex.getMessage)
     }
     pos
   }
