@@ -12,32 +12,34 @@ import java.io.PipedOutputStream
 import java.io.PrintStream
 import java.util.logging.Level
 import java.util.logging.Logger
-import java.util.regex.Pattern
 import javax.swing.DefaultListCellRenderer
 import javax.swing.JComboBox
 import javax.swing.JScrollPane
 import javax.swing.JTextPane
 import javax.swing.JViewport
 import javax.swing.plaf.basic.BasicComboPopup
-import javax.swing.text.AbstractDocument
 import javax.swing.text.AttributeSet
 import javax.swing.text.BadLocationException
 import javax.swing.text.Document
-import javax.swing.text.DocumentFilter
 import javax.swing.text.JTextComponent
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 import javax.swing.text.StyledDocument
 import scala.collection.mutable.ArrayBuffer
 
+
+trait ConsoleOutputLineParser {
+  def parseLine(line: String): Array[(String, AttributeSet)]
+}
+
 /**
  *
  * @author Caoyuan Deng
  */
-class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: PipedInputStream) extends OutputStream {
-  import ConsoleOutputStream._
+class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends OutputStream {
+  private val log = Logger.getLogger(getClass.getName)
   
-  def this(area: JTextComponent) = this(area, null, null)
+  def this(area: JTextPane) = this(area, null, null)
     
   /** buffer which will be used for the next line */
   private val buf = new StringBuffer(1000)
@@ -45,76 +47,47 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
   private var promptPos = 0
   private var currentLine: String = _
   private var isWaitingUserInput = false
-
-  area.setForeground(defaultFg)
-  area.setBackground(defaultBg)
-  area.setCaretColor(defaultFg)
-  val sequenceStyle = new SimpleAttributeSet()
-  val defaultStyle  = new SimpleAttributeSet()
   
-  val infoStyle = new SimpleAttributeSet()
-  val warnStyle = new SimpleAttributeSet()
-  val errorStyle = new SimpleAttributeSet()
-  val successStyle = new SimpleAttributeSet()
-  val linkStyle = new SimpleAttributeSet()
-  
-  StyleConstants.setForeground(sequenceStyle, defaultFg)     
-  StyleConstants.setBackground(sequenceStyle, defaultBg)     
-  StyleConstants.setForeground(defaultStyle, defaultFg)     
-  StyleConstants.setBackground(defaultStyle, defaultBg)
+  lazy val defaultStyle = {
+    val x = new SimpleAttributeSet()
+    StyleConstants.setForeground(x, area.getForeground)     
+    StyleConstants.setBackground(x, area.getBackground)
+    x
+  }
 
-  StyleConstants.setForeground(infoStyle, defaultFg)
-  StyleConstants.setForeground(warnStyle, new Color(0xB9, 0x7C, 0x00))
-  StyleConstants.setForeground(errorStyle, Color.RED)
-  StyleConstants.setForeground(successStyle, Color.GREEN)
+  lazy val sequenceStyle = {
+    val x = new SimpleAttributeSet()
+    StyleConstants.setForeground(x, area.getForeground)     
+    StyleConstants.setBackground(x, area.getBackground)
+    x
+  }
 
-  StyleConstants.setForeground(linkStyle, linkFg)
-  StyleConstants.setUnderline(linkStyle, true)
-  
   var currentStyle = defaultStyle
+
+  /**
+   * override to define custom line parser
+   */
+  protected val lineParser = new ConsoleOutputLineParser {
+    def parseLine(line: String): Array[(String, AttributeSet)] = Array((line, defaultStyle))
+  }
+
+  val pipedOut = new PrintStream(new PipedOutputStream(pipedIn))
+  private val doc = area.getDocument
   
+  private object areaMouseListener extends ConsoleMouseListener(area)
+  
+  area.setCaret(BlockCaret)
+  area.addKeyListener(terminalInput)
+  area.addMouseListener(areaMouseListener)
+  area.addMouseMotionListener(areaMouseListener)
+
   private val completeCombo = new JComboBox[String]()
   private var completeStart: Int = _
   private var completeEnd: Int = _
     
-  private val pipedOut = new PrintStream(new PipedOutputStream(pipedIn))
-  
-  private val doc = area.getDocument
-  //ConsoleLineReader.createConsoleLineReader
-        
-  area.setCaret(BlockCaret)
-  area.addKeyListener(terminalInput)
-  
-  private val docFilter = new DocumentFilter() {
-    override 
-    def insertString(fb: DocumentFilter.FilterBypass, offset: Int, str: String, attr: AttributeSet) {
-      if (offset >= promptPos) {
-        super.insertString(fb, offset, str, attr)
-      }
-    }
-                
-    override 
-    def remove(fb: DocumentFilter.FilterBypass, offset: Int, length: Int) {
-      if (offset >= promptPos) {
-        super.remove(fb, offset, length)
-      }
-    }
-                
-    override 
-    def replace(fb: DocumentFilter.FilterBypass, offset: Int, length: Int, str: String ,  attrs: AttributeSet) {
-      if (offset >= promptPos) {
-        super.replace(fb, offset, length, str, attrs)
-      }
-    }
-  }
-  
-  // No editing before startPos
-  doc match {
-    case styleDoc: AbstractDocument => //styleDoc.setDocumentFilter(docFilter)
-  }
-        
   completeCombo.setRenderer(new DefaultListCellRenderer())
   val completePopup = new BasicComboPopup(completeCombo)
+  //ConsoleLineReader.createConsoleLineReader
         
   if (welcome ne null) {
     val messageStyle = new SimpleAttributeSet()
@@ -123,15 +96,6 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     overwrite(welcome, messageStyle)
   }
   
-  def runSbtCommand(command: String): String = synchronized {
-    pipedOut.println(command)
-    ""
-  }
-  
-  def exitSbt {
-    runSbtCommand("exit")   
-  }
- 
   @throws(classOf[IOException])
   override
   def close() {
@@ -146,7 +110,11 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
    * The default implementation does nothing.
    */
   @throws(classOf[IOException])
-  protected def handleClose() {}
+  protected def handleClose() {
+    area.removeKeyListener(terminalInput)
+    area.removeMouseListener(areaMouseListener)
+    area.removeMouseMotionListener(areaMouseListener)
+  }
 
   @throws(classOf[IOException])
   override
@@ -217,7 +185,7 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     while (i < len) {
       if (buf.charAt(i) == '\n') {
         val line = if (i > 0 && buf.charAt(i - 1) == '\r') { 
-          buf.substring(newLineOffset, i) + "\n" // strip '\r' for Windows
+          buf.substring(newLineOffset, i) + "\n"  // strip '\r' for Windows
         } else {
           buf.substring(newLineOffset, i + 1)
         }
@@ -245,11 +213,7 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
    * Write a line string to doc, to start a new line afterward, the line string should end with "\n"
    */
   private def writeLine(line: String) {
-    if (line.length >= 6) {
-      for ((text, style) <- parseLine(line)) overwrite(text, style)
-    } else {
-      overwrite(line, currentStyle)
-    }
+    lineParser.parseLine(line) foreach overwrite
   }
   
   /**
@@ -278,6 +242,11 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     area.setCaretPosition(area.getCaretPosition - backNum)
   }
   
+  @throws(classOf[BadLocationException])
+  private def overwrite(str_style: (String, AttributeSet)) {
+    overwrite(str_style._1, str_style._2)
+  }
+  
   /**
    * @param string to overwrite
    * @param style
@@ -291,91 +260,11 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     area.setCaretPosition(from + str.length)
   }
     
-  protected def parseLine(line: String): ArrayBuffer[(String, AttributeSet)] = {
-    val texts = new ArrayBuffer[(String, AttributeSet)]()
-    val testRest_style = if (line.startsWith(ERROR_PREFIX)) {
-      
-      val m = rERROR_WITH_FILE.matcher(line)
-      if (m.matches && m.groupCount >= 3) {
-        texts += (("[", currentStyle))
-        texts += (("error", errorStyle))
-        texts += (("] ", currentStyle))
-        val textRest = line.substring(ERROR_PREFIX.length + 1, line.length)
-        
-        val fileName = m.group(1)
-        val lineNo = m.group(2)
-        val linkStyle = new SimpleAttributeSet()
-        StyleConstants.setForeground(linkStyle, linkFg)
-        StyleConstants.setUnderline(linkStyle, true)
-        linkStyle.addAttribute("file", fileName)
-        linkStyle.addAttribute("line", lineNo)
-        
-        (textRest, linkStyle)
-      } else {
-        texts += (("[", currentStyle))
-        texts += (("error", errorStyle))
-        texts += (("]", currentStyle))
-        val textRest = line.substring(ERROR_PREFIX.length, line.length)
-        
-        (textRest, errorStyle)
-      }
-      
-    } else if (line.startsWith(WARN_PREFIX)) {
-      
-      val m = rWARN_WITH_FILE.matcher(line)
-      if (m.matches && m.groupCount >= 3) {
-        texts += (("[", currentStyle))
-        texts += (("warn", warnStyle))
-        texts += (("] ", currentStyle))
-        val textRest = line.substring(WARN_PREFIX.length + 1, line.length)
-        
-        val fileName = m.group(1)
-        val lineNo = m.group(2)
-        val linkStyle = new SimpleAttributeSet()
-        StyleConstants.setForeground(linkStyle, linkFg)
-        StyleConstants.setUnderline(linkStyle, true)
-        linkStyle.addAttribute("file", fileName)
-        linkStyle.addAttribute("line", lineNo)
-        
-        (textRest, linkStyle)
-      } else {
-        texts += (("[", currentStyle))
-        texts += (("warn", warnStyle))
-        texts += (("]", currentStyle))
-        val textRest = line.substring(WARN_PREFIX.length, line.length)
-        
-        (textRest, warnStyle)
-      }
-      
-    } else if (line.startsWith(INFO_PREFIX)) {
-      
-      texts += (("[", currentStyle))
-      texts += (("info", infoStyle))
-      texts += (("]", currentStyle))
-      val textRest = line.substring(INFO_PREFIX.length, line.length)
-      
-      (textRest, currentStyle)
-      
-    } else if (line.startsWith(SUCCESS_PREFIX)) {
-      
-      texts += (("[", currentStyle))
-      texts += (("success", successStyle))
-      texts += (("]", currentStyle))
-      val textRest = line.substring(SUCCESS_PREFIX.length, line.length)
-      
-      (textRest, currentStyle)
-      
-    } else {
-      (line, currentStyle)
-    }
-    
-    texts += testRest_style
-  }
-  
+
   protected def replaceText(start: Int, end: Int, replacement: String) {
     try {
       doc.remove(start, end - start)
-      doc.insertString(start, replacement, sequenceStyle)
+      doc.insertString(start, replacement, currentStyle)
     } catch {
       case ex: BadLocationException => // Ifnore
     }
@@ -641,31 +530,6 @@ class ConsoleOutputStream(val area: JTextComponent, welcome: String, pipedIn: Pi
     
 }
 
-object ConsoleOutputStream {
-  private val log = Logger.getLogger(getClass.getName)
-  
-  val defaultFg = Color.BLACK
-  val defaultBg = Color.WHITE
-  val linkFg = Color.BLUE
-
-  private val INFO_PREFIX    = "[info]"
-  private val WARN_PREFIX    = "[warn]"
-  private val ERROR_PREFIX   = "[error]"
-  private val SUCCESS_PREFIX = "[success]"
-  
-  private val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
-  private val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
-  private val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
-  private val LINE = "(([1-9][0-9]*))"  // line number
-  private val ROL = ".*\\s?"            // rest of line
-  private val SEP = "\\:"               // seperator between file path and line number
-  private val STD_SUFFIX = FILE + SEP + LINE + ROL  // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-  
-  private val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-  private val rWARN_WITH_FILE =  Pattern.compile("\\Q" + WARN_PREFIX  + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-
-}
-
 class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStream(term) {
   import AnsiConsoleOutputStream._
   
@@ -686,13 +550,13 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   
   override
   protected def processDefaultTextColor {
-    StyleConstants.setForeground(term.sequenceStyle, ConsoleOutputStream.defaultFg)
+    StyleConstants.setForeground(term.sequenceStyle, term.defaultStyle.getAttribute(StyleConstants.Foreground).asInstanceOf[Color])
     term.currentStyle = term.sequenceStyle
   }
 
   override
   protected def processDefaultBackgroundColor {
-    StyleConstants.setBackground(term.sequenceStyle, ConsoleOutputStream.defaultBg)
+    StyleConstants.setBackground(term.sequenceStyle, term.defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
     term.currentStyle = term.sequenceStyle
   }
 
