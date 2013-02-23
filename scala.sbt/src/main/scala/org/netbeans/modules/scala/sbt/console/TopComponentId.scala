@@ -5,6 +5,7 @@ import java.util.logging.Logger
 import org.openide.loaders.InstanceDataObject
 
 /**
+ * @see org.netbeans.core.windows.persistence.PersistenceManager
  * 
  * @author Caoyuan Deng
  */

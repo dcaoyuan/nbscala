@@ -43,6 +43,7 @@ package org.netbeans.modules.scala.sbt.console
 
 import java.io.File
 import java.io.IOException
+import org.netbeans.api.project.ui.OpenProjects
 import org.openide.DialogDisplayer
 import org.openide.NotifyDescriptor
 import org.openide.filesystems.FileUtil
@@ -294,5 +295,30 @@ object SBTExecution {
     }
     if (Utilities.isWindows)  "\"" + sb.toString + "\""  else sb.toString // NOI18N
   }
+  
+  def getMainProjectWorkPath: File = {
+    var pwd: File = null
+    val mainProject = OpenProjects.getDefault.getMainProject
+    if (mainProject != null) {
+      var fo = mainProject.getProjectDirectory
+      if (!fo.isFolder) {
+        fo = fo.getParent
+      }
+      pwd = FileUtil.toFile(fo)
+    }
+    if (pwd == null) {
+      val userHome = System.getProperty("user.home")
+      pwd = new File(userHome, "project")
+      if (pwd.exists) {
+        pwd = if (pwd.isDirectory) new File(userHome) else pwd
+      } else {
+        pwd.mkdir
+        pwd
+      }
+    }
+    pwd
+  }
+  
+
      
 }

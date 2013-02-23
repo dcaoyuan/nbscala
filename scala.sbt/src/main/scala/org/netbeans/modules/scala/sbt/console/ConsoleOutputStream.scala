@@ -1,7 +1,6 @@
 package org.netbeans.modules.scala.sbt.console
 
 import java.awt.Color
-import java.awt.EventQueue
 import java.awt.Point
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -10,6 +9,7 @@ import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.io.PrintStream
+import java.util.concurrent.Future
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.swing.DefaultListCellRenderer
@@ -96,6 +96,12 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     overwrite(welcome, messageStyle)
   }
   
+  private var _underlyingTask: Option[Future[Integer]] = None
+  def underlyingTask = _underlyingTask
+  def underlyingTask_=(underlyingTask: Option[Future[Integer]]) {
+    _underlyingTask = underlyingTask
+  }
+  
   @throws(classOf[IOException])
   override
   def close() {
@@ -105,12 +111,16 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
 
   /**
    * This method is called when the stream is closed and it allows
-   * entensions of this class to do additional tasks.
+   * extensions of this class to do additional tasks.
    * For example, closing an underlying stream, etc.
-   * The default implementation does nothing.
+   * 
+   * By override this method, extra tasks can be performance before/after the
+   * existed task that have been defined here.
    */
   @throws(classOf[IOException])
   protected def handleClose() {
+    underlyingTask map (_.cancel(true))
+    
     area.removeKeyListener(terminalInput)
     area.removeMouseListener(areaMouseListener)
     area.removeMouseMotionListener(areaMouseListener)
@@ -143,27 +153,16 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   
   @throws(classOf[IOException])
   protected[console] def doFlush(postAction: () => Unit = () => ()) {
-    if (EventQueue.isDispatchThread) {
-      try {
-        writeLines(readLines)
-        writeLastLine(readLastLine)
-        postAction()
-      } catch {
-        case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
-      }
-    } else {
-      EventQueue.invokeLater(new Runnable() {
-          def run {
-            try {
-              writeLines(readLines)
-              writeLastLine(readLastLine)
-              postAction()
-            } catch {
-              case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
-            }
-          }
-        }
-      )
+    try {
+      writeLines(readLines)
+      writeLastLine(readLastLine)
+      postAction()
+      // XXX call repaint to force the caret get painted properly under windows,
+      // for example, when press left-arrow, the previous caret will leave there
+      // under windows.
+      area.repaint() 
+    } catch {
+      case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
     }
   }
   

@@ -3,13 +3,11 @@ package org.netbeans.modules.scala.sbt.console
 import java.awt.Color
 import java.awt.Font
 import java.awt.Insets
-import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PipedInputStream
 import java.io.PrintStream
 import java.io.PrintWriter
-import java.io.Reader
 import java.util.logging.Logger
 import java.util.regex.Pattern
 import javax.swing._
@@ -21,15 +19,11 @@ import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.extexecution.ExternalProcessBuilder
 import org.netbeans.api.progress.ProgressHandleFactory
 import org.netbeans.api.project.Project
-import org.netbeans.api.project.ui.OpenProjects
 import org.openide.ErrorManager
 import org.openide.filesystems.FileUtil
 import org.openide.util.Cancellable
 import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
-import org.openide.windows.InputOutput
-import org.openide.windows.OutputListener
-import org.openide.windows.OutputWriter
 import org.openide.windows.TopComponent
 import org.openide.windows.WindowManager
 import scala.collection.mutable.ArrayBuffer
@@ -40,19 +34,19 @@ import scala.collection.mutable.ArrayBuffer
  */
 final class SBTConsoleTopComponent private (project: Project) extends TopComponent {
   import SBTConsoleTopComponent._
-  
-  private var textPane: JTextPane = _
-  private val mimeType = "text/x-sbt"
+
   private val log = Logger.getLogger(getClass.getName)
   
+  private val mimeType = "text/x-sbt"
+  private var console: SbtConsoleOutputStream = _
+ 
   initComponents
-  setName("SBT " + project.getProjectDirectory.getName)
-  setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
-  setIcon(ImageUtilities.loadImage(ICON_PATH, true))
-  var console: SbtConsoleOutputStream = _
  
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
+    setName("SBT " + project.getProjectDirectory.getName)
+    setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
+    setIcon(ImageUtilities.loadImage(ICON_PATH, true))
   }            
 
   /**
@@ -64,6 +58,9 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   override
   def getPersistenceType = TopComponent.PERSISTENCE_NEVER
 
+  override
+  def canClose = true // make sure this tc can be truely closed
+  
   override 
   def open() {
     /**
@@ -92,19 +89,18 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
       try {
         console.close
       } catch {
-        case ex: Exception => // ignore
+        case ex: Exception => log.warning(ex.getMessage)
       }
       console == null
     }
-    textPane = null
     super.componentClosed
   }
 
   override
   protected def componentActivated() {
     // Make the caret visible. See comment under componentDeactivated.
-    if (textPane != null) {
-      val caret = textPane.getCaret
+    if (console != null) {
+      val caret = console.area.getCaret
       if (caret != null) {
         caret.setVisible(true)
       }
@@ -118,8 +114,8 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     // normally do this by themselves, but the TextAreaReadline component seems
     // to mess around with the editable property of the text pane, and
     // the caret will not turn itself on/off for noneditable text areas.
-    if (textPane != null) {
-      val caret = textPane.getCaret
+    if (console != null) {
+      val caret = console.area.getCaret
       if (caret != null) {
         caret.setVisible(false)
       }
@@ -129,15 +125,15 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   
   override
   def requestFocus() {
-    if (textPane != null) {
-      textPane.requestFocus
+    if (console != null) {
+      console.area.requestFocus
     }
   }
 
   override
   def requestFocusInWindow: Boolean = {
-    if (textPane != null) {
-      textPane.requestFocusInWindow
+    if (console != null) {
+      console.area.requestFocusInWindow
     } else {
       false
     }
@@ -159,7 +155,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
       case x => x
     } 
 
-    textPane = new JTextPane()
+    val textPane = new JTextPane()
     textPane.getDocument.putProperty("mimeType", mimeType)
     textPane.setMargin(new Insets(8, 8, 8, 8))
     textPane.setFont(font)
@@ -256,8 +252,8 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
       })
 
     val executionService = ExecutionService.newService(builder, execDescriptor, "Sbt Shell")
-    executionService.run()
-    
+    console.underlyingTask = Option(executionService.run())
+
     console
   }
   
@@ -328,7 +324,6 @@ object SBTConsoleTopComponent {
         val results = commands map tc.console.runSbtCommand
 
         if (background && !isNewCreated) {
-          tc.console.exitSbt
           tc.close
         }
               
@@ -343,90 +338,63 @@ object SBTConsoleTopComponent {
     SwingUtilities.invokeLater(runnableTask)
   }
   
-  private def getMainProjectWorkPath: File = {
-    var pwd: File = null
-    val mainProject = OpenProjects.getDefault.getMainProject
-    if (mainProject != null) {
-      var fo = mainProject.getProjectDirectory
-      if (!fo.isFolder) {
-        fo = fo.getParent
-      }
-      pwd = FileUtil.toFile(fo)
-    }
-    if (pwd == null) {
-      val userHome = System.getProperty("user.home")
-      pwd = new File(userHome, "project")
-      if (pwd.exists) {
-        pwd = if (pwd.isDirectory) new File(userHome) else pwd
-      } else {
-        pwd.mkdir
-        pwd
-      }
-    }
-    pwd
-  }
-  
   class SbtConsoleOutputStream(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleOutputStream(_area, pipedIn, welcome) {
-    def runSbtCommand(command: String): String = synchronized {
+    def runSbtCommand(command: String): String = {
       pipedOut.println(command)
       ""
     }
   
-    def exitSbt {
-      runSbtCommand("exit")
-    }
- 
     @throws(classOf[IOException])
     override 
     protected def handleClose() {
-      exitSbt
-      super.handleClose
+      runSbtCommand("exit") // try to exit underlying process gracefully 
+      super.handleClose()
     }
     
     override 
     protected val lineParser = new ConsoleOutputLineParser() {
       
-      private val INFO_PREFIX    = "[info]"
-      private val WARN_PREFIX    = "[warn]"
-      private val ERROR_PREFIX   = "[error]"
-      private val SUCCESS_PREFIX = "[success]"
+      val INFO_PREFIX    = "[info]"
+      val WARN_PREFIX    = "[warn]"
+      val ERROR_PREFIX   = "[error]"
+      val SUCCESS_PREFIX = "[success]"
   
-      private val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
-      private val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
-      private val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
-      private val LINE = "(([1-9][0-9]*))"  // line number
-      private val ROL = ".*\\s?"            // rest of line
-      private val SEP = "\\:"               // seperator between file path and line number
-      private val STD_SUFFIX = FILE + SEP + LINE + ROL  // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+      val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
+      val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
+      val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
+      val LINE = "(([1-9][0-9]*))"  // line number
+      val ROL = ".*\\s?"            // rest of line
+      val SEP = "\\:"               // seperator between file path and line number
+      val STD_SUFFIX = FILE + SEP + LINE + ROL  // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
   
-      private val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-      private val rWARN_WITH_FILE =  Pattern.compile("\\Q" + WARN_PREFIX  + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+      val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+      val rWARN_WITH_FILE =  Pattern.compile("\\Q" + WARN_PREFIX  + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
 
-      private lazy val infoStyle = {
+      lazy val infoStyle = {
         val x = new SimpleAttributeSet()
         StyleConstants.setForeground(x, defaultStyle.getAttribute(StyleConstants.Foreground).asInstanceOf[Color])
         StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
         x
       }
-      private lazy val warnStyle = {
+      lazy val warnStyle = {
         val x = new SimpleAttributeSet()
         StyleConstants.setForeground(x, new Color(0xB9, 0x7C, 0x00))
         StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
         x
       }
-      private lazy val errorStyle = {
+      lazy val errorStyle = {
         val x = new SimpleAttributeSet()
         StyleConstants.setForeground(x, Color.RED)
         StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
         x
       }
-      private lazy val successStyle = {
+      lazy val successStyle = {
         val x = new SimpleAttributeSet()
         StyleConstants.setForeground(x, Color.GREEN)
         StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
         x
       }
-      private lazy val linkStyle = {
+      lazy val linkStyle = {
         val x = new SimpleAttributeSet()
         StyleConstants.setForeground(x, linkFg)
         StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
