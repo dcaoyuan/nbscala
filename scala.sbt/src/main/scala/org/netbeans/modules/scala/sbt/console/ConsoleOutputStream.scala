@@ -152,11 +152,12 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   }
   
   @throws(classOf[IOException])
-  protected[console] def doFlush(postAction: () => Unit = () => ()) {
+  protected[console] def doFlush(withAction: () => Unit = () => ()) {
+    val (lines, rest) = readLines
     try {
-      writeLines(readLines)
-      writeLastLine(readLastLine)
-      postAction()
+      writeLines(lines)
+      writeNonTeminatedLine(rest)
+      withAction()
       // XXX call repaint to force the caret get painted properly under windows,
       // for example, when press left-arrow, the previous caret will leave there
       // under windows.
@@ -166,51 +167,48 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     }
   }
   
-  @throws(classOf[IOException])
+  /**
+   * Read lines from buf, keep not-line-completed chars in buf
+   * @return lines
+   */
+  private def readLines: (ArrayBuffer[String], String) = {
+    val len = buf.length
+    var newLineOffset = 0
+    var readOffset = -1 // offset that has read to lines
+    var i = 0
+    while (i < len) {
+      val c = buf.charAt(i)
+      if (c == '\n' || c == '\r') {
+        // trick: '\u0000' a char that is non-equalable with '\n' or '\r'
+        val c1 = if (i + 1 < len) buf.charAt(i + 1) else '\u0000' 
+        val line = buf.substring(newLineOffset, i) + "\n"  // strip '\r' for Windows
+        if (c == '\n' && c1 == '\r' | c == '\r' && c1 == '\n') { 
+          i += 1  // bypass '\r' for Windows
+        }
+        linesBuf += line
+        readOffset = i
+        newLineOffset = i + 1
+      }
+      
+      i += 1
+    }
+    
+    val rest = buf.substring(readOffset + 1, buf.length)
+    buf.delete(0, buf.length)
+    
+    (linesBuf, rest)
+  }
+    
+  @throws(classOf[Exception])
   private def writeLines(lines: ArrayBuffer[String]) {
     lines foreach writeLine
     lines.clear
   }
 
   /**
-   * Read lines from buf, keep not-line-completed chars in buf
-   * @return lines
-   */
-  private def readLines: ArrayBuffer[String] = {
-    val len = buf.length
-    var newLineOffset = 0
-    var readOffset = -1 // offset that has read to lines
-    var i = 0
-    while (i < len) {
-      if (buf.charAt(i) == '\n') {
-        val line = if (i > 0 && buf.charAt(i - 1) == '\r') { 
-          buf.substring(newLineOffset, i) + "\n"  // strip '\r' for Windows
-        } else {
-          buf.substring(newLineOffset, i + 1)
-        }
-        linesBuf += line
-        readOffset = i
-        newLineOffset = i + 1
-      }
-      i += 1
-    }
-    
-    if (readOffset >= 0) {
-      buf.delete(0, readOffset + 1)
-    }
-    
-    linesBuf
-  }
-  
-  private def readLastLine: String = {
-    val line = buf.substring(0, buf.length)
-    buf.delete(0, buf.length)
-    line
-  }
-  
-  /**
    * Write a line string to doc, to start a new line afterward, the line string should end with "\n"
    */
+  @throws(classOf[Exception])
   private def writeLine(line: String) {
     lineParser.parseLine(line) foreach overwrite
   }
@@ -221,7 +219,8 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
    * @Note The '\b' from JLine, is actually a back cursor, which works with 
    * followed overwriting in combination for non-ansi terminal to move cursor.
    */
-  private def writeLastLine(str: String) {
+  @throws(classOf[Exception])
+  private def writeNonTeminatedLine(str: String) {
     val len = str.length
     var i = 0
     while (i < len) {
@@ -235,13 +234,13 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     }
   }
   
-  @throws(classOf[BadLocationException])
+  @throws(classOf[Exception])
   private def backCursor(num: Int) {
     val backNum = math.min(area.getCaretPosition, num)
     area.setCaretPosition(area.getCaretPosition - backNum)
   }
   
-  @throws(classOf[BadLocationException])
+  @throws(classOf[Exception])
   private def overwrite(str_style: (String, AttributeSet)) {
     overwrite(str_style._1, str_style._2)
   }
@@ -250,7 +249,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
    * @param string to overwrite
    * @param style
    */
-  @throws(classOf[BadLocationException])
+  @throws(classOf[Exception])
   private def overwrite(str: String, style: AttributeSet) {
     val from = area.getCaretPosition
     val overwriteLen = math.min(doc.getLength - from, str.length)
@@ -317,11 +316,11 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
         case VK_ENTER => true   // enter command
           
         case VK_V => 
-          // we need more carefully implementation for Paste action, since should 
-          // also move the cursor of backed jline to proper position and send chars in clipboard.
+          // we need a carefully implementation for paste action, since we should 
+          // also move the cursor of backed jline to proper position, then send chars in clipboard.
           true
           
-        case (VK_C | VK_A) if evt.isMetaDown => false // copy keys
+        case (VK_C | VK_A) if evt.isMetaDown | evt.isControlDown => false // copy action
         
         case _ => true
       }
@@ -676,8 +675,8 @@ object AnsiConsoleOutputStream {
    * the uncommentout is the reverse operation
    */
   def commentOutLines(doc: Document, fromPos: Int, toPos: Int) {
-    val lineStart = getLineNumber( doc, fromPos);
-    val lineEnd = getLineNumber( doc, toPos );
+    val lineStart = getLineNumber( doc, fromPos)
+    val lineEnd = getLineNumber( doc, toPos )
 
     var line = lineStart
     while (line <= lineEnd) {
@@ -787,7 +786,7 @@ object AnsiConsoleOutputStream {
     // a document is modelled as a list of lines (Element)=> index = line number
     val line = doc.getParagraphElement(pos)
     try {
-      doc.getText(line.getStartOffset(), pos-line.getStartOffset());
+      doc.getText(line.getStartOffset, pos-line.getStartOffset)
     } catch {
       case ex: Exception => null
     }
@@ -797,10 +796,10 @@ object AnsiConsoleOutputStream {
    */
   def getTextOfLine(doc: Document, line: Int): String = {
     // a document is modelled as a list of lines (Element)=> index = line number
-    val map = doc.getDefaultRootElement();
-    val lineElt = map.getElement(line);
+    val map = doc.getDefaultRootElement
+    val lineElt = map.getElement(line)
     try {
-      doc.getText(lineElt.getStartOffset(), lineElt.getEndOffset()-lineElt.getStartOffset());
+      doc.getText(lineElt.getStartOffset, lineElt.getEndOffset-lineElt.getStartOffset)
     } catch {
       case ex: Exception => null
     }
@@ -811,7 +810,7 @@ object AnsiConsoleOutputStream {
     var break = false
     var i = 0
     while (i < text.length && !break) {
-      val ci = text.charAt(i);
+      val ci = text.charAt(i)
       if (Character.isWhitespace(ci) && ci!='\r' && ci!='\n') {
         sb.append(text.charAt(i))
       } else {
@@ -852,7 +851,7 @@ object AnsiConsoleOutputStream {
       case null => return
       case vp: JViewport =>
         try {
-          val pt = tp.modelToView(pos);
+          val pt = tp.modelToView(pos)
           var h = (pt.getY - vp.getHeight / 4).toInt
           if (h < 0) h = 0
           vp.setViewPosition(new Point(0, h))

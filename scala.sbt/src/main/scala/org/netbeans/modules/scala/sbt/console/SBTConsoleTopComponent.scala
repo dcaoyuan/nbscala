@@ -363,7 +363,7 @@ object SBTConsoleTopComponent {
       val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
       val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
       val LINE = "(([1-9][0-9]*))"  // line number
-      val ROL = ".*\\s?"            // rest of line
+      val ROL = ".*\\s?\\s?"        // rest of line (may end with "\n" or "\r\n")
       val SEP = "\\:"               // seperator between file path and line number
       val STD_SUFFIX = FILE + SEP + LINE + ROL  // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
   
@@ -392,13 +392,6 @@ object SBTConsoleTopComponent {
         val x = new SimpleAttributeSet()
         StyleConstants.setForeground(x, Color.GREEN)
         StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
-        x
-      }
-      lazy val linkStyle = {
-        val x = new SimpleAttributeSet()
-        StyleConstants.setForeground(x, linkFg)
-        StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
-        StyleConstants.setUnderline(x, true)
         x
       }
   
