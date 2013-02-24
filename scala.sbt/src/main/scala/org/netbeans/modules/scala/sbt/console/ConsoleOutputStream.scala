@@ -32,6 +32,44 @@ trait ConsoleOutputLineParser {
   def parseLine(line: String): Array[(String, AttributeSet)]
 }
 
+class ConsoleCapturer {
+  private val log = Logger.getLogger(getClass.getName)
+  
+  private var _isCapturing = false
+  private var _captureText = new StringBuilder()
+  private var _text: String = ""
+  private var _inputLine: String = ""
+  private var _postAction: ConsoleCapturer => Unit = capturer => ()
+    
+  def text = _text
+  def inputLine = _inputLine
+
+  def isCapturing = _isCapturing
+    
+  def capture(postAction: ConsoleCapturer => Unit) {
+    _isCapturing = true
+    _text = ""
+    _postAction = postAction
+  }
+    
+  def endWith(inputLine: String) {
+    _isCapturing = false
+    _inputLine = inputLine
+    _text = _captureText.toString
+    _captureText.delete(0, _captureText.length)
+      
+    try {
+      _postAction(this)
+    } catch {
+      case ex: Exception => log.log(Level.WARNING, ex.getMessage, ex)
+    }
+  }
+    
+  def append(str: String) {
+    _captureText.append(str)
+  }
+}
+
 /**
  *
  * @author Caoyuan Deng
@@ -45,33 +83,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   private val buf = new StringBuffer(1000)
   private val linesBuf = new ArrayBuffer[String]()
   private var isWaitingUserInput = false
-  private val outputCapturer = new Capturer()
-  
-  private class Capturer {
-    private var _isCapturing = false
-    private var captureText = new StringBuilder()
-    private var text: Option[String] = None
-    private var _postAction: String => Unit = (text) => ()
-    
-    def isCapturing = _isCapturing
-    
-    def capture(postAction: String => Unit) {
-      _isCapturing = true
-      text = None
-      _postAction = postAction
-    }
-    
-    def end {
-      _isCapturing = false
-      text = Some(captureText.toString)
-      captureText.delete(0, captureText.length)
-      _postAction(text getOrElse "")
-    }
-    
-    def append(str: String) {
-      captureText.append(str)
-    }
-  }
+  private val outputCapturer = new ConsoleCapturer()
   
   lazy val defaultStyle = {
     val x = new SimpleAttributeSet()
@@ -106,13 +118,17 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   area.addMouseListener(areaMouseListener)
   area.addMouseMotionListener(areaMouseListener)
 
-  private val completeCombo = new JComboBox[String]()
-  private var completeStart: Int = _
-  private var completeEnd: Int = _
-    
-  completeCombo.setRenderer(new DefaultListCellRenderer())
-  val completePopup = new BasicComboPopup(completeCombo)
-  //ConsoleLineReader.createConsoleLineReader
+  private lazy val completeCombo = {
+    val x = new JComboBox[String]()
+    x.setFont(area.getFont)
+    x.setRenderer(new DefaultListCellRenderer())
+    x
+  }
+  private lazy val completePopup = {
+    val x = new BasicComboPopup(completeCombo)
+    x.setFont(area.getFont)
+    x
+  }
         
   if (welcome ne null) {
     val messageStyle = new SimpleAttributeSet()
@@ -175,17 +191,19 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   @throws(classOf[IOException])
   override
   def flush() {
-    isWaitingUserInput = doFlush()
+    val inputLine = doFlush()
+    isWaitingUserInput = inputLine.length > 0
     if (isWaitingUserInput && outputCapturer.isCapturing) {
-      outputCapturer.end
+      outputCapturer.endWith(inputLine)
     }
   }
   
   /**
-   * @param an afterward action
-   * @return if is waiting user input, ie. the rest non-teminated line is not empty.
+   * @param   an afterward action
+   * @return  the last non-teminated line. if it's waiting for user input, this 
+   *          line.length should > 0 (with at least one char)
    */
-  protected[console] def doFlush(withAction: () => Unit = () => ()): Boolean = {
+  protected[console] def doFlush(withAction: () => Unit = () => ()): String = {
     val (lines, rest) = readLines
     try {
       writeLines(lines)
@@ -199,14 +217,18 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
     }
     
-    rest.length > 0
+    if (outputCapturer.isCapturing) {
+      lines foreach outputCapturer.append
+    } 
+
+    rest
   }
   
   /**
    * Read lines from buf, keep not-line-completed chars in buf
    * @return lines
    */
-  private def readLines: (ArrayBuffer[String], String) = {
+  private def readLines: (Array[String], String) = {
     val len = buf.length
     var newLineOffset = 0
     var readOffset = -1 // offset that has read to lines
@@ -231,13 +253,15 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     val rest = buf.substring(readOffset + 1, buf.length)
     buf.delete(0, buf.length)
     
-    (linesBuf, rest)
+    val lines = linesBuf.toArray
+    linesBuf.clear
+    
+    (lines, rest)
   }
     
   @throws(classOf[Exception])
-  private def writeLines(lines: ArrayBuffer[String]) {
+  private def writeLines(lines: Array[String]) {
     lines foreach writeLine
-    lines.clear
   }
 
   /**
@@ -245,9 +269,6 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
    */
   @throws(classOf[Exception])
   private def writeLine(line: String) {
-    if (outputCapturer.isCapturing) {
-      outputCapturer.append(line)
-    } 
     lineParser.parseLine(line) foreach overwrite
   }
   
@@ -306,40 +327,68 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     }
   }
     
-  /**
-   * XXX TODO
-   */
-  protected def tabAction(text: String) {
-    if (completePopup.isVisible) return
-        
+  // --- complete actions
+  
+  protected def completePopupAction(capturer: ConsoleCapturer) {
+    val text = capturer.text
+    if (text.trim == "{invalid input}") {
+      return
+    }
+    
     val candidates = text.split("\\s+") filter (_.length > 0)
     if (candidates.length == 0 || candidates.length == 1) {
       return
     }
         
-    completeStart = area.getCaretPosition
-    completeEnd = area.getCaretPosition
-        
-    val pos = area.getCaret.getMagicCaretPosition
-        
-    // bit risky if someone changes completor, but useful for method calls
-    val cutoff = 0//bufstr.substring(position).lastIndexOf('.') + 1
-    completeStart += cutoff
-        
-    val candicatesSize = math.max(10, candidates.length)
-    completePopup.getList.setVisibleRowCount(candicatesSize)
-    
+    completePopup.getList.setVisibleRowCount(math.max(10, candidates.length))
     completeCombo.removeAllItems
-    if (cutoff != 0) {
-      candidates foreach (x => completeCombo.addItem(x.substring(cutoff)))
-    } else {
-      candidates foreach completeCombo.addItem
+    candidates foreach completeCombo.addItem
+    
+    val caretPos = area.getCaretPosition
+    if (caretPos >= 0) {
+      val pos = area.modelToView(caretPos)
+      completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
+    } 
+  }
+  
+  protected def completeUpSelectAction(evt: KeyEvent) {
+    val selected = completeCombo.getSelectedIndex - 1
+    if (selected >= 0) {
+      completeCombo.setSelectedIndex(selected)
     }
-        
-    completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
+  }
+    
+  protected def completeDownSelectAction(evt: KeyEvent) {
+    val selected = completeCombo.getSelectedIndex + 1
+    if (selected != completeCombo.getItemCount) {
+      completeCombo.setSelectedIndex(selected)
+    }
+  }
+  
+  protected def completeEnterSelectAction(evt: KeyEvent) {
+    completeCombo.getSelectedItem match {
+      case selectedText: String =>
+        val input = outputCapturer.inputLine
+        val len = math.max(input.length, selectedText.length)
+        var matched = 0
+        var i = 1
+        while (i < len) {
+          val toCompare = selectedText.substring(0, i)
+          if (input.endsWith(toCompare)) {
+            matched = i
+          }
+          i += 1
+        }
+        val complete = selectedText.substring(matched, selectedText.length)
+        if (complete.length > 0) {
+          terminalInput.write(complete.getBytes("utf-8"))
+        }
+      case _ =>
+    }
   }
 
   object terminalInput extends TerminalInput with KeyListener {
+    import KeyEvent._
 
     System.getProperty("os.name").toLowerCase match {
       case os if os.indexOf("windows") != -1 => terminalId = TerminalInput.JLineWindows
@@ -353,40 +402,42 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     
     override 
     def keyPressed(evt: KeyEvent) {
-      import KeyEvent._
+      val keyCode = evt.getKeyCode
+      
+      // --- complete visiblilty
+      if (completePopup.isVisible) {
+        keyCode match {
+          case VK_TAB =>
+          case VK_UP =>    
+            completeUpSelectAction(evt)
+          case VK_DOWN =>  
+            completeDownSelectAction(evt)
+          case VK_ENTER => 
+            // terminalInput process VK_ENTER in keyTyped, so keep completePopup.isVisible here
+          case VK_ESCAPE => 
+            // terminalInput will also process VK_ESCAPE in keyTyped later, so keep completePopup.isVisible here
+          case _ =>
+            completePopup.setVisible(false)
+            keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+        }
+      } else {
+        keyCode match {
+          case VK_TAB => 
+            outputCapturer capture completePopupAction // do completion
+          case _ => 
+        }
+        keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+      }
 
-      val consumeIt = evt.getKeyCode match {
-        case VK_PAUSE => true
-        case VK_F1 | VK_F2 | VK_F3 | VK_F4 | VK_F5 | VK_F6 | VK_F7 | VK_F8 | VK_F9 | VK_F10 | VK_F11 | VK_F12 => true
-        case VK_PAGE_DOWN | VK_PAGE_UP | VK_HOME | VK_END => true
-        case VK_NUM_LOCK | VK_CAPS_LOCK => true
-        case VK_SHIFT | VK_CONTROL | VK_ALT => true
-        case VK_INSERT => true
-        case VK_DELETE | VK_BACK_SPACE => true
-        case VK_LEFT | VK_RIGHT        => true
-        
-        case VK_UP    => true   // search history
-        case VK_DOWN  => true   // search history
-        case VK_TAB   =>        // do completion
-          //outputCapturer capture tabAction
-          
-          true   
-        case VK_ENTER => true   // enter command
-          
-        case VK_V => 
+      // --- evt consumes 
+      keyCode match {
+        case (VK_C | VK_A) if evt.isMetaDown | evt.isControlDown =>  // copy action
+        case VK_V =>
           // we need a carefully implementation for paste action, since we should 
           // also move the cursor of backed jline to proper position, then send chars in clipboard.
-          true
-          
-        case (VK_C | VK_A) if evt.isMetaDown | evt.isControlDown => false // copy action
-        
-        case _ => true
+          evt.consume
+        case _ => evt.consume
       }
-      
-      if (consumeIt) {
-        evt.consume // consume it, will be handled by echo etc
-      }
-      keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
     }
   
     override 
@@ -396,8 +447,23 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     
     override 
     def keyTyped(evt: KeyEvent) {
+      // under keyTyped, always use evt.getKeyChar
+      if (completePopup.isVisible) {
+        evt.getKeyChar match {
+          case VK_ENTER => 
+            completeEnterSelectAction(evt)
+            completePopup.setVisible(false)
+          case VK_ESCAPE =>
+            completePopup.setVisible(false)
+          case _ => 
+            // XXX TODO incremental completion when letters typed
+            //keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+        }
+      } else {
+        keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+      }
+      
       evt.consume // consume it, will be handled by echo etc
-      keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
     }
     
     private def getModifiers(e: KeyEvent): Int = {
@@ -407,203 +473,6 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       (if (e.isActionKey) TerminalInput.KEY_ACTION else 0)
     }
   }
-    
-  @deprecated("Need to re-do", "1.6.1")
-  object keyListener extends KeyListener {
-    
-    private var promptPos = 0
-    private var currentLine: String = _
-    
-    protected def getInputLine(): String = {
-      try {
-        doc.getText(promptPos, doc.getLength - promptPos)
-      } catch {
-        case ex: BadLocationException => null 
-      }
-    }
-    
-    protected def clearInputLine() = {
-      try {
-        doc.remove(promptPos, doc.getLength - promptPos)
-      } catch {
-        case ex: BadLocationException =>
-      }
-    }
-    
-    override 
-    def keyPressed(evt: KeyEvent) {
-      val code = evt.getKeyCode
-      code match {
-        case KeyEvent.VK_TAB        => evt.consume; pipedOut.write("\u0009".getBytes) //completeAction(evt)
-        case KeyEvent.VK_LEFT       => backAction(evt)
-        case KeyEvent.VK_BACK_SPACE => backAction(evt)
-        case KeyEvent.VK_UP         => upAction(evt)
-        case KeyEvent.VK_DOWN       => downAction(evt)
-        case KeyEvent.VK_ENTER      => enterAction(evt)
-        case KeyEvent.VK_HOME       => evt.consume; area.setCaretPosition(promptPos)  
-        case _ => // Ignore
-      }
-        
-      if (
-        completePopup.isVisible &&
-        code != KeyEvent.VK_TAB &&
-        code != KeyEvent.VK_UP  &&
-        code != KeyEvent.VK_DOWN
-      ) {
-        completePopup.setVisible(false)
-      }
-    }
-  
-    override 
-    def keyReleased(event: KeyEvent) {}
-    
-    override 
-    def keyTyped(event: KeyEvent) {}
-    
-    // ----- mouse actions
-    
-    private def enterAction(evt: KeyEvent) {
-      evt.consume
-        
-      if (completePopup.isVisible) {
-        if (completeCombo.getSelectedItem ne null) {
-          replaceText(completeStart, completeEnd, completeCombo.getSelectedItem.asInstanceOf[String])
-        }
-      
-        completePopup.setVisible(false)
-        return
-      }
-        
-      val inputStr = getInputLine.trim
-      pipedOut.println(inputStr)
-      overwrite("\n", null)
-        
-      //ConsoleLineReader.history.addToHistory(inputStr)
-      //ConsoleLineReader.history.moveToEnd
-        
-      val len = doc.getLength
-      area.setCaretPosition(len)
-      promptPos = len
-
-//    notify
-//        synchronized (inEditing) {
-//            inEditing.notify();
-//        }
-    }
-    
-    private def backAction(evt: KeyEvent) {
-      if (area.getCaretPosition <= promptPos) {
-        evt.consume
-      }
-    }
-    
-    private def upAction(evt: KeyEvent) {
-      evt.consume
-      clearInputLine
-      pipedOut.write("\033[A".getBytes)
-      isWaitingUserInput = true
-
-      if (completePopup.isVisible) {
-        val selected = completeCombo.getSelectedIndex - 1
-        if (selected < 0) return
-        completeCombo.setSelectedIndex(selected)
-        return
-      }
-        
-      //if (! ConsoleLineReader.history.next) // at end
-      currentLine = getInputLine
-      //else
-      //  ConsoleLineReader.history.previous // undo check
-        
-      //if (! ConsoleLineReader.history.previous) {
-      //  return
-      //}
-        
-      //val oldLine = ConsoleLineReader.history.current.trim
-      //replaceText(startPos, area.getDocument.getLength, oldLine)
-    }
-    
-    private def downAction(evt: KeyEvent) {
-      evt.consume
-      clearInputLine
-      pipedOut.write("\033[B".getBytes)
-      isWaitingUserInput = true
-        
-      if (completePopup.isVisible) {
-        val selected = completeCombo.getSelectedIndex + 1
-        if (selected == completeCombo.getItemCount) return
-        completeCombo.setSelectedIndex(selected)
-        return
-      }
-        
-      //if (! ConsoleLineReader.history.next) {
-      //  return
-      //}
-        
-      val oldLine = //if (! ConsoleLineReader.history.next) // at end
-        currentLine
-      //else {
-      //  ConsoleLineReader.history.previous // undo check
-      //  ConsoleLineReader.history.current.trim
-      //}
-        
-      //replaceText(startPos, area.getDocument.getLength, oldLine)
-    }
-    
-    private def tabAction(evt: KeyEvent) {
-      //if (ConsoleLineReader.completor eq null) {
-      //  return
-      //}
-        
-      evt.consume
-        
-      if (completePopup.isVisible) return
-        
-      val candidates = new ArrayBuffer[String]()
-      val bufstr = try {
-        area.getText(promptPos, area.getCaretPosition - promptPos)
-      } catch  {
-        case ex: BadLocationException => return
-      }
-        
-      val cursor = area.getCaretPosition - promptPos
-        
-      //val position = ConsoleLineReader.completor.complete(bufstr, cursor, candidates)
-        
-      // no candidates? Fail.
-      if (candidates.isEmpty) {
-        return
-      }
-        
-      //if (candidates.size == 1) {
-      //  replaceText(startPos + position, area.getCaretPosition, candidates(0))
-      //  return
-      //}
-        
-      completeStart = promptPos //+ position
-      completeEnd = area.getCaretPosition
-        
-      val pos = area.getCaret.getMagicCaretPosition
-        
-      // bit risky if someone changes completor, but useful for method calls
-      val cutoff = 0//bufstr.substring(position).lastIndexOf('.') + 1
-      completeStart += cutoff
-        
-      val candicateSize = math.max(10, candidates.size)
-      completePopup.getList.setVisibleRowCount(candicateSize)
-        
-      completeCombo.removeAllItems
-      if (cutoff != 0) {
-        candidates foreach {item => completeCombo.addItem(item.substring(cutoff))}
-      } else {
-        candidates foreach {item => completeCombo.addItem(item)}
-      }
-        
-      completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
-    }
-    
-  }
-    
 }
 
 class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStream(term) {
@@ -670,7 +539,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   @throws(classOf[BadLocationException])
   override 
   protected def processCursorToColumn(col: Int) {
-    term.doFlush{() => 
+    term doFlush {() => 
       val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
       val toPos = lineStart + col - 1
       area.setCaretPosition(toPos)
@@ -687,7 +556,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   protected def processEraseScreen(eraseOption: Int) {
     eraseOption match {
       case 0 => 
-        term.doFlush{() =>
+        term doFlush {() =>
           val currPos = area.getCaretPosition
           doc.remove(currPos, doc.getLength - currPos)
         }
