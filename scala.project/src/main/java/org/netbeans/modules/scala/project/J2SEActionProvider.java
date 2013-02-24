@@ -112,6 +112,7 @@ import org.openide.util.Task;
 import org.openide.util.TaskListener;
 
 import org.netbeans.api.language.util.ast.AstDfn;
+import org.netbeans.modules.scala.console.shell.ScalaConsoleTopComponent;
 import org.netbeans.modules.scala.core.ScalaParserResult;
 import org.netbeans.modules.scala.core.ast.ScalaRootScope;
 
@@ -119,7 +120,8 @@ import org.netbeans.modules.scala.core.ast.ScalaRootScope;
 /** Action provider of the J2SE project. This is the place where to do
  * strange things to J2SE actions. E.g. compile-single.
  */
-class J2SEActionProvider implements ActionProvider {
+public class J2SEActionProvider implements ActionProvider {
+    public static final String COMMAND_SCALA_CONSOLE = "scala-console";
 
     // Commands available from J2SE project
     private static final String[] supportedActions = {
@@ -141,6 +143,7 @@ class J2SEActionProvider implements ActionProvider {
         COMMAND_COPY,
         COMMAND_MOVE,
         COMMAND_RENAME,
+        COMMAND_SCALA_CONSOLE
     };
 
 
@@ -296,6 +299,12 @@ class J2SEActionProvider implements ActionProvider {
     }
 
     public void invokeAction( final String command, final Lookup context ) throws IllegalArgumentException {
+        if (COMMAND_SCALA_CONSOLE.equals(command)) {
+            scala.collection.immutable.List<String> nil = scala.collection.immutable.List$.MODULE$.empty();
+            ScalaConsoleTopComponent.openInstance(project, false, nil, null, null);
+            return;
+        }
+        
         if (COMMAND_DELETE.equals(command)) {
             DefaultProjectOperations.performDefaultDeleteOperation(project);
             return ;

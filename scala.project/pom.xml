@@ -224,6 +224,11 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-scala-console</artifactId>
+            <version>${scala.console.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-scala-core</artifactId>
             <version>${scala.core.version}</version>
         </dependency>

@@ -65,6 +65,7 @@ import org.netbeans.modules.java.api.common.SourceRoots;
 import org.netbeans.modules.java.api.common.ant.UpdateHelper;
 import org.netbeans.modules.java.api.common.project.ProjectProperties;
 import org.netbeans.modules.java.api.common.project.ui.LogicalViewProvider2;
+import org.netbeans.modules.scala.project.J2SEActionProvider;
 import org.netbeans.modules.scala.project.J2SEProjectUtil;
 import org.netbeans.modules.scala.project.ui.customizer.J2SEProjectProperties;
 import org.netbeans.modules.scala.project.J2SEProject;
@@ -342,6 +343,8 @@ public class J2SELogicalViewProvider implements LogicalViewProvider2 {
             
             List<Action> actions = new ArrayList<Action>();
             
+            actions.add(ProjectSensitiveActions.projectCommandAction(J2SEActionProvider.COMMAND_SCALA_CONSOLE, bundle.getString("LBL_ScalaConsole_Name"), null));  // NOI18N
+            actions.add(null);
             actions.add(CommonProjectActions.newFileAction());
             actions.add(null);
             actions.add(ProjectSensitiveActions.projectCommandAction(ActionProvider.COMMAND_BUILD, bundle.getString("LBL_BuildAction_Name"), null)); // NOI18N
