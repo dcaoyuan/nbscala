@@ -44,9 +44,34 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   /** buffer which will be used for the next line */
   private val buf = new StringBuffer(1000)
   private val linesBuf = new ArrayBuffer[String]()
-  private var promptPos = 0
-  private var currentLine: String = _
   private var isWaitingUserInput = false
+  private val outputCapturer = new Capturer()
+  
+  private class Capturer {
+    private var _isCapturing = false
+    private var captureText = new StringBuilder()
+    private var text: Option[String] = None
+    private var _postAction: String => Unit = (text) => ()
+    
+    def isCapturing = _isCapturing
+    
+    def capture(postAction: String => Unit) {
+      _isCapturing = true
+      text = None
+      _postAction = postAction
+    }
+    
+    def end {
+      _isCapturing = false
+      text = Some(captureText.toString)
+      captureText.delete(0, captureText.length)
+      _postAction(text getOrElse "")
+    }
+    
+    def append(str: String) {
+      captureText.append(str)
+    }
+  }
   
   lazy val defaultStyle = {
     val x = new SimpleAttributeSet()
@@ -151,6 +176,9 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   override
   def flush() {
     isWaitingUserInput = doFlush()
+    if (isWaitingUserInput && outputCapturer.isCapturing) {
+      outputCapturer.end
+    }
   }
   
   /**
@@ -217,6 +245,9 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
    */
   @throws(classOf[Exception])
   private def writeLine(line: String) {
+    if (outputCapturer.isCapturing) {
+      outputCapturer.append(line)
+    } 
     lineParser.parseLine(line) foreach overwrite
   }
   
@@ -275,20 +306,37 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     }
   }
     
-  protected def getInputLine(): String = {
-    try {
-      doc.getText(promptPos, doc.getLength - promptPos)
-    } catch {
-      case ex: BadLocationException => null 
+  /**
+   * XXX TODO
+   */
+  protected def tabAction(text: String) {
+    if (completePopup.isVisible) return
+        
+    val candidates = text.split("\\s+") filter (_.length > 0)
+    if (candidates.length == 0 || candidates.length == 1) {
+      return
     }
-  }
+        
+    completeStart = area.getCaretPosition
+    completeEnd = area.getCaretPosition
+        
+    val pos = area.getCaret.getMagicCaretPosition
+        
+    // bit risky if someone changes completor, but useful for method calls
+    val cutoff = 0//bufstr.substring(position).lastIndexOf('.') + 1
+    completeStart += cutoff
+        
+    val candicatesSize = math.max(10, candidates.length)
+    completePopup.getList.setVisibleRowCount(candicatesSize)
     
-  protected def clearInputLine() = {
-    try {
-      doc.remove(promptPos, doc.getLength - promptPos)
-    } catch {
-      case ex: BadLocationException =>
+    completeCombo.removeAllItems
+    if (cutoff != 0) {
+      candidates foreach (x => completeCombo.addItem(x.substring(cutoff)))
+    } else {
+      candidates foreach completeCombo.addItem
     }
+        
+    completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
   }
 
   object terminalInput extends TerminalInput with KeyListener {
@@ -319,7 +367,10 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
         
         case VK_UP    => true   // search history
         case VK_DOWN  => true   // search history
-        case VK_TAB   => true   // do completion
+        case VK_TAB   =>        // do completion
+          //outputCapturer capture tabAction
+          
+          true   
         case VK_ENTER => true   // enter command
           
         case VK_V => 
@@ -359,6 +410,26 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     
   @deprecated("Need to re-do", "1.6.1")
   object keyListener extends KeyListener {
+    
+    private var promptPos = 0
+    private var currentLine: String = _
+    
+    protected def getInputLine(): String = {
+      try {
+        doc.getText(promptPos, doc.getLength - promptPos)
+      } catch {
+        case ex: BadLocationException => null 
+      }
+    }
+    
+    protected def clearInputLine() = {
+      try {
+        doc.remove(promptPos, doc.getLength - promptPos)
+      } catch {
+        case ex: BadLocationException =>
+      }
+    }
+    
     override 
     def keyPressed(evt: KeyEvent) {
       val code = evt.getKeyCode
