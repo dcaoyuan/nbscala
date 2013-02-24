@@ -568,6 +568,19 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
       case _ =>
     }
   }
+  
+  @throws(classOf[BadLocationException])
+  override 
+  protected def processEraseLine(eraseOption: Int) {
+    eraseOption match {
+      case 0 => 
+        term doFlush {() =>
+          val currPos = area.getCaretPosition
+          doc.remove(currPos, doc.getLength - currPos)
+        }
+      case _ =>
+    }
+  }
 
 }
 
