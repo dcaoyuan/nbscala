@@ -1,4 +1,4 @@
-package org.netbeans.modules.scala.sbt.console
+package org.netbeans.modules.scala.console.shell
 
 import java.awt.Color
 import java.awt.Font
@@ -24,7 +24,6 @@ import org.netbeans.modules.scala.console.ConsoleInputOutput
 import org.netbeans.modules.scala.console.ConsoleOutputStream
 import org.netbeans.modules.scala.console.ConsoleOutputLineParser
 import org.netbeans.modules.scala.console.TopComponentId
-import org.netbeans.modules.scala.console.shell.ScalaExecution
 import org.openide.ErrorManager
 import org.openide.filesystems.FileUtil
 import org.openide.util.Cancellable
@@ -38,20 +37,20 @@ import scala.collection.mutable.ArrayBuffer
  *
  * @author Caoyuan Deng
  */
-final class SBTConsoleTopComponent private (project: Project) extends TopComponent {
-  import SBTConsoleTopComponent._
+final class ScalaConsoleTopComponent private (project: Project) extends TopComponent {
+  import ScalaConsoleTopComponent._
 
   private val log = Logger.getLogger(getClass.getName)
   
   private val mimeType = "text/x-sbt"
-  private var console: SbtConsoleOutputStream = _
+  private var console: ScalaConsoleOutputStream = _
  
   initComponents
  
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
-    setName("SBT " + project.getProjectDirectory.getName)
-    setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
+    setName("Scala " + project.getProjectDirectory.getName)
+    setToolTipText(NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "HINT_ScalaConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
     setIcon(ImageUtilities.loadImage(ICON_PATH, true))
   }            
 
@@ -145,7 +144,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     }
   }
 
-  private def createTerminal: SbtConsoleOutputStream = {
+  private def createTerminal: ScalaConsoleOutputStream = {
     // From core/output2/**/AbstractOutputPane
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
       case null =>
@@ -214,26 +213,27 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     add(pane)
     validate
 
-    val sbtHome = ScalaExecution.getSbtHome
-    val sbtLaunchJar = ScalaExecution.getSbtLaunchJar(sbtHome)
-    if (sbtLaunchJar == null) {
+    val scalaHome = ScalaExecution.getScalaHome
+    val scalaFile = ScalaExecution.getScala
+    if (scalaFile == null) {
       return null
     }
 
-    val (executable, args) = ScalaExecution.getSbtArgs(sbtHome)
+    val (executable, args) = ScalaExecution.getScalaArgs(scalaHome)
     var builder = args.foldLeft(new ExternalProcessBuilder(executable))(_ addArgument _)
-    log.info(args.mkString("==== Sbt console args ====\n" + executable + "\n", "\n", "\n==== End of Sbt console args ===="))
+    log.info(args.mkString("==== Scala console args ====\n" + executable + "\n", "\n", "\n==== End of Scala console args ===="))
 
     // XXX under Mac OS jdk7, the java.home is point to /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/jre
     // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which cause the lack of javac
     //builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
+    builder = builder.addEnvironmentVariable("SCALA_HOME", ScalaExecution.getScalaHome)
     val pwd = FileUtil.toFile(project.getProjectDirectory)
     builder = builder.workingDirectory(pwd)
     
     val pipedIn = new PipedInputStream()
-    val console = new SbtConsoleOutputStream(
+    val console = new ScalaConsoleOutputStream(
       textPane, pipedIn,
-      " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n"
+      " " + NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "ScalaConsoleWelcome") + " " + "scala.home=" + scalaHome + "\n"
     )
     val consoleOut = new AnsiConsoleOutputStream(console)
     
@@ -250,8 +250,8 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
           SwingUtilities.invokeLater(new Runnable() {
               override
               def run() {
-                SBTConsoleTopComponent.this.close
-                SBTConsoleTopComponent.this.removeAll
+                ScalaConsoleTopComponent.this.close
+                ScalaConsoleTopComponent.this.removeAll
               }
             })
         }
@@ -265,7 +265,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   
 }
 
-object SBTConsoleTopComponent {
+object ScalaConsoleTopComponent {
   private val log = Logger.getLogger(this.getClass.getName)
   
   val defaultFg = Color.BLACK
@@ -275,9 +275,9 @@ object SBTConsoleTopComponent {
   /**
    * path to the icon used by the component and its open action
    */
-  val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png" 
+  val ICON_PATH = "org/netbeans/modules/scala/console/resources/scala16x16.png" 
   
-  private val compName = "SBTConsole"
+  private val compName = "ScalaConsole"
   /**
    * @see org.netbeans.core.windows.persistence.PersistenceManager
    */
@@ -309,8 +309,8 @@ object SBTConsoleTopComponent {
         val tcId = toEscapedPreferredId(project)
         val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
           case null => 
-            (new SBTConsoleTopComponent(project), true)
-          case tc: SBTConsoleTopComponent => 
+            (new ScalaConsoleTopComponent(project), true)
+          case tc: ScalaConsoleTopComponent => 
             (tc, false)
           case _ =>
             ErrorManager.getDefault.log(ErrorManager.WARNING,
@@ -344,12 +344,12 @@ object SBTConsoleTopComponent {
     SwingUtilities.invokeLater(runnableTask)
   }
   
-  class SbtConsoleOutputStream(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleOutputStream(_area, pipedIn, welcome) {
+  class ScalaConsoleOutputStream(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleOutputStream(_area, pipedIn, welcome) {
   
     @throws(classOf[IOException])
     override 
     protected def handleClose() {
-      runCommand("exit") // try to exit underlying process gracefully 
+      runCommand(":quit") // try to exit underlying process gracefully 
       super.handleClose()
     }
     

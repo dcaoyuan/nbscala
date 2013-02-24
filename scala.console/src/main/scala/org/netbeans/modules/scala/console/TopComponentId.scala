@@ -1,4 +1,4 @@
-package org.netbeans.modules.scala.sbt.console
+package org.netbeans.modules.scala.console
 
 import java.util.logging.Level
 import java.util.logging.Logger

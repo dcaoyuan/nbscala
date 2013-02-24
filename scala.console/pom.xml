@@ -16,6 +16,11 @@
     <dependencies>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-progress</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-extexecution</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
@@ -46,12 +51,22 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-loaders</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-io</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-modules</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-text</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
@@ -130,6 +145,8 @@
                     <licenseName>CDDL-GPLV2</licenseName>
                     <licenseFile>license.txt</licenseFile>
                     <publicPackages>
+                        <pulicPackage>org.netbeans.modules.scala.console</pulicPackage>
+                        <pulicPackage>org.netbeans.modules.scala.console.shell</pulicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

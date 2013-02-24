@@ -3,6 +3,6 @@
 <settings version="1.0">
     <module name="org.netbeans.modules.scala.console" spec="1.0"/>
     <instanceof class="org.openide.windows.TopComponent"/>
-    <instanceof class="org.netbeans.modules.scala.console.ScalaConsoleTopComponent"/>
-    <instance class="org.netbeans.modules.scala.console.ScalaConsoleTopComponent" method="getDefault"/>
+    <instanceof class="org.netbeans.modules.scala.console.old.ScalaConsoleTopComponent"/>
+    <instance class="org.netbeans.modules.scala.console.old.ScalaConsoleTopComponent" method="getDefault"/>
 </settings>

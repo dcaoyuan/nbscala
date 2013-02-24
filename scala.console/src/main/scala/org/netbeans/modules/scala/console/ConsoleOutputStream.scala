@@ -1,4 +1,4 @@
-package org.netbeans.modules.scala.sbt.console
+package org.netbeans.modules.scala.console
 
 import java.awt.Color
 import java.awt.Point
@@ -141,6 +141,11 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   def underlyingTask = _underlyingTask
   def underlyingTask_=(underlyingTask: Option[Future[Integer]]) {
     _underlyingTask = underlyingTask
+  }
+  
+  def runCommand(command: String): String = {
+    pipedOut.println(command)
+    ""
   }
   
   @throws(classOf[IOException])
@@ -340,7 +345,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       return
     }
         
-    completePopup.getList.setVisibleRowCount(math.max(10, candidates.length))
+    completePopup.getList.setVisibleRowCount(math.min(10, candidates.length))
     completeCombo.removeAllItems
     candidates foreach completeCombo.addItem
     
@@ -369,7 +374,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     completeCombo.getSelectedItem match {
       case selectedText: String =>
         val input = outputCapturer.inputLine
-        val len = math.max(input.length, selectedText.length)
+        val len = math.min(input.length, selectedText.length)
         var matched = 0
         var i = 1
         while (i < len) {

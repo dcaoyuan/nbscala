@@ -60,6 +60,7 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
     override
     def getActions(arg0: Boolean): Array[Action] = Array(
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_OpenSbtAction"), null),
+      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SCALA_CONSOLE, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_OpenScalaAction"), null),
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_RELOAD,  NbBundle.getMessage(classOf[SBTActionProvider], "CTL_ReloadSbtAction"), null),
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_BUILD, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_BuildAction"), null),
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_CLEAN,  NbBundle.getMessage(classOf[SBTActionProvider], "CTL_CleanAction"), null),

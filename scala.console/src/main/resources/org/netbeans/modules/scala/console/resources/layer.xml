@@ -12,7 +12,7 @@
         <folder name="Window">
             <folder name="Other">
                 <file name="ScalaConsoleAction.shadow">
-                    <attr name="originalFile" stringvalue="Actions/Window/org-netbeans-modules-scala-console-ScalaConsoleAction.instance"/>
+                    <attr name="originalFile" stringvalue="Actions/Window/org-netbeans-modules-scala-console-old-ScalaConsoleAction.instance"/>
                     <attr name="position" intvalue="910"/>
                 </file>
             </folder>

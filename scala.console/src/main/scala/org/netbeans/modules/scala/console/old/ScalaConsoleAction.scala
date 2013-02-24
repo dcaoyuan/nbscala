@@ -1,4 +1,4 @@
-package org.netbeans.modules.scala.console
+package org.netbeans.modules.scala.console.old
 
 import java.awt.event.ActionEvent
 import javax.swing.AbstractAction

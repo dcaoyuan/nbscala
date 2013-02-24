@@ -1,4 +1,4 @@
-package org.netbeans.modules.scala.sbt.console
+package org.netbeans.modules.scala.console
 
 import java.io.IOException
 import java.io.PrintWriter
