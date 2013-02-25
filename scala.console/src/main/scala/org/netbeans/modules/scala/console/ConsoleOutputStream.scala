@@ -197,44 +197,52 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   @throws(classOf[IOException])
   override
   def flush() {
-    val inputLine = doFlush()
-    isWaitingUserInput = inputLine.length > 0
-    if (isWaitingUserInput && outputCapturer.isCapturing) {
-      outputCapturer.endWith(inputLine)
+    doFlush {currentLine =>
+      isWaitingUserInput = currentLine.length > 0
+      if (isWaitingUserInput && outputCapturer.isCapturing) {
+        outputCapturer.endWith(currentLine)
+      }
     }
   }
   
   /**
-   * @param   an afterward action
+   * @param   an afterward action, with param 'current inputing line' which could be used or just ignore
    * @return  the last non-teminated line. if it's waiting for user input, this 
    *          line.length should > 0 (with at least one char)
    */
-  protected[console] def doFlush(withAction: () => Unit = () => ()): String = {
-    val (lines, rest) = readLines
-    try {
-      writeLines(lines)
-      writeNonTeminatedLine(rest)
-      withAction()
-      // XXX call repaint to force the caret get painted properly under windows,
-      // for example, when press left-arrow, the previous caret will leave there
-      // under windows.
-      area.repaint() 
-    } catch {
-      case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
-    }
-    
+  protected[console] def doFlush(withAction: String => Unit = currentLine => ()): String = {
+    val bufStr = buf.toString
+    buf.delete(0, buf.length)
+    val (lines, currentLine) = readLines(bufStr)
+
     if (outputCapturer.isCapturing) {
       lines foreach outputCapturer.append
     } 
+    
+    // doFlush may be called by input/output stream processing thread, whatever, we
+    // will force Swing related code to be executed in event dispatch thread:
+    SwingUtilities.invokeLater(new Runnable() {
+        def run() {
+          try {
+            writeLines(lines)
+            writeNonTeminatedLine(currentLine)
+            withAction(currentLine)
+          } catch {
+            case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
+          }
+    
+        }
+      }
+    )
 
-    rest
+    currentLine
   }
   
   /**
    * Read lines from buf, keep not-line-completed chars in buf
-   * @return lines
+   * @return (lines, non-teminated line ie. current input line)
    */
-  private def readLines: (Array[String], String) = {
+  private def readLines(buf: String): (Array[String], String) = {
     val len = buf.length
     var newLineOffset = 0
     var readOffset = -1 // offset that has read to lines
@@ -257,7 +265,6 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     }
     
     val rest = buf.substring(readOffset + 1, buf.length)
-    buf.delete(0, buf.length)
     
     val lines = linesBuf.toArray
     linesBuf.clear
@@ -346,20 +353,15 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       return
     }
     
-    SwingUtilities.invokeLater(new Runnable() {
-        def run() {
-          completePopup.getList.setVisibleRowCount(math.min(10, candidates.length))
-          completeCombo.removeAllItems
-          candidates foreach completeCombo.addItem
+    completePopup.getList.setVisibleRowCount(math.min(10, candidates.length))
+    completeCombo.removeAllItems
+    candidates foreach completeCombo.addItem
     
-          val caretPos = area.getCaretPosition
-          if (caretPos >= 0) {
-            val pos = area.modelToView(caretPos)
-            completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
-          }
-        }
-      }
-    )
+    val caretPos = area.getCaretPosition
+    if (caretPos >= 0) {
+      val pos = area.modelToView(caretPos)
+      completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
+    }
   }
   
   protected def completeUpSelectAction(evt: KeyEvent) {
@@ -554,7 +556,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   @throws(classOf[BadLocationException])
   override 
   protected def processCursorToColumn(col: Int) {
-    term doFlush {() => 
+    term doFlush {currentLine => 
       val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
       val toPos = lineStart + col - 1
       area.setCaretPosition(toPos)
@@ -571,7 +573,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   protected def processEraseScreen(eraseOption: Int) {
     eraseOption match {
       case 0 => 
-        term doFlush {() =>
+        term doFlush {currentLine =>
           val currPos = area.getCaretPosition
           doc.remove(currPos, doc.getLength - currPos)
         }
@@ -584,7 +586,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   protected def processEraseLine(eraseOption: Int) {
     eraseOption match {
       case 0 => 
-        term doFlush {() =>
+        term doFlush {currentLine =>
           val currPos = area.getCaretPosition
           doc.remove(currPos, doc.getLength - currPos)
         }
