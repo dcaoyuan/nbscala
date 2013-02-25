@@ -162,8 +162,13 @@ trait LexUtil {
 
   /** Find the token sequence (in case it's embedded in something else at the top level */
   final def getTokenSequence(doc: BaseDocument, offset: Int): Option[TokenSequence[TokenId]] = {
-    val th = TokenHierarchy.get(doc)
-    getTokenSequence(th, offset)
+    doc.readLock
+    try {
+      val th = TokenHierarchy.get(doc)
+      getTokenSequence(th, offset)
+    } finally {
+      doc.readUnlock
+    }
   }
 
   final def getTokenSequence(th: TokenHierarchy[_], offset: Int): Option[TokenSequence[TokenId]] = {
@@ -197,7 +202,7 @@ trait LexUtil {
       }
     }
 
-    if (ts ne null) Some(ts) else None
+    Option(ts)
   }
 
   def getPositionedSequence(doc: BaseDocument, offset: Int): Option[TokenSequence[TokenId]] = {

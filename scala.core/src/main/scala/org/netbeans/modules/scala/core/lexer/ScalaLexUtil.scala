@@ -40,16 +40,10 @@
  */
 package org.netbeans.modules.scala.core.lexer
 
-import java.io.IOException
-import javax.swing.text.{BadLocationException, Document}
-
 import org.netbeans.modules.csl.api.OffsetRange
 import org.netbeans.api.lexer.{Token, TokenHierarchy, TokenId, TokenSequence}
 import org.netbeans.editor.{BaseDocument}
-import org.openide.loaders.{DataObject, DataObjectNotFoundException}
-
 import scala.collection.mutable.ArrayBuffer
-
 import org.netbeans.api.language.util.lex.LexUtil
 
 /**
@@ -65,23 +59,23 @@ object ScalaLexUtil extends LexUtil {
 
   override val LANGUAGE = ScalaTokenId.language
 
-  override val WS_COMMENTS: Set[TokenId] =
-    Set(ScalaTokenId.Ws,
-        ScalaTokenId.Nl,
-        ScalaTokenId.LineComment,
-        ScalaTokenId.DocCommentStart,
-        ScalaTokenId.DocCommentData,
-        ScalaTokenId.DocCommentEnd,
-        ScalaTokenId.BlockCommentStart,
-        ScalaTokenId.BlockCommentEnd,
-        ScalaTokenId.BlockCommentData,
-        ScalaTokenId.CommentTag
-    )
+  override val WS_COMMENTS: Set[TokenId] = Set(
+    ScalaTokenId.Ws,
+    ScalaTokenId.Nl,
+    ScalaTokenId.LineComment,
+    ScalaTokenId.DocCommentStart,
+    ScalaTokenId.DocCommentData,
+    ScalaTokenId.DocCommentEnd,
+    ScalaTokenId.BlockCommentStart,
+    ScalaTokenId.BlockCommentEnd,
+    ScalaTokenId.BlockCommentData,
+    ScalaTokenId.CommentTag
+  )
 
-  override val WS: Set[TokenId] =
-    Set(ScalaTokenId.Ws,
-        ScalaTokenId.Nl
-    )
+  override val WS: Set[TokenId] = Set(
+    ScalaTokenId.Ws,
+    ScalaTokenId.Nl
+  )
 
   /**
    * Tokens that should cause indentation of the next line. This is true for all {@link #END_PAIRS},
@@ -89,63 +83,62 @@ object ScalaLexUtil extends LexUtil {
    * structure for indentation.
    *
    */
-  override val INDENT_WORDS: Set[TokenId] =
-    Set(ScalaTokenId.Class,
-        ScalaTokenId.Object,
-        ScalaTokenId.Trait,
-        ScalaTokenId.Do,
-        ScalaTokenId.For,
-        ScalaTokenId.While,
-        ScalaTokenId.Case,
-        ScalaTokenId.If,
-        ScalaTokenId.Else
-    )
+  override val INDENT_WORDS: Set[TokenId] = Set(
+    ScalaTokenId.Class,
+    ScalaTokenId.Object,
+    ScalaTokenId.Trait,
+    ScalaTokenId.Do,
+    ScalaTokenId.For,
+    ScalaTokenId.While,
+    ScalaTokenId.Case,
+    ScalaTokenId.If,
+    ScalaTokenId.Else
+  )
 
-  override val BLOCK_COMMENTS: Set[TokenId] =
-    Set(ScalaTokenId.BlockCommentStart,
-        ScalaTokenId.BlockCommentEnd,
-        ScalaTokenId.BlockCommentData,
-        ScalaTokenId.CommentTag
-    )
+  override val BLOCK_COMMENTS: Set[TokenId] = Set(
+    ScalaTokenId.BlockCommentStart,
+    ScalaTokenId.BlockCommentEnd,
+    ScalaTokenId.BlockCommentData,
+    ScalaTokenId.CommentTag
+  )
 
-  override val DOC_COMMENTS: Set[TokenId] =
-    Set(ScalaTokenId.DocCommentStart,
-        ScalaTokenId.DocCommentEnd,
-        ScalaTokenId.DocCommentData,
-        ScalaTokenId.CommentTag
-    )
+  override val DOC_COMMENTS: Set[TokenId] = Set(
+    ScalaTokenId.DocCommentStart,
+    ScalaTokenId.DocCommentEnd,
+    ScalaTokenId.DocCommentData,
+    ScalaTokenId.CommentTag
+  )
 
-  override val LINE_COMMENTS: Set[TokenId] =
-    Set(
-      ScalaTokenId.LineComment
-    )
+  override val LINE_COMMENTS: Set[TokenId] = Set(
+    ScalaTokenId.LineComment
+  )
 
   override val WHITE_SPACE: TokenId = ScalaTokenId.Ws
   override val NEW_LINE: TokenId = ScalaTokenId.Nl
   override val LPAREN: TokenId = ScalaTokenId.LParen
   override val RPAREN: TokenId = ScalaTokenId.RParen
 
-  val PotentialIdTokens: Set[TokenId] =
-    Set(ScalaTokenId.Identifier,
-        ScalaTokenId.True,
-        ScalaTokenId.False,
-        ScalaTokenId.Null,
-        ScalaTokenId.SymbolLiteral,
-        ScalaTokenId.IntegerLiteral,
-        ScalaTokenId.FloatingPointLiteral,
-        ScalaTokenId.StringLiteral,
-        ScalaTokenId.CharacterLiteral,
-        ScalaTokenId.XmlAttName,
-        ScalaTokenId.XmlAttValue,
-        ScalaTokenId.XmlCDData,
-        ScalaTokenId.XmlCDEnd,
-        ScalaTokenId.XmlComment,
-        ScalaTokenId.XmlSTagName,
-        ScalaTokenId.XmlSTagName,
-        ScalaTokenId.XmlCharData,
-        ScalaTokenId.LArrow,
-        ScalaTokenId.Wild
-    )
+  val PotentialIdTokens: Set[TokenId] = Set(
+    ScalaTokenId.Identifier,
+    ScalaTokenId.True,
+    ScalaTokenId.False,
+    ScalaTokenId.Null,
+    ScalaTokenId.SymbolLiteral,
+    ScalaTokenId.IntegerLiteral,
+    ScalaTokenId.FloatingPointLiteral,
+    ScalaTokenId.StringLiteral,
+    ScalaTokenId.CharacterLiteral,
+    ScalaTokenId.XmlAttName,
+    ScalaTokenId.XmlAttValue,
+    ScalaTokenId.XmlCDData,
+    ScalaTokenId.XmlCDEnd,
+    ScalaTokenId.XmlComment,
+    ScalaTokenId.XmlSTagName,
+    ScalaTokenId.XmlSTagName,
+    ScalaTokenId.XmlCharData,
+    ScalaTokenId.LArrow,
+    ScalaTokenId.Wild
+  )
 
   override def getDocCommentRangeBefore(th: TokenHierarchy[_], lexOffset: Int): OffsetRange = {
     val ts = getTokenSequence(th, lexOffset).getOrElse(return OffsetRange.NONE)
