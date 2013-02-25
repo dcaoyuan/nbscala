@@ -395,7 +395,7 @@ object ScalaSourceUtil {
     // * The safer way is using ProjectUtils.getSources(project). See ScalaGlobal#findDirResources
     // *     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
 
-    val srcRootsMine = ScalaGlobal.getSrcFileObjects(fo, true)
+    val srcRootsMine = ProjectResources.getSrcFileObjects(fo, true)
     val srcCpMine = ClassPathSupport.createClassPath(srcRootsMine: _*)
 
     val cp = getClassPath(fo)
@@ -403,7 +403,7 @@ object ScalaSourceUtil {
     val root  = cp.findOwnerRoot(clzFo)
 
     val srcCpTarget = if (root ne null) {
-      val srcRoots1 = ScalaGlobal.getSrcFileObjects(root, true)
+      val srcRoots1 = ProjectResources.getSrcFileObjects(root, true)
       val srcRoots2 = SourceForBinaryQuery.findSourceRoots(root.toURL).getRoots
       ClassPathSupport.createClassPath(srcRoots1 ++ srcRoots2: _*)
     } else null
@@ -555,7 +555,7 @@ object ScalaSourceUtil {
 
     if (clazzName.length == 0) return null
 
-    val out = ScalaGlobal.getOutFileObject(fo, true) getOrElse {return clazzName}
+    val out = ProjectResources.getOutFileObject(fo, true) getOrElse {return clazzName}
 
     def findAllClassFilesWith(prefix: String, dirFo: FileObject, result: ArrayBuffer[FileObject]): Unit = {
       dirFo.getChildren foreach {
