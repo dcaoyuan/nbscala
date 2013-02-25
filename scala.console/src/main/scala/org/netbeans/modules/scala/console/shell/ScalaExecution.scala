@@ -144,7 +144,7 @@ object ScalaExecution {
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"?
      * And jline may cause terminal unresponsed after netbeans quited.
      */
-    //args += "-Djline.terminal=jline.UnixTerminal" //NOI18N
+    //args += "-Djline.terminal=jline.UnsupportedTerminal" 
     args += "-Djline.WindowsTerminal.directConsole=false"
             
     // TODO - turn off verifier?
@@ -224,6 +224,7 @@ object ScalaExecution {
      * Also, from Scala-2.7.1, jline is used for scala shell, we should 
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
      */
+    //args += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal" 
     args += "-Djline.WindowsTerminal.directConsole=false" //NOI18N
             
     // TODO - turn off verifier?
