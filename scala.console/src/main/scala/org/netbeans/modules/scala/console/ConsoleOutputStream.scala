@@ -17,6 +17,7 @@ import javax.swing.JComboBox
 import javax.swing.JScrollPane
 import javax.swing.JTextPane
 import javax.swing.JViewport
+import javax.swing.SwingUtilities
 import javax.swing.plaf.basic.BasicComboPopup
 import javax.swing.text.AttributeSet
 import javax.swing.text.BadLocationException
@@ -344,16 +345,21 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     if (candidates.length == 0 || candidates.length == 1) {
       return
     }
-        
-    completePopup.getList.setVisibleRowCount(math.min(10, candidates.length))
-    completeCombo.removeAllItems
-    candidates foreach completeCombo.addItem
     
-    val caretPos = area.getCaretPosition
-    if (caretPos >= 0) {
-      val pos = area.modelToView(caretPos)
-      completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
-    } 
+    SwingUtilities.invokeLater(new Runnable() {
+        def run() {
+          completePopup.getList.setVisibleRowCount(math.min(10, candidates.length))
+          completeCombo.removeAllItems
+          candidates foreach completeCombo.addItem
+    
+          val caretPos = area.getCaretPosition
+          if (caretPos >= 0) {
+            val pos = area.modelToView(caretPos)
+            completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
+          }
+        }
+      }
+    )
   }
   
   protected def completeUpSelectAction(evt: KeyEvent) {
@@ -422,7 +428,9 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
           case VK_ESCAPE => 
             // terminalInput will also process VK_ESCAPE in keyTyped later, so keep completePopup.isVisible here
           case _ =>
-            completePopup.setVisible(false)
+            if (!(evt.isControlDown || evt.isAltDown || evt.isMetaDown)) {
+              completePopup.setVisible(false)
+            }
             keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
       } else {
@@ -453,8 +461,10 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     override 
     def keyTyped(evt: KeyEvent) {
       // under keyTyped, always use evt.getKeyChar
+      val keyChar = evt.getKeyChar
+      
       if (completePopup.isVisible) {
-        evt.getKeyChar match {
+        keyChar match {
           case VK_ENTER => 
             completeEnterSelectAction(evt)
             completePopup.setVisible(false)
