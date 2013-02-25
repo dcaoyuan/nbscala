@@ -2,6 +2,7 @@ package org.netbeans.modules.scala.console
 
 import java.awt.Color
 import java.awt.Point
+import java.awt.Insets
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import java.io.IOException
@@ -123,9 +124,11 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   area.addMouseMotionListener(areaMouseListener)
 
   private lazy val completeCombo = {
-    val x = new JComboBox[String]()
+    val x = new JComboBox[String]() {
+      override def getInsets = new Insets(8, 8, 8, 8)
+    }
     x.setFont(area.getFont)
-    x.setRenderer(new DefaultListCellRenderer())
+    x.setRenderer(new DefaultListCellRenderer() )
     x
   }
   private lazy val completePopup = {
@@ -371,13 +374,21 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     val selected = completeCombo.getSelectedIndex - 1
     if (selected >= 0) {
       completeCombo.setSelectedIndex(selected)
+    } else {
+      if (completeCombo.getItemCount > 0) {
+        completeCombo.setSelectedIndex(completeCombo.getItemCount - 1)
+      }
     }
   }
     
   protected def completeDownSelectAction(evt: KeyEvent) {
     val selected = completeCombo.getSelectedIndex + 1
-    if (selected != completeCombo.getItemCount) {
+    if (selected < completeCombo.getItemCount) {
       completeCombo.setSelectedIndex(selected)
+    } else {
+      if (completeCombo.getItemCount > 0) {
+        completeCombo.setSelectedIndex(0)
+      }
     }
   }
   
