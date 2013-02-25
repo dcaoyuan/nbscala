@@ -85,11 +85,6 @@
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scala-library</artifactId>
-            <version>${libs.scala.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-awt</artifactId>
             <version>${netbeans.version}</version>
@@ -99,6 +94,18 @@
             <artifactId>org-openide-nodes</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scala-library</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-scala-core</artifactId>
+            <version>${scala.core.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

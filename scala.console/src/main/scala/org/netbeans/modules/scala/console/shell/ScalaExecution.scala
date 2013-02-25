@@ -43,13 +43,15 @@ package org.netbeans.modules.scala.console.shell
 
 import java.io.File
 import java.io.IOException
+import org.netbeans.api.project.Project
 import org.netbeans.api.project.ui.OpenProjects
+import org.netbeans.modules.scala.core.ProjectResources
 import org.openide.DialogDisplayer
 import org.openide.NotifyDescriptor
 import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileUtil
 import org.openide.modules.InstalledFileLocator
-import org.openide.modules.Places
+//import org.openide.modules.Places
 import org.openide.util.Exceptions
 import org.openide.util.Utilities
 import scala.collection.mutable.ArrayBuffer
@@ -158,65 +160,49 @@ object ScalaExecution {
     (executable, args.toArray)
   }
 
-  def getScalaArgs(scalaHome: String): (String, Array[String]) = {
+  def getScalaArgs(scalaHome: String, project: Project = null): (String, Array[String]) = {
     val args = new ArrayBuffer[String]()
 
-    val executable = getJavaHome + File.separator + "bin" + File.separator + "java" // NOI18N   
-    // XXX Do I need java.exe on Windows?
+    val executable = getJavaHome + File.separator + "bin" + File.separator + "java"
 
-    // Additional execution flags specified in the Scala startup script:
-    args += "-Xverify:none" // NOI18N
-    args += "-da" // NOI18N
+    // additional execution flags specified in the Scala startup script:
+    args += "-Xverify:none"
+    args += "-da" 
             
-    val extraArgs = System.getenv("SCALA_EXTRA_VM_ARGS") // NOI18N
+    System.getenv("SCALA_EXTRA_VM_ARGS") match {
+      case null =>
+        args += "-Xmx512m"
+        args += "-Xss1024k"
+      case extraArgs =>
+        if (!extraArgs.contains("-Xmx")) { 
+          args += "-Xmx512m"
+        }
+        if (!extraArgs.contains("-Xss")) {
+          args += "-Xss1024k"
+        }
+        args ++= Utilities.parseParameters(extraArgs)
+    }
 
-    var javaMemory = "-Xmx512m" // NOI18N
-    var javaStack = "-Xss1024k" // NOI18N
-            
-    if (extraArgs ne null) {
-      if (extraArgs.indexOf("-Xmx") != -1) { // NOI18N
-        javaMemory = null
-      }
-      if (extraArgs.indexOf("-Xss") != -1) { // NOI18N
-        javaStack = null
-      }
-      val scalaArgs = Utilities.parseParameters(extraArgs)
-      args ++= scalaArgs
-    }
-            
-    if (javaMemory ne null) {
-      args += javaMemory
-    }
-    if (javaStack ne null) {
-      args += javaStack
-    }
-            
     val scalaHomeDir = try {
       new File(scalaHome).getCanonicalFile
     } catch  {
-      case ex:IOException => Exceptions.printStackTrace(ex); null
+      case ex: IOException => Exceptions.printStackTrace(ex); null
     }
 
-    val scalaLib = new File(scalaHomeDir, "lib") // NOI18N
+    val scalaLib = new File(scalaHomeDir, "lib") 
+    args += "-Xbootclasspath/a:" + mkClassPathString(scalaLib)  // @Note jline is a must for for interactive scala console
 
-    // BootClassPath
-    args += "-Xbootclasspath/a:" + mkClassPath(Array(
-        "scala-library.jar",
-        "scala-reflect.jar",
-        "scala-compiler.jar",
-        "jline.jar"
-      ), scalaLib)   
-            
-    // Classpath
-    args += "-classpath" // NOI18N
-
-
-//            argvList.add(computeScalaClassPath(
-//                    descriptor eq null ? null : descriptor.getClassPath(), scalaLib));
-            
-    args += computeScalaClassPath(null, scalaLib)
-            
-    args += "-Dscala.home=" + scalaHomeDir // NOI18N
+    if (project != null) {
+      val (projectBootCpStr, projectExecCpStr) = ProjectResources.getExecuteClassPathString(project)
+      args += "-classpath" 
+      args += projectExecCpStr
+    } else {
+      args += "-classpath" 
+      args += computeScalaClassPath(null, scalaLib)
+    }
+    
+    args += "-Dscala.home=" + scalaHomeDir // is this a must for interactive scala console
+    args += "-Dscala.usejavacp=true"  // this is a must for -classpath can be imported under interative shell
             
     /** 
      * @Note:
@@ -225,31 +211,29 @@ object ScalaExecution {
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
      */
     //args += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal" 
-    args += "-Djline.WindowsTerminal.directConsole=false" //NOI18N
+    args += "-Djline.WindowsTerminal.directConsole=false" 
             
-    // TODO - turn off verifier?
-
-    // Main class
-    args += SCALA_MAIN_CLASS // NOI18N
-
-    // Application arguments follow
+    // main class
+    args += SCALA_MAIN_CLASS 
+    // application arguments follow
         
     (executable, args.toArray)
   }
-
+  
   def getJavaHome: String = {
-    System.getProperty("scala.java.home") match {  // NOI18N
-      case null => System.getProperty("java.home") // NOI18N
+    System.getProperty("scala.java.home") match {  
+      case null => System.getProperty("java.home") 
       case x => x
     }
   }
   
   def getScalaHome: String = {
-    System.getenv("SCALA_HOME") match { // NOI18N
+    System.getenv("SCALA_HOME") match { 
       case null => 
         val d = new NotifyDescriptor.Message(
           "SCALA_HOME environment variable may not be set, or is invalid.\n" +
-          "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
+          "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE
+        )
         DialogDisplayer.getDefault().notify(d)
         null
       case scalaHome => System.setProperty("scala.home", scalaHome); scalaHome
@@ -267,7 +251,7 @@ object ScalaExecution {
   def getScala: File = {
     var scalaFo: FileObject = null
     val scalaHome = getScalaHome
-    if (scalaHome ne null) {
+    if (scalaHome != null) {
       val scalaHomeDir = new File(getScalaHome)
       if (scalaHomeDir.exists && scalaHomeDir.isDirectory) {
         try {
@@ -286,12 +270,13 @@ object ScalaExecution {
         }
       }
     }
-    if (scalaFo ne null) {
+    if (scalaFo != null) {
       FileUtil.toFile(scalaFo)
     } else {
       val d = new NotifyDescriptor.Message(
         "Can not found ${SCALA_HOME}/bin/scala, the environment variable SCALA_HOME may be invalid.\n" +
-        "Please set proper SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
+        "Please set proper SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE
+      )
       DialogDisplayer.getDefault().notify(d)
       null
     }
@@ -346,7 +331,7 @@ object ScalaExecution {
 //        env.put("SCALA_HOME", getScalaHome());
 //    }
     
-  private def mkClassPath(jarNames: Array[String], dir: File) = {
+  private def mkClassPathString(dir: File, jarNames: Array[String]): String = {
     val dirPath = dir.getAbsolutePath 
     jarNames map (dirPath + File.separator + _) filter {fileName => 
       try {
@@ -356,6 +341,10 @@ object ScalaExecution {
         case ex: Throwable => false
       }
     } mkString File.pathSeparator
+  }
+
+  private def mkClassPathString(dir: File): String = {
+    dir.listFiles filter (_.getName.endsWith("jar")) map (_.getAbsolutePath) mkString (File.pathSeparator)
   }
   
   /** Package-private for unit test. */

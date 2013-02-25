@@ -46,6 +46,9 @@ class ConsoleCapturer {
   def inputLine = _inputLine
 
   def isCapturing = _isCapturing
+  def discard {
+    _isCapturing = false
+  }
     
   def capture(postAction: ConsoleCapturer => Unit) {
     _isCapturing = true

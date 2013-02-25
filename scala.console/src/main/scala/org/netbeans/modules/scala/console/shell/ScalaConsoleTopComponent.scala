@@ -219,7 +219,7 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
       return null
     }
 
-    val (executable, args) = ScalaExecution.getScalaArgs(scalaHome)
+    val (executable, args) = ScalaExecution.getScalaArgs(scalaHome, project)
     var builder = args.foldLeft(new ExternalProcessBuilder(executable))(_ addArgument _)
     log.info(args.mkString("==== Scala console args ====\n" + executable + "\n", "\n", "\n==== End of Scala console args ===="))
 
