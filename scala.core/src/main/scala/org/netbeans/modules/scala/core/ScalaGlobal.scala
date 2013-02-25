@@ -383,7 +383,7 @@ object ScalaGlobal {
       }
     }
 
-    val resource = ProjectResources.findDirResource(project)
+    val resource = ProjectResources.findProjectResource(project)
 
     val forTest = ProjectResources.isForTest(resource, fo)
 

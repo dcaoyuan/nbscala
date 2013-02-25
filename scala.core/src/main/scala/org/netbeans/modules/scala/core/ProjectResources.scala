@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.netbeans.modules.scala.core
 
 import java.io.File
@@ -19,18 +14,21 @@ import org.netbeans.spi.java.queries.BinaryForSourceQueryImplementation
 import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileStateInvalidException
 import org.openide.filesystems.FileUtil
-import org.openide.filesystems.JarFileSystem
 import org.openide.modules.InstalledFileLocator
 import org.openide.util.Exceptions
 import scala.collection.mutable
 import scala.reflect.io.AbstractFile
 
+/**
+ * 
+ * @author Caoyuan Deng
+ */
 object ProjectResources {
   private val log = Logger.getLogger(getClass.getName)
   
-  private val projectToResources = new mutable.WeakHashMap[Project, DirResource]
+  private val projectToResources = new mutable.WeakHashMap[Project, ProjectResource]
 
-  class DirResource {
+  class ProjectResource {
     var srcToOut:  Map[FileObject, FileObject] = Map()
     var testToOut: Map[FileObject, FileObject] = Map()
 
@@ -60,9 +58,9 @@ object ProjectResources {
     }
 
     val resource = if (refresh ) {
-      findDirResource(project)
+      findProjectResource(project)
     } else {
-      projectToResources.get(project) getOrElse findDirResource(project)
+      projectToResources.getOrElseUpdate(project, findProjectResource(project))
     }
 
     if (isForTest(resource, fo)) resource.testToOut else resource.srcToOut
@@ -91,7 +89,7 @@ object ProjectResources {
     None
   }
   
-  def isForTest(resource: DirResource, fo: FileObject) = {
+  def isForTest(resource: ProjectResource, fo: FileObject) = {
     // * is this `fo` under test source?
     resource.testToOut exists {case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo)}
   }
@@ -106,8 +104,8 @@ object ProjectResources {
     }
   }
 
-  def findDirResource(project: Project): DirResource = {
-    val resource = new DirResource
+  def findProjectResource(project: Project): ProjectResource = {
+    val resource = new ProjectResource
 
     val sources = ProjectUtils.getSources(project)
     val scalaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_SCALA)
@@ -149,9 +147,9 @@ object ProjectResources {
 
     var out: FileObject = null
     val query = project.getLookup.lookup(classOf[BinaryForSourceQueryImplementation])
-    if ((query ne null) && (srcRootUrl ne null)) {
+    if ((query != null) && (srcRootUrl != null)) {
       val result = query.findBinaryRoots(srcRootUrl)
-      if (result ne null) {
+      if (result != null) {
         var break = false
         val itr = result.getRoots.iterator
         while (itr.hasNext && !break) {
@@ -161,10 +159,10 @@ object ProjectResources {
               url.toURI
             } catch {case ex: URISyntaxException => Exceptions.printStackTrace(ex); null}
 
-            if (uri ne null) {
+            if (uri != null) {
               val file = new File(uri)
               break =
-                if (file ne null) {
+                if (file != null) {
                   if (file.isDirectory) {
                     out = FileUtil.toFileObject(file)
                     true
@@ -184,21 +182,22 @@ object ProjectResources {
       }
     }
 
-    if (out eq null) {
+    if (out == null) {
       val execCp = ClassPath.getClassPath(srcRoot, ClassPath.EXECUTE)
-      if (execCp ne null) {
-        val candidates = execCp.getRoots filter (!_.getFileSystem.isInstanceOf[JarFileSystem])
-        candidates find (x => x.getPath.endsWith("classes")) foreach {out = _}
-        if ((out eq null) & candidates.length > 0) {
-          out = candidates(0)
+      if (execCp != null) {
+        val candidates = execCp.getRoots filter {x => FileUtil.getArchiveFile(x) == null}
+        out = candidates find (_.getPath.endsWith("classes")) match {
+          case Some(x) => x
+          case None if candidates.length > 0 => candidates(0)
+          case _ => null
         }
       }
     }
 
     // global requires an exist out path, so we have to create a tmp folder
-    if (out eq null) {
+    if (out == null) {
       val projectDir = project.getProjectDirectory
-      if ((projectDir ne null) && projectDir.isFolder) {
+      if (projectDir != null && projectDir.isFolder) {
         try {
           val tmpClasses = "build.classes"
           out = projectDir.getFileObject(tmpClasses) match {
@@ -213,34 +212,63 @@ object ProjectResources {
   }
 
   def toClassPathString(cp: ClassPath): String = {
-    if (cp eq null) return ""
-
-    val sb = new StringBuilder
-    val itr = cp.entries.iterator
-    while (itr.hasNext) {
-      val rootFile =
+    if (cp == null) "" else toClassPathString(List(cp))
+  }
+  
+  def toClassPathString(cps: Iterable[ClassPath]): String = {
+    val cpStrs = new mutable.HashSet[String]()
+    
+    for (cp <- cps) {
+      val entries = cp.entries.iterator
+      while (entries.hasNext) {
         try {
-          itr.next.getRoot match {
+          entries.next.getRoot match {
             case null => null
-            case entryRoot => entryRoot.getFileSystem match {
-                case jfs: JarFileSystem => jfs.getJarFile
-                case _ => FileUtil.toFile(entryRoot)
+            case entryRoot => 
+              // test if entryRoot is an ArchiveRoot, if yes, FileUtil.getArchiveFile(entryRoot) will return an ArchiveFile
+              val file = FileUtil.getArchiveFile(entryRoot) match {
+                case null => FileUtil.toFile(entryRoot)           // a regular file
+                case archiveFile => FileUtil.toFile(archiveFile)  // a archive file
               }
+              cpStrs += file.getAbsolutePath
           }
-        } catch {case ex: FileStateInvalidException => Exceptions.printStackTrace(ex); null}
-
-      if (rootFile ne null) {
-        sb.append(rootFile.getAbsolutePath)
-        if (itr.hasNext) sb.append(File.pathSeparator)
+        } catch {
+          case ex: FileStateInvalidException => Exceptions.printStackTrace(ex); null
+        }
       }
     }
-
-    sb.toString
+    
+    cpStrs.mkString(File.pathSeparator)
   }
-
   
   def getPluginJarsDir = {
     InstalledFileLocator.getDefault.locate("modules/ext/org.scala-lang.plugins", "org.netbeans.libs.scala.continuations", false)
   }
+  
+  def getExecuteClassPathString(project: Project): (String, String) = {
+    val bootCps = new mutable.HashSet[ClassPath]()
+    val compCps = new mutable.HashSet[ClassPath]()
+    val execCps = new mutable.HashSet[ClassPath]()
 
+    val resource = findProjectResource(project)
+    for ((src, out) <- resource.srcToOut) {
+      ClassPath.getClassPath(src, ClassPath.BOOT) match {
+        case null =>
+        case cp => bootCps += cp
+      }
+      ClassPath.getClassPath(src, ClassPath.COMPILE) match {
+        case null =>
+        case cp => compCps += cp
+      }
+      ClassPath.getClassPath(src, ClassPath.EXECUTE) match {
+        case null =>
+        case cp => execCps += cp
+      }
+    }
+    
+    val bootCpStr = toClassPathString(bootCps)
+    val execCpStr = toClassPathString(if (execCps.isEmpty) compCps else execCps)
+    
+    (bootCpStr, execCpStr)
+  }
 }
