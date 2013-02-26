@@ -2,7 +2,10 @@ package org.netbeans.modules.scala.console
 
 import java.awt.Color
 import java.awt.Point
+import java.awt.Component
 import java.awt.Insets
+import java.awt.Toolkit
+import java.awt.datatransfer.DataFlavor
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import java.io.IOException
@@ -27,7 +30,7 @@ import javax.swing.text.JTextComponent
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 import javax.swing.text.StyledDocument
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable
 
 
 trait ConsoleOutputLineParser {
@@ -40,11 +43,11 @@ class ConsoleCapturer {
   private var _isCapturing = false
   private var _captureText = new StringBuilder()
   private var _text: String = ""
-  private var _inputLine: String = ""
+  private var _lastOutput: String = ""
   private var _postAction: ConsoleCapturer => Unit = capturer => ()
     
   def text = _text
-  def inputLine = _inputLine
+  def lastOutput = _lastOutput
 
   def isCapturing = _isCapturing
   def discard {
@@ -57,9 +60,9 @@ class ConsoleCapturer {
     _postAction = postAction
   }
     
-  def endWith(inputLine: String) {
+  def endWith(lastOutput: String) {
     _isCapturing = false
-    _inputLine = inputLine
+    _lastOutput = lastOutput
     _text = _captureText.toString
     _captureText.delete(0, _captureText.length)
       
@@ -86,7 +89,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     
   /** buffer which will be used for the next line */
   private val buf = new StringBuffer(1000)
-  private val linesBuf = new ArrayBuffer[String]()
+  private val linesBuf = new mutable.ArrayBuffer[String]()
   private var isWaitingUserInput = false
 
   protected val outputCapturer = new ConsoleCapturer()
@@ -115,7 +118,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   }
 
   val pipedOut = new PrintStream(new PipedOutputStream(pipedIn))
-  private val doc = area.getDocument
+  private val doc = area.getDocument.asInstanceOf[StyledDocument]
   
   private object areaMouseListener extends ConsoleMouseListener(area)
   
@@ -125,15 +128,21 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   area.addMouseMotionListener(areaMouseListener)
 
   private lazy val completeCombo = {
-    val x = new JComboBox[String]() {
-      override def getInsets = new Insets(8, 8, 8, 8)
-    }
+    val x = new JComboBox[String]()
     x.setFont(area.getFont)
-    x.setRenderer(new DefaultListCellRenderer() )
+    x.setRenderer(new DefaultListCellRenderer())
     x
   }
   private lazy val completePopup = {
-    val x = new BasicComboPopup(completeCombo)
+    val x = new BasicComboPopup(completeCombo) {
+      override def getInsets = new Insets(4, 4, 4, 4)
+      // JPopupMenu will aleays show from (x, y) to right-lower, but we want to it shows to right-upper 
+      override def show(invoker: Component, _x: Int, _y: Int) {
+        val x = _x
+        val y = _y - getPreferredSize.height
+        super.show(invoker, x, y)
+      }
+    }
     x.setFont(area.getFont)
     x
   }
@@ -204,10 +213,10 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   @throws(classOf[IOException])
   override
   def flush() {
-    doFlush {currentLine =>
-      isWaitingUserInput = currentLine.length > 0
+    doFlush {nonTeminatedText =>
+      isWaitingUserInput = nonTeminatedText.length > 0
       if (isWaitingUserInput && outputCapturer.isCapturing) {
-        outputCapturer.endWith(currentLine)
+        outputCapturer.endWith(nonTeminatedText)
       }
     }
   }
@@ -220,7 +229,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   protected[console] def doFlush(withAction: String => Unit = currentLine => ()): String = {
     val bufStr = buf.toString
     buf.delete(0, buf.length)
-    val (lines, currentLine) = readLines(bufStr)
+    val (lines, nonTerminatedText) = readLines(bufStr)
 
     if (outputCapturer.isCapturing) {
       lines foreach outputCapturer.append
@@ -232,8 +241,8 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
         def run() {
           try {
             writeLines(lines)
-            writeNonTeminatedLine(currentLine)
-            withAction(currentLine)
+            writeNonTeminatedText(nonTerminatedText)
+            withAction(nonTerminatedText)
           } catch {
             case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
           }
@@ -242,7 +251,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       }
     )
 
-    currentLine
+    nonTerminatedText
   }
   
   /**
@@ -293,17 +302,17 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   }
   
   /**
-   * The last line is usaully the line that is accepting user input, ie. an editable 
+   * The non teminated text line is usaully the line that is accepting user input, ie. an editable 
    * line, we should process '\b' here (JTextPane just print ' ' for '\b')
    * @Note The '\b' from JLine, is actually a back cursor, which works with 
    * followed overwriting in combination for non-ansi terminal to move cursor.
    */
   @throws(classOf[Exception])
-  private def writeNonTeminatedLine(str: String) {
-    val len = str.length
+  private def writeNonTeminatedText(text: String) {
+    val len = text.length
     var i = 0
     while (i < len) {
-      str.charAt(i) match {
+      text.charAt(i) match {
         case '\b' =>
           backCursor(1)
         case c =>
@@ -346,7 +355,40 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       case ex: BadLocationException => // Ifnore
     }
   }
-    
+  
+  /** 
+   * A document is modelled as a list of lines (Element)=> index = line number
+   *
+   * @return the text at the last line, @Note the doc's always ending with a '\n' even there was never print this CR?
+   */
+  private def getLastLine: String = {
+    val root = doc.getDefaultRootElement
+    val numLines = root.getElementCount
+    val line = root.getElement(numLines - 1)
+    try {
+      doc.getText(line.getStartOffset, line.getEndOffset - line.getStartOffset)
+    } catch {
+      case ex: Exception => ""
+    }
+  } 
+  
+  private def stripEndingCR(line: String): String = {
+    val len = line.length
+    if (len > 0) {
+      if (line.charAt(len - 1) == '\n' || line.charAt(len - 1) == '\r') {
+        if (len > 1 && (line.charAt(len - 2) == '\n' || line.charAt(len - 2) == '\r')) {
+          line.substring(0, len - 2)
+        } else {
+          line.substring(0, len - 1)
+        }
+      } else {
+        line
+      }
+    } else {
+      line
+    }
+  }
+  
   // --- complete actions
   
   protected def completePopupAction(capturer: ConsoleCapturer) {
@@ -356,19 +398,79 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     }
     
     val candidates = text.split("\\s+") filter (_.length > 0)
-    if (candidates.length == 0 || candidates.length == 1) {
-      return
-    }
+    if (candidates.length > 1) {
+      completePopup.getList.setVisibleRowCount(math.min(10, candidates.length))
+      completeCombo.removeAllItems
+      candidates foreach completeCombo.addItem
     
-    completePopup.getList.setVisibleRowCount(math.min(10, candidates.length))
-    completeCombo.removeAllItems
-    candidates foreach completeCombo.addItem
-    
-    val caretPos = area.getCaretPosition
-    if (caretPos >= 0) {
-      val pos = area.modelToView(caretPos)
-      completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
+      val pos = area.getCaretPosition
+      if (pos >= 0) {
+        val rec = area.modelToView(pos)
+        completePopup.show(area, rec.x, rec.y + area.getFontMetrics(area.getFont).getHeight)
+      }
     }
+  }
+  
+  protected def completeIncrementalAction(capturer: ConsoleCapturer) {
+    val pos = area.getCaretPosition
+    if (pos >= 0) {
+      val input = stripEndingCR(getLastLine)
+      val candidates = new mutable.ArrayBuffer[String]()
+      val count = completeCombo.getItemCount
+      var i = 0
+      while (i < count) {
+        val candidate = completeCombo.getItemAt(i)
+        val matchedLength = matches(input, candidate)
+        if (matchedLength > 0) {
+          candidates += candidate
+        }
+        i += 1
+      }
+    
+      completeCombo.removeAllItems
+      if (candidates.length > 0) {
+        completePopup.getList.setVisibleRowCount(math.min(10, candidates.length))
+        candidates foreach completeCombo.addItem
+        val rec = area.modelToView(pos)
+        completePopup.show(area, rec.x, rec.y + area.getFontMetrics(area.getFont).getHeight)
+      } else {
+        completePopup.setVisible(false)
+      }
+    } else {
+      completePopup.setVisible(false)
+    }
+  }
+  
+  protected def completeSelectedAction(evt: KeyEvent) {
+    completeCombo.getSelectedItem match {
+      case selectedText: String =>
+        val pos = area.getCaretPosition
+        if (pos >= 0) {
+          val input = stripEndingCR(getLastLine)
+          val matchedLength = matches(input, selectedText)
+          if (matchedLength > 0) {
+            val complete = selectedText.substring(matchedLength, selectedText.length)
+            if (complete.length > 0) {
+              terminalInput.write(complete.getBytes("utf-8"))
+            }
+          }
+        }
+      case _ =>
+    }
+  }
+  
+  private def matches(input: String, candicate: String): Int = {
+    val len = math.min(input.length, candicate.length)
+    var matchedLength = 0
+    var i = 0
+    while (i < len) {
+      val toCompare = candicate.substring(0, i + 1)
+      if (input.endsWith(toCompare)) {
+        matchedLength = i + 1
+      }
+      i += 1
+    }
+    matchedLength
   }
   
   protected def completeUpSelectAction(evt: KeyEvent) {
@@ -393,28 +495,6 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     }
   }
   
-  protected def completeEnterSelectAction(evt: KeyEvent) {
-    completeCombo.getSelectedItem match {
-      case selectedText: String =>
-        val input = outputCapturer.inputLine
-        val len = math.min(input.length, selectedText.length)
-        var matched = 0
-        var i = 1
-        while (i < len) {
-          val toCompare = selectedText.substring(0, i)
-          if (input.endsWith(toCompare)) {
-            matched = i
-          }
-          i += 1
-        }
-        val complete = selectedText.substring(matched, selectedText.length)
-        if (complete.length > 0) {
-          terminalInput.write(complete.getBytes("utf-8"))
-        }
-      case _ =>
-    }
-  }
-
   object terminalInput extends TerminalInput with KeyListener {
     import KeyEvent._
 
@@ -426,6 +506,12 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
     override 
     def write(b: Array[Byte]) {
       pipedOut.write(b)
+    }
+    
+    
+    override 
+    def keyReleased(evt: KeyEvent) {
+      evt.consume
     }
     
     override 
@@ -441,11 +527,14 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
           case VK_DOWN =>  
             completeDownSelectAction(evt)
           case VK_ENTER => 
-            // terminalInput process VK_ENTER in keyTyped, so keep completePopup.isVisible here
+            // terminalInput process VK_ENTER in keyTyped, so keep completePopup visible here
           case VK_ESCAPE => 
-            // terminalInput will also process VK_ESCAPE in keyTyped later, so keep completePopup.isVisible here
+            // terminalInput will also process VK_ESCAPE in keyTyped later, so keep completePopup visible here
+          case _ if isPrintableChar(evt.getKeyChar) =>
+            // may be under incremental complete
+            keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
           case _ =>
-            if (!(evt.isControlDown || evt.isAltDown || evt.isMetaDown)) {
+            if (!(evt.isControlDown || evt.isAltDown || evt.isMetaDown || evt.isShiftDown)) {
               completePopup.setVisible(false)
             }
             keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
@@ -462,19 +551,16 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       // --- evt consumes 
       keyCode match {
         case (VK_C | VK_A) if evt.isMetaDown | evt.isControlDown =>  // copy action
-        case VK_V =>
-          // we need a carefully implementation for paste action, since we should 
-          // also move the cursor of backed jline to proper position, then send chars in clipboard.
+        case VK_V if evt.isMetaDown | evt.isControlDown => // paste action
+          // for console, only paste at the end is meaningful. Anyway, just write them to terminalInput dicarding the caret position
+          val data =Toolkit.getDefaultToolkit.getSystemClipboard.getData(DataFlavor.stringFlavor).asInstanceOf[String]
+          terminalInput.write(data.getBytes("utf-8"))
           evt.consume
-        case _ => evt.consume
+        case _ =>
+          evt.consume
       }
     }
   
-    override 
-    def keyReleased(evt: KeyEvent) {
-      evt.consume
-    }
-    
     override 
     def keyTyped(evt: KeyEvent) {
       // under keyTyped, always use evt.getKeyChar
@@ -483,13 +569,15 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       if (completePopup.isVisible) {
         keyChar match {
           case VK_ENTER => 
-            completeEnterSelectAction(evt)
+            completeSelectedAction(evt)
             completePopup.setVisible(false)
           case VK_ESCAPE =>
             completePopup.setVisible(false)
-          case _ => 
-            // XXX TODO incremental completion when letters typed
-            //keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+          case c if isPrintableChar(c) => 
+            outputCapturer capture completeIncrementalAction
+            keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+          case _ =>
+            keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
       } else {
         keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
@@ -503,6 +591,15 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
       (if (e.isShiftDown) TerminalInput.KEY_SHIFT else 0) |
       (if (e.isAltDown) TerminalInput.KEY_ALT else 0) |
       (if (e.isActionKey) TerminalInput.KEY_ACTION else 0)
+    }
+    
+    private def isPrintableChar(c: Char): Boolean = {
+      val block = Character.UnicodeBlock.of(c)
+      
+      !Character.isISOControl(c) &&
+      c != KeyEvent.CHAR_UNDEFINED &&
+      block != null &&
+      block != Character.UnicodeBlock.SPECIALS
     }
   }
 }
@@ -764,9 +861,9 @@ object AnsiConsoleOutputStream {
    */
   def getTextOfLineAtPosition(doc: StyledDocument, pos: Int): String = {
     // a document is modelled as a list of lines (Element)=> index = line number
-    val line = doc.getParagraphElement(pos);
+    val line = doc.getParagraphElement(pos)
     try {
-      doc.getText(line.getStartOffset(), line.getEndOffset()-line.getStartOffset());
+      doc.getText(line.getStartOffset, line.getEndOffset - line.getStartOffset)
     } catch {
       case ex: Exception => null
     }
