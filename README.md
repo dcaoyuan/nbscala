@@ -111,7 +111,7 @@ The Project targets version 2.10.x of the scala release.
 ### Features:
 
 * Be aware of project's classpath that could be imported, new, run under console
-* Popup auto-completion when press <tab>
+* Popup auto-completion when press \<tab\>
 * Applied also to Java SE projects and Maven projects
 
 
