@@ -29,10 +29,10 @@ Make sure you don't have an old version installed. (Check your netbeans installa
 3. Start Netbeans.
 4. Select Tools -> Plugins -> Downloaded -> Add Plugins...
 5. Select all extracted files.
-6. Accept the licence and the installation of unsigned plugins. 
+6. Accept the license and the installation of unsigned plugins. 
 
 ## Build Instructions
-Cause of the smale group of people involved in the project we only supply updates for the latest netbeans version (7.2 at the moment).
+Cause of the small group of people involved in the project we only supply updates for the latest netbeans version (7.2 at the moment).
 
 ### Requirement - Run:
 * Java 1.6+
@@ -44,12 +44,12 @@ Cause of the smale group of people involved in the project we only supply update
 * Maven 2.x/3.x 
 * NetBeans 7.2
 
-### Branchs:
+### Branches:
 * master -- tracking Scala 2.10.x currently
 * 2.9.x  -- for Scala 2.9.x
 
 ### Setting nb.installation property for maven
-Hint: This is going to be removed in the future. There is allready a nbm-application based subproject which can be used to run all modules of the plugin. See the scala.app/pom.xml for more information, what is still missing.
+Hint: This is going to be removed in the future. There is already a nbm-application based subproject which can be used to run all modules of the plugin. See the scala.app/pom.xml for more information, what is still missing.
 
 Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:run-ide' goal), check if there is a directory 'nbscala' under this copy, if yes, delete it. Then set 'nb.installation' property in your maven settings.xml (.m2/settings.xml) to point to this copy:
 
@@ -99,6 +99,22 @@ Build-Debug-Cycle: (after changed module was successfuly built)
 ## Project Details
 
 The Project targets version 2.10.x of the scala release.
+
+
+
+## Scala Console Integration
+
+### A new Scala shell console is developed recently (since Feb 27, 2013)
+
+### To open it, right click on project, and choose "Open Scala Console"
+
+### Features:
+
+* Be aware of project's classpath that could be imported, new, run under console
+* Popup auto-completion when press <tab>
+* Applied also to Java SE projects and Maven projects
+
+
 
 ## Sbt Integration
 
