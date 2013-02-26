@@ -54,7 +54,7 @@
         <brandingToken>nbscala</brandingToken>
         <deploy.version>snapshots</deploy.version>
 
-        <netbeans.version>RELEASE72</netbeans.version>
+        <netbeans.version>RELEASE73</netbeans.version>
 
         <scala.version>2.10.0-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
         <sbt.version>0.12.2</sbt.version>
@@ -81,7 +81,7 @@
         <repository>
             <id>netbeans</id>
             <name>NetBeans Platform Maven Repository</name>
-            <url>http://bits.netbeans.org/maven2/</url>
+			<url>http://bits.netbeans.org/nexus/content/groups/netbeans</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
