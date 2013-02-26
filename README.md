@@ -102,4 +102,70 @@ The Project targets version 2.10.x of the scala release.
 
 ## Sbt Integration
 
-See [https://github.com/dcaoyuan/nbscala/wiki/SbtIntegrationInNetBeans](https://github.com/dcaoyuan/nbscala/wiki/SbtIntegrationInNetBeans)
+### Only Scala-2.10+ is supported under NetBeans
+
+* That is, always try to set your project's Scala version to 2.10+ in Build.scala or build.sbt: 
+
+        scalaVersion := "2.10.0"
+
+### Supported features
+
+* Recognize sbt project and open in NetBeans
+* Open sbt console in NetBeans (Right click on sbt project, choose "Open Sbt")
+* Jump to/Open compile error lines
+
+### How to
+
+* Install the newest nbscala plugins, [download directly](https://sourceforge.net/projects/erlybird/files/nb-scala/7.x_2.10.x/) or [build by yourself](https://github.com/dcaoyuan/nbscala) on NetBeans 7.2+.
+* Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt>:
+
+        git clone git@github.com:dcaoyuan/nbsbt.git
+        cd nbsbt
+        sbt clean compile publish-local
+
+* Add nbsbt to your plugin definition file. You can use either the global one at  **~/.sbt/plugins/plugins.sbt** or the project-specific one at **PROJECT_DIR/project/plugins.sbt**
+
+        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.0.0")
+
+
+## FAQ
+
+**Q**: I got:
+
+    [error] sbt.IncompatiblePluginsException: Binary incompatibility in plugins detected.
+
+**A**: Try to remove published nbsbt plugin from your local .ivy2 repository:
+
+    rm -r ~/.ivy2/local/org.netbeans.nbsbt
+
+
+**Q**: I got:
+
+    [error] Not a valid command: netbeans
+    [error] Expected '/'
+    [error] Expected ':'
+    [error] Not a valid key: netbeans (similar: test, tags, streams)
+    [error] netbeans
+    [error]         ^
+
+**A**: Try to remove the project/target folder under your project base directory, there may be something cached here, and was not reflected to the newest condition.
+
+
+**Q**: What will this plugin do upon my project?
+
+**A**: It will generate a NetBeans project definition file ".classpath_nb" for each project.
+
+
+**Q**: It seems there are some suspicious error hints displayed on the edited source file, how can I do?
+
+**A**: There may be varies causes, you can try open another source file, then switch back to this one, the error hints may have disappeared. If not, right click in editing window, choose 'Reset Scala Parser', and try the steps mentioned previous again.
+
+
+**Q**: My project's definition was changed, how to reflect these changes to NetBeans.
+
+**A**: Right click on the root project, choose "Reload Project".
+
+
+**Q**: Exiting from Scala console leaves terminal unusable.
+
+**A**: Under some unix-like environment, scala interactive console started with some stty setting, but not for NetBeans's integrated one. You can try 'reset' after quit from NetBeans.
