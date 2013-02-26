@@ -67,11 +67,12 @@ import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.api.project.FileOwnerQuery;
 import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
-import org.netbeans.api.project.SourceGroup;
 import org.netbeans.api.project.Sources;
 import org.netbeans.api.project.ui.OpenProjects;
 import org.netbeans.modules.csl.api.ElementKind
-import org.netbeans.modules.scala.core.{ScalaMimeResolver, ScalaParserResult, ScalaSourceUtil}
+import org.netbeans.modules.scala.core.ScalaMimeResolver
+import org.netbeans.modules.scala.core.ScalaSourceUtil
+import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.core.ast.ScalaItems
 import org.netbeans.modules.scala.core.lexer.ScalaTokenId
 import org.netbeans.modules.parsing.spi.Parser;
@@ -420,7 +421,7 @@ object RetoucheUtils {
           dependentRoots += sourceRoot
         }
 
-        val sgs = ScalaSourceUtil.getScalaJavaSourceGroups(p)
+        val sgs = ProjectResources.getScalaJavaSourceGroups(p)
         dependentRoots ++= sgs.map(root => URLMapper.findURL(root.getRootFolder, URLMapper.INTERNAL))
       } else {
         val srcCps = GlobalPathRegistry.getDefault.getPaths(ClassPath.SOURCE).iterator

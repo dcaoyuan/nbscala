@@ -45,7 +45,6 @@ import java.util.ResourceBundle
 import javax.swing.event.ChangeListener
 import org.netbeans.api.java.source.ClasspathInfo
 import org.netbeans.api.project.FileOwnerQuery
-import org.netbeans.api.project.ProjectUtils
 import org.netbeans.modules.csl.api.ElementKind
 import org.netbeans.modules.refactoring.api.AbstractRefactoring
 import org.netbeans.modules.refactoring.api.Problem
@@ -58,7 +57,7 @@ import org.openide.util.HelpCtx
 import org.openide.util.NbBundle
 import org.openide.util.lookup.Lookups
 
-import org.netbeans.modules.scala.core.ScalaSourceUtil
+import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.core.ast.ScalaItems
 import org.netbeans.modules.scala.refactoring.RetoucheUtils
 import org.netbeans.modules.scala.refactoring.WhereUsedQueryConstants
@@ -111,7 +110,7 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
     } else {
       val cpInfo = query.getContext.lookup(classOf[ClasspathInfo])
       val p = FileOwnerQuery.getOwner(handle.fo.get)
-      val roots = new HashSet[FileObject] ++= ScalaSourceUtil.getScalaJavaSourceGroups(p).map(_.getRootFolder)
+      val roots = new HashSet[FileObject] ++= ProjectResources.getScalaJavaSourceGroups(p).map(_.getRootFolder)
 
       val srcCp = ClassPathSupport.createClassPath(roots.toArray: _*)
       val bootCp = cpInfo.getClassPath(ClasspathInfo.PathKind.BOOT)

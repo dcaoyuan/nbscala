@@ -10,6 +10,7 @@ import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.project.FileOwnerQuery
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ProjectUtils
+import org.netbeans.api.project.SourceGroup
 import org.netbeans.spi.java.queries.BinaryForSourceQueryImplementation
 import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileStateInvalidException
@@ -25,6 +26,11 @@ import scala.reflect.io.AbstractFile
  */
 object ProjectResources {
   private val log = Logger.getLogger(getClass.getName)
+  
+  /** @see org.netbeans.api.java.project.JavaProjectConstants */
+  val SOURCES_TYPE_JAVA = "java"
+  /** a source group type for separate scala source roots, as seen in maven projects for example */
+  val SOURCES_TYPE_SCALA = "scala"
   
   private val projectToResources = new mutable.WeakHashMap[Project, ProjectResource]
 
@@ -89,8 +95,8 @@ object ProjectResources {
     None
   }
   
+  /** is this `fo` under test source? */
   def isForTest(resource: ProjectResource, fo: FileObject) = {
-    // * is this `fo` under test source?
     resource.testToOut exists {case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo)}
   }
   
@@ -103,16 +109,23 @@ object ProjectResources {
       }
     }
   }
-
+  
+  def getScalaJavaSourceGroups(project: Project): Array[SourceGroup] = {
+    val sources = ProjectUtils.getSources(project)
+    val scalaSgs = sources.getSourceGroups(SOURCES_TYPE_SCALA)
+    val javaSgs  = sources.getSourceGroups(SOURCES_TYPE_JAVA)
+    scalaSgs ++ javaSgs
+  }
+  
   def findProjectResource(project: Project): ProjectResource = {
     val resource = new ProjectResource
 
     val sources = ProjectUtils.getSources(project)
-    val scalaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_SCALA)
-    val javaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_JAVA)
+    val scalaSgs = sources.getSourceGroups(SOURCES_TYPE_SCALA)
+    val javaSgs  = sources.getSourceGroups(SOURCES_TYPE_JAVA)
 
-    log.fine((scalaSgs map (_.getRootFolder.getPath)).mkString("Project's src group[ScalaType] dir: [", ", ", "]"))
-    log.fine((javaSgs  map (_.getRootFolder.getPath)).mkString("Project's src group[JavaType]  dir: [", ", ", "]"))
+    log.fine((scalaSgs map (_.getRootFolder.getPath)).mkString("Project's src group[Scala] dir: [", ", ", "]"))
+    log.fine((javaSgs  map (_.getRootFolder.getPath)).mkString("Project's src group[Java]  dir: [", ", ", "]"))
 
     List(scalaSgs, javaSgs) foreach {
       case Array(srcSg) =>

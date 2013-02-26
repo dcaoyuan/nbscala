@@ -88,7 +88,8 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   private val buf = new StringBuffer(1000)
   private val linesBuf = new ArrayBuffer[String]()
   private var isWaitingUserInput = false
-  private val outputCapturer = new ConsoleCapturer()
+
+  protected val outputCapturer = new ConsoleCapturer()
   
   lazy val defaultStyle = {
     val x = new SimpleAttributeSet()

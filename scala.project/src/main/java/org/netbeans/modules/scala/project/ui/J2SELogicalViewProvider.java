@@ -343,10 +343,9 @@ public class J2SELogicalViewProvider implements LogicalViewProvider2 {
             
             List<Action> actions = new ArrayList<Action>();
             
-            actions.add(ProjectSensitiveActions.projectCommandAction(J2SEActionProvider.COMMAND_SCALA_CONSOLE, bundle.getString("LBL_ScalaConsole_Name"), null));  // NOI18N
-            actions.add(null);
             actions.add(CommonProjectActions.newFileAction());
             actions.add(null);
+            actions.add(ProjectSensitiveActions.projectCommandAction(J2SEActionProvider.COMMAND_SCALA_CONSOLE, bundle.getString("LBL_ScalaConsole_Name"), null));  // NOI18N
             actions.add(ProjectSensitiveActions.projectCommandAction(ActionProvider.COMMAND_BUILD, bundle.getString("LBL_BuildAction_Name"), null)); // NOI18N
             actions.add(ProjectSensitiveActions.projectCommandAction(ActionProvider.COMMAND_REBUILD, bundle.getString("LBL_RebuildAction_Name"), null)); // NOI18N
             actions.add(ProjectSensitiveActions.projectCommandAction(ActionProvider.COMMAND_CLEAN, bundle.getString("LBL_CleanAction_Name"), null)); // NOI18N

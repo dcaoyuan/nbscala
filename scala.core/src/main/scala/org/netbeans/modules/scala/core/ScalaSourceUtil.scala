@@ -37,9 +37,6 @@ import org.netbeans.api.java.classpath.GlobalPathRegistry
 import org.netbeans.api.java.queries.SourceForBinaryQuery
 import org.netbeans.api.java.source.ClasspathInfo
 import org.netbeans.api.lexer.TokenHierarchy
-import org.netbeans.api.project.Project
-import org.netbeans.api.project.ProjectUtils
-import org.netbeans.api.project.SourceGroup
 import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.classfile.ClassFile
 import org.netbeans.modules.csl.api.{ElementKind, OffsetRange}
@@ -67,13 +64,7 @@ import scala.reflect.internal.{Flags, Symbols}
  * @author Caoyuan Deng
  */
 object ScalaSourceUtil {
-
-  val logger = Logger.getLogger(getClass.getName)
-
-  /** @see org.netbeans.api.java.project.JavaProjectConstants */
-  val SOURCES_TYPE_JAVA = "java" // NOI18N
-  /** a source group type for separate scala source roots, as seen in maven projects for example */
-  val SOURCES_TYPE_SCALA = "scala" //NOI18N
+  private val logger = Logger.getLogger(getClass.getName)
 
   def isScalaFile(f: FileObject): Boolean = {
     ScalaMimeResolver.MIME_TYPE.equals(f.getMIMEType)
@@ -454,13 +445,6 @@ object ScalaSourceUtil {
     
   }
 
-  def getScalaJavaSourceGroups(p: Project): Array[SourceGroup] = {
-    val sources = ProjectUtils.getSources(p)
-    val scalaSgs = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_SCALA)
-    val javaSgs  = sources.getSourceGroups(ScalaSourceUtil.SOURCES_TYPE_JAVA)
-    scalaSgs ++ javaSgs
-  }
-
   /** @see org.netbeans.api.java.source.SourceUtils#getDependentRoots */
   def getDependentRoots(root: URL): Set[URL] = {
     val deps = IndexingController.getDefault.getRootDependencies
@@ -835,24 +819,21 @@ object ScalaSourceUtil {
   def getClasspathInfo(fo: FileObject): Option[ClasspathInfo] = {
     val bootCp = ClassPath.getClassPath(fo, ClassPath.BOOT)
     val compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
-    val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
+    val srcCp  = ClassPath.getClassPath(fo, ClassPath.SOURCE)
 
-    if ((bootCp eq null) || (compCp eq null) || (srcCp eq null)) {
+    if (bootCp == null || compCp == null || srcCp == null) {
       /** @todo why? at least I saw this happens on "Scala project created from existing sources" */
       logger.warning("No classpath for " + fo)
       None
     } else {
-      ClasspathInfo.create(bootCp, compCp, srcCp) match {
-        case null => None
-        case x => Some(x)
-      }
+      Option(ClasspathInfo.create(bootCp, compCp, srcCp))
     }
   }
 
   def getClassPath(fo: FileObject) = {
     val bootCp = ClassPath.getClassPath(fo, ClassPath.BOOT)
     val compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
-    val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
+    val srcCp  = ClassPath.getClassPath(fo, ClassPath.SOURCE)
     ClassPathSupport.createProxyClassPath(Array(bootCp, compCp, srcCp): _*)
   }
 
