@@ -65,18 +65,24 @@ Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:r
         </profile>
     </profiles>
 
+### Set system environment variable for building.
+
+    MAVEN_OPTS=-Xmx1024M
+
 ### Build all nbms
 
     cd nbscala
     mvn clean install
 
 ### Generate auto-update site:
+
     cd nbscala
     mvn nbm:autoupdate
 
 the nbms and update site can be found at nbscala/target/netbeans_site
 
 ### Run/Debug ide:
+
     cd nbscala
     mvn nbm:cluster
 
@@ -145,6 +151,11 @@ The Project targets version 2.10.x of the scala release.
 
 
 ## FAQ
+
+**Q**: NetBeans' response becomes slower after a while.
+
+**A**: Edit your NetBeans configuration file (NetBeansInstallationPlace/etc/netbeans.conf), add -J-Xmx1024M (or bigger)
+
 
 **Q**: I got:
 
