@@ -72,7 +72,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     val javaCode = new StringBuilder(1024)
 
     if (!pkgName.isEmpty) {
-      javaCode ++= "package" ++= pkgName ++= ";\n"
+      javaCode ++= "package " ++= pkgName ++= ";\n"
     }
 
     val sym = syms match {
@@ -245,7 +245,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
      *   non-private members
      */
     def genJavaMembers(sym: Symbol, tpe: Type): String = {
-      val javaCode = new StringBuilder
+      val javaCode = new StringBuilder()
       val members = try {
         tpe.members
       } catch {
@@ -306,7 +306,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
     //TODO: Refactor this down to a smaller method
     private def genJavaMethod(member: Symbol, memberType: Type): String = {
-      val javaCode = new StringBuilder
+      val javaCode = new StringBuilder()
       val mSName = member.nameString
       val mResTpe = try {
         memberType.resultType
@@ -468,7 +468,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     // Anything which could conceivably be a module (i.e. isn't known to be
     // a type parameter or similar) must go through here or the signature is
     // likely to end up with Foo<T>.Empty where it needs Foo<T>.Empty$.
-    def fullNameInSig(sym: Symbol) = "L" + beforeIcode(sym.javaBinaryName)
+    def fullNameInSig(sym: Symbol) = "Array<" + beforeIcode(sym.javaBinaryName) + ">" // "L" + beforeIcode(sym.javaBinaryName)
 
     def jsig(tp0: Type, existentiallyBound: List[Symbol] = Nil, toplevel: Boolean = false, primitiveOK: Boolean = true): String = {
       val tp = tp0.dealias
@@ -493,7 +493,10 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
               (
                 if (needsJavaSig(preRebound)) {
                   val s = jsig(preRebound, existentiallyBound)
-                  if (s.charAt(0) == 'L') s.substring(0, s.length - 1) + "." + sym.javaSimpleName
+                  if (s.charAt(0) == 'L') {
+                    "Array<" + s.substring(1, s.length - 1) + "." + sym.javaSimpleName + ">"
+                    //s.substring(0, s.length - 1) + "." + sym.javaSimpleName
+                  }
                   else fullNameInSig(sym)
                 }
                 else fullNameInSig(sym)
