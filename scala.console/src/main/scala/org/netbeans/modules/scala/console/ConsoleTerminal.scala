@@ -3,7 +3,6 @@ package org.netbeans.modules.scala.console
 import java.awt.Color
 import java.awt.Point
 import java.awt.Component
-import java.awt.Insets
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.KeyEvent
@@ -82,7 +81,7 @@ class ConsoleCapturer {
  *
  * @author Caoyuan Deng
  */
-class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends OutputStream {
+class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends OutputStream {
   private val log = Logger.getLogger(getClass.getName)
   
   def this(area: JTextPane) = this(area, null, null)
@@ -135,7 +134,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   }
   private lazy val completePopup = {
     val x = new BasicComboPopup(completeCombo) {
-      override def getInsets = new Insets(4, 4, 4, 4)
+      //override def getInsets = new Insets(4, 4, 4, 4) // looks ugly under Windows
       // JPopupMenu will aleays show from (x, y) to right-lower, but we want to it shows to right-upper 
       override def show(invoker: Component, _x: Int, _y: Int) {
         val x = _x
@@ -213,7 +212,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   @throws(classOf[IOException])
   override
   def flush() {
-    doFlush {nonTeminatedText =>
+    doFlushWith {nonTeminatedText =>
       isWaitingUserInput = nonTeminatedText.length > 0
       if (isWaitingUserInput && outputCapturer.isCapturing) {
         outputCapturer.endWith(nonTeminatedText)
@@ -226,7 +225,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
    * @return  the last non-teminated line. if it's waiting for user input, this 
    *          line.length should > 0 (with at least one char)
    */
-  protected[console] def doFlush(withAction: String => Unit = currentLine => ()): String = {
+  protected[console] def doFlushWith(postAction: String => Unit = nonTeminatedText => ()): String = {
     val bufStr = buf.toString
     buf.delete(0, buf.length)
     val (lines, nonTerminatedText) = readLines(bufStr)
@@ -242,7 +241,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
           try {
             writeLines(lines)
             writeNonTeminatedText(nonTerminatedText)
-            withAction(nonTerminatedText)
+            postAction(nonTerminatedText)
           } catch {
             case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
           }
@@ -498,11 +497,6 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   object terminalInput extends TerminalInput with KeyListener {
     import KeyEvent._
 
-    System.getProperty("os.name").toLowerCase match {
-      case os if os.indexOf("windows") != -1 => terminalId = TerminalInput.JLineWindows
-      case _ =>
-    }
-
     override 
     def write(b: Array[Byte]) {
       pipedOut.write(b)
@@ -604,7 +598,7 @@ class ConsoleOutputStream(val area: JTextPane, pipedIn: PipedInputStream, welcom
   }
 }
 
-class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStream(term) {
+class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(term) {
   import AnsiConsoleOutputStream._
   
   private val area = term.area
@@ -668,7 +662,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   @throws(classOf[BadLocationException])
   override 
   protected def processCursorToColumn(col: Int) {
-    term doFlush {currentLine => 
+    term doFlushWith {currentLine => 
       val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
       val toPos = lineStart + col - 1
       area.setCaretPosition(toPos)
@@ -685,7 +679,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   protected def processEraseScreen(eraseOption: Int) {
     eraseOption match {
       case 0 => 
-        term doFlush {currentLine =>
+        term doFlushWith {currentLine =>
           val currPos = area.getCaretPosition
           doc.remove(currPos, doc.getLength - currPos)
         }
@@ -698,7 +692,7 @@ class AnsiConsoleOutputStream(term: ConsoleOutputStream) extends AnsiOutputStrea
   protected def processEraseLine(eraseOption: Int) {
     eraseOption match {
       case 0 => 
-        term doFlush {currentLine =>
+        term doFlushWith {currentLine =>
           val currPos = area.getCaretPosition
           doc.remove(currPos, doc.getLength - currPos)
         }

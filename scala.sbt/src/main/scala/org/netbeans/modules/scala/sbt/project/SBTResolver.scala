@@ -120,13 +120,13 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
           for (entry @ <classpathentry>{ _* }</classpathentry> <- entries) {
             (entry \ "@kind").text match {
               case "src" =>
-                val path = (entry \ "@path").text.trim
+                val path = (entry \ "@path").text.trim.replace("\\", "/")
                 val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
                 val isDepProject = !((entry \ "@exported") isEmpty)
                 
                 val srcFo = projectFo.getFileObject(path)
 
-                val output = (entry \ "@output").text.trim // classes folder
+                val output = (entry \ "@output").text.trim.replace("\\", "/") // classes folder
                 val outDir = if (isDepProject) {
                   new File(output)
                 } else {
@@ -151,7 +151,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                 }
               
                 if (isDepProject) {
-                  val base = (entry \ "@base").text.trim
+                  val base = (entry \ "@base").text.trim.replace("\\", "/")
                   val baseDir = new File(base)
                   if (baseDir.exists) {
                     depPrjs += baseDir
@@ -159,7 +159,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                 }
               
               case "lib" =>
-                val path = (entry \ "@path").text.trim
+                val path = (entry \ "@path").text.trim.replace("\\", "/")
                 val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
                 val libFile = new File(path)
                 if (libFile.exists) {
@@ -171,7 +171,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                 }
                 
               case "agg" =>
-                val base = (entry \ "@base").text.trim
+                val base = (entry \ "@base").text.trim.replace("\\", "/")
                 val baseFile = new File(base)
                 if (baseFile.exists) {
                   aggPrjs += baseFile

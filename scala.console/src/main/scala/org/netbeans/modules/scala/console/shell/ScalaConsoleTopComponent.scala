@@ -21,7 +21,7 @@ import org.netbeans.api.progress.ProgressHandleFactory
 import org.netbeans.api.project.Project
 import org.netbeans.modules.scala.console.AnsiConsoleOutputStream
 import org.netbeans.modules.scala.console.ConsoleInputOutput
-import org.netbeans.modules.scala.console.ConsoleOutputStream
+import org.netbeans.modules.scala.console.ConsoleTerminal
 import org.netbeans.modules.scala.console.ConsoleOutputLineParser
 import org.netbeans.modules.scala.console.TopComponentId
 import org.openide.ErrorManager
@@ -42,8 +42,8 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
 
   private val log = Logger.getLogger(getClass.getName)
   
-  private val mimeType = "text/x-sbt"
-  private var console: ScalaConsoleOutputStream = _
+  private val mimeType = "text/x-scala"
+  private var console: ScalaConsoleTerminal = _
  
   initComponents
  
@@ -144,7 +144,7 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
     }
   }
 
-  private def createTerminal: ScalaConsoleOutputStream = {
+  private def createTerminal: ScalaConsoleTerminal = {
     // From core/output2/**/AbstractOutputPane
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
       case null =>
@@ -231,12 +231,12 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
     builder = builder.workingDirectory(pwd)
     
     val pipedIn = new PipedInputStream()
-    val console = new ScalaConsoleOutputStream(
+    val console = new ScalaConsoleTerminal(
       textPane, pipedIn,
       " " + NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "ScalaConsoleWelcome") + " " + "scala.home=" + scalaHome + "\n"
     )
-    val consoleOut = new AnsiConsoleOutputStream(console)
     
+    val consoleOut = new AnsiConsoleOutputStream(console)
     val in = new InputStreamReader(pipedIn)
     val out = new PrintWriter(new PrintStream(consoleOut))
     val err = new PrintWriter(new PrintStream(consoleOut))
@@ -344,7 +344,7 @@ object ScalaConsoleTopComponent {
     SwingUtilities.invokeLater(runnableTask)
   }
   
-  class ScalaConsoleOutputStream(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleOutputStream(_area, pipedIn, welcome) {
+  class ScalaConsoleTerminal(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleTerminal(_area, pipedIn, welcome) {
   
     @throws(classOf[IOException])
     override 

@@ -62,71 +62,11 @@ import scala.collection.mutable.ArrayBuffer
  */
 object ScalaExecution {
 
-  val SCALA_MAIN_CLASS = "scala.tools.nsc.MainGenericRunner" // NOI18N <- Change
-  val SBT_MAIN_CLASS = "sbt.xMain" // NOI18N <- Change
+  private val SCALA_MAIN_CLASS = "scala.tools.nsc.MainGenericRunner" 
+  private val SBT_MAIN_CLASS = "sbt.xMain"
+  
+  private val JVM_DEBUG = "-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
     
-//    private static final String WINDOWS_DRIVE = "(?:\\S{1}:[\\\\/])"; // NOI18N
-//    private static final String FILE_CHAR = "[^\\s\\[\\]\\:\\\"]"; // NOI18N
-//    private static final String FILE = "((?:" + FILE_CHAR + "*))"; // NOI18N
-//    private static final String FILE_WIN = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + ".*))"; // NOI18N
-//    private static final String LINE = "([1-9][0-9]*)"; // NOI18N
-//    private static final String ROL = ".*\\s?"; // NOI18N
-//    private static final String SEP = "\\:"; // NOI18N
-//    private static final String STD_SUFFIX = FILE + SEP + LINE + ROL;
-    
-//    private static List<RegexpOutputRecognizer> stdScalaRecognizers;
-//
-//    private static final RegexpOutputRecognizer SCALA_COMPILER =
-//        new RegexpOutputRecognizer(".*?" + STD_SUFFIX); // NOI18N
-//
-//    private static final RegexpOutputRecognizer SCALA_COMPILER_WIN_MY =
-//        new RegexpOutputRecognizer(".*?" + FILE_WIN + SEP + LINE + ROL); // NOI18N
-//
-//    /* Keeping old one. Get rid of this with more specific recongizers? */
-//    private static final RegexpOutputRecognizer SCALA_COMPILER_WIN =
-//        new RegexpOutputRecognizer("^(?:(?:\\[|\\]|\\-|\\:|[0-9]|\\s|\\,)*)(?:\\s*from )?" + FILE_WIN + SEP + LINE + ROL); // NOI18N
-//
-//    public static final RegexpOutputRecognizer SCALA_TEST_OUTPUT =
-//        new RegexpOutputRecognizer("\\s*test.*\\[" + STD_SUFFIX); // NOI18N
-    
-//    private String charsetName;
-//    
-//    public ScalaExecution(ExecutionDescriptor descriptor) {
-//        super(descriptor);
-//
-//        assert descriptor ne null;
-//        
-//        if (descriptor.getCmd() eq null) {
-//            descriptor.cmd(getScala());
-//        }
-//
-//        descriptor.addBinPath(true);
-//    }
-
-  /** Create a Scala execution service with the given source-encoding charset */
-//    public ScalaExecution(ExecutionDescriptor descriptor, String charsetName) {
-//        this(descriptor);
-//        this.charsetName = charsetName;
-//    }
-    
-//    public synchronized static List<? extends RegexpOutputRecognizer> getStandardScalaRecognizers() {
-//        if (stdScalaRecognizers eq null) {
-//            stdScalaRecognizers = new LinkedList<RegexpOutputRecognizer>();
-//            stdScalaRecognizers.add(SCALA_COMPILER_WIN_MY);
-//            stdScalaRecognizers.add(SCALA_COMPILER);
-//            stdScalaRecognizers.add(SCALA_COMPILER_WIN);
-//        }
-//        return stdScalaRecognizers;
-//    }
-
-  /**
-   * Returns the basic Scala interpreter command and associated flags (not
-   * application arguments)
-   */
-//    public static List<String> getScalaArgs(String scalaHome, String cmdName) {
-//        return getScalaArgs(scalaHome, cmdName, null);
-//    }
-
   def getSbtArgs(sbtHome: String): (String, Array[String]) = {
     val args = new ArrayBuffer[String]()
 
@@ -212,12 +152,37 @@ object ScalaExecution {
      */
     //args += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal" 
     args += "-Djline.WindowsTerminal.directConsole=false" 
-            
+
+    // Under Windows, you may get:
+    //      Failed to created JLineReader: java.lang.NoClassDefFoundError: Could not initialize class org.fusesource.jansi.internal.Kernel32
+    //      Falling back to SimpleReader.
+    // which may be caused by varies reason, @see http://www.scala-lang.org/node/9795
+    // Since we are a pesudo terminal (the ConsoleTerminal), we don't care the behavior of
+    // different terminals, or, we can pretend we are a unix terminal
+    // But, for jline.UnixTerminal, it will try to send stty command to init the behavior, so
+    // we have to cheat it by replace jline.sh and jline.stty as a no harmful and quick command,
+    // here's what we do: 
+    // @see jline.UnitTerminal#init and TerminalLineSettings
+    System.getProperty("os.name").toLowerCase match {
+      case os if os.indexOf("windows") != -1 => 
+        args += "-Djline.terminal=unix" 
+        args += "-Djline.sh=cmd"
+        // add switch "/c" here to "Carries out the command specified by string and then terminates",
+        // so, the process will terminate and not hang on "process.waitFor()" @see cmd /?
+        args += "-Djline.stty=/c\\ echo"  
+      case _ =>
+    }
+    
     // main class
     args += SCALA_MAIN_CLASS 
     // application arguments follow
         
     (executable, args.toArray)
+  }
+  
+  def isWindows: Boolean = System.getProperty("os.name").toLowerCase match {
+    case os if os.indexOf("windows") != -1 => true
+    case _ => false
   }
   
   def getJavaHome: String = {
@@ -321,16 +286,6 @@ object ScalaExecution {
     null
   }
   
-  /**
-   * Add settings in the environment appropriate for running Scala:
-   * add the given directory into the path, and set up SCALA_HOME
-   */
-//    public @Override void setupProcessEnvironment(Map<String, String> env) {
-//        super.setupProcessEnvironment(env);
-//        env.put("JAVA_HOME", getJavaHome());
-//        env.put("SCALA_HOME", getScalaHome());
-//    }
-    
   private def mkClassPathString(dir: File, jarNames: Array[String]): String = {
     val dirPath = dir.getAbsolutePath 
     jarNames map (dirPath + File.separator + _) filter {fileName => 
@@ -416,7 +371,5 @@ object ScalaExecution {
     }
     pwd
   }
-  
-
      
 }

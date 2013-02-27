@@ -21,8 +21,9 @@ import org.netbeans.api.progress.ProgressHandleFactory
 import org.netbeans.api.project.Project
 import org.netbeans.modules.scala.console.AnsiConsoleOutputStream
 import org.netbeans.modules.scala.console.ConsoleInputOutput
-import org.netbeans.modules.scala.console.ConsoleOutputStream
+import org.netbeans.modules.scala.console.ConsoleTerminal
 import org.netbeans.modules.scala.console.ConsoleOutputLineParser
+import org.netbeans.modules.scala.console.TerminalInput
 import org.netbeans.modules.scala.console.TopComponentId
 import org.netbeans.modules.scala.console.shell.ScalaExecution
 import org.openide.ErrorManager
@@ -44,7 +45,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   private val log = Logger.getLogger(getClass.getName)
   
   private val mimeType = "text/x-sbt"
-  private var console: SbtConsoleOutputStream = _
+  private var console: SbtConsoleTerminal = _
  
   initComponents
  
@@ -145,7 +146,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     }
   }
 
-  private def createTerminal: SbtConsoleOutputStream = {
+  private def createTerminal: SbtConsoleTerminal = {
     // From core/output2/**/AbstractOutputPane
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
       case null =>
@@ -231,12 +232,15 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     builder = builder.workingDirectory(pwd)
     
     val pipedIn = new PipedInputStream()
-    val console = new SbtConsoleOutputStream(
+    val console = new SbtConsoleTerminal(
       textPane, pipedIn,
       " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n"
     )
+    if (ScalaExecution.isWindows) {
+      console.terminalInput.terminalId = TerminalInput.JLineWindows
+    }
+
     val consoleOut = new AnsiConsoleOutputStream(console)
-    
     val in = new InputStreamReader(pipedIn)
     val out = new PrintWriter(new PrintStream(consoleOut))
     val err = new PrintWriter(new PrintStream(consoleOut))
@@ -344,7 +348,7 @@ object SBTConsoleTopComponent {
     SwingUtilities.invokeLater(runnableTask)
   }
   
-  class SbtConsoleOutputStream(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleOutputStream(_area, pipedIn, welcome) {
+  class SbtConsoleTerminal(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleTerminal(_area, pipedIn, welcome) {
   
     @throws(classOf[IOException])
     override 

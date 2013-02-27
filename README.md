@@ -67,7 +67,11 @@ Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:r
 
 ### Set system environment variable for building.
 
-    MAVEN_OPTS=-Xmx1024M
+    MAVEN_OPTS=-Xss8M
+
+or even more:
+
+    MAVEN_OPTS=-Xss8M -Xmx1024M
 
 ### Build all nbms
 
