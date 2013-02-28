@@ -27,7 +27,7 @@ import org.openide.util.lookup.ProxyLookup
  * 
  * @author Caoyuan Deng
  */
-class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
+class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
   import SBTProjectLogicalView._
   
   private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
@@ -50,7 +50,7 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
     }
   }
 
-  private final class ProjectNode(node: Node, project: Project) extends AbstractNode(
+  private final class ProjectNode(node: Node, project: SBTProject) extends AbstractNode(
     NodeFactorySupport.createCompositeChildren(project, NODE_FACTORY_FOLDER_PATH),
     new ProxyLookup(Lookups.singleton(project), node.getLookup)
   ) with PropertyChangeListener {
@@ -80,9 +80,7 @@ class SBTProjectLogicalView(project: Project) extends LogicalViewProvider {
     def getOpenedIcon(tpe: Int): Image = getIcon(tpe)
 
     override
-    def getDisplayName: String = {
-      project.getProjectDirectory.getName
-    }
+    def getDisplayName = project.getDisplayName
     
     override
     def getShortDescription = project.getProjectDirectory.getPath

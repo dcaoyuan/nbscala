@@ -15,7 +15,7 @@ import org.openide.util.NbBundle
  * 
  * @author Caoyuan Deng
  */
-class SubProjectNode(project: Project) extends AbstractNode(Children.LEAF) {
+class SubProjectNode(project: SBTProject) extends AbstractNode(Children.LEAF) {
 
   override
   def getIcon(tpe: Int): Image = SBTProject.SBT_ICON
@@ -25,7 +25,7 @@ class SubProjectNode(project: Project) extends AbstractNode(Children.LEAF) {
 
   override
   def getDisplayName: String = {
-    project.getProjectDirectory.getName
+    project.getDisplayName
   }
 
   /**

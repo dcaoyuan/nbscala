@@ -67,7 +67,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
     }
   }
   
-  def getName = {
+  def getName: String = {
     val resolvedName = getLookup.lookup(classOf[SBTResolver]) match {
       case null => null
       case resolver => resolver.getName 
@@ -79,6 +79,25 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
     }
   }
   
+  /**
+   * May be null
+   */
+  def getId: String = {
+    getLookup.lookup(classOf[SBTResolver]) match {
+      case null => null
+      case resolver => resolver.getId 
+    }
+  }
+  
+  def getDisplayName = {
+    val name = getName
+    val id = getId
+    if (id != null && id != "" && id != name) 
+      name + " (" + id + ")" 
+    else 
+      name
+  }
+
   private final class Info extends ProjectInformation {
 
     override

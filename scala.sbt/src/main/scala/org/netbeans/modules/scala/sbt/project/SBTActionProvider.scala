@@ -36,7 +36,11 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
     command match {
       case COMMAND_SBT_CONSOLE => 
         val rootProject = project.getRootProject
-        val commands = List("project " + project.getName)
+        val id = project.getId
+        val commands = project.getId match {
+          case null => Nil
+          case id   => List("project " + id)
+        }
         SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
         
       case COMMAND_SCALA_CONSOLE => 
@@ -49,21 +53,30 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         
       case COMMAND_BUILD =>
         val rootProject = project.getRootProject
-        val commands = List("project " + project.getName,
+        val commands = project.getId match {
+          case null => List("compile")
+          case id   => List("project " + id, 
                             "compile")
+        }
         SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
         
       case COMMAND_REBUILD =>
         val rootProject = project.getRootProject
-        val commands = List("project " + project.getName,
+        val commands = project.getId match {
+          case null => List("compile")
+          case id   => List("project " + id,
                             "clean",
                             "compile")
+        }
         SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
         
       case COMMAND_CLEAN =>
         val rootProject = project.getRootProject
-        val commands = List("project " + project.getName,
+        val commands = project.getId match {
+          case null => List("compile")
+          case id   => List("project " + id, 
                             "clean")
+        }
         SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
         
       case _ =>

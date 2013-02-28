@@ -23,14 +23,14 @@ import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 
 class DepProjectsNodeFactory extends NodeFactory {
-  def createNodes(project: Project): NodeList[_] = new DepProjectsNodeFactory.ProjectsNodeList(project)
+  def createNodes(project: Project): NodeList[_] = new DepProjectsNodeFactory.ProjectsNodeList(project.asInstanceOf[SBTProject])
 }
 
 object DepProjectsNodeFactory {
   private val DEP_PROJECTS = "dep-projects"
   private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
     
-  private class ProjectsNodeList(project: Project) extends NodeList[String] {
+  private class ProjectsNodeList(project: SBTProject) extends NodeList[String] {
     private val cs = new ChangeSupport(this)
     private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
     
@@ -72,7 +72,7 @@ object DepProjectsNodeFactory {
     }
   }
   
-  private class ProjectNode(project: Project) extends AbstractNode(Children.create(new ProjectsChildFactory(project), true)) {
+  private class ProjectNode(project: SBTProject) extends AbstractNode(Children.create(new ProjectsChildFactory(project), true)) {
     private val DISPLAY_NAME = NbBundle.getMessage(classOf[DepProjectsNodeFactory], "CTL_DepProjectsNode")
 
     override
@@ -94,12 +94,12 @@ object DepProjectsNodeFactory {
     def getActions(context: Boolean): Array[Action] = Array[Action]()
   }
   
-  private class ProjectsChildFactory(parentProject: Project) extends ChildFactory.Detachable[Project] {
+  private class ProjectsChildFactory(parentProject: SBTProject) extends ChildFactory.Detachable[SBTProject] {
     private lazy val sbtResolver = parentProject.getLookup.lookup(classOf[SBTResolver])
 
     override 
-    protected def createKeys(toPopulate: java.util.List[Project]): Boolean = {
-      val toSort = new java.util.TreeMap[String, Project]()
+    protected def createKeys(toPopulate: java.util.List[SBTProject]): Boolean = {
+      val toSort = new java.util.TreeMap[String, SBTProject]()
       try {
         val projectFos = sbtResolver.getDependenciesProjects map FileUtil.toFileObject
         for (projectFo <- projectFos) {
@@ -118,7 +118,7 @@ object DepProjectsNodeFactory {
     }
     
     override
-    protected def createNodeForKey(key: Project): Node = new SubProjectNode(key)
+    protected def createNodeForKey(key: SBTProject): Node = new SubProjectNode(key)
   }
   
 }

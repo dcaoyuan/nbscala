@@ -15,6 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 
 case class ProjectContext(
   name: String,
+  id: String,
   mainJavaSrcs:   Array[(File, File)], 
   testJavaSrcs:   Array[(File, File)], 
   mainScalaSrcs:  Array[(File, File)], 
@@ -101,6 +102,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
 
   private def parseClasspathXml(file: File): ProjectContext = {
     var name: String = null
+    var id: String = null
     val mainJavaSrcs  = new ArrayBuffer[(File, File)]()
     val testJavaSrcs  = new ArrayBuffer[(File, File)]()
     val mainScalaSrcs = new ArrayBuffer[(File, File)]()
@@ -117,6 +119,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
       classpath match {
         case context @ <classpath>{ entries @ _* }</classpath> =>
           name = (context \ "@name").text.trim
+          id = (context \ "@id").text.trim
           for (entry @ <classpathentry>{ _* }</classpathentry> <- entries) {
             (entry \ "@kind").text match {
               case "src" =>
@@ -186,6 +189,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     }
     
     ProjectContext(name,
+                   id,
                    mainJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
                    testJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
                    mainScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
@@ -212,6 +216,14 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     }
   }
   
+  def getId: String = {
+    if (projectContext != null) {
+      projectContext.id 
+    } else {
+      null
+    }
+  }
+
   def getResolvedLibraries(scope: String): Array[File] = {
     scope match {
       case ClassPath.COMPILE => projectContext.mainCps //++ libraryEntry.testCps
@@ -249,7 +261,8 @@ object SBTResolver {
   val SBT_RESOLVED_STATE_CHANGE = "sbtResolvedStateChange"
   val SBT_RESOLVED = "sbtResolved" 
   
-  val EmptyContext = ProjectContext(null, 
+  val EmptyContext = ProjectContext(null,
+                                    null,
                                     Array[(File, File)](), 
                                     Array[(File, File)](), 
                                     Array[(File, File)](), 
