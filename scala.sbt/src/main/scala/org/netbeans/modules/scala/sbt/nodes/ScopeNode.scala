@@ -10,10 +10,10 @@ import org.openide.nodes.Node
 import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 
-class ScopeNode(project: Project, scope: String) extends AbstractNode(Children.create(new ScopesChildFactory(project, scope), true)) {
+class ScopeNode(project: Project, scope: String, isTest: Boolean) extends AbstractNode(Children.create(new ScopesChildFactory(project, scope, isTest), true)) {
 
   override
-  def getDisplayName = NbBundle.getMessage(classOf[ScopeNode], "CTL_Scope_" + scope)
+  def getDisplayName = NbBundle.getMessage(classOf[ScopeNode], "CTL_Scope_" + scope + (if (isTest) "_Test" else ""))
 
   override
   def getName = scope
@@ -28,12 +28,12 @@ class ScopeNode(project: Project, scope: String) extends AbstractNode(Children.c
   private def getBadge = Icons.ICON_LIBARARIES_BADGE
 }
 
-private class ScopesChildFactory(project: Project, scope: String) extends ChildFactory.Detachable[ArtifactInfo] {
+private class ScopesChildFactory(project: Project, scope: String, isTest: Boolean) extends ChildFactory.Detachable[ArtifactInfo] {
   private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
 
   override 
   protected def createKeys(toPopulate: java.util.List[ArtifactInfo]): Boolean = {
-    val artifacts = sbtResolver.getResolvedLibraries(scope) map FileUtil.toFileObject filter {fo => 
+    val artifacts = sbtResolver.getResolvedLibraries(scope, isTest) map FileUtil.toFileObject filter {fo => 
       fo != null && FileUtil.isArchiveFile(fo)
     } map {fo =>
       ArtifactInfo(fo.getNameExt, "", "", FileUtil.toFile(fo), null, null)

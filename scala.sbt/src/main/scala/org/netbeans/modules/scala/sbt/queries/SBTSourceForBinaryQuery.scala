@@ -91,7 +91,7 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
         
       case "jar" =>
         // XXX todo
-        val artifacts = sbtResolver.getResolvedLibraries(ClassPath.COMPILE) map FileUtil.toFileObject filter {fo => 
+        val artifacts = sbtResolver.getResolvedLibraries(ClassPath.COMPILE, isTest=false) map FileUtil.toFileObject filter {fo => 
           fo != null && FileUtil.isArchiveFile(fo)
         } map {fo =>
           ArtifactInfo(fo.getNameExt, "", "", FileUtil.toFile(fo), null, null)

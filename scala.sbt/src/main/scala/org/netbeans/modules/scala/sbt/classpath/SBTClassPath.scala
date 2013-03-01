@@ -21,7 +21,7 @@ import org.openide.util.Exceptions
  *
  * @author Caoyuan Deng
  */
-final class SBTClassPath(project: Project, scope: String) extends ClassPathImplementation {
+final class SBTClassPath(project: Project, scope: String, isTest: Boolean) extends ClassPathImplementation {
   private val pcs = new PropertyChangeSupport(this)
   
   private lazy val sbtResolver = {
@@ -46,7 +46,7 @@ final class SBTClassPath(project: Project, scope: String) extends ClassPathImple
       result.addAll(getJavaBootResources)
     }
 
-    for (file <- sbtResolver.getResolvedLibraries(scope)) {
+    for (file <- sbtResolver.getResolvedLibraries(scope, isTest)) {
       val fo = FileUtil.toFileObject(file)
       try {
         val rootUrl = if (fo != null && FileUtil.isArchiveFile(fo)) {

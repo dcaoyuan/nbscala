@@ -35,15 +35,15 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
 
   def findClassPath(fileObject: FileObject, scope: String): ClassPath = {
     getFileType(fileObject) match {
-      case SOURCE => getClassPath(scope)
-      case TEST_SOURCE => getClassPath(scope)
+      case SOURCE => getClassPath(scope, isTest = false)
+      case TEST_SOURCE => getClassPath(scope, isTest = true)
       case _ => null
     }
   }
 
-  def getClassPath(scope: String): ClassPath = synchronized {
+  def getClassPath(scope: String, isTest: Boolean): ClassPath = synchronized {
     cache.getOrElseUpdate(scope, {
-        val scpi = new SBTClassPath(project, scope)
+        val scpi = new SBTClassPath(project, scope, isTest)
         val cp = ClassPathFactory.createClassPath(scpi)
         scpi.addPropertyChangeListener(this)
         cache += scope -> cp

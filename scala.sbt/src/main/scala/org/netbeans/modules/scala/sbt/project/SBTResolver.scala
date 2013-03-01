@@ -224,11 +224,16 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     }
   }
 
-  def getResolvedLibraries(scope: String): Array[File] = {
+  def getResolvedLibraries(scope: String, isTest: Boolean): Array[File] = {
     scope match {
-      case ClassPath.COMPILE => projectContext.mainCps //++ libraryEntry.testCps
-      case ClassPath.EXECUTE => projectContext.mainCps //++ libraryEntry.testCps
-      case ClassPath.SOURCE => projectContext.mainJavaSrcs ++ projectContext.testJavaSrcs ++ projectContext.mainScalaSrcs ++ projectContext.mainScalaSrcs map (_._1)
+      case ClassPath.COMPILE => if (isTest) projectContext.testCps else projectContext.mainCps
+      case ClassPath.EXECUTE => if (isTest) projectContext.testCps else projectContext.mainCps
+      case ClassPath.SOURCE => 
+        if (isTest) {
+          projectContext.testJavaSrcs ++ projectContext.testScalaSrcs map (_._1)
+        } else {
+          projectContext.mainJavaSrcs ++ projectContext.mainScalaSrcs map (_._1)
+        }
       case ClassPath.BOOT => projectContext.mainCps filter {cp =>
           val name = cp.getName
           name.endsWith(".jar") && (name.startsWith("scala-library")  ||
@@ -240,12 +245,12 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     }
   }
 
-  def getSources(tpe: String, test: Boolean): Array[(File, File)] = {
+  def getSources(tpe: String, isTest: Boolean): Array[(File, File)] = {
     tpe match {
       case ProjectConstants.SOURCES_TYPE_JAVA =>
-        if (test) projectContext.testJavaSrcs else projectContext.mainJavaSrcs
+        if (isTest) projectContext.testJavaSrcs else projectContext.mainJavaSrcs
       case ProjectConstants.SOURCES_TYPE_SCALA =>
-        if (test) projectContext.testScalaSrcs else projectContext.mainScalaSrcs
+        if (isTest) projectContext.testScalaSrcs else projectContext.mainScalaSrcs
       case _ => Array()
     }
   }

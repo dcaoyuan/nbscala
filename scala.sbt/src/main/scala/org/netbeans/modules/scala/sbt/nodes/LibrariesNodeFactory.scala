@@ -31,7 +31,7 @@ object LibrariesNodeFactory {
     def keys: java.util.List[String] = {
       val theKeys = new java.util.ArrayList[String]()
       theKeys.add(LIBRARIES)
-      val addTestSources = false // @TODO
+      val addTestSources = true // @TODO
       if (addTestSources) {
         theKeys.add(TEST_LIBRARIES)
       }
@@ -40,8 +40,8 @@ object LibrariesNodeFactory {
 
     def node(key: String): Node = {
       key match {
-        case LIBRARIES => new LibrariesNode(project)
-        case TEST_LIBRARIES => new LibrariesNode(project)
+        case LIBRARIES => new LibrariesNode(project, isTest = false)
+        case TEST_LIBRARIES => new LibrariesNode(project, isTest = true)
         case _ => assert(false, "No node for key: " + key); null
       }
     }
@@ -63,8 +63,8 @@ object LibrariesNodeFactory {
     }
   }
   
-  class LibrariesNode(project: Project) extends AbstractNode(new LibrariesChildren(project)) {
-    private val DISPLAY_NAME = NbBundle.getMessage(classOf[LibrariesNodeFactory], "CTL_LibrariesNode")
+  class LibrariesNode(project: Project, isTest: Boolean) extends AbstractNode(new LibrariesChildren(project, isTest)) {
+    private val DISPLAY_NAME = NbBundle.getMessage(classOf[LibrariesNodeFactory], "CTL_LibrariesNode" + (if (isTest) "_Test" else ""))
 
     override
     def getDisplayName: String = DISPLAY_NAME
@@ -88,13 +88,13 @@ object LibrariesNodeFactory {
     def getActions(context: Boolean): Array[Action] = Array()
   }
   
-  private class LibrariesChildren(project: Project) extends Children.Keys[String] {
+  private class LibrariesChildren(project: Project, isTest: Boolean) extends Children.Keys[String] {
 
     setKeys()
 
     override
     protected def createNodes(key: String): Array[Node] = {
-      Array(new ScopeNode(project, key))
+      Array(new ScopeNode(project, key, isTest))
     }
 
     private def setKeys() {

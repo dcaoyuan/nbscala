@@ -17,7 +17,8 @@ class SBTProjectOpenedHook(project: Project) extends ProjectOpenedHook {
   protected def projectOpened() {
     val cpProvider = project.getLookup.lookup(classOf[SBTClassPathProvider])
     classpaths = Array(
-      cpProvider.getClassPath(ClassPath.COMPILE)
+      cpProvider.getClassPath(ClassPath.COMPILE, isTest = false),
+      cpProvider.getClassPath(ClassPath.COMPILE, isTest = true)
     )
     
     GlobalPathRegistry.getDefault.register(ClassPath.COMPILE, classpaths)
@@ -27,6 +28,5 @@ class SBTProjectOpenedHook(project: Project) extends ProjectOpenedHook {
   protected def projectClosed() {
     GlobalPathRegistry.getDefault.unregister(ClassPath.COMPILE, classpaths)
     SBTResolver.dirWatcher.removeChangeListener(project.getLookup.lookup(classOf[SBTResolver]))
-    //close sbt console
   }
 }
