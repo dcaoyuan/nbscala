@@ -58,11 +58,14 @@ import scala.tools.nsc.reporters.Reporter
  */
 class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapshot) {
   private val fileObject = snapshot.getSource.getFileObject
-  val srcFile = ScalaSourceFile.sourceFileOf(fileObject)
   val global = ScalaGlobal.getGlobal(fileObject)
-  srcFile.snapshot = snapshot
+  val srcFile = {
+    val x = ScalaSourceFile.sourceFileOf(fileObject)
+    x.snapshot = snapshot
+    x
+  }
 
-  @volatile private var isInSemantic = false
+  @volatile private var isAskingSemantic = false
   @volatile private var _root: ScalaRootScope = ScalaRootScope.EMPTY
   private var _errors: java.util.List[Error] = java.util.Collections.emptyList[Error]
 
@@ -98,7 +101,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
   /** @todo since only call rootScope will cause actual parsing, those parsing task
    * that won't get rootScope will not be truly parsed, I choose this approach because
    * the TaskListIndexer will re-parse all dependent source files, with bad scala
-   * comiler performance right now, it's better to bypass it.
+   * compiler performance right now, it's better to bypass it.
    *
    * When background scanning project truly no to block the code-completion and
    * other editor behavior, or, the performance of complier is not the bottleneck
@@ -107,10 +110,6 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
   override 
   def getDiagnostics: java.util.List[_ <: Error] = _errors
   
-  def toTyped {
-    global.askForType(srcFile, true)
-  }
-  
   def toSemanticed: Unit = _root synchronized {
     // although the unit may have been ahead to typed phase during autocompletion, 
     // the typed trees may not be correct for semantic analysis, it's better to reset 
@@ -118,18 +117,18 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     // An example is that when try completing on x. and then press esc, the error won't
     // be reported if do not call reset here 
     reset
-    _root = global.askForSemantic(srcFile, true)
+    _root = global.askForSemantic(srcFile)
     _errors = collectErrors(global.reporter)
   }
   
   def cancelSemantic: Boolean = {
-    val willCancel = if (isInSemantic) {
+    val willCancel = if (isAskingSemantic) {
       global.cancelSemantic(srcFile)
     } else false
     
     if (willCancel) reset
     
-    isInSemantic = false
+    isAskingSemantic = false
     willCancel
   }
   
@@ -163,9 +162,9 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
    */
   lazy val rootScope: ScalaRootScope = _root synchronized {
     if (isInvalid) {
-      isInSemantic = true
+      isAskingSemantic = true
       toSemanticed
-      isInSemantic = false
+      isAskingSemantic = false
     }
     _root
   }
@@ -195,4 +194,3 @@ object ScalaParserResult {
     pr
   }
 }
-

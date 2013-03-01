@@ -153,7 +153,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
   override def fastCheckParameters: Problem = {
     var fastCheckProblem: Problem = null
     if (searchHandle eq null) {
-      return null; //no refactoring, not params check
+      return null //no refactoring, not params check
     }
 
     val kind = searchHandle.kind
@@ -330,11 +330,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
     searchHandle.fo foreach {fo =>
       set.add(fo)
 
-      // * is there any symbol in this place not private?
-      val notLocal = samePlaceSyms exists {x => 
-        !x.hasFlag(Flags.PRIVATE)
-      }
-
+      // is there any symbol in this place not private?
+      val notLocal = samePlaceSyms exists {x => !x.hasFlag(Flags.PRIVATE)}
       if (notLocal) {
         val srcCp = cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE)
         if (srcCp ne null) {
@@ -493,47 +490,54 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       val root = workingCopy.rootScope
       val workingCopyFo = workingCopy.getSnapshot.getSource.getFileObject
       val global = workingCopy.global
-      import global._
+      
 
 
       if (root != ScalaRootScope.EMPTY) {
         val doc = GsfUtilities.getDocument(workingCopyFo, true)
-        try {
-          if (doc ne null) doc.readLock
+        global.askForResponse {() =>
+          import global._
+          try {
+            if (doc ne null) doc.readLock
 
-          if (samePlaceSymToDSimpleSig.isEmpty) {
-            samePlaceSymToDSimpleSig = samePlaceSyms map {case x: Symbol => (x, ScalaUtil.symSimpleSig(x))}
-          }
-
-
-          def isRef(sym: Symbol) = try {
-            lazy val overriddens = sym.allOverriddenSymbols
-            val mySig = ScalaUtil.symSimpleSig(sym)
-            val myQName = sym.fullName
-            samePlaceSymToDSimpleSig exists {
-              case (symx, sigx) if mySig == sigx =>
-                val qNamex = symx.fullName
-                if (myQName == qNamex) true
-                else overriddens exists {_.fullName == qNamex}
-              case _ => false
+            if (samePlaceSymToDSimpleSig.isEmpty) {
+              samePlaceSymToDSimpleSig = samePlaceSyms map {case x: Symbol => (x, ScalaUtil.symSimpleSig(x))}
             }
-          } catch {
-            case _: Throwable => false
-          }
 
-          val tokens = new HashSet[Token[_]]
-          for {(token, items) <- root.idTokenToItems
-               item <- items
-               sym = item.asInstanceOf[ScalaItem].symbol
-               // * tokens.add(token) should be last condition
-               if token.text.toString == sym.nameString && isRef(sym) && tokens.add(token)
-          } {
-            logger.info(workingCopyFo + ": find where used element " + sym.fullName)
-            rename(item.asInstanceOf[ScalaItem], sym.nameString, null, getString("UpdateLocalvar"), th)
-          }
 
-        } finally {
-          if (doc ne null) doc.readUnlock
+            def isRef(sym: Symbol) = try {
+              lazy val overriddens = sym.allOverriddenSymbols
+              val mySig = ScalaUtil.symSimpleSig(sym)
+              val myQName = sym.fullName
+              samePlaceSymToDSimpleSig exists {
+                case (symx, sigx) if mySig == sigx =>
+                  val qNamex = symx.fullName
+                  if (myQName == qNamex) true
+                  else overriddens exists {_.fullName == qNamex}
+                case _ => false
+              }
+            } catch {
+              case _: Throwable => false
+            }
+
+            val tokens = new HashSet[Token[_]]
+            for {
+              (token, items) <- root.idTokenToItems
+              item <- items
+              sym = item.asInstanceOf[ScalaItem].symbol
+              // * tokens.add(token) should be last condition
+              if token.text.toString == sym.nameString && isRef(sym) && tokens.add(token)
+            } {
+              logger.info(workingCopyFo + ": find where used element " + sym.fullName)
+              rename(item.asInstanceOf[ScalaItem], sym.nameString, null, getString("UpdateLocalvar"), th)
+            }
+
+          } finally {
+            if (doc ne null) doc.readUnlock
+          }
+        } get match {
+          case Left(_) =>
+          case Right(_) =>
         }
       } else {
         //System.out.println("Skipping file " + workingCopy.getFileObject());
@@ -575,8 +579,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
             }
             end = start
           }
-          val startPos = ces.createPositionRef(start, Bias.Forward);
-          val endPos = ces.createPositionRef(end, Bias.Forward);
+          val startPos = ces.createPositionRef(start, Bias.Forward)
+          val endPos = ces.createPositionRef(end, Bias.Forward)
           val diff = new Difference(Difference.Kind.CHANGE, startPos, endPos, "", "", desc) // NOI18N
           diffs += diff
         }

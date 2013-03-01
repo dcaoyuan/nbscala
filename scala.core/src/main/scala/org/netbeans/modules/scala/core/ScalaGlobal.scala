@@ -49,11 +49,11 @@ import org.openide.filesystems.FileRenameEvent
 import org.openide.filesystems.FileUtil
 import org.openide.filesystems.FileChangeListener
 import org.openide.util.RequestProcessor
+import org.netbeans.modules.scala.core.ast.ScalaAstVisitor
 import org.netbeans.modules.scala.core.ast.ScalaItems
 import org.netbeans.modules.scala.core.ast.ScalaDfns
 import org.netbeans.modules.scala.core.ast.ScalaRefs
 import org.netbeans.modules.scala.core.ast.ScalaRootScope
-import org.netbeans.modules.scala.core.ast.ScalaAstVisitor
 import org.netbeans.modules.scala.core.ast.ScalaUtils
 import org.netbeans.modules.scala.core.element.ScalaElements
 import org.netbeans.modules.scala.core.element.JavaElements
@@ -93,6 +93,7 @@ case class ErrorReporter(var errors: List[ScalaError] = Nil) extends Reporter {
 }
 
 class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String = "") extends Global(_settings, _reporter, projectName)
+                                                                                         with ScalaAstVisitor
                                                                                          with ScalaItems
                                                                                          with ScalaDfns
                                                                                          with ScalaRefs
@@ -107,14 +108,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
   private val log1 = Logger.getLogger(this.getClass.getName)
   
-  // Inner object inside a class is not singleton, so it's safe for each instance of ScalaGlobal,
-  // but, is it thread safe? http://lampsvn.epfl.ch/trac/scala/ticket/1591
-  private object scalaAstVisitor extends ScalaAstVisitor {
-    val global: ScalaGlobal.this.type = ScalaGlobal.this
-  }
-
   @volatile private var workingSource: Option[SourceFile] = None
-  var isCancelingSemantic = false
+  @volatile var isCancelingSemantic = false
 
   private def resetReporter {
     reporter match {
@@ -123,91 +118,86 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
   
-  def askForReLoad(srcFos: List[FileObject]) {
+  def askForReload(srcFiles: List[SourceFile]) {
     resetReporter
     
-    val srcFiles = srcFos map {fo =>
-      val sourceFile = ScalaSourceFile.sourceFileOf(fo)
-      sourceFile.refreshSnapshot
-      sourceFile
-    }
-
-    try {
-      val resp = new Response[Unit]
-      askReload(srcFiles, resp)
-      resp.get
-    } catch {
-      case ex: AssertionError =>
-        /**
-         * @Note: avoid scala nsc's assert error. Since global's
-         * symbol table may have been broken, we have to reset ScalaGlobal
-         * to clean this global
-         */
-        ScalaGlobal.resetLate(this, ex)
-      case ex: java.lang.Error => // avoid scala nsc's Error error
-      case ex: Throwable => // just ignore all ex
+    val resp = new Response[Unit]
+    askReload(srcFiles, resp)
+    resp.get match {
+      case Left(_) =>
+      case Right(ex) => ex match {
+          case _: AssertionError =>
+            /**
+             * @Note: avoid scala nsc's assert error. Since global's
+             * symbol table may have been broken, we have to reset ScalaGlobal
+             * to clean this global
+             */
+            ScalaGlobal.resetLate(this, ex)
+          case _: java.lang.Error => // avoid scala nsc's Error error
+          case _: Throwable => // just ignore all ex
+        }
     }
   }
 
-  def askForType(source: ScalaSourceFile, forceReload: Boolean) {
-    resetReporter
-    
-    try {
-      val typeResp = new Response[Tree]
-      askType(source, forceReload, typeResp)
-      typeResp.get
-    } catch {
-      case ex: AssertionError =>
-        /**
-         * @Note: avoid scala nsc's assert error. Since global's
-         * symbol table may have been broken, we have to reset ScalaGlobal
-         * to clean this global
-         */
-        ScalaGlobal.resetLate(this, ex)
-      case ex: java.lang.Error => // avoid scala nsc's Error error
-      case ex: Throwable => // just ignore all ex
-    }
-  }
-  
   /**
    * We should carefully design askForSemantic(.) and cancelSemantic(.) to make them thread safe,
    * so cancelSemantic could be called during askForSemantic and the rootScope is always that we want.
    */
-  def askForSemantic(source: ScalaSourceFile, forceReload: Boolean): ScalaRootScope = {
+  def askForSemantic(source: ScalaSourceFile): ScalaRootScope = {
     resetReporter
-    
+
+    askForReload(List(source))
+
     workingSource = Some(source)
     isCancelingSemantic = false
 
     qualToRecoveredType.clear
 
-    val res = try {
+    try {
       if (isCancelingSemantic) return ScalaRootScope.EMPTY
+      
       val typeResp = new Response[Tree]
-      askType(source, forceReload, typeResp)
-
+      askLoadedTyped(source, typeResp)
       if (isCancelingSemantic) return ScalaRootScope.EMPTY
-      typeResp.get
-
-      if (isCancelingSemantic) return ScalaRootScope.EMPTY
-      getSemanticRoot(source)
-    } catch {
-      case ex: AssertionError =>
-        /**
-         * @Note: avoid scala nsc's assert error. Since global's
-         * symbol table may have been broken, we have to reset ScalaGlobal
-         * to clean this global
-         */
-        ScalaGlobal.resetLate(this, ex)
-        ScalaRootScope.EMPTY
-      case ex: java.lang.Error => ScalaRootScope.EMPTY // avoid scala nsc's Error error
-      case ex: Throwable => ScalaRootScope.EMPTY // just ignore all ex
+      
+      typeResp.get match {
+        case Left(rootTree) => 
+          if (isCancelingSemantic) return ScalaRootScope.EMPTY
+          
+          askForSemanticRoot(source, rootTree)
+          
+        case Right(ex) => ex match { 
+            case _: AssertionError =>
+              /**
+               * @Note: avoid scala nsc's assert error. Since global's
+               * symbol table may have been broken, we have to reset ScalaGlobal
+               * to clean this global
+               */
+              ScalaGlobal.resetLate(this, ex)
+              ScalaRootScope.EMPTY
+            case _: java.lang.Error => ScalaRootScope.EMPTY // avoid scala nsc's Error error
+            case _: Throwable => ScalaRootScope.EMPTY // just ignore all ex
+          }
+      }
+      
+    } finally {
+      workingSource = None
     }
-
-    workingSource = None
-    res
   }
+    
   
+  private def askForSemanticRoot(source: ScalaSourceFile, rootTree: Tree): ScalaRootScope = {
+    askForResponse {() =>
+      val start = System.currentTimeMillis
+      val rootScope = astVisit(source, rootTree, source.tokenHierarchy)
+      log1.info("Visited " + source.file.file.getName + " in " + (System.currentTimeMillis - start) + "ms")
+      rootScope
+    } get match {
+      case Left(x) => x
+      case Right(ex) => ScalaRootScope.EMPTY
+    }
+  }
+    
   /**
    * @return will cancel
    */
@@ -268,23 +258,11 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
             })
         }
 
-        scalaAstVisitor.visit(unit, source.tokenHierarchy)
+        astVisit(source, unit.body, source.tokenHierarchy)
       case None => ScalaRootScope.EMPTY
     }
   }
   
-  private def getSemanticRoot(source: ScalaSourceFile): ScalaRootScope = {
-    val start = System.currentTimeMillis
-    getUnitOf(source) match {
-      case Some(unit) => 
-        val root = scalaAstVisitor.visit(unit, source.tokenHierarchy)
-        log1.info("Visited " + source.file.file.getName + " in " + (System.currentTimeMillis - start) + "ms")
-        root
-      case None => 
-        log1.warning("Tried to visit " + source.file.file.getName + ", but got no unit!")
-        ScalaRootScope.EMPTY
-    }
-  }
 }
 
 object ScalaGlobal {
@@ -525,7 +503,10 @@ object ScalaGlobal {
         srcCp.getRoots foreach ProjectResources.findAllSourcesOf("text/x-scala", scalaSrcs)
 
         // the reporter should be set previous, otherwise, no java source is resolved, may throw exception already.
-        global askForReLoad (javaSrcs ++= scalaSrcs).toList
+        
+        val srcFiles = (javaSrcs ++= scalaSrcs).toList map toSourceFile
+
+        global askForReload srcFiles
       }
     }
 
@@ -534,6 +515,11 @@ object ScalaGlobal {
     global
   }
 
+  private def toSourceFile(fo: FileObject): ScalaSourceFile = {
+    val sourceFile = ScalaSourceFile.sourceFileOf(fo)
+    sourceFile.refreshSnapshot
+    sourceFile
+  }
 
   private class SrcCpListener(global: ScalaGlobal, srcCp: ClassPath) extends FileChangeAdapter {
     val javaMimeType = "text/x-java"
@@ -547,7 +533,7 @@ object ScalaGlobal {
     def fileDataCreated(fe: FileEvent) {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
-        global askForReLoad List(fo)
+        global askForReload List(toSourceFile(fo))
       }
     }
 
@@ -555,7 +541,7 @@ object ScalaGlobal {
     def fileChanged(fe: FileEvent) {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
-        global askForReLoad List(fo)
+        global askForReload List(toSourceFile(fo))
       }
     }
 
@@ -563,7 +549,7 @@ object ScalaGlobal {
     def fileRenamed(fe: FileRenameEvent) {
       val fo = fe.getFile
       if (fo.getMIMEType == javaMimeType && isUnderSrcDir(fo) && (global ne null)) {
-        global askForReLoad List(fo)
+        global askForReload List(toSourceFile(fo))
       }
     }
 

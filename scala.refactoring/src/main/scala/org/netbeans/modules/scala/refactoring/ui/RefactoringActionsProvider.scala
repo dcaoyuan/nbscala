@@ -286,7 +286,6 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
         val th = ri.getSnapshot.getTokenHierarchy
         val root = pr.rootScope
         val global = pr.global
-        import global._
 
         /* val sorted = root.findItemsAt(th, caret) sortWith {(x1, x2) =>
          def weight(sym: Symbol) =
@@ -305,7 +304,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
         logger.info("Refactoring handle's token symbols: " + handle.samePlaceSymbols)
         
         // @todo ("FAILURE - can't refactor a reference identifier") ?
-        ui = createRefactoringUI(handle.asInstanceOf[ScalaItem], start, end, pr)
+        ui = createRefactoringUI(handle.asInstanceOf[global.ScalaItem], start, end, pr)
       } else {
         val itr = ri.getEmbeddings.iterator
         while (itr.hasNext) {

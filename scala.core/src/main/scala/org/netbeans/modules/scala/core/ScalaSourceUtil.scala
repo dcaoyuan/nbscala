@@ -505,9 +505,6 @@ object ScalaSourceUtil {
   private val TMPL_KINDS = Set(ElementKind.CLASS, ElementKind.MODULE)
 
   def getBinaryClassName(pr: ScalaParserResult, lineNumber: Int): String = {
-    val global = pr.global
-    import global._
-
     val root = pr.rootScope
     val fo = pr.getSnapshot.getSource.getFileObject
     val doc = pr.getSnapshot.getSource.getDocument(false).asInstanceOf[StyledDocument]
@@ -515,26 +512,35 @@ object ScalaSourceUtil {
     val offset = NbDocument.findLineOffset(doc, lineNumber - 1)
 
     var clazzName = ""
-    root.enclosingDfn(TMPL_KINDS, th, offset) foreach {case enclDfn: ScalaDfn =>
-        val sym = enclDfn.symbol
-        // "scalarun.Dog.$talk$1"
-        val fqn = new StringBuilder(sym.fullName('.'))
+    
+    val global = pr.global
+    import global._
+    askForResponse {() =>
+      root.enclosingDfn(TMPL_KINDS, th, offset) foreach {case enclDfn: ScalaDfn =>
+          val sym = enclDfn.symbol
+          // "scalarun.Dog.$talk$1"
+          val fqn = new StringBuilder(sym.fullName('.'))
 
-        // * getTopLevelClassName "scalarun.Dog"
-        val topSym = sym.enclosingTopLevelClass
-        val topClzName = topSym.fullName('.')
+          // * getTopLevelClassName "scalarun.Dog"
+          val topSym = sym.enclosingTopLevelClass
+          val topClzName = topSym.fullName('.')
 
-        // "scalarun.Dog$$talk$1"
-        for (i <- topClzName.length until fqn.length if fqn.charAt(i) == '.') {
-          fqn.setCharAt(i, '$')
-        }
+          // "scalarun.Dog$$talk$1"
+          for (i <- topClzName.length until fqn.length if fqn.charAt(i) == '.') {
+            fqn.setCharAt(i, '$')
+          }
 
-        // * According to Symbol#kindString, an object template isModuleClass()
-        // * trait's symbol name has been added "$class" by compiler
-        if (topSym.isModuleClass) {
-          fqn.append("$")
-        }
-        clazzName = fqn.toString
+          // * According to Symbol#kindString, an object template isModuleClass()
+          // * trait's symbol name has been added "$class" by compiler
+          if (topSym.isModuleClass) {
+            fqn.append("$")
+          }
+          clazzName = fqn.toString
+      }
+      
+    } get match {
+      case Left(_) =>
+      case Right(_) =>
     }
 
     if (clazzName.length == 0) return null
@@ -584,7 +590,7 @@ object ScalaSourceUtil {
     clazzName
   }
 
-  @deprecated
+  @deprecated("For reference only", "1.6.0")
   def getBinaryClassName_old(pr: ScalaParserResult, offset: Int): String = {
     val root = pr.rootScopeForDebug
     val th = pr.getSnapshot.getTokenHierarchy

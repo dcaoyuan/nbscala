@@ -62,7 +62,7 @@ abstract class ScalaSymbolResolver {
     // @todo
     val srcFile = ScalaSourceFile.sourceFileOf(null)
     val th = TokenHierarchy.create(sb.toString, ScalaTokenId.language)
-    val rootScope = global.askForSemantic(srcFile, true)
+    val rootScope = global.askForSemantic(srcFile)
     
     val lastDot = fqn.lastIndexOf('.')
     val lastPart = if (lastDot == -1) fqn else fqn.substring(lastDot + 1, fqn.length)

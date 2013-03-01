@@ -53,7 +53,7 @@ import org.openide.util.Exceptions
 
 import scala.reflect.internal.Flags
 
-import org.netbeans.api.language.util.ast.{AstElementHandle}
+import org.netbeans.api.language.util.ast.AstElementHandle
 import org.netbeans.modules.scala.core.{JavaSourceUtil, ScalaGlobal, ScalaSourceUtil, ScalaMimeResolver}
 
 
@@ -242,7 +242,7 @@ trait ScalaElements {self: ScalaGlobal =>
              * position via the AST Tree, or use a tree visitor to update
              * all symbols Position
              */
-            val root = askForSemantic(srcFile, true)
+            val root = askForSemantic(srcFile)
             root.findDfnMatched(symbol) match {
               case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
               case None =>
@@ -265,7 +265,9 @@ trait ScalaElements {self: ScalaGlobal =>
         case _: Throwable => false
       }
     }
-    def isDeprecated_=(b: Boolean) {}
+    def isDeprecated_=(b: Boolean) {
+      
+    }
 
     def isInherited = _isInherited
     def isInherited_=(b: Boolean) {
@@ -273,7 +275,9 @@ trait ScalaElements {self: ScalaGlobal =>
     }
 
     def isEmphasize = !isInherited
-    def isEmphasize_=(b: Boolean) {}
+    def isEmphasize_=(b: Boolean) {
+      
+    }
 
     def isSmart = _isSmart
     def isSmart_=(b: Boolean) {
@@ -294,18 +298,11 @@ trait ScalaElements {self: ScalaGlobal =>
     }
 
     def htmlFormat(fm: HtmlFormatter) {
-      ScalaUtil.htmlFormat(symbol, fm)
+      ScalaUtil.askForHtmlFormat(symbol, fm)
     }
 
     def sigFormat(fm: HtmlFormatter) {
-      try {
-        fm.appendHtml("<i>")
-        fm.appendText(symbol.enclClass.fullName)
-        fm.appendHtml("</i><p>")
-        ScalaUtil.htmlDef(symbol, fm)
-      } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(self, ex)
-      }
+      ScalaUtil.askForHtmlDef(symbol, fm)
     }
 
   }

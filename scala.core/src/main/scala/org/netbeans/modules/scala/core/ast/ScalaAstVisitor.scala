@@ -39,14 +39,18 @@
 package org.netbeans.modules.scala.core.ast
 
 import java.io.File
-import org.netbeans.api.lexer.{Token, TokenId, TokenHierarchy, TokenSequence}
+import org.netbeans.api.lexer.Token
+import org.netbeans.api.lexer.TokenId
+import org.netbeans.api.lexer.TokenHierarchy
+import org.netbeans.api.lexer.TokenSequence
 import org.netbeans.modules.csl.api.{ElementKind}
-import org.openide.filesystems.{FileObject, FileUtil}
-
-import org.netbeans.api.language.util.ast.{AstItem, AstScope}
+import org.openide.filesystems.FileObject
+import org.openide.filesystems.FileUtil
+import org.netbeans.api.language.util.ast.AstItem
+import org.netbeans.api.language.util.ast.AstScope
 import org.netbeans.modules.scala.core.ScalaGlobal
-import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
-
+import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
+import org.netbeans.modules.scala.core.lexer.ScalaTokenId
 import scala.reflect.internal.Flags
 import scala.reflect.internal.Flags._
 import scala.reflect.internal.util.{SourceFile, OffsetPosition}
@@ -61,74 +65,57 @@ import scala.collection.mutable.{Stack, HashSet, HashMap}
  * 
  * @author Caoyuan Deng
  */
-abstract class ScalaAstVisitor {
+trait ScalaAstVisitor {self: ScalaGlobal =>
 
-  val global: ScalaGlobal
-  import global._
-
-  private val EOL = System.getProperty("line.separator", "\n")
-
-  private val debug = false
-  private val scopes = new Stack[AstScope]
-  private val owners = new Stack[Symbol]
-  private var rootScope: ScalaRootScope = _
-
-  private var fo: Option[FileObject] = _
-  private var th: TokenHierarchy[_] = _
-  private var srcFile: SourceFile = _
-  private var docLength: Int = _
-
-  def visit(unit: CompilationUnit, th: TokenHierarchy[_]): ScalaRootScope = {
-    this.th = th
-    this.srcFile = unit.source
-    this.docLength = srcFile.content.length
-    this.fo = if (srcFile ne null) {
-      val file = new File(srcFile.path)
-      if ((file ne null) && file.exists) { // it's a real file instead of archive file
-        FileUtil.toFileObject(file) match {
-          case null => None
-          case x => Some(x)
-        }
-      } else None
-    } else None
-
-    //println(global.qualToRecoveredType)
-
-    scopes.clear
-    rootScope = ScalaRootScope(Some(unit), getBoundsTokens(0, docLength))
-    scopes push rootScope
-
-    owners.clear
-    owners push rootMirror.RootClass
-
-    treeTraverser(unit.body)
-
-    rootScope
+  /**
+   * call this method only via askForResponse to avoid race condition upon interactive presnetation compiler
+   */
+  protected def astVisit(srcFile: SourceFile, rootTree: Tree, th: TokenHierarchy[_]): ScalaRootScope = {
+    new treeTraverser(srcFile, rootTree, th).apply()
   }
 
-  private final object treeTraverser {
+  private class treeTraverser(srcFile: SourceFile, rootTree: Tree, th: TokenHierarchy[_]) {
+    private val debug = false
+
+    private val docLength = srcFile.content.length
+    private val fo = {
+      val file = new File(srcFile.path)
+      if (file != null && file.exists) { // it's a real file instead of archive file
+        Option(FileUtil.toFileObject(file))
+      } else None
+    }
+
+    private val rootScope: ScalaRootScope = ScalaRootScope(getBoundsTokens(0, docLength))
+    private val scopes = new Stack[AstScope]
+    private val owners = new Stack[Symbol]
+
     private val visited = new HashSet[Tree]
     private val treeToKnownType = new HashMap[Tree, Type]
 
-    def apply[T <: Tree](tree: T): T = {
-      traverse(tree)
+    def apply(): ScalaRootScope = {
+      //println(qualToRecoveredType)
+
+      scopes push rootScope
+      owners push rootMirror.RootClass
+
+      traverse(rootTree)
       
-      // * clear after visit to free memory
+      // clear after visit to free memory
       visited.clear
       treeToKnownType.clear
 
       if (debug) rootScope.debugPrintTokens(th)
 
-      tree
+      rootScope
     }
 
-    private def traverse(tree: Tree): Unit = {
-      if (global.isCancelingSemantic) return
-      if (!visited.add(tree)) return // has visited
+    private def traverse(tree: Tree) {
+      if (isCancelingSemantic) return
+      if (!visited.add(tree))  return // has visited
 
       tree match {
         case EmptyTree =>
-          ;
+          
         case PackageDef(pid, stats) =>
           val scope = ScalaScope(getBoundsTokens(tree))
           scopes.top.addScope(scope)
@@ -136,7 +123,7 @@ abstract class ScalaAstVisitor {
           val sym = tree.symbol
           withIdToken(getIdToken(tree)) {token =>
             val dfn = ScalaDfn(sym, token, ElementKind.PACKAGE, scope, fo)
-            if (scopes.top.addDfn(dfn)) info("\tAdded: ", dfn)
+            if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
 
           atOwner(sym.moduleClass, scope) {
@@ -153,7 +140,7 @@ abstract class ScalaAstVisitor {
           val sym = tree.symbol
           withIdToken(getIdToken(tree)) {token =>
             val dfn = ScalaDfn(sym, token, ElementKind.CLASS, scope, fo)
-            if (scopes.top.addDfn(dfn)) info("\tAdded: ", dfn)
+            if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
 
           atOwner(sym, scope) {
@@ -170,7 +157,7 @@ abstract class ScalaAstVisitor {
           val sym = tree.symbol
           withIdToken(getIdToken(tree)) {token =>
             val dfn = ScalaDfn(sym, token, ElementKind.MODULE, scope, fo)
-            if (scopes.top.addDfn(dfn)) info("\tAdded: ", dfn)
+            if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
 
           atOwner(sym.moduleClass, scope) {
@@ -188,7 +175,7 @@ abstract class ScalaAstVisitor {
           if (!isTupleClass(tpt.symbol)) {
             withIdToken(getIdToken(tree, name.decode)) {token =>
               val dfn = ScalaDfn(sym, token, ElementKind.OTHER, scope, fo)
-              if (scopes.top.addDfn(dfn)) info("\tAdded: ", dfn)
+              if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
             }
           }
 
@@ -208,7 +195,7 @@ abstract class ScalaAstVisitor {
           val sym = tree.symbol
           withIdToken(getIdToken(tree)) {token =>
             val dfn = ScalaDfn(sym, token, kind, scope, fo)
-            if (scopes.top.addDfn(dfn)) info("\tAdded: ", dfn)
+            if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
 
           atOwner(sym, scope) {
@@ -229,7 +216,7 @@ abstract class ScalaAstVisitor {
             if (!sym.hasFlag(Flags.SYNTHETIC)) {
               withIdToken(getIdToken(tree, name.decode)) {token =>
                 val dfn = ScalaDfn(sym, token, ElementKind.CLASS, scope, fo)
-                if (scopes.top.addDfn(dfn)) info("\tAdded: ", dfn)
+                if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
               }
             }
           }
@@ -246,13 +233,13 @@ abstract class ScalaAstVisitor {
                   val loSym = loTpe.typeSymbol
                   withIdToken(getIdToken(lo, loSym.nameString)) {token =>
                     val loRef = ScalaRef(loSym, token, ElementKind.CLASS, fo)
-                    if (scopes.top.addRef(loRef)) info("\tAdded: ", loRef)
+                    if (scopes.top.addRef(loRef)) logInfo("\tAdded: ", loRef)
                   }
 
                   val hiSym = hiTpe.typeSymbol
                   withIdToken(getIdToken(hi, hiSym.nameString)) {token =>
                     val hiRef = ScalaRef(hiSym, token, ElementKind.CLASS, fo)
-                    if (scopes.top.addRef(hiRef)) info("\tAdded: ", hiRef)
+                    if (scopes.top.addRef(hiRef)) logInfo("\tAdded: ", hiRef)
                   }
                 case _ => traverse(rhs)
               }
@@ -279,7 +266,7 @@ abstract class ScalaAstVisitor {
           if (qualSym ne null) {
             withIdToken(getIdToken(qual)) {token =>
               val ref = ScalaRef(qualSym, token, if (qualSym.hasFlag(Flags.PACKAGE)) ElementKind.PACKAGE else ElementKind.OTHER, fo)
-              if (scopes.top.addRef(ref)) info("\tAdded: ", ref)
+              if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
             }
           }
 
@@ -290,7 +277,7 @@ abstract class ScalaAstVisitor {
               withIdToken(getIdToken(tree, nme.WILDCARD.decode)) {token =>
                 val ref = ScalaRef(qualSym, token, ElementKind.OTHER, fo)
                 if (scopes.top.addRef(ref)) {
-                  info("\tAdded: ", ref)
+                  logInfo("\tAdded: ", ref)
                   rootScope putImportingItem ref
                 }
               }
@@ -301,7 +288,7 @@ abstract class ScalaAstVisitor {
                 withIdToken(getIdToken(tree, from.decode)) {idToken =>
                   val ref = ScalaRef(xsym, idToken, ElementKind.OTHER, fo)
                   if (scopes.top.addRef(ref)) {
-                    info("\tAdded: ", ref)
+                    logInfo("\tAdded: ", ref)
                     rootScope putImportingItem ref
                   }
                 }
@@ -311,7 +298,7 @@ abstract class ScalaAstVisitor {
                   withIdToken(getIdToken(tree, to.decode)) {token =>
                     val ref = ScalaRef(ysym, token, ElementKind.OTHER, fo)
                     if (scopes.top.addRef(ref)) {
-                      info("\tAdded: ", ref)
+                      logInfo("\tAdded: ", ref)
                       rootScope putImportingItem ref
                     }
                   }
@@ -343,7 +330,7 @@ abstract class ScalaAstVisitor {
           // * "case c => println(c)", will define a bind val "c"
           withIdToken(getIdToken(tree)) {token =>
             val dfn = ScalaDfn(tree.symbol, token, ElementKind.VARIABLE, scope, fo)
-            if (scopes.top.addDfn(dfn)) info("\tAdded: ", dfn)
+            if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
 
           traverse(body)
@@ -382,7 +369,7 @@ abstract class ScalaAstVisitor {
           if (sym ne null) {
             withIdToken(getIdToken(tree, "super")) {token =>
               val ref = ScalaRef(sym, token, ElementKind.OTHER, fo)
-              if (scopes.top.addRef(ref)) info("\tAdded: ", ref)
+              if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
             }
           }
 
@@ -391,7 +378,7 @@ abstract class ScalaAstVisitor {
           if (sym ne null) {
             withIdToken(getIdToken(tree, "this")) {token =>
               val ref = ScalaRef(sym, token, ElementKind.OTHER, fo)
-              if (scopes.top.addRef(ref)) info("\tAdded: ", ref)
+              if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
             }
           }
 
@@ -428,9 +415,9 @@ abstract class ScalaAstVisitor {
                  * to get the proper resultType, we'll check if the qualierMaybeType isDefined
                  */
                 if ((sym ne null) && !sym.exists) {
-                  global.recoveredType(tree) foreach {tpex => ref.resultType = tpex}
+                  recoveredType(tree) foreach {tpex => ref.resultType = tpex}
                 }
-                if (scopes.top.addRef(ref)) info("\tAdded: ", ref)
+                if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
               }
             }
           }
@@ -454,10 +441,10 @@ abstract class ScalaAstVisitor {
                * to get the proper resultType, we'll check if the qualierMaybeType isDefined
                */
               if (!sym1.exists) {
-                global.recoveredType(tree) foreach {tpex => ref.resultType = tpex}
+                recoveredType(tree) foreach {tpex => ref.resultType = tpex}
               }
               // * set ref.resultType before addRef to scope, otherwise, it may not be added if there is same symbol had been added
-              if (scopes.top.addRef(ref)) info("\tAdded: ", ref)
+              if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
             }
           }
 
@@ -491,7 +478,7 @@ abstract class ScalaAstVisitor {
                   case _ =>
                     withIdToken(getIdToken(tree)) {token =>
                       val ref = ScalaRef(sym, token, ElementKind.CLASS, fo)
-                      if (scopes.top.addRef(ref)) info("\tAdded: ", ref)
+                      if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
                     }
                 }
               }
@@ -547,6 +534,7 @@ abstract class ScalaAstVisitor {
         case Parens(ts) =>
           traverseTrees(ts)
         case _ =>
+          logInfo("Unknow tree: " + tree)
       }
     }
 
@@ -603,7 +591,7 @@ abstract class ScalaAstVisitor {
       
       withIdToken(idToken) {token =>
         val ref = ScalaRef(sym, token, ElementKind.CLASS, fo)
-        if (scopes.top.addRef(ref)) info("\tAdded: ", ref)
+        if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
       }
 
       // if tpe is TypeRef, we need to add args type
@@ -625,7 +613,7 @@ abstract class ScalaAstVisitor {
 
       withIdToken(idToken) {token =>
         val ref = ScalaRef(sym, token, ElementKind.CLASS, fo)
-        if (scopes.top.addRef(ref)) info("\tAdded: ", ref)
+        if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
       }
 
       // if tpe is TypeRef, we need to add args type
@@ -635,309 +623,310 @@ abstract class ScalaAstVisitor {
       }
     }
     
-  }
-
-  // ---- Helper methods
-
-  /**
-   * The symbol with name <code>name</code> imported from import clause <code>tree</code>.
-   * We'll find class/trait instead of object first.
-   * @bug in scala compiler? why name is always TermName? which means it's object instead of class/trait
-   */
-  private def importedSymbol(qual: Tree, xname: Name, yname: Name): Symbol = {
-    val targetName = xname.toTermName
-    val members = try {
-      qual.tpe.members
-    } catch {
-      case ex: Throwable => EmptyScope
-    }
-
-    val result = members filter {_.name.toTermName == targetName}
-
-    // * prefer type over object
-    result find ScalaUtil.isProperType getOrElse result.headOption.getOrElse(null)
-  }
-
-  private def withIdToken(idToken: Option[Token[TokenId]])(op: Token[TokenId] => Unit) {
-    if (idToken.isDefined) op(idToken.get)
-  }
-
-  /**
-   * @Note: nameNode may contains preceding void productions, and may also contains
-   * following void productions, but nameString has stripped the void productions,
-   * so we should adjust nameRange according to name and its length.
-   */
-  private def getIdTokenViaPos(pos: Position, knownName: String = "", forward: Int = -1, sym: Symbol): Option[Token[TokenId]] = {
-    if (sym eq null) return None
-
-    if (sym.hasFlag(Flags.SYNTHETIC)) {
-      // @todo
-    }
-
-    /** Do not use symbol.nameString or idString) here, for example, a constructor Dog()'s nameString maybe "this" */
-    val name = if (knownName.length > 0) knownName else (if (sym != NoSymbol) sym.rawname.decode else "")
-    if (name.length == 0) return None
-
-    val offset = if (pos.isDefined) pos.startOrPoint else return None
-
-    var endOffset = if (pos.isDefined) pos.endOrPoint else -1
-    if (forward != -1) {
-      endOffset = math.max(endOffset, offset + forward)
-    }
-
-    val ts = ScalaLexUtil.getTokenSequence(th, offset) getOrElse {return None}
-    ts.move(offset)
-    if (!ts.moveNext && !ts.movePrevious) {
-      assert(false, "Should not happen!")
-    }
-
-    val token = findIdTokenForward(ts, name, offset, endOffset)
     
-    token match {
-      case Some(x) if x.isFlyweight => Some(ts.offsetToken)
-      case x => x
+    // ---- Helper methods
+
+    /**
+     * The symbol with name <code>name</code> imported from import clause <code>tree</code>.
+     * We'll find class/trait instead of object first.
+     * @bug in scala compiler? why name is always TermName? which means it's object instead of class/trait
+     */
+    private def importedSymbol(qual: Tree, xname: Name, yname: Name): Symbol = {
+      val targetName = xname.toTermName
+      val members = try {
+        qual.tpe.members
+      } catch {
+        case ex: Throwable => EmptyScope
+      }
+
+      val result = members filter {_.name.toTermName == targetName}
+
+      // * prefer type over object
+      result find ScalaUtil.isProperType getOrElse result.headOption.getOrElse(null)
     }
-  }
 
-  /**
-   * @Note: nameNode may contains preceding void productions, and may also contains
-   * following void productions, but nameString has stripped the void productions,
-   * so we should adjust nameRange according to name and its length.
-   */
-  private def getIdToken(tree: Tree, knownName: String = "", forward: Int = -1, asym: Symbol = null): Option[Token[TokenId]] = {
-    val sym = if (asym ne null) asym else tree.symbol
-    if (sym eq null) return None
-
-    if (sym.hasFlag(Flags.SYNTHETIC)) {
-      // @todo
+    private def withIdToken(idToken: Option[Token[TokenId]])(op: Token[TokenId] => Unit) {
+      if (idToken.isDefined) op(idToken.get)
     }
 
-    /** Do not use symbol.nameString or idString) here, for example, a constructor Dog()'s nameString maybe "this" */
-    val name = if (knownName.length > 0) knownName else (if (sym != NoSymbol) sym.rawname.decode else "")
-    if (name.length == 0) return None
+    /**
+     * @Note: nameNode may contains preceding void productions, and may also contains
+     * followed void productions, but nameString has stripped the void productions,
+     * so we should adjust nameRange according to name and its length.
+     */
+    private def getIdTokenViaPos(pos: Position, knownName: String = "", forward: Int = -1, sym: Symbol): Option[Token[TokenId]] = {
+      if (sym eq null) return None
 
-    val pos = tree.pos
-    val offset = if (pos.isDefined) pos.startOrPoint else return None
+      if (sym.hasFlag(Flags.SYNTHETIC)) {
+        // @todo
+      }
 
-    var endOffset = if (pos.isDefined) pos.endOrPoint else -1
-    if (forward != -1) {
-      endOffset = math.max(endOffset, offset + forward)
-    }
+      /** Do not use symbol.nameString or idString) here, for example, a constructor Dog()'s nameString maybe "this" */
+      val name = if (knownName.length > 0) knownName else (if (sym != NoSymbol) sym.rawname.decode else "")
+      if (name.length == 0) return None
+
+      val offset = if (pos.isDefined) pos.startOrPoint else return None
+
+      var endOffset = if (pos.isDefined) pos.endOrPoint else -1
+      if (forward != -1) {
+        endOffset = math.max(endOffset, offset + forward)
+      }
+
+      val ts = ScalaLexUtil.getTokenSequence(th, offset) getOrElse {return None}
+      ts.move(offset)
+      if (!ts.moveNext && !ts.movePrevious) {
+        assert(false, "Should not happen!")
+      }
+
+      val token = findIdTokenForward(ts, name, offset, endOffset)
     
-    val ts = ScalaLexUtil.getTokenSequence(th, offset) getOrElse {return None} 
-    ts.move(offset)
-    if (!ts.moveNext && !ts.movePrevious) {
-      assert(false, "Should not happen!")
-    }
-
-    val token = tree match {
-      case _: This => ScalaLexUtil.findNext(ts, ScalaTokenId.This)
-      case _: Super => ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
-      case _ if name == "this" => ScalaLexUtil.findNext(ts, ScalaTokenId.This)
-      case _ if name == "super" => ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
-      case _ if name == "expected" => Some(ts.token)
-      case _: ValDef if sym hasFlag SYNTHETIC =>
-        // * is it a placeholder '_' token ?
-        ScalaLexUtil.findNext(ts, ScalaTokenId.Wild) find {_.offset(th) <= endOffset}
-        
-      case _: Select if name == "apply" =>
-        // * for Select tree that is `apple` call, will look forward for the nearest id token
-        //val content = getContent(offset, endOffset)
-        ScalaLexUtil.findNextIn(ts, ScalaLexUtil.PotentialIdTokens)
-
-      case _: Select if endOffset > 0 =>
-        // * for Select tree, will look backward from endOffset
-        ts.move(endOffset)
-        findIdTokenBackward(ts, name, offset, endOffset) match {
-          case None =>
-            // * bug in scalac, wrong RangePosition for "list filter {...}", the range only contains "list"
-            ts.move(endOffset)
-            if (ts.moveNext && ts.movePrevious) {
-              val end = math.min(endOffset + 100, docLength - 1)
-              findIdTokenForward(ts, name, endOffset, end)
-            } else None
-          case x => x
-        }
-
-      case _: Import =>
-        //println("import tree content=" + getContent(offset, endOffset) + ", name=" + name)
-        ts.move(endOffset)
-        findIdTokenBackward(ts, name, offset, endOffset)
-        
-      case _ => findIdTokenForward(ts, name, offset, endOffset)
-    }
-
-    token match {
-      case Some(x) if x.isFlyweight => Some(ts.offsetToken)
-      case x => x
-    }
-  }
-
-  private def findIdTokenForward(ts: TokenSequence[TokenId], name: String, offset: Int, endOffset: Int): Option[Token[TokenId]] = {
-    var token = ScalaLexUtil.findNextIn(ts, ScalaLexUtil.PotentialIdTokens)
-    var curr = offset + token.get.length
-    while (token.isDefined && !tokenNameEquals(token.get, name) && curr <= endOffset) {
-      token = if (ts.moveNext) {
-        ScalaLexUtil.findNextIn(ts, ScalaLexUtil.PotentialIdTokens)
-      } else None
-      if (token.isDefined) curr = ts.offset + token.get.length
-    }
-
-    token match {
-      case Some(x) if tokenNameEquals(x, name) => token
-      case _ => None
-    }
-  }
-
-  private def findIdTokenBackward(ts: TokenSequence[TokenId], name: String, offset: Int, endOffset: Int): Option[Token[TokenId]] = {
-    var token = if (ts.movePrevious) {
-      ScalaLexUtil.findPreviousIn(ts, ScalaLexUtil.PotentialIdTokens)
-    } else None
-    var curr = endOffset
-    while (token.isDefined && !tokenNameEquals(token.get, name) && curr >= offset) {
-      token = if (ts.movePrevious) {
-        ScalaLexUtil.findPreviousIn(ts, ScalaLexUtil.PotentialIdTokens)
-      } else None
-      if (token.isDefined) curr = ts.offset
-    }
-
-    token match {
-      case Some(x) if tokenNameEquals(x, name) => token
-      case _ => None
-    }
-  }
-  
-  private def tokenNameEquals(token: Token[_], name: String): Boolean = {
-    val text = token.text.toString
-    token.id match {
-      case ScalaTokenId.SymbolLiteral => text.substring(1, text.length - 1) == name // strip '`'
-      case ScalaTokenId.LArrow if name == "foreach" || name == "map" => true
-      case ScalaTokenId.Identifier if name == "apply" || name.startsWith("<error") => true // return the first matched identifier token
-      case _ if name.endsWith("_=") => text == name || text + "_=" == name
-      case _ if name == "Sequence"  => text == name || text == "Seq" // Seq may have symbol name "Sequence"
-      case _ => text == name
-    }
-  }
-
-  private def getContent(offset: Int, endOffset: Int): CharSequence = {
-    if (endOffset > offset && offset > -1) {
-      srcFile.content.subSequence(offset, endOffset)
-    } else ""
-  }
-
-  private def getBoundsTokens(offset: Int, endOffset: Int): Array[Token[TokenId]] = {
-    Array(getBoundsToken(offset).getOrElse(null), getBoundsEndToken(endOffset).getOrElse(null))
-  }
-
-  private def getBoundsTokens(tree: Tree): Array[Token[TokenId]] = {
-    val pos = tree.pos
-    val (offset, endOffset) = if (tree.pos.isDefined) {
-      (pos.startOrPoint, pos.endOrPoint)
-    } else (-1, -1)
-    
-    getBoundsTokens(offset, endOffset)
-  }
-  
-  private def getBoundsToken(offset: Int): Option[Token[TokenId]]  = {
-    if (offset < 0) return None
-
-    val ts = ScalaLexUtil.getTokenSequence(th, offset).getOrElse(return None)
-    ts.move(offset)
-    if (!ts.moveNext && !ts.movePrevious) {
-      assert(false, "Should not happen!")
-    }
-
-    val startToken = ScalaLexUtil.findPreviousNoWsNoComment(ts) match {
-      case Some(x) if x.isFlyweight => Some(ts.offsetToken)
-      case x => x
-    }
-
-    if (startToken == None) {
-      println("null start token(" + offset + ")")
-    }
-
-    startToken
-  }
-
-  private def getBoundsEndToken(endOffset: Int): Option[Token[TokenId]] = {
-    if (endOffset == -1) return None
-
-    val ts = ScalaLexUtil.getTokenSequence(th, endOffset).getOrElse{return None}
-    ts.move(endOffset)
-    if (!ts.movePrevious && !ts.moveNext) {
-      assert(false, "Should not happen!")
-    }
-    
-    val endToken = ScalaLexUtil.findPreviousNoWsNoComment(ts) match {
-      case Some(x) if x.isFlyweight => Some(ts.offsetToken)
-      case x => x
-    }
-
-    endToken
-  }
-
-  private def info(message: String): Unit = {
-    if (!debug) return
-
-    println(message)
-  }
-
-  private def info(message: String, item: AstItem): Unit = {
-    if (!debug) return
-
-    print(message)
-    println(item)
-  }
-
-  private def debugPrintAstPath(tree: Tree): Unit = {
-    if (!debug) {
-      return
-    }
-
-    val idTokenStr = getIdToken(tree) match {
-      case None => "<null>"
-      case Some(x) => x.text.toString
-    }
-
-    val symbol = tree.symbol
-    val symbolStr = if (symbol eq null) "<null>" else symbol.toString
-
-    val pos = tree.pos
-
-    println("(" + pos.line + ":" + pos.column + ")" + ", idToken: " + idTokenStr + ", symbol: " + symbolStr)
-  }
-
-  /**
-   * Used when endOffset of tree is not available.
-   * @Note from scala-2.8.x, the endOffset has been added, just keep this method
-   * here for reference.
-   */
-  private def setBoundsEndToken(fromScope: AstScope) {
-    assert(fromScope.isScopesSorted == false)
-
-    val children = fromScope.subScopes
-    val itr = children.iterator
-    var curr = if (itr.hasNext) itr.next else null
-    while (curr ne null) {
-      if (itr.hasNext) {
-        val next = itr.next
-        val offset = next.boundsOffset(th)
-        if (offset != -1) {
-          val endToken = getBoundsEndToken(offset - 1)
-          curr.boundsEndToken = endToken
-        } else {
-          println("Scope without start token: " + next)
-        }
-        curr = next
-      } else {
-        curr.parent match {
-          case Some(x) => curr.boundsEndToken = x.boundsEndToken
-          case None =>
-        }
-        curr = null
+      token match {
+        case Some(x) if x.isFlyweight => Some(ts.offsetToken)
+        case x => x
       }
     }
 
-    children foreach setBoundsEndToken
+    /**
+     * @Note: nameNode may contains preceding void productions, and may also contains
+     * following void productions, but nameString has stripped the void productions,
+     * so we should adjust nameRange according to name and its length.
+     */
+    private def getIdToken(tree: Tree, knownName: String = "", forward: Int = -1, asym: Symbol = null): Option[Token[TokenId]] = {
+      val sym = if (asym ne null) asym else tree.symbol
+      if (sym eq null) return None
+
+      if (sym.hasFlag(Flags.SYNTHETIC)) {
+        // @todo
+      }
+
+      /** Do not use symbol.nameString or idString) here, for example, a constructor Dog()'s nameString maybe "this" */
+      val name = if (knownName.length > 0) knownName else (if (sym != NoSymbol) sym.rawname.decode else "")
+      if (name.length == 0) return None
+
+      val pos = tree.pos
+      val offset = if (pos.isDefined) pos.startOrPoint else return None
+
+      var endOffset = if (pos.isDefined) pos.endOrPoint else -1
+      if (forward != -1) {
+        endOffset = math.max(endOffset, offset + forward)
+      }
+    
+      val ts = ScalaLexUtil.getTokenSequence(th, offset) getOrElse {return None} 
+      ts.move(offset)
+      if (!ts.moveNext && !ts.movePrevious) {
+        assert(false, "Should not happen!")
+      }
+
+      val token = tree match {
+        case _: This => ScalaLexUtil.findNext(ts, ScalaTokenId.This)
+        case _: Super => ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
+        case _ if name == "this" => ScalaLexUtil.findNext(ts, ScalaTokenId.This)
+        case _ if name == "super" => ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
+        case _ if name == "expected" => Some(ts.token)
+        case _: ValDef if sym hasFlag SYNTHETIC =>
+          // * is it a placeholder '_' token ?
+          ScalaLexUtil.findNext(ts, ScalaTokenId.Wild) find {_.offset(th) <= endOffset}
+        
+        case _: Select if name == "apply" =>
+          // * for Select tree that is `apple` call, will look forward for the nearest id token
+          //val content = getContent(offset, endOffset)
+          ScalaLexUtil.findNextIn(ts, ScalaLexUtil.PotentialIdTokens)
+
+        case _: Select if endOffset > 0 =>
+          // * for Select tree, will look backward from endOffset
+          ts.move(endOffset)
+          findIdTokenBackward(ts, name, offset, endOffset) match {
+            case None =>
+              // * bug in scalac, wrong RangePosition for "list filter {...}", the range only contains "list"
+              ts.move(endOffset)
+              if (ts.moveNext && ts.movePrevious) {
+                val end = math.min(endOffset + 100, docLength - 1)
+                findIdTokenForward(ts, name, endOffset, end)
+              } else None
+            case x => x
+          }
+
+        case _: Import =>
+          //println("import tree content=" + getContent(offset, endOffset) + ", name=" + name)
+          ts.move(endOffset)
+          findIdTokenBackward(ts, name, offset, endOffset)
+        
+        case _ => findIdTokenForward(ts, name, offset, endOffset)
+      }
+
+      token match {
+        case Some(x) if x.isFlyweight => Some(ts.offsetToken)
+        case x => x
+      }
+    }
+
+    private def findIdTokenForward(ts: TokenSequence[TokenId], name: String, offset: Int, endOffset: Int): Option[Token[TokenId]] = {
+      var token = ScalaLexUtil.findNextIn(ts, ScalaLexUtil.PotentialIdTokens)
+      var curr = offset + token.get.length
+      while (token.isDefined && !tokenNameEquals(token.get, name) && curr <= endOffset) {
+        token = if (ts.moveNext) {
+          ScalaLexUtil.findNextIn(ts, ScalaLexUtil.PotentialIdTokens)
+        } else None
+        if (token.isDefined) curr = ts.offset + token.get.length
+      }
+
+      token match {
+        case Some(x) if tokenNameEquals(x, name) => token
+        case _ => None
+      }
+    }
+
+    private def findIdTokenBackward(ts: TokenSequence[TokenId], name: String, offset: Int, endOffset: Int): Option[Token[TokenId]] = {
+      var token = if (ts.movePrevious) {
+        ScalaLexUtil.findPreviousIn(ts, ScalaLexUtil.PotentialIdTokens)
+      } else None
+      var curr = endOffset
+      while (token.isDefined && !tokenNameEquals(token.get, name) && curr >= offset) {
+        token = if (ts.movePrevious) {
+          ScalaLexUtil.findPreviousIn(ts, ScalaLexUtil.PotentialIdTokens)
+        } else None
+        if (token.isDefined) curr = ts.offset
+      }
+
+      token match {
+        case Some(x) if tokenNameEquals(x, name) => token
+        case _ => None
+      }
+    }
+  
+    private def tokenNameEquals(token: Token[_], name: String): Boolean = {
+      val text = token.text.toString
+      token.id match {
+        case ScalaTokenId.SymbolLiteral => text.substring(1, text.length - 1) == name // strip '`'
+        case ScalaTokenId.LArrow if name == "foreach" || name == "map" => true
+        case ScalaTokenId.Identifier if name == "apply" || name.startsWith("<error") => true // return the first matched identifier token
+        case _ if name.endsWith("_=") => text == name || text + "_=" == name
+        case _ if name == "Sequence"  => text == name || text == "Seq" // Seq may have symbol name "Sequence"
+        case _ => text == name
+      }
+    }
+
+    private def getContent(offset: Int, endOffset: Int): CharSequence = {
+      if (endOffset > offset && offset > -1) {
+        srcFile.content.subSequence(offset, endOffset)
+      } else ""
+    }
+
+    private def getBoundsTokens(offset: Int, endOffset: Int): Array[Token[TokenId]] = {
+      Array(getBoundsToken(offset).getOrElse(null), getBoundsEndToken(endOffset).getOrElse(null))
+    }
+
+    private def getBoundsTokens(tree: Tree): Array[Token[TokenId]] = {
+      val pos = tree.pos
+      val (offset, endOffset) = if (tree.pos.isDefined) {
+        (pos.startOrPoint, pos.endOrPoint)
+      } else (-1, -1)
+    
+      getBoundsTokens(offset, endOffset)
+    }
+  
+    private def getBoundsToken(offset: Int): Option[Token[TokenId]]  = {
+      if (offset < 0) return None
+
+      val ts = ScalaLexUtil.getTokenSequence(th, offset).getOrElse(return None)
+      ts.move(offset)
+      if (!ts.moveNext && !ts.movePrevious) {
+        assert(false, "Should not happen!")
+      }
+
+      val startToken = ScalaLexUtil.findPreviousNoWsNoComment(ts) match {
+        case Some(x) if x.isFlyweight => Some(ts.offsetToken)
+        case x => x
+      }
+
+      if (startToken == None) {
+        println("null start token(" + offset + ")")
+      }
+
+      startToken
+    }
+
+    private def getBoundsEndToken(endOffset: Int): Option[Token[TokenId]] = {
+      if (endOffset == -1) return None
+
+      val ts = ScalaLexUtil.getTokenSequence(th, endOffset).getOrElse{return None}
+      ts.move(endOffset)
+      if (!ts.movePrevious && !ts.moveNext) {
+        assert(false, "Should not happen!")
+      }
+    
+      val endToken = ScalaLexUtil.findPreviousNoWsNoComment(ts) match {
+        case Some(x) if x.isFlyweight => Some(ts.offsetToken)
+        case x => x
+      }
+
+      endToken
+    }
+
+    private def logInfo(message: String): Unit = {
+      if (!debug) return
+
+      println(message)
+    }
+
+    private def logInfo(message: String, item: AstItem): Unit = {
+      if (!debug) return
+
+      print(message)
+      println(item)
+    }
+
+    private def debugPrintAstPath(tree: Tree): Unit = {
+      if (!debug) {
+        return
+      }
+
+      val idTokenStr = getIdToken(tree) match {
+        case None => "<null>"
+        case Some(x) => x.text.toString
+      }
+
+      val symbol = tree.symbol
+      val symbolStr = if (symbol eq null) "<null>" else symbol.toString
+
+      val pos = tree.pos
+
+      println("(" + pos.line + ":" + pos.column + ")" + ", idToken: " + idTokenStr + ", symbol: " + symbolStr)
+    }
+
+    /**
+     * Used when endOffset of tree is not available.
+     * @Note from scala-2.8.x, the endOffset has been added, just keep this method
+     * here for reference.
+     */
+    private def setBoundsEndToken(fromScope: AstScope) {
+      assert(fromScope.isScopesSorted == false)
+
+      val children = fromScope.subScopes
+      val itr = children.iterator
+      var curr = if (itr.hasNext) itr.next else null
+      while (curr ne null) {
+        if (itr.hasNext) {
+          val next = itr.next
+          val offset = next.boundsOffset(th)
+          if (offset != -1) {
+            val endToken = getBoundsEndToken(offset - 1)
+            curr.boundsEndToken = endToken
+          } else {
+            println("Scope without start token: " + next)
+          }
+          curr = next
+        } else {
+          curr.parent match {
+            case Some(x) => curr.boundsEndToken = x.boundsEndToken
+            case None =>
+          }
+          curr = null
+        }
+      }
+
+      children foreach setBoundsEndToken
+    }
   }
+
 }

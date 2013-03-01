@@ -72,8 +72,6 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
   val global = pResult.global
   val th = pResult.getSnapshot.getTokenHierarchy
   
-  import global._
-
   private object completionProposals extends {
     val global = ScalaCodeCompleter.this.global
   } with ScalaCompletionProposals
@@ -306,7 +304,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
               case i => qname.substring(i + 1, qname.length)
             }
             if (sname.startsWith(prefix)) {
-              val jElement = JavaElement(tpElement)
+              val jElement = global.JavaElement(tpElement)
               val proposal = TypeProposal(jElement, this)
               proposals.add(proposal)
             }
@@ -356,7 +354,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
                                   methodHolder: Array[ExecutableElement],
                                   parameterIndexHolder: Array[Int],
                                   anchorOffsetHolder: Array[Int],
-                                  alternativesHolder: Array[Set[Function]]): Boolean = {
+                                  alternativesHolder: Array[Set[global.Function]]): Boolean = {
     try {
       val pResult = info.asInstanceOf[ScalaParserResult]
       val root = pResult.rootScope
@@ -477,24 +475,21 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
   def completeLocals(proposals: java.util.List[CompletionProposal]) {
     //pResult.toTyped
     
-    val pos = rangePos(pResult.srcFile, lexOffset, lexOffset, lexOffset)
-    val resp = new Response[List[Member]]
-    try {
-      global.askScopeCompletion(pos, resp)
-      resp.get match {
-        case Left(members) =>
-          for (ScopeMember(sym, tpe, accessible, viaImport) <- members
-               if startsWith(sym.nameString, prefix) && !sym.isConstructor
-          ) {
-            if (accessible) {
-              createSymbolProposal(sym) foreach {proposals add _}
-            }
+    val pos = global.rangePos(pResult.srcFile, lexOffset, lexOffset, lexOffset)
+    val resp = new global.Response[List[global.Member]]
+    global.askScopeCompletion(pos, resp)
+    resp.get match {
+      case Left(members) =>
+        for (global.ScopeMember(sym, tpe, accessible, viaImport) <- members
+             if startsWith(sym.nameString, prefix) && !sym.isConstructor
+        ) {
+          if (accessible) {
+            createSymbolProposal(sym) foreach {proposals add _}
           }
-        case Right(ex) => ScalaGlobal.resetLate(global, ex)
-      }
-    } catch {
-      case ex: Throwable => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
-    } 
+        }
+      case Right(ex) => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
+    }
+    
   }
 
   def completeSymbolMembers(baseToken: Token[TokenId], proposals: java.util.List[CompletionProposal]): Boolean = {
@@ -502,64 +497,62 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
     
     val offset = baseToken.offset(th)
     val endOffset = offset + baseToken.length - 1
-    val pos = rangePos(pResult.srcFile, offset, offset, endOffset)
-    val resp = new Response[List[Member]]
-    try {
-      global.askTypeCompletion(pos, resp)
-      resp.get match {
-        case Left(members) =>
-          for (TypeMember(sym, tpe, accessible, inherited, viaView) <- members 
-               if startsWith(sym.nameString, prefix) && !sym.isConstructor
-          ) {
-            if (accessible) {
-              createSymbolProposal(sym) foreach {proposal =>
-                proposal.getElement.asInstanceOf[ScalaElement].isInherited = inherited
-                proposal.getElement.asInstanceOf[ScalaElement].isImplicit = (viaView != NoSymbol)
-                proposals.add(proposal)
-              }
+    val pos = global.rangePos(pResult.srcFile, offset, offset, endOffset)
+    val resp = new global.Response[List[global.Member]]
+    global.askTypeCompletion(pos, resp)
+    resp.get match {
+      case Left(members) =>
+        for (global.TypeMember(sym, tpe, accessible, inherited, viaView) <- members 
+             if startsWith(sym.nameString, prefix) && !sym.isConstructor
+        ) {
+          if (accessible) {
+            createSymbolProposal(sym) foreach {proposal =>
+              proposal.getElement.asInstanceOf[global.ScalaElement].isInherited = inherited
+              proposal.getElement.asInstanceOf[global.ScalaElement].isImplicit = (viaView != global.NoSymbol)
+              proposals.add(proposal)
             }
           }
-        case Right(ex) => ScalaGlobal.resetLate(global, ex)
-      }
-    } catch {
-      case ex: Throwable => ScalaGlobal.resetLate(global, ex)
+        }
+      case Right(ex) => ScalaGlobal.resetLate(global, ex)
     }
+    
 
     // always return true ?
     true
   }
 
-  private def createSymbolProposal(sym: Symbol): Option[CompletionProposal] = {
-    var element: ScalaElement = null
+  private def createSymbolProposal(sym: global.Symbol): Option[CompletionProposal] = {
+    var element: global.ScalaElement = null
     var proposal: CompletionProposal = null
     if (sym.isMethod) {
-      element = ScalaElement(sym, pResult)
+      element = global.ScalaElement(sym, pResult)
       proposal = FunctionProposal(element, this)
     } else if (sym.isVariable) {
-      element = ScalaElement(sym, pResult)
+      element = global.ScalaElement(sym, pResult)
       proposal = PlainProposal(element, this)
     } else if (sym.isValue) {
-      element = ScalaElement(sym, pResult)
+      element = global.ScalaElement(sym, pResult)
       proposal = PlainProposal(element, this)
     } else if (sym.isClass || sym.isTrait || sym.isModule || sym.isPackage) {
-      element = ScalaElement(sym, pResult)
+      element = global.ScalaElement(sym, pResult)
       proposal = PlainProposal(element, this)
     }
 
     if (proposal ne null) Some(proposal) else None
   }
 
-  private def getResultType(sym: Symbol): Option[Type] = {
-    try {
+  private def getResultType(sym: global.Symbol): Option[global.Type] = {
+    global.askForResponse {() =>
       sym.tpe match {
-        case null | ErrorType | NoType => None
+        case null | global.ErrorType | global.NoType => None
         case tpe => tpe.resultType match {
             case null => None
             case x => Some(x)
           }
       }
-    } catch {
-      case ex: Throwable => ScalaGlobal.resetLate(global, ex); None
+    } get match {
+      case Left(x) => x
+      case Right(ex) => ScalaGlobal.resetLate(global, ex); None
     }
   }
 

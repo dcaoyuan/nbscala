@@ -50,25 +50,31 @@ import scala.reflect.internal.Flags
 trait ScalaUtils {self: ScalaGlobal =>
   
   object ScalaUtil {
+    
     def getModifiers(symbol: Symbol): java.util.Set[Modifier] = {
       val modifiers = new java.util.HashSet[Modifier]
+      askForResponse {() =>
 
-      if (symbol hasFlag Flags.PROTECTED) {
-        modifiers.add(Modifier.PROTECTED)
-      } else if (symbol hasFlag Flags.PRIVATE) {
-        modifiers.add(Modifier.PRIVATE)
-      } else {
-        modifiers.add(Modifier.PUBLIC)
+        if (symbol hasFlag Flags.PROTECTED) {
+          modifiers.add(Modifier.PROTECTED)
+        } else if (symbol hasFlag Flags.PRIVATE) {
+          modifiers.add(Modifier.PRIVATE)
+        } else {
+          modifiers.add(Modifier.PUBLIC)
+        }
+
+        if (symbol hasFlag Flags.MUTABLE)    modifiers.add(Modifier.STATIC) // to use STATIC icon only
+        if (symbol.isDeprecated) modifiers.add(Modifier.DEPRECATED)
+
+        modifiers
+      } get match {
+        case Left(x) => x
+        case Right(_) => modifiers
       }
-
-      if (symbol hasFlag Flags.MUTABLE)    modifiers.add(Modifier.STATIC) // to use STATIC icon only
-      if (symbol.isDeprecated) modifiers.add(Modifier.DEPRECATED)
-
-      modifiers
     }
 
     def getKind(sym: Symbol): ElementKind = {
-      try {
+      askForResponse {() =>
         if (sym.isPackage) {
           ElementKind.PACKAGE
         } else if (sym.isClass) {
@@ -87,6 +93,8 @@ trait ScalaUtils {self: ScalaGlobal =>
           ElementKind.FIELD
         } else if (sym.isVariable) {
           ElementKind.VARIABLE
+        } else if (sym.isGetter) {
+          ElementKind.FIELD
         } else if (sym.isMethod) {
           ElementKind.METHOD
         } else if (sym.isValueParameter) {
@@ -96,11 +104,14 @@ trait ScalaUtils {self: ScalaGlobal =>
         } else {
           ElementKind.OTHER
         }
-      } catch {
-        case t: Throwable => ElementKind.OTHER
+        
+      } get match {
+        case Left(x) => x
+        case Right(_) => 
           // java.lang.Error: no-symbol does not have owner
           //      at scala.tools.nsc.symtab.Symbols$NoSymbol$.owner(Symbols.scala:1609)
           //      at scala.tools.nsc.symtab.Symbols$Symbol.isLocal(Symbols.scala:346)
+          ElementKind.OTHER
       }
     }
 
@@ -148,7 +159,7 @@ trait ScalaUtils {self: ScalaGlobal =>
     }
 
     def typeQualifiedName(tpe: Type, forScala: Boolean): String = {
-      symbolQualifiedName(tpe.typeSymbol, forScala);
+      symbolQualifiedName(tpe.typeSymbol, forScala)
     }
 
     def isInherited(template: Symbol, member: Symbol): Boolean = {
@@ -167,23 +178,28 @@ trait ScalaUtils {self: ScalaGlobal =>
       if (str ne null) str else tpe.termSymbol.nameString
     }
 
-    def htmlFormat(symbol: Symbol, fm: HtmlFormatter): Unit = {
-      symbol match {
-        case sym if sym.isPackage | sym.isClass | sym.isModule => fm.appendText(sym.nameString)
-        case sym if sym.isConstructor =>
-          fm.appendText(sym.owner.nameString)
-          htmlTypeName(sym, fm)
-        case sym if sym.isMethod =>
-          fm.appendText(sym.nameString)
-          htmlTypeName(sym, fm)
-        case sym =>
-          fm.appendText(sym.nameString)
-          fm.appendText(": ")
-          htmlTypeName(sym, fm)
+    def askForHtmlFormat(symbol: Symbol, fm: HtmlFormatter) {
+      askForResponse {() =>
+        symbol match {
+          case sym if sym.isPackage | sym.isClass | sym.isModule => fm.appendText(sym.nameString)
+          case sym if sym.isConstructor =>
+            fm.appendText(sym.owner.nameString)
+            htmlTypeName(sym, fm)
+          case sym if sym.isMethod =>
+            fm.appendText(sym.nameString)
+            htmlTypeName(sym, fm)
+          case sym =>
+            fm.appendText(sym.nameString)
+            fm.appendText(": ")
+            htmlTypeName(sym, fm)
+        }
+      } get match {
+        case Left(_) =>
+        case Right(_) =>
       }
     }
 
-    def tryTpe(sym: Symbol): Type = {
+    private def tryTpe(sym: Symbol): Type = {
       try {
         sym.tpe
       } catch {
@@ -191,11 +207,11 @@ trait ScalaUtils {self: ScalaGlobal =>
       }
     }
 
-    def htmlTypeName(sym: Symbol, fm: HtmlFormatter): Unit = {      
+    private def htmlTypeName(sym: Symbol, fm: HtmlFormatter) {      
       htmlTypeName(tryTpe(sym), fm)
     }
 
-    def htmlTypeName(tpe: Type, fm: HtmlFormatter): Unit = {
+    private def htmlTypeName(tpe: Type, fm: HtmlFormatter): Unit = {
       if (tpe eq null) return
       tpe match {
         case ErrorType => fm.appendText("<error>")
@@ -307,39 +323,51 @@ trait ScalaUtils {self: ScalaGlobal =>
      * String representation of symbol's definition
      * from scala.tools.nsc.symtab.Symbols
      */
-    def htmlDef(sym: Symbol, fm: HtmlFormatter): Unit = {
-      // * no-symbol does not have owner
-      if (sym == NoSymbol) {
-        fm.appendText("<no-symbol>")
-        return
+    def askForHtmlDef(sym: Symbol, fm: HtmlFormatter) {
+      
+      askForResponse {() =>
+        fm.appendHtml("<i>")
+        fm.appendText(sym.enclClass.fullName)
+        fm.appendHtml("</i><p>")
+
+        // * no-symbol does not have owner
+        if (sym == NoSymbol) {
+          fm.appendText("<no-symbol>")
+          return
+        }
+
+        completeIfWithLazyType(sym)
+      
+        val flags = if (sym.owner.isRefinementClass) {
+          sym.flags & Flags.ExplicitFlags & ~Flags.OVERRIDE
+        } else sym.flags & Flags.ExplicitFlags
+
+        compose(List(Flags.flagsToString(flags),
+                     sym.keyString,
+                     sym.varianceString + sym.nameString), fm)
+      
+        sym match {
+          case _ if sym.isPackage | sym.isClass | sym.isTrait =>
+            if (sym.hasRawInfo) htmlTypeInfo(sym.rawInfo, fm)
+          case _ if sym.isModule => // object, the `rawInfo` is `TypeRef`, we should dive into `sym.moduleClass`
+            if (sym.hasRawInfo) htmlTypeInfo(sym.moduleClass.rawInfo, fm)
+          case _ if sym.isConstructor =>
+            if (sym.hasRawInfo) fm.appendText(sym.infoString(sym.rawInfo))
+          case _ if sym.isMethod =>
+            if (sym.hasRawInfo) fm.appendText(sym.infoString(sym.rawInfo))
+          case _ => 
+            if (sym.hasRawInfo) fm.appendText(sym.infoString(sym.rawInfo))
+        }
+        
+      } get match {
+        case Left(x) =>
+        case Right(ex) =>
+          ScalaGlobal.resetLate(self, ex)
       }
-
-      completeIfWithLazyType(sym)
-      
-      val flags = if (sym.owner.isRefinementClass) {
-        sym.flags & Flags.ExplicitFlags & ~Flags.OVERRIDE
-      } else sym.flags & Flags.ExplicitFlags
-
-      compose(List(Flags.flagsToString(flags),
-                   sym.keyString,
-                   sym.varianceString + sym.nameString), fm)
-      
-      sym match {
-        case _ if sym.isPackage | sym.isClass | sym.isTrait =>
-          if (sym.hasRawInfo) htmlTypeInfo(sym.rawInfo, fm)
-        case _ if sym.isModule => // object, the `rawInfo` is `TypeRef`, we should dive into `sym.moduleClass`
-          if (sym.hasRawInfo) htmlTypeInfo(sym.moduleClass.rawInfo, fm)
-        case _ if sym.isConstructor =>
-          if (sym.hasRawInfo) fm.appendText(sym.infoString(sym.rawInfo))
-        case _ if sym.isMethod =>
-          if (sym.hasRawInfo) fm.appendText(sym.infoString(sym.rawInfo))
-        case _ => 
-          if (sym.hasRawInfo) fm.appendText(sym.infoString(sym.rawInfo))
-      }      
     }
 
     /** Concatenate strings separated by spaces */
-    private def compose(ss: List[String], fm: HtmlFormatter): Unit = {
+    private def compose(ss: List[String], fm: HtmlFormatter) {
       val itr = ss.filter("" !=).iterator
       while (itr.hasNext) {
         fm.appendText(itr.next)
@@ -347,7 +375,7 @@ trait ScalaUtils {self: ScalaGlobal =>
       }
     }
 
-    def htmlTypeInfo(tpe: Type, fm: HtmlFormatter): Unit = {
+    private def htmlTypeInfo(tpe: Type, fm: HtmlFormatter) {
       if (tpe eq null) return
       tpe match {
         case ErrorType => fm.appendText("<error>")
@@ -476,133 +504,138 @@ trait ScalaUtils {self: ScalaGlobal =>
     }
 
     def completeIfWithLazyType(sym: Symbol) {
-      val topClazz = sym.enclosingTopLevelClass
+      askForResponse {() =>
+        val topClazz = sym.enclosingTopLevelClass
 
-      if (topClazz.nameString.indexOf('$') != -1) return // avoid assertion error @see
+        if (topClazz.nameString.indexOf('$') != -1) return // avoid assertion error @see
       
-      val (clazz, staticModule) = if (topClazz.isModule) {
-        (topClazz.companionClass, topClazz)
-      } else {
-        (topClazz, topClazz.companionModule)
-      }
-
-      if (clazz != NoSymbol && staticModule != NoSymbol) { // avoid Error: NoSymbol does not have owner
-        topClazz.rawInfo match {
-          case x if !x.isComplete => 
-            /*
-             java.lang.AssertionError: assertion failed: object NotificationDisplayer$NotificationImpl
-             at scala.Predef$.assert(Predef.scala:179)
-             at scala.tools.nsc.Global.assert(Global.scala:239)
-             at scala.tools.nsc.symtab.SymbolLoaders.enterClassAndModule(SymbolLoaders.scala:100)
-             at scala.tools.nsc.symtab.SymbolLoaders.initializeFromClassPath(SymbolLoaders.scala:138)
-             at scala.tools.nsc.symtab.SymbolLoaders$PackageLoader$$anonfun$doComplete$3.apply(SymbolLoaders.scala:232)
-             at scala.tools.nsc.symtab.SymbolLoaders$PackageLoader$$anonfun$doComplete$3.apply(SymbolLoaders.scala:231)
-             at scala.collection.TraversableLike$WithFilter$$anonfun$foreach$1.apply(TraversableLike.scala:772)
-             at scala.collection.Iterator$class.foreach(Iterator.scala:727)
-             at scala.collection.AbstractIterator.foreach(Iterator.scala:1156)
-             at scala.collection.IterableLike$class.foreach(IterableLike.scala:72)
-             at scala.collection.AbstractIterable.foreach(Iterable.scala:54)
-             at scala.collection.TraversableLike$WithFilter.foreach(TraversableLike.scala:771)
-             at scala.tools.nsc.symtab.SymbolLoaders$PackageLoader.doComplete(SymbolLoaders.scala:231)
-             at scala.tools.nsc.symtab.SymbolLoaders$SymbolLoader.complete(SymbolLoaders.scala:187)
-             at scala.reflect.internal.Symbols$Symbol.info(Symbols.scala:1217)
-             at scala.reflect.internal.Types$TypeRef.thisInfo(Types.scala:2364)
-             at scala.reflect.internal.Types$TypeRef.baseClasses(Types.scala:2369)
-             at scala.reflect.internal.Types$Type.findMember(Types.scala:1138)
-             at scala.reflect.internal.Types$Type.memberBasedOnName(Types.scala:687)
-             at scala.reflect.internal.Types$Type.member(Types.scala:645)
-             at scala.reflect.internal.Mirrors$RootsBase.getModuleOrClass(Mirrors.scala:43)
-             at scala.reflect.internal.Mirrors$RootsBase.getModuleOrClass(Mirrors.scala:61)
-             at scala.reflect.internal.Mirrors$RootsBase.getClassByName(Mirrors.scala:99)
-             at scala.reflect.internal.Mirrors$RootsBase.getClass(Mirrors.scala:96)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.lookupClass$1(ClassfileParser.scala:481)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.classNameToSymbol(ClassfileParser.scala:494)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.sig2type$1(ClassfileParser.scala:755)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.sig2type$1(ClassfileParser.scala:792)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.scala$tools$nsc$symtab$classfile$ClassfileParser$$sigToType(ClassfileParser.scala:838)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser$ConstantPool.getType(ClassfileParser.scala:334)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.parseMethod(ClassfileParser.scala:644)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$scala$tools$nsc$symtab$classfile$ClassfileParser$$queueLoad$1$2.apply$mcVI$sp(ClassfileParser.scala:565)
-             at scala.collection.immutable.Range.foreach$mVc$sp(Range.scala:142)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.scala$tools$nsc$symtab$classfile$ClassfileParser$$queueLoad$1(ClassfileParser.scala:565)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$parseClass$1.apply$mcV$sp(ClassfileParser.scala:575)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.parseClass(ClassfileParser.scala:580)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$parse$1.apply$mcV$sp(ClassfileParser.scala:105)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$parse$1.apply(ClassfileParser.scala:94)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$parse$1.apply(ClassfileParser.scala:94)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.pushBusy(ClassfileParser.scala:81)
-             at scala.tools.nsc.symtab.classfile.ClassfileParser.parse(ClassfileParser.scala:94)
-             at scala.tools.nsc.symtab.SymbolLoaders$ClassfileLoader.doComplete(SymbolLoaders.scala:254)
-             at scala.tools.nsc.symtab.SymbolLoaders$SymbolLoader.complete(SymbolLoaders.scala:187)
-             at scala.tools.nsc.symtab.SymbolLoaders$SymbolLoader.load(SymbolLoaders.scala:203)
-             at scala.reflect.internal.Symbols$Symbol.exists(Symbols.scala:884)
-             at scala.tools.nsc.typechecker.Typers$Typer.typedIdent$1(Typers.scala:4894)
-             at scala.tools.nsc.typechecker.Typers$Typer.typedIdentOrWildcard$1(Typers.scala:5048)
-             at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:5379)
-             at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:5458)
-             at scala.tools.nsc.typechecker.Typers$Typer.typedTypeConstructor(Typers.scala:5588)
-             at scala.tools.nsc.typechecker.Typers$Typer.typedTypeConstructor(Typers.scala:5616)
-             at scala.tools.nsc.typechecker.Typers$Typer.parentTypes(Typers.scala:1495)
-             at scala.tools.nsc.typechecker.Namers$Namer.templateSig(Namers.scala:861)
-             at scala.tools.nsc.typechecker.Namers$Namer.classSig(Namers.scala:907)
-             at scala.tools.nsc.typechecker.Namers$Namer.getSig$1(Namers.scala:1291)
-             at scala.tools.nsc.typechecker.Namers$Namer.typeSig(Namers.scala:1349)
-             at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1$$anonfun$apply$1.apply$mcV$sp(Namers.scala:709)
-             at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1$$anonfun$apply$1.apply(Namers.scala:708)
-             at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1$$anonfun$apply$1.apply(Namers.scala:708)
-             at scala.tools.nsc.typechecker.Namers$Namer$LogTransitions.apply(Namers.scala:1378)
-             at scala.tools.nsc.typechecker.Namers$Namer.scala$tools$nsc$typechecker$Namers$Namer$$logAndValidate(Namers.scala:1387)
-             at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1.apply(Namers.scala:708)
-             at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1.apply(Namers.scala:707)
-             at scala.tools.nsc.typechecker.Namers$$anon$1.completeImpl(Namers.scala:1498)
-             at scala.tools.nsc.typechecker.Namers$LockingTypeCompleter$class.complete(Namers.scala:1506)
-             at scala.tools.nsc.typechecker.Namers$$anon$1.complete(Namers.scala:1496)
-             at org.netbeans.modules.scala.core.ast.ScalaUtils$ScalaUtil$.completeIfWithLazyType(ScalaUtils.scala:491)
-             at org.netbeans.modules.scala.core.ast.ScalaUtils$ScalaUtil$.isProperType(ScalaUtils.scala:499)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$$importedSymbol$1.apply(ScalaAstVisitor.scala:658)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$$importedSymbol$1.apply(ScalaAstVisitor.scala:658)
-             at scala.collection.Iterator$class.find(Iterator.scala:780)
-             at scala.collection.AbstractIterator.find(Iterator.scala:1156)
-             at scala.collection.IterableLike$class.find(IterableLike.scala:79)
-             at scala.reflect.internal.Scopes$Scope.find(Scopes.scala:44)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$$importedSymbol(ScalaAstVisitor.scala:658)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse$15.apply(ScalaAstVisitor.scala:299)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse$15.apply(ScalaAstVisitor.scala:287)
-             at scala.collection.immutable.List.foreach(List.scala:309)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse(ScalaAstVisitor.scala:287)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverseTrees$1.apply(ScalaAstVisitor.scala:554)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverseTrees$1.apply(ScalaAstVisitor.scala:554)
-             at scala.collection.immutable.List.foreach(List.scala:309)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverseTrees(ScalaAstVisitor.scala:554)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse$1.apply$mcV$sp(ScalaAstVisitor.scala:144)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$atOwner(ScalaAstVisitor.scala:580)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse(ScalaAstVisitor.scala:142)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.apply(ScalaAstVisitor.scala:114)
-             at org.netbeans.modules.scala.core.ast.ScalaAstVisitor.visit(ScalaAstVisitor.scala:104)
-             at org.netbeans.modules.scala.core.ScalaGlobal.getSemanticRoot(ScalaGlobal.scala:280)
-             [catch] at org.netbeans.modules.scala.core.ScalaGlobal.askForSemantic(ScalaGlobal.scala:193)
-             at org.netbeans.modules.scala.core.ScalaParserResult.toSemanticed(ScalaParserResult.scala:121)
-             at org.netbeans.modules.scala.core.ScalaParserResult.rootScope$lzycompute(ScalaParserResult.scala:167)
-             at org.netbeans.modules.scala.core.ScalaParserResult.rootScope(ScalaParserResult.scala:164)
-             at org.netbeans.modules.scala.editor.overridden.IsOverriddenAnnotationHandler.process(IsOverriddenAnnotationHandler.scala:241)
-             at org.netbeans.modules.scala.editor.overridden.IsOverriddenAnnotationHandler.run(IsOverriddenAnnotationHandler.scala:218)
-             at org.netbeans.modules.scala.editor.overridden.IsOverriddenAnnotationHandler.run(IsOverriddenAnnotationHandler.scala:180)
-             at org.netbeans.modules.parsing.impl.TaskProcessor.callParserResultTask(TaskProcessor.java:559)
-             at org.netbeans.modules.parsing.impl.TaskProcessor$CompilationJob.run(TaskProcessor.java:735)
-             at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)
-             at java.util.concurrent.FutureTask$Sync.innerRun(FutureTask.java:334)
-             at java.util.concurrent.FutureTask.run(FutureTask.java:166)
-             at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
-             at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
-             at java.lang.Thread.run(Thread.java:722)
-             */
-            try {
-              x.complete(topClazz)
-            } catch {
-              case ex: Throwable =>
-            }
-          case _ =>
+        val (clazz, staticModule) = if (topClazz.isModule) {
+          (topClazz.companionClass, topClazz)
+        } else {
+          (topClazz, topClazz.companionModule)
         }
+
+        if (clazz != NoSymbol && staticModule != NoSymbol) { // avoid Error: NoSymbol does not have owner
+          topClazz.rawInfo match {
+            case x if !x.isComplete => 
+              /*
+               java.lang.AssertionError: assertion failed: object NotificationDisplayer$NotificationImpl
+               at scala.Predef$.assert(Predef.scala:179)
+               at scala.tools.nsc.Global.assert(Global.scala:239)
+               at scala.tools.nsc.symtab.SymbolLoaders.enterClassAndModule(SymbolLoaders.scala:100)
+               at scala.tools.nsc.symtab.SymbolLoaders.initializeFromClassPath(SymbolLoaders.scala:138)
+               at scala.tools.nsc.symtab.SymbolLoaders$PackageLoader$$anonfun$doComplete$3.apply(SymbolLoaders.scala:232)
+               at scala.tools.nsc.symtab.SymbolLoaders$PackageLoader$$anonfun$doComplete$3.apply(SymbolLoaders.scala:231)
+               at scala.collection.TraversableLike$WithFilter$$anonfun$foreach$1.apply(TraversableLike.scala:772)
+               at scala.collection.Iterator$class.foreach(Iterator.scala:727)
+               at scala.collection.AbstractIterator.foreach(Iterator.scala:1156)
+               at scala.collection.IterableLike$class.foreach(IterableLike.scala:72)
+               at scala.collection.AbstractIterable.foreach(Iterable.scala:54)
+               at scala.collection.TraversableLike$WithFilter.foreach(TraversableLike.scala:771)
+               at scala.tools.nsc.symtab.SymbolLoaders$PackageLoader.doComplete(SymbolLoaders.scala:231)
+               at scala.tools.nsc.symtab.SymbolLoaders$SymbolLoader.complete(SymbolLoaders.scala:187)
+               at scala.reflect.internal.Symbols$Symbol.info(Symbols.scala:1217)
+               at scala.reflect.internal.Types$TypeRef.thisInfo(Types.scala:2364)
+               at scala.reflect.internal.Types$TypeRef.baseClasses(Types.scala:2369)
+               at scala.reflect.internal.Types$Type.findMember(Types.scala:1138)
+               at scala.reflect.internal.Types$Type.memberBasedOnName(Types.scala:687)
+               at scala.reflect.internal.Types$Type.member(Types.scala:645)
+               at scala.reflect.internal.Mirrors$RootsBase.getModuleOrClass(Mirrors.scala:43)
+               at scala.reflect.internal.Mirrors$RootsBase.getModuleOrClass(Mirrors.scala:61)
+               at scala.reflect.internal.Mirrors$RootsBase.getClassByName(Mirrors.scala:99)
+               at scala.reflect.internal.Mirrors$RootsBase.getClass(Mirrors.scala:96)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.lookupClass$1(ClassfileParser.scala:481)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.classNameToSymbol(ClassfileParser.scala:494)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.sig2type$1(ClassfileParser.scala:755)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.sig2type$1(ClassfileParser.scala:792)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.scala$tools$nsc$symtab$classfile$ClassfileParser$$sigToType(ClassfileParser.scala:838)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser$ConstantPool.getType(ClassfileParser.scala:334)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.parseMethod(ClassfileParser.scala:644)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$scala$tools$nsc$symtab$classfile$ClassfileParser$$queueLoad$1$2.apply$mcVI$sp(ClassfileParser.scala:565)
+               at scala.collection.immutable.Range.foreach$mVc$sp(Range.scala:142)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.scala$tools$nsc$symtab$classfile$ClassfileParser$$queueLoad$1(ClassfileParser.scala:565)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$parseClass$1.apply$mcV$sp(ClassfileParser.scala:575)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.parseClass(ClassfileParser.scala:580)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$parse$1.apply$mcV$sp(ClassfileParser.scala:105)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$parse$1.apply(ClassfileParser.scala:94)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser$$anonfun$parse$1.apply(ClassfileParser.scala:94)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.pushBusy(ClassfileParser.scala:81)
+               at scala.tools.nsc.symtab.classfile.ClassfileParser.parse(ClassfileParser.scala:94)
+               at scala.tools.nsc.symtab.SymbolLoaders$ClassfileLoader.doComplete(SymbolLoaders.scala:254)
+               at scala.tools.nsc.symtab.SymbolLoaders$SymbolLoader.complete(SymbolLoaders.scala:187)
+               at scala.tools.nsc.symtab.SymbolLoaders$SymbolLoader.load(SymbolLoaders.scala:203)
+               at scala.reflect.internal.Symbols$Symbol.exists(Symbols.scala:884)
+               at scala.tools.nsc.typechecker.Typers$Typer.typedIdent$1(Typers.scala:4894)
+               at scala.tools.nsc.typechecker.Typers$Typer.typedIdentOrWildcard$1(Typers.scala:5048)
+               at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:5379)
+               at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:5458)
+               at scala.tools.nsc.typechecker.Typers$Typer.typedTypeConstructor(Typers.scala:5588)
+               at scala.tools.nsc.typechecker.Typers$Typer.typedTypeConstructor(Typers.scala:5616)
+               at scala.tools.nsc.typechecker.Typers$Typer.parentTypes(Typers.scala:1495)
+               at scala.tools.nsc.typechecker.Namers$Namer.templateSig(Namers.scala:861)
+               at scala.tools.nsc.typechecker.Namers$Namer.classSig(Namers.scala:907)
+               at scala.tools.nsc.typechecker.Namers$Namer.getSig$1(Namers.scala:1291)
+               at scala.tools.nsc.typechecker.Namers$Namer.typeSig(Namers.scala:1349)
+               at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1$$anonfun$apply$1.apply$mcV$sp(Namers.scala:709)
+               at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1$$anonfun$apply$1.apply(Namers.scala:708)
+               at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1$$anonfun$apply$1.apply(Namers.scala:708)
+               at scala.tools.nsc.typechecker.Namers$Namer$LogTransitions.apply(Namers.scala:1378)
+               at scala.tools.nsc.typechecker.Namers$Namer.scala$tools$nsc$typechecker$Namers$Namer$$logAndValidate(Namers.scala:1387)
+               at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1.apply(Namers.scala:708)
+               at scala.tools.nsc.typechecker.Namers$Namer$$anonfun$monoTypeCompleter$1.apply(Namers.scala:707)
+               at scala.tools.nsc.typechecker.Namers$$anon$1.completeImpl(Namers.scala:1498)
+               at scala.tools.nsc.typechecker.Namers$LockingTypeCompleter$class.complete(Namers.scala:1506)
+               at scala.tools.nsc.typechecker.Namers$$anon$1.complete(Namers.scala:1496)
+               at org.netbeans.modules.scala.core.ast.ScalaUtils$ScalaUtil$.completeIfWithLazyType(ScalaUtils.scala:491)
+               at org.netbeans.modules.scala.core.ast.ScalaUtils$ScalaUtil$.isProperType(ScalaUtils.scala:499)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$$importedSymbol$1.apply(ScalaAstVisitor.scala:658)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$$importedSymbol$1.apply(ScalaAstVisitor.scala:658)
+               at scala.collection.Iterator$class.find(Iterator.scala:780)
+               at scala.collection.AbstractIterator.find(Iterator.scala:1156)
+               at scala.collection.IterableLike$class.find(IterableLike.scala:79)
+               at scala.reflect.internal.Scopes$Scope.find(Scopes.scala:44)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$$importedSymbol(ScalaAstVisitor.scala:658)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse$15.apply(ScalaAstVisitor.scala:299)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse$15.apply(ScalaAstVisitor.scala:287)
+               at scala.collection.immutable.List.foreach(List.scala:309)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse(ScalaAstVisitor.scala:287)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverseTrees$1.apply(ScalaAstVisitor.scala:554)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverseTrees$1.apply(ScalaAstVisitor.scala:554)
+               at scala.collection.immutable.List.foreach(List.scala:309)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverseTrees(ScalaAstVisitor.scala:554)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$$anonfun$org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse$1.apply$mcV$sp(ScalaAstVisitor.scala:144)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$atOwner(ScalaAstVisitor.scala:580)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.org$netbeans$modules$scala$core$ast$ScalaAstVisitor$treeTraverser$$traverse(ScalaAstVisitor.scala:142)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor$treeTraverser$.apply(ScalaAstVisitor.scala:114)
+               at org.netbeans.modules.scala.core.ast.ScalaAstVisitor.visit(ScalaAstVisitor.scala:104)
+               at org.netbeans.modules.scala.core.ScalaGlobal.getSemanticRoot(ScalaGlobal.scala:280)
+               [catch] at org.netbeans.modules.scala.core.ScalaGlobal.askForSemantic(ScalaGlobal.scala:193)
+               at org.netbeans.modules.scala.core.ScalaParserResult.toSemanticed(ScalaParserResult.scala:121)
+               at org.netbeans.modules.scala.core.ScalaParserResult.rootScope$lzycompute(ScalaParserResult.scala:167)
+               at org.netbeans.modules.scala.core.ScalaParserResult.rootScope(ScalaParserResult.scala:164)
+               at org.netbeans.modules.scala.editor.overridden.IsOverriddenAnnotationHandler.process(IsOverriddenAnnotationHandler.scala:241)
+               at org.netbeans.modules.scala.editor.overridden.IsOverriddenAnnotationHandler.run(IsOverriddenAnnotationHandler.scala:218)
+               at org.netbeans.modules.scala.editor.overridden.IsOverriddenAnnotationHandler.run(IsOverriddenAnnotationHandler.scala:180)
+               at org.netbeans.modules.parsing.impl.TaskProcessor.callParserResultTask(TaskProcessor.java:559)
+               at org.netbeans.modules.parsing.impl.TaskProcessor$CompilationJob.run(TaskProcessor.java:735)
+               at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)
+               at java.util.concurrent.FutureTask$Sync.innerRun(FutureTask.java:334)
+               at java.util.concurrent.FutureTask.run(FutureTask.java:166)
+               at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
+               at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
+               at java.lang.Thread.run(Thread.java:722)
+               */
+              try {
+                x.complete(topClazz)
+              } catch {
+                case ex: Throwable =>
+              }
+            case _ =>
+          }
+        }
+      } get match {
+        case Left(_) =>
+        case Right(ex) =>
       }
     }
 

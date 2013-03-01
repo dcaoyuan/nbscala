@@ -90,7 +90,6 @@ class ScalaDeclarationFinder extends DeclarationFinder {
   def findDeclaration(info: ParserResult, lexOffset: Int): DeclarationLocation = {
     val pr = info.asInstanceOf[ScalaParserResult]
     val global = pr.global
-    import global._
 
     val root = pr.rootScope
 
@@ -101,7 +100,7 @@ class ScalaDeclarationFinder extends DeclarationFinder {
 
     val closest = root.findItemsAt(th, astOffset) match {
       case Nil => return DeclarationLocation.NONE
-      case xs => ScalaUtil.importantItem(xs)
+      case xs => global.ScalaUtil.importantItem(xs)
     }
         
     root.findDfnOf(closest) match {
@@ -120,8 +119,8 @@ class ScalaDeclarationFinder extends DeclarationFinder {
             root.findItemsAt(th, token.offset(th)) match {
               case Nil => DeclarationLocation.NONE
               case xs =>
-                val item = ScalaUtil.importantItem(xs).asInstanceOf[ScalaItem]
-                val remoteDfn = ScalaElement(item.symbol, info)
+                val item = global.ScalaUtil.importantItem(xs).asInstanceOf[global.ScalaItem]
+                val remoteDfn = global.ScalaElement(item.symbol, info)
                 val location = new DeclarationLocation(remoteDfn.getFileObject, remoteDfn.getOffset, remoteDfn)
                 if (remoteDfn.getFileObject eq null) {
                   // even fo is null, we should return a location to enable popping up a declaration string

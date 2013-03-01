@@ -108,18 +108,11 @@ trait ScalaDfns {self: ScalaGlobal =>
     }
 
     def htmlFormat(fm: HtmlFormatter) {
-      ScalaUtil.htmlFormat(symbol, fm)
+      ScalaUtil.askForHtmlFormat(symbol, fm)
     }
 
     def sigFormat(fm: HtmlFormatter) {
-      try {
-        fm.appendHtml("<i>")
-        fm.appendText(symbol.enclClass.fullName)
-        fm.appendHtml("</i><p>")
-        ScalaUtil.htmlDef(symbol, fm)
-      } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(self, ex)
-      }
+      ScalaUtil.askForHtmlDef(symbol, fm)
     }
   }
 

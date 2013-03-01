@@ -90,59 +90,65 @@ abstract class ScalaCompletionProposals {
 
     def getElement: ElementHandle = element
 
-    def getKind: ElementKind = {
-      getElement match {
-        case x: ScalaDfn     if x.symbol.isGetter => ElementKind.FIELD
-        case x: ScalaElement if x.symbol.isGetter => ElementKind.FIELD
-        case x => x.getKind
-      }
-    }
+    def getKind: ElementKind = element.getKind
 
     def getIcon: ImageIcon = null
 
     def getLhsHtml(fm: HtmlFormatter): String = {
-      val emphasize = !element.isInherited
-      val strike = element.isDeprecated
+      askForResponse {() =>
+        val emphasize = !element.isInherited
+        val strike = element.isDeprecated
 
-      if (emphasize) fm.emphasis(true)
-      if (strike)    fm.deprecated(true)
+        if (emphasize) fm.emphasis(true)
+        if (strike)    fm.deprecated(true)
       
-      val kind = getKind
-      fm.name(kind, true)
-      fm.appendText(getName)
-      fm.name(kind, false)
+        val kind = getKind
+        fm.name(kind, true)
+        fm.appendText(getName)
+        fm.name(kind, false)
 
-      if (strike)    fm.deprecated(false)
-      if (emphasize) fm.emphasis(false)
+        if (strike)    fm.deprecated(false)
+        if (emphasize) fm.emphasis(false)
 
+      } get match {
+        case Left(_) => 
+        case Right(_) => 
+      }
+      
       fm.getText
     }
 
     override 
     def getRhsHtml(fm: HtmlFormatter): String = {
-      element match {
-        case x: ScalaElement =>
-          val sym = x.symbol
+      askForResponse {() =>
+        element match {
+          case x: ScalaElement =>
+            val sym = x.symbol
 
-          ScalaUtil.completeIfWithLazyType(sym)
+            ScalaUtil.completeIfWithLazyType(sym)
 
-          fm.`type`(true)
-          val retType = try {
-            sym.tpe match {
-              case null => null
-              case x => x.resultType
+            fm.`type`(true)
+            val retType = try {
+              sym.tpe match {
+                case null => null
+                case x => x.resultType
+              }
+            } catch {
+              case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
             }
-          } catch {
-            case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
-          }
 
-          if ((retType ne null) && !sym.isConstructor) {
-            fm.appendText(ScalaUtil.typeToString(retType))
-          }
-          fm.`type`(false)
-        case _ =>
+            if ((retType ne null) && !sym.isConstructor) {
+              fm.appendText(ScalaUtil.typeToString(retType))
+            }
+            fm.`type`(false)
+          case _ =>
+        }
+
+      } get match {
+        case Left(_) => 
+        case Right(_) => 
       }
-
+      
       fm.getText
     }
 
@@ -176,38 +182,38 @@ abstract class ScalaCompletionProposals {
 
     override 
     def getLhsHtml(fm: HtmlFormatter): String = {
-      val strike = element.isDeprecated
-      val emphasize = !element.isInherited
-      val preStar = element.isImplicit
+      askForResponse {() =>
+        val strike = element.isDeprecated
+        val emphasize = !element.isInherited
+        val preStar = element.isImplicit
       
-      if (preStar)   fm.appendHtml("<u>")
-      if (strike)    fm.deprecated(true)
-      if (emphasize) fm.emphasis(true)
+        if (preStar)   fm.appendHtml("<u>")
+        if (strike)    fm.deprecated(true)
+        if (emphasize) fm.emphasis(true)
 
-      val kind = getKind
-      fm.name(kind, true)
-      fm.appendText(getName)
-      fm.name(kind, false)
+        val kind = getKind
+        fm.name(kind, true)
+        fm.appendText(getName)
+        fm.name(kind, false)
 
-      if (emphasize) fm.emphasis(false)
-      if (strike)    fm.deprecated(false)
-      if (preStar)   fm.appendHtml("</u>")
+        if (emphasize) fm.emphasis(false)
+        if (strike)    fm.deprecated(false)
+        if (preStar)   fm.appendHtml("</u>")
 
-      val typeParams = try {
-        sym.tpe match {
-          case null => Nil
-          case tpe => tpe.typeParams
+        val typeParams = try {
+          sym.tpe match {
+            case null => Nil
+            case tpe => tpe.typeParams
+          }
+        } catch {
+          case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex); Nil
         }
-      } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex); Nil
-      }
-      if (!typeParams.isEmpty) {
-        fm.appendHtml("[")
-        fm.appendText(typeParams map (_.nameString) mkString(", "))
-        fm.appendHtml("]")
-      }
+        if (!typeParams.isEmpty) {
+          fm.appendHtml("[")
+          fm.appendText(typeParams map (_.nameString) mkString(", "))
+          fm.appendHtml("]")
+        }
 
-      try {
         sym.tpe match {
           case MethodType(params, resultType) =>
             if (!params.isEmpty) {
@@ -242,22 +248,26 @@ abstract class ScalaCompletionProposals {
           case NullaryMethodType(resultType) =>
           case _ =>
         }
-      } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex)
+        
+      } get match {
+        case Left(x) =>
+        case Right(ex) => ScalaGlobal.resetLate(completer.global, ex)
       }
 
       fm.getText
     }
 
     def getInsertParams: List[String] = {
-      try {
+      askForResponse {() =>
         sym.tpe match {
           case MethodType(params, resultType) => params map (_.nameString)
           case NullaryMethodType(resultType) => Nil
           case _ => Nil
         }
-      } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex); Nil
+      
+      } get match {
+        case Left(x) => x
+        case Right(ex) => ScalaGlobal.resetLate(completer.global, ex); Nil
       }
     }
 

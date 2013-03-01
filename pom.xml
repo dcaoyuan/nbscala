@@ -56,11 +56,11 @@
 
         <netbeans.version>RELEASE73</netbeans.version>
 
-        <scala.version>2.10.0-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
+        <scala.version>2.10.1-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
         <sbt.version>0.12.2</sbt.version>
         
         <!-- module versions -->
-        <libs.scala.version>2.10.0.3</libs.scala.version>
+        <libs.scala.version>2.10.1.0</libs.scala.version>
         <libs.sbt.version>0.12.2.1</libs.sbt.version>
         <libs.xtc.version>1.15.1</libs.xtc.version>
         <languages.execution.version>1.6.1</languages.execution.version>

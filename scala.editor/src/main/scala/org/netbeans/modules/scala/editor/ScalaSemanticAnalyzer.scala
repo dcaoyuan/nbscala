@@ -40,6 +40,7 @@
 package org.netbeans.modules.scala.editor
 
 import java.util.logging.Logger
+import java.util.logging.Level
 import org.netbeans.api.lexer.{TokenHierarchy}
 import org.netbeans.modules.csl.api.{ElementKind, ColoringAttributes, OffsetRange, SemanticAnalyzer}
 import org.netbeans.modules.parsing.spi.{Scheduler, SchedulerEvent}
@@ -56,7 +57,6 @@ import scala.reflect.internal.Flags
  * @author Caoyuan Deng
  */
 class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
-
   private val log = Logger.getLogger(this.getClass.getName)
   
   private var cancelled: Boolean = _
@@ -129,164 +129,170 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
     import global._
 
     val highlights = new java.util.HashMap[OffsetRange, java.util.Set[ColoringAttributes]](100)
-
+  
     def isSingletonType(sym: Symbol) = try {
       sym.tpe.resultType.isInstanceOf[SingletonType]
     } catch {
       case _: Throwable => false
     }
 
-    for {
-      (idToken, items) <- root.idTokenToItems
-      item = ScalaUtil.importantItem(items)
-      name = item.getName if name != "this" && name != "super"
-    } {
-      if (isCancelled) return null
+    askForResponse {() =>
+      for {
+        (idToken, items) <- root.idTokenToItems
+        item = ScalaUtil.importantItem(items)
+        name = item.getName if name != "this" && name != "super"
+      } {
       
-      // * token may be xml tokens, @see AstVisit#getTokenId
-      idToken.id match {
-        case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super =>
-          val hiRange = ScalaLexUtil.getRangeOfToken(th, idToken)
-          val coloringSet = new java.util.HashSet[ColoringAttributes]
-          val sym = item.symbol
+        if (isCancelled) return null
+      
+        // * token may be xml tokens, @see AstVisit#getTokenId
+        idToken.id match {
+          case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super =>
+            val hiRange = ScalaLexUtil.getRangeOfToken(th, idToken)
+            val coloringSet = new java.util.HashSet[ColoringAttributes]
+            val sym = item.symbol
           
-          item match {
+            item match {
             
-            case dfn: ScalaDfn =>
+              case dfn: ScalaDfn =>
               
-              if (sym.isModule) {
+                if (sym.isModule) {
 
-                coloringSet.add(ColoringAttributes.CLASS)
-                coloringSet.add(ColoringAttributes.DECLARATION)
-                coloringSet.add(ColoringAttributes.GLOBAL)
-
-              } else if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter) {
-
-                coloringSet.add(ColoringAttributes.CLASS)
-                coloringSet.add(ColoringAttributes.DECLARATION)
-
-              } else if (sym.isSetter) {
-
-                coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
-                coloringSet.add(ColoringAttributes.GLOBAL)
-
-              } else if (sym.isGetter) {
-
-                coloringSet.add(ColoringAttributes.FIELD)
-                coloringSet.add(ColoringAttributes.GLOBAL)
-
-              } else if (sym.hasFlag(Flags.LAZY)) {
-
-                coloringSet.add(ColoringAttributes.FIELD)
-                val owner = sym.owner
-                if ((owner ne null) && (owner.isClass || owner.isTrait || owner.isModule)) {
+                  coloringSet.add(ColoringAttributes.CLASS)
+                  coloringSet.add(ColoringAttributes.DECLARATION)
                   coloringSet.add(ColoringAttributes.GLOBAL)
-                }
 
-              } else if (sym.isMethod && sym.hasFlag(Flags.DEFERRED)) {
+                } else if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter) {
 
-                coloringSet.add(ColoringAttributes.METHOD)
-                coloringSet.add(ColoringAttributes.DECLARATION)
-                coloringSet.add(ColoringAttributes.GLOBAL)
+                  coloringSet.add(ColoringAttributes.CLASS)
+                  coloringSet.add(ColoringAttributes.DECLARATION)
 
-              } else if (sym.isMethod) {
+                } else if (sym.isSetter) {
 
-                coloringSet.add(ColoringAttributes.METHOD)
-                coloringSet.add(ColoringAttributes.DECLARATION)
-                  
-              } else if (sym.hasFlag(Flags.PARAM)) {
-
-                coloringSet.add(ColoringAttributes.PARAMETER)
-
-              } else if (sym.hasFlag(Flags.MUTABLE)) {
-
-                coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
-                  
-              } else if (sym.isValue && !sym.hasFlag(Flags.PACKAGE)) {
-
-                coloringSet.add(ColoringAttributes.FIELD)
-                
-              } 
-              
-            case ref: ScalaRef =>
-              
-              if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter || sym.isConstructor) {
-
-                coloringSet.add(ColoringAttributes.CLASS)
-
-              } else if (sym.isModule && !sym.hasFlag(Flags.PACKAGE) || isSingletonType(sym)) {
-
-                coloringSet.add(ColoringAttributes.CLASS)
-                coloringSet.add(ColoringAttributes.GLOBAL)
-
-              } else if (sym.hasFlag(Flags.LAZY)) { // why it's also setter/getter?
-
-                coloringSet.add(ColoringAttributes.FIELD)
-                val owner = sym.owner
-                if ((owner ne null) && (owner.isClass || owner.isTrait || owner.isModule)) {
-                  coloringSet.add(ColoringAttributes.GLOBAL)
-                }
-
-              } else if (sym.isSetter) {
-
-                coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
-                coloringSet.add(ColoringAttributes.GLOBAL)
-
-              } else if (sym.isGetter) {
-
-                val name = sym.nameString
-                val isVariable = try {
-                  val owntpe = sym.owner.tpe
-                  owntpe.members exists {x => x.isVariable && x.nameString == name}
-                } catch {
-                  case _: Throwable => false
-                }
-
-                if (isVariable) {
                   coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
-                } else {
+                  coloringSet.add(ColoringAttributes.GLOBAL)
+
+                } else if (sym.isGetter) {
+
                   coloringSet.add(ColoringAttributes.FIELD)
-                }
-                coloringSet.add(ColoringAttributes.GLOBAL)
+                  coloringSet.add(ColoringAttributes.GLOBAL)
 
-              } else if (sym.hasFlag(Flags.PARAM) || sym.hasFlag(Flags.PARAMACCESSOR)) {
+                } else if (sym.hasFlag(Flags.LAZY)) {
 
-                coloringSet.add(ColoringAttributes.PARAMETER)
+                  coloringSet.add(ColoringAttributes.FIELD)
+                  val owner = sym.owner
+                  if ((owner ne null) && (owner.isClass || owner.isTrait || owner.isModule)) {
+                    coloringSet.add(ColoringAttributes.GLOBAL)
+                  }
 
-              } else if (sym.isMethod && ref.getKind == ElementKind.RULE) { // implicit call
+                } else if (sym.isMethod && sym.hasFlag(Flags.DEFERRED)) {
 
-                coloringSet.add(ColoringAttributes.CUSTOM1)
+                  coloringSet.add(ColoringAttributes.METHOD)
+                  coloringSet.add(ColoringAttributes.DECLARATION)
+                  coloringSet.add(ColoringAttributes.GLOBAL)
 
-              } else if (sym.isMethod) {
+                } else if (sym.isMethod) {
 
-                coloringSet.add(ColoringAttributes.METHOD)
+                  coloringSet.add(ColoringAttributes.METHOD)
+                  coloringSet.add(ColoringAttributes.DECLARATION)
+                  
+                } else if (sym.hasFlag(Flags.PARAM)) {
 
-              } else if (sym.hasFlag(Flags.IMPLICIT)) {
+                  coloringSet.add(ColoringAttributes.PARAMETER)
 
-                coloringSet.add(ColoringAttributes.CUSTOM1)
+                } else if (sym.hasFlag(Flags.MUTABLE)) {
 
-              } else if (sym.hasFlag(Flags.MUTABLE)) {
+                  coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
+                  
+                } else if (sym.isValue && !sym.hasFlag(Flags.PACKAGE)) {
 
-                coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
-
-              } else if (sym.isValue && !sym.hasFlag(Flags.PACKAGE)) {
+                  coloringSet.add(ColoringAttributes.FIELD)
                 
-                coloringSet.add(ColoringAttributes.FIELD)
+                } 
+              
+              case ref: ScalaRef =>
+              
+                if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter || sym.isConstructor) {
 
-              }
-          }
+                  coloringSet.add(ColoringAttributes.CLASS)
 
-          if (sym.isDeprecated) coloringSet.add(ColoringAttributes.DEPRECATED)
-          if (sym.hasFlag(Flags.LAZY)) coloringSet.add(ColoringAttributes.CUSTOM2)
-          if (sym.hasFlag(Flags.BYNAMEPARAM)) coloringSet.add(ColoringAttributes.CUSTOM1)
+                } else if (sym.isModule && !sym.hasFlag(Flags.PACKAGE) || isSingletonType(sym)) {
 
-          if (!coloringSet.isEmpty) highlights.put(hiRange, coloringSet)
+                  coloringSet.add(ColoringAttributes.CLASS)
+                  coloringSet.add(ColoringAttributes.GLOBAL)
 
-        case _ =>
+                } else if (sym.hasFlag(Flags.LAZY)) { // why it's also setter/getter?
+
+                  coloringSet.add(ColoringAttributes.FIELD)
+                  val owner = sym.owner
+                  if ((owner ne null) && (owner.isClass || owner.isTrait || owner.isModule)) {
+                    coloringSet.add(ColoringAttributes.GLOBAL)
+                  }
+
+                } else if (sym.isSetter) {
+
+                  coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
+                  coloringSet.add(ColoringAttributes.GLOBAL)
+
+                } else if (sym.isGetter) {
+
+                  val name = sym.nameString
+                  val isVariable = try {
+                    val owntpe = sym.owner.tpe
+                    owntpe.members exists {x => x.isVariable && x.nameString == name}
+                  } catch {
+                    case _: Throwable => false
+                  }
+
+                  if (isVariable) {
+                    coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
+                  } else {
+                    coloringSet.add(ColoringAttributes.FIELD)
+                  }
+                  coloringSet.add(ColoringAttributes.GLOBAL)
+
+                } else if (sym.hasFlag(Flags.PARAM) || sym.hasFlag(Flags.PARAMACCESSOR)) {
+
+                  coloringSet.add(ColoringAttributes.PARAMETER)
+
+                } else if (sym.isMethod && ref.getKind == ElementKind.RULE) { // implicit call
+
+                  coloringSet.add(ColoringAttributes.CUSTOM1)
+
+                } else if (sym.isMethod) {
+
+                  coloringSet.add(ColoringAttributes.METHOD)
+
+                } else if (sym.hasFlag(Flags.IMPLICIT)) {
+
+                  coloringSet.add(ColoringAttributes.CUSTOM1)
+
+                } else if (sym.hasFlag(Flags.MUTABLE)) {
+
+                  coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
+
+                } else if (sym.isValue && !sym.hasFlag(Flags.PACKAGE)) {
+                
+                  coloringSet.add(ColoringAttributes.FIELD)
+
+                }
+            }
+
+            if (sym.isDeprecated) coloringSet.add(ColoringAttributes.DEPRECATED)
+            if (sym.hasFlag(Flags.LAZY)) coloringSet.add(ColoringAttributes.CUSTOM2)
+            if (sym.hasFlag(Flags.BYNAMEPARAM)) coloringSet.add(ColoringAttributes.CUSTOM1)
+
+            if (!coloringSet.isEmpty) highlights.put(hiRange, coloringSet)
+
+          case _ =>
+        }
       }
-
+      
+    } get match {
+      case Left(x) =>
+      case Right(ex) => ScalaSemanticAnalyzer.this.log.log(Level.WARNING, ex.getMessage, ex)
     }
     
     highlights
-  }
+  }  
 }

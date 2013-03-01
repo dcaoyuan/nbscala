@@ -142,39 +142,42 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
           override def run(ri: ResultIterator) {
             val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
             val global = pr.global
-            import global._
 
             var m_isBaseClassText: String = null
             var labelText: String = null
             var modif = java.util.Collections.emptySet[Modifier]
 
+            global.askForResponse {() =>
+              import global._
 
-            val sName = element.symbol.nameString
-            val clzName = element.symbol.enclClass.nameString
+              val sName = element.symbol.nameString
+              val clzName = element.symbol.enclClass.nameString
+            
+              element.kind match {
+                case ElementKind.METHOD | ElementKind.CALL =>
+                  modif = element.getModifiers
+                  methodDeclaringClass = clzName
+                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_MethodUsages", element.symbol.nameString, methodDeclaringClass) // NOI18N
 
-            element.kind match {
-              case ElementKind.METHOD | ElementKind.CALL =>
-                modif = element.getModifiers
-                methodDeclaringClass = clzName
-                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_MethodUsages", element.symbol.nameString, methodDeclaringClass) // NOI18N
-
-                val overridens = element.symbol.allOverriddenSymbols
-                if (!overridens.isEmpty) {
-                  val overriden = overridens.head
-                  m_isBaseClassText = new MessageFormat(NbBundle.getMessage(classOf[WhereUsedPanel], "LBL_UsagesOfBaseClass")).format(
-                    Array(methodDeclaringSuperClass).asInstanceOf[Array[Object]]
-                  )
-                  newElement = ScalaElement(overriden.asInstanceOf[Symbol], pr)
-                }
-              case ElementKind.CLASS | ElementKind.MODULE =>
-                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ClassUsages", sName) // NOI18N
-              case ElementKind.CONSTRUCTOR =>
-                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ConstructorUsages", sName, clzName) // NOI18N
-              case ElementKind.FIELD =>
-                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_FieldUsages", sName, clzName) // NOI18N
-              case _ =>
-                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_VariableUsages", sName) // NOI18N
-            }
+                  val overridens = element.symbol.allOverriddenSymbols
+                  if (!overridens.isEmpty) {
+                    val overriden = overridens.head
+                    m_isBaseClassText = new MessageFormat(NbBundle.getMessage(classOf[WhereUsedPanel], "LBL_UsagesOfBaseClass")).format(
+                      Array(methodDeclaringSuperClass).asInstanceOf[Array[Object]]
+                    )
+                    newElement = ScalaElement(overriden.asInstanceOf[Symbol], pr)
+                  }
+                case ElementKind.CLASS | ElementKind.MODULE =>
+                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ClassUsages", sName) // NOI18N
+                case ElementKind.CONSTRUCTOR =>
+                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ConstructorUsages", sName, clzName) // NOI18N
+                case ElementKind.FIELD =>
+                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_FieldUsages", sName, clzName) // NOI18N
+                case _ =>
+                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_VariableUsages", sName) // NOI18N
+              }
+            
+            } get 
 
             val modifiers = modif
             val isBaseClassText = m_isBaseClassText
@@ -187,35 +190,40 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
                   //label.setText(labelText);
                   val combinedLabelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_WhereUsedWarningInDevelopment", labelText)
                   label.setText(combinedLabelText)
-                  element.kind match {
-                    case ElementKind.METHOD =>
-                      add(methodsPanel, BorderLayout.CENTER)
-                      methodsPanel.setVisible(true)
-                      m_usages.setVisible(!modifiers.contains(Modifier.STATIC))
-                      val enclClass = element.symbol.enclClass
-                      m_overriders.setVisible(!(enclClass.hasFlag(Flags.STATIC) ||
-                                                enclClass.hasFlag(Flags.FINAL) ||
-                                                modifiers.contains(Modifier.STATIC) ||
-                                                modifiers.contains(Modifier.PRIVATE)))
-                      if (methodDeclaringSuperClass ne null ) {
-                        m_isBaseClass.setVisible(true)
-                        m_isBaseClass.setSelected(true)
-                        Mnemonics.setLocalizedText(m_isBaseClass, isBaseClassText)
-                      } else {
-                        m_isBaseClass.setVisible(false)
-                        m_isBaseClass.setSelected(false)
-                      }
-                    case ElementKind.CLASS | ElementKind.MODULE =>
-                      add(classesPanel, BorderLayout.CENTER)
-                      classesPanel.setVisible(true)
-                    case _ =>
-                      remove(classesPanel)
-                      remove(methodsPanel)
-                      c_subclasses.setVisible(false)
-                      m_usages.setVisible(false)
-                      c_usages.setVisible(false)
-                      c_directOnly.setVisible(false)
-                  }
+                  
+                  global.askForResponse {() =>
+                    //import global._
+                    
+                    element.kind match {
+                      case ElementKind.METHOD =>
+                        add(methodsPanel, BorderLayout.CENTER)
+                        methodsPanel.setVisible(true)
+                        m_usages.setVisible(!modifiers.contains(Modifier.STATIC))
+                        val enclClass = element.symbol.enclClass
+                        m_overriders.setVisible(!(enclClass.hasFlag(Flags.STATIC) ||
+                                                  enclClass.hasFlag(Flags.FINAL) ||
+                                                  modifiers.contains(Modifier.STATIC) ||
+                                                  modifiers.contains(Modifier.PRIVATE)))
+                        if (methodDeclaringSuperClass ne null ) {
+                          m_isBaseClass.setVisible(true)
+                          m_isBaseClass.setSelected(true)
+                          Mnemonics.setLocalizedText(m_isBaseClass, isBaseClassText)
+                        } else {
+                          m_isBaseClass.setVisible(false)
+                          m_isBaseClass.setSelected(false)
+                        }
+                      case ElementKind.CLASS | ElementKind.MODULE =>
+                        add(classesPanel, BorderLayout.CENTER)
+                        classesPanel.setVisible(true)
+                      case _ =>
+                        remove(classesPanel)
+                        remove(methodsPanel)
+                        c_subclasses.setVisible(false)
+                        m_usages.setVisible(false)
+                        c_usages.setVisible(false)
+                        c_directOnly.setVisible(false)
+                    }
+                  } get
                   
                   if (currentProject ne null) {
                     scope.setModel(new DefaultComboBoxModel(Array(allProjects, currentProject).asInstanceOf[Array[JLabel]]))
@@ -314,14 +322,14 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
           m_isBaseClassActionPerformed(evt);
         }
       });
-    gridBagConstraints = new java.awt.GridBagConstraints();
+    gridBagConstraints = new java.awt.GridBagConstraints()
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 3;
-    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-    gridBagConstraints.insets = new java.awt.Insets(0, 12, 0, 0);
-    methodsPanel.add(m_isBaseClass, gridBagConstraints);
-    val bundle = java.util.ResourceBundle.getBundle("org/netbeans/modules/scala/refactoring/ui/Bundle"); // NOI18N
-    m_isBaseClass.getAccessibleContext().setAccessibleDescription(bundle.getString("ACSD_isBaseClass")); // NOI18N
+    gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST
+    gridBagConstraints.insets = new java.awt.Insets(0, 12, 0, 0)
+    methodsPanel.add(m_isBaseClass, gridBagConstraints)
+    val bundle = java.util.ResourceBundle.getBundle("org/netbeans/modules/scala/refactoring/ui/Bundle") // NOI18N
+    m_isBaseClass.getAccessibleContext().setAccessibleDescription(bundle.getString("ACSD_isBaseClass")) // NOI18N
 
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;

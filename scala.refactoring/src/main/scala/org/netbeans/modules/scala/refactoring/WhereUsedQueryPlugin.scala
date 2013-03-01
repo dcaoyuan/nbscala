@@ -110,9 +110,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
       set.add(fo)
 
       // * is there any symbol in this place not private?
-      val notLocal = samePlaceSyms exists {x =>
-        !x.hasFlag(Flags.PRIVATE)
-      }
+      val notLocal = samePlaceSyms exists {x => !x.hasFlag(Flags.PRIVATE)}
 
       if (notLocal) {
         val srcCp = cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE)
@@ -262,7 +260,6 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
       val th = pr.getSnapshot.getTokenHierarchy
       val root = pr.rootScope
       val global = pr.global
-      import global._
 
       if (root == ScalaRootScope.EMPTY) {
         val sourceText = pr.getSnapshot.getText.toString
@@ -340,36 +337,41 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
        } else*/
 
       if (samePlaceSymToDSimpleSig.isEmpty) {
-        samePlaceSymToDSimpleSig = samePlaceSyms map {case x: Symbol => (x, ScalaUtil.symSimpleSig(x))}
+        samePlaceSymToDSimpleSig = samePlaceSyms map {case x: global.Symbol => (x, global.ScalaUtil.symSimpleSig(x))}
       }
 
       if (isFindUsages) {
-        
-        def isRef(sym: Symbol) = try {
-          lazy val overriddens = sym.allOverriddenSymbols
-          val mySig = ScalaUtil.symSimpleSig(sym)
-          val myQName = sym.fullName
-          samePlaceSymToDSimpleSig exists {
-            case (symx, sigx) if mySig == sigx =>
-              val qNamex = symx.fullName
-              if (myQName == qNamex) true 
-              else overriddens exists {_.fullName == qNamex}
-            case _ => false
+        global.askForResponse {() =>
+          import global._
+          
+          def isRef(sym: Symbol) = try {
+            lazy val overriddens = sym.allOverriddenSymbols
+            val mySig = ScalaUtil.symSimpleSig(sym)
+            val myQName = sym.fullName
+            samePlaceSymToDSimpleSig exists {
+              case (symx, sigx) if mySig == sigx =>
+                val qNamex = symx.fullName
+                if (myQName == qNamex) true 
+                else overriddens exists {_.fullName == qNamex}
+              case _ => false
+            }
+          } catch {
+            case _: Throwable => false
           }
-        } catch {
-          case _: Throwable => false
-        }
         
-        val tokens = new HashSet[Token[_]]
-        for ((token, items) <- root.idTokenToItems;
-             item <- items;
-             sym = item.asInstanceOf[ScalaItem].symbol;
-             // * tokens.add(token) should be the last condition
-             if token.text.toString == targetName && isRef(sym) && tokens.add(token)
-        ) {
-          logger.info(pr.getSnapshot.getSource.getFileObject + ": find where used element " + sym.fullName)
-          elements.add(refactoring, WhereUsedElement(pr, item.asInstanceOf[ScalaItem]))
-        }
+          val tokens = new HashSet[Token[_]]
+          for {
+            (token, items) <- root.idTokenToItems
+            item <- items
+            sym = item.asInstanceOf[ScalaItem].symbol
+            // * tokens.add(token) should be the last condition
+            if token.text.toString == targetName && isRef(sym) && tokens.add(token)
+          } {
+            logger.info(pr.getSnapshot.getSource.getFileObject + ": find where used element " + sym.fullName)
+            elements.add(refactoring, WhereUsedElement(pr, item.asInstanceOf[ScalaItem]))
+          }
+        } get 
+        
       } else if (isFindOverridingMethods) {
         // TODO
       } else if (isSearchFromBaseClass) {
