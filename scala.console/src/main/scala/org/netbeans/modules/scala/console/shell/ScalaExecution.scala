@@ -171,6 +171,9 @@ object ScalaExecution {
         // so, the process will terminate and not hang on "process.waitFor()" @see cmd /?
         args += "-Djline.stty=/c\\ echo"  
       case _ =>
+        args += "-Djline.terminal=unix" 
+        args += "-Djline.sh=sh"
+        args += "-Djline.stty=echo"  // avoid to send stty command, it's not necessary for pseudo termnial
     }
     
     // main class
