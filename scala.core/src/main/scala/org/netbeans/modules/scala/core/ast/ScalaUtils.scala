@@ -324,7 +324,6 @@ trait ScalaUtils {self: ScalaGlobal =>
      * from scala.tools.nsc.symtab.Symbols
      */
     def askForHtmlDef(sym: Symbol, fm: HtmlFormatter) {
-      
       askForResponse {() =>
         fm.appendHtml("<i>")
         fm.appendText(sym.enclClass.fullName)
@@ -640,50 +639,70 @@ trait ScalaUtils {self: ScalaGlobal =>
     }
 
     def isProperType(sym: Symbol): Boolean = {
-      if (sym.isType && sym.hasRawInfo) {
-        completeIfWithLazyType(sym)
-        sym.rawInfo match {
-          case NoType | ErrorType => false
-          case _ => true
-        }
-      } else false
+      askForResponse {() =>
+        if (sym.isType && sym.hasRawInfo) {
+          completeIfWithLazyType(sym)
+          sym.rawInfo match {
+            case NoType | ErrorType => false
+            case _ => true
+          }
+        } else false
+      } get match {
+        case Left(x) => x
+        case Right(ex) => false
+      }
     }
 
     def importantItem(items: List[AstItem]): ScalaItem = {
-      items map {item =>
-        val (sym, baseLevel) = item match {
-          case dfn: ScalaDfn => (dfn.symbol, 0)
-          case ref: ScalaRef => (ref.symbol, 100)
+      askForResponse {() =>
+        items map {item =>
+          val (sym, baseLevel) = item match {
+            case dfn: ScalaDfn => (dfn.symbol, 0)
+            case ref: ScalaRef => (ref.symbol, 100)
+          }
+
+          val importantLevel = baseLevel + (if (sym == NoSymbol) 90
+                                            else if (sym.isClass  || sym.isTrait || sym.isType || sym.isModule) 10
+                                            else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 20
+                                            else if (sym.isGetter)      30
+                                            else if (sym.isConstructor) 40
+                                            else if (!sym.isMethod)     50
+                                            else 60)
+
+          (importantLevel, item)
+        } sortWith {(x1, x2) => x1._1 < x2._1} head match {
+          case (_, item) => item.asInstanceOf[ScalaItem]
         }
-
-        val importantLevel = baseLevel + (if (sym == NoSymbol) 90
-                                          else if (sym.isClass  || sym.isTrait || sym.isType || sym.isModule) 10
-                                          else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 20
-                                          else if (sym.isGetter)      30
-                                          else if (sym.isConstructor) 40
-                                          else if (!sym.isMethod)     50
-                                          else 60)
-
-        (importantLevel, item)
-      } sortWith {(x1, x2) => x1._1 < x2._1} head match {
-        case (_, item) => item.asInstanceOf[ScalaItem]
+      } get match {
+        case Left(x) => x
+        case Right(ex) => items.head.asInstanceOf[ScalaItem]
       }
     }
 
     @throws(classOf[Throwable])
-    def symSimpleSig(sym: Symbol) = {
-      val tpe = sym.tpe // may throws exception
-      typeSimpleSig(tpe)
+    def symSimpleSig(sym: Symbol): String = {
+      askForResponse {() =>
+        val tpe = sym.tpe // may throws exception
+        typeSimpleSig(tpe)
+      } get match {
+        case Left(x) => x
+        case Right(ex) => "<error>"
+      }
     }
 
-    def typeSimpleSig(tpe: Type) = {
-      val sb = new StringBuilder
-      typeSimpleSig_(tpe, sb)
-      sb.toString
+    def typeSimpleSig(tpe: Type): String = {
+      askForResponse {() =>
+        val sb = new StringBuilder
+        typeSimpleSig_(tpe, sb)
+        sb.toString
+      } get match {
+        case Left(x) => x
+        case Right(ex) => "<error>"
+      }
     }
 
     /** use to test if type is the same: when they have same typeSimpleSig true, otherwise false */
-    private def typeSimpleSig_(tpe: Type, sb: StringBuilder): Unit = {
+    private def typeSimpleSig_(tpe: Type, sb: StringBuilder) {
       if (tpe eq null) return
       tpe match {
         case ErrorType =>
