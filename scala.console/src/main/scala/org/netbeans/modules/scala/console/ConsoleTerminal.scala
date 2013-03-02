@@ -91,6 +91,8 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   private val linesBuf = new mutable.ArrayBuffer[String]()
   private var isWaitingUserInput = false
 
+  /** override me to enable it, -1 means no trigger */
+  protected val CompleteTriggerChar = -1.toChar
   protected val outputCapturer = new ConsoleCapturer()
   
   lazy val defaultStyle = {
@@ -534,11 +536,6 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
             keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
       } else {
-        keyCode match {
-          case VK_TAB => 
-            outputCapturer capture completePopupAction // do completion
-          case _ => 
-        }
         keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
       }
 
@@ -574,7 +571,23 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
       } else {
-        keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+        keyChar match {
+          case VK_TAB =>
+            println("keyCode: " + evt.getKeyCode + ", keyChar: " + evt.getKeyChar)
+            outputCapturer capture completePopupAction // do completion
+            keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+            
+          case CompleteTriggerChar if CompleteTriggerChar != -1 =>
+            keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+            outputCapturer capture {_ =>
+              outputCapturer capture completePopupAction // do completion afterward
+              keyTyped(0, VK_TAB, 0)
+            }
+            
+          case _ =>
+            keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+        }
+        
       }
       
       evt.consume // consume it, will be handled by echo etc

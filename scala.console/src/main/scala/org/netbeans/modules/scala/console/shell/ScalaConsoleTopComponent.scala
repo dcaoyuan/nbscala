@@ -354,6 +354,9 @@ object ScalaConsoleTopComponent {
     }
     
     override 
+    protected val CompleteTriggerChar = '.'
+    
+    override 
     protected val lineParser = new ConsoleOutputLineParser() {
       
       val INFO_PREFIX    = "[info]"
