@@ -573,7 +573,6 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       } else {
         keyChar match {
           case VK_TAB =>
-            println("keyCode: " + evt.getKeyCode + ", keyChar: " + evt.getKeyChar)
             outputCapturer capture completePopupAction // do completion
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
             
