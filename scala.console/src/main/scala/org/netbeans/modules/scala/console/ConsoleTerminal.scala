@@ -23,7 +23,6 @@ import javax.swing.JViewport
 import javax.swing.SwingUtilities
 import javax.swing.plaf.basic.BasicComboPopup
 import javax.swing.text.AttributeSet
-import javax.swing.text.BadLocationException
 import javax.swing.text.Document
 import javax.swing.text.JTextComponent
 import javax.swing.text.SimpleAttributeSet
@@ -37,43 +36,63 @@ trait ConsoleOutputLineParser {
 }
 
 class ConsoleCapturer {
-  private val log = Logger.getLogger(getClass.getName)
+  import ConsoleCapturer._
   
   private var _isCapturing = false
-  private var _captureText = new StringBuilder()
-  private var _text: String = ""
-  private var _lastOutput: String = ""
-  private var _postAction: ConsoleCapturer => Unit = capturer => ()
+  private var _linesUnderCapturing = new StringBuilder()
+  private var _endAction: EndAction = _
+  
+  /** a temperary variable that will be injected to _endAction at once, and then reset to false */
+  private var _isHidingOutput = false
     
-  def text = _text
-  def lastOutput = _lastOutput
+  def action = _endAction
 
   def isCapturing = _isCapturing
   def discard {
     _isCapturing = false
   }
-    
-  def capture(postAction: ConsoleCapturer => Unit) {
-    _isCapturing = true
-    _text = ""
-    _postAction = postAction
+  
+  /**
+   * XXX The logic is too complex for jline1 and windows terminal, todo
+   */
+  def hideOutput = {
+    _isHidingOutput = true
+    this
   }
     
-  def endWith(lastOutput: String) {
-    _isCapturing = false
-    _lastOutput = lastOutput
-    _text = _captureText.toString
-    _captureText.delete(0, _captureText.length)
-      
-    try {
-      _postAction(this)
-    } catch {
-      case ex: Exception => log.log(Level.WARNING, ex.getMessage, ex)
+  def capture(endAction: EndAction => Unit) {
+    _isCapturing = true
+    _endAction = new EndAction {
+      // should keep a self copy of of _isHidingOutput as soon as possible to avoid being changed by outside
+      val isHidingOutput = _isHidingOutput
+      def apply() = endAction(this)
     }
+    _isHidingOutput = false // reset back to default
+  }
+ 
+  def endWith(lastOutput: String): EndAction = {
+    _isCapturing = false
+      
+    _endAction.lines = _linesUnderCapturing.toString
+    _linesUnderCapturing.delete(0, _linesUnderCapturing.length)
+    _endAction.lastOutput = lastOutput
+    _endAction
   }
     
   def append(str: String) {
-    _captureText.append(str)
+    _linesUnderCapturing.append(str)
+  }
+}
+
+object ConsoleCapturer {
+  private val log = Logger.getLogger(getClass.getName)
+
+  trait EndAction {
+    /** print captured output on console or not */
+    def isHidingOutput: Boolean
+    def apply(): Unit
+    var lines: String = ""
+    var lastOutput: String = ""
   }
 }
 
@@ -214,45 +233,69 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   @throws(classOf[IOException])
   override
   def flush() {
-    doFlushWith {nonTeminatedText =>
-      isWaitingUserInput = nonTeminatedText.length > 0
-      if (isWaitingUserInput && outputCapturer.isCapturing) {
-        outputCapturer.endWith(nonTeminatedText)
-      }
-    }
+    doFlushWith(true)()
   }
   
   /**
+   * @param   is from a carry out flush
    * @param   an afterward action, with param 'current inputing line' which could be used or just ignore
    * @return  the last non-teminated line. if it's waiting for user input, this 
    *          line.length should > 0 (with at least one char)
    */
-  protected[console] def doFlushWith(postAction: String => Unit = nonTeminatedText => ()): String = {
-    val bufStr = buf.toString
+  protected[console] def doFlushWith(isCarryOut: Boolean)(postAction: => Unit) {
+    val text = buf.toString
     buf.delete(0, buf.length)
-    val (lines, nonTerminatedText) = readLines(bufStr)
+    val (lines, nonLineTeminatedText) = readLines(text)
 
-    if (outputCapturer.isCapturing) {
-      lines foreach outputCapturer.append
+    if (isCarryOut) {
+      isWaitingUserInput = nonLineTeminatedText.length > 0
     } 
     
-    // doFlush may be called by input/output stream processing thread, whatever, we
-    // will force Swing related code to be executed in event dispatch thread:
-    SwingUtilities.invokeLater(new Runnable() {
-        def run() {
-          try {
-            writeLines(lines)
-            writeNonTeminatedText(nonTerminatedText)
-            postAction(nonTerminatedText)
-          } catch {
-            case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex)
+    // @Note 
+    // doFlushWith is usaully called by inputstream/outputstream processing thread, 
+    // whatever, we will force Swing related code to be executed in event dispatch thread
+    if (!outputCapturer.isCapturing) {
+      val theIsWaitingUserInput = isWaitingUserInput // keep a copy for async call
+      SwingUtilities.invokeLater(new Runnable() {
+          def run() {
+            try {
+              writeLines(lines)
+              writeNonLineTeminatedText(nonLineTeminatedText)
+              postAction
+              if (theIsWaitingUserInput) {
+                if (CompleteTriggerChar != -1 && 
+                    nonLineTeminatedText.length > 0 &&
+                    nonLineTeminatedText.charAt(nonLineTeminatedText.length -1) == CompleteTriggerChar
+                ) {
+                  terminalInput.invokeCompleteAction
+                }
+              }
+            } catch {
+              case ex: Throwable => log.log(Level.SEVERE, ex.getMessage, ex)
+            }
           }
-    
         }
-      }
-    )
-
-    nonTerminatedText
+      )
+    } else {
+      lines foreach outputCapturer.append
+      val theIsWaitingUserInput = isWaitingUserInput // keep a copy for async call
+      SwingUtilities.invokeLater(new Runnable() {
+          def run() {
+            try {
+              writeLines(lines)
+              writeNonLineTeminatedText(nonLineTeminatedText)
+              postAction
+              if (theIsWaitingUserInput) { // it's time to end capturing
+                val captureEndAction = outputCapturer.endWith(nonLineTeminatedText)
+                captureEndAction()
+              }
+            } catch {
+              case ex: Throwable => log.log(Level.SEVERE, ex.getMessage, ex)
+            }
+          }
+        }
+      )
+    }
   }
   
   /**
@@ -309,7 +352,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
    * followed overwriting in combination for non-ansi terminal to move cursor.
    */
   @throws(classOf[Exception])
-  private def writeNonTeminatedText(text: String) {
+  private def writeNonLineTeminatedText(text: String) {
     val len = text.length
     var i = 0
     while (i < len) {
@@ -353,7 +396,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       doc.remove(start, end - start)
       doc.insertString(start, replacement, currentStyle)
     } catch {
-      case ex: BadLocationException => // Ifnore
+      case ex: Throwable => // Ifnore
     }
   }
   
@@ -392,8 +435,8 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   
   // --- complete actions
   
-  protected def completePopupAction(capturer: ConsoleCapturer) {
-    val text = capturer.text
+  protected def completePopupAction(endAction: ConsoleCapturer.EndAction) {
+    val text = endAction.lines
     if (text.trim == "{invalid input}") {
       return
     }
@@ -412,7 +455,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     }
   }
   
-  protected def completeIncrementalAction(capturer: ConsoleCapturer) {
+  protected def completeIncrementalAction(endAction: ConsoleCapturer.EndAction) {
     val pos = area.getCaretPosition
     if (pos >= 0) {
       val input = stripEndingCR(getLastLine)
@@ -499,11 +542,15 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   object terminalInput extends TerminalInput with KeyListener {
     import KeyEvent._
 
+    def invokeCompleteAction {
+      outputCapturer.hideOutput capture completePopupAction
+      keyTyped(0, VK_TAB, 0)
+    }
+    
     override 
     def write(b: Array[Byte]) {
       pipedOut.write(b)
     }
-    
     
     override 
     def keyReleased(evt: KeyEvent) {
@@ -517,15 +564,16 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       // --- complete visiblilty
       if (completePopup.isVisible) {
         keyCode match {
-          case VK_TAB =>
-          case VK_UP =>    
+          case VK_TAB => 
+            // ignore it
+          case VK_UP =>
             completeUpSelectAction(evt)
           case VK_DOWN =>  
             completeDownSelectAction(evt)
           case VK_ENTER => 
             // terminalInput process VK_ENTER in keyTyped, so keep completePopup visible here
           case VK_ESCAPE => 
-            // terminalInput will also process VK_ESCAPE in keyTyped later, so keep completePopup visible here
+            // terminalInput process VK_ESCAPE in keyTyped, so keep completePopup visible here
           case _ if isPrintableChar(evt.getKeyChar) =>
             // may be under incremental complete
             keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
@@ -559,29 +607,33 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       
       if (completePopup.isVisible) {
         keyChar match {
+          case VK_TAB => 
+            // ignore it
+            
           case VK_ENTER => 
             completeSelectedAction(evt)
             completePopup.setVisible(false)
+            
           case VK_ESCAPE =>
             completePopup.setVisible(false)
-          case c if isPrintableChar(c) => 
+            
+          case _ if isPrintableChar(keyChar) => 
             outputCapturer capture completeIncrementalAction
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
+            
           case _ =>
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
       } else {
         keyChar match {
           case VK_TAB =>
-            outputCapturer capture completePopupAction // do completion
-            keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
-            
-          case CompleteTriggerChar if CompleteTriggerChar != -1 =>
-            keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
-            outputCapturer capture {_ =>
-              outputCapturer capture completePopupAction // do completion afterward
-              keyTyped(0, VK_TAB, 0)
+            if (!outputCapturer.isCapturing) {
+              outputCapturer.hideOutput capture completePopupAction // do completion
+              keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
             }
+            
+          case VK_ESCAPE => 
+            // ignore it. Under sbt console, <escape> followed by <backspace> behaves strange
             
           case _ =>
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
@@ -671,13 +723,16 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
   
   // @Note before do any ansi cursor command, we should flush first to keep the 
   // proper caret position which is sensitive to the order of ansi command and chars to print
-  @throws(classOf[BadLocationException])
   override 
   protected def processCursorToColumn(col: Int) {
-    term doFlushWith {currentLine => 
-      val lineStart = getLineStartOffsetForPos(doc, area.getCaretPosition)
-      val toPos = lineStart + col - 1
-      area.setCaretPosition(toPos)
+    term.doFlushWith(false) { 
+      try {
+        val lineOffset = getLineStartOffsetForPos(doc, area.getCaretPosition)
+        val toPos = lineOffset + col - 1
+        area.setCaretPosition(toPos)
+      } catch {
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+      }
     }
   }
   
@@ -686,27 +741,33 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
    * end of screen. If n is one, clear from cursor to beginning of the screen. 
    * If n is two, clear entire screen (and moves cursor to upper left on MS-DOS ANSI.SYS).
    */
-  @throws(classOf[BadLocationException])
   override 
   protected def processEraseScreen(eraseOption: Int) {
     eraseOption match {
       case 0 => 
-        term doFlushWith {currentLine =>
-          val currPos = area.getCaretPosition
-          doc.remove(currPos, doc.getLength - currPos)
+        term.doFlushWith(false) {
+          try {
+            val currPos = area.getCaretPosition
+            doc.remove(currPos, doc.getLength - currPos)
+          } catch {
+            case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+          }
         }
       case _ =>
     }
   }
   
-  @throws(classOf[BadLocationException])
   override 
   protected def processEraseLine(eraseOption: Int) {
     eraseOption match {
       case 0 => 
-        term doFlushWith {currentLine =>
-          val currPos = area.getCaretPosition
-          doc.remove(currPos, doc.getLength - currPos)
+        term.doFlushWith(false) {
+          try {
+            val currPos = area.getCaretPosition
+            doc.remove(currPos, doc.getLength - currPos)
+          } catch {
+            case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+          }
         }
       case _ =>
     }
