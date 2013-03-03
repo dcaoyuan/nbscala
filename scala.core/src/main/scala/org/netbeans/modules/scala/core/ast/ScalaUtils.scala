@@ -216,7 +216,7 @@ trait ScalaUtils {self: ScalaGlobal =>
       tpe match {
         case ErrorType => fm.appendText("<error>")
           // internal: error
-        case WildcardType => "_"
+        case WildcardType => fm.appendText("_")
           // internal: unknown
         case NoType => fm.appendText("<notype>")
         case NoPrefix => fm.appendText("<noprefix>")
@@ -341,7 +341,7 @@ trait ScalaUtils {self: ScalaGlobal =>
           sym.flags & Flags.ExplicitFlags & ~Flags.OVERRIDE
         } else sym.flags & Flags.ExplicitFlags
 
-        compose(List(Flags.flagsToString(flags),
+        compose(List(sym.flagString(flags),
                      sym.keyString,
                      sym.varianceString + sym.nameString), fm)
       
@@ -379,7 +379,7 @@ trait ScalaUtils {self: ScalaGlobal =>
       tpe match {
         case ErrorType => fm.appendText("<error>")
           // internal: error
-        case WildcardType => "_"
+        case WildcardType => fm.appendText("_")
           // internal: unknown
         case NoType => fm.appendText("<notype>")
         case NoPrefix => fm.appendText("<noprefix>")
@@ -708,7 +708,7 @@ trait ScalaUtils {self: ScalaGlobal =>
         case ErrorType =>
           sb.append("<error>")
           // internal: error
-        case WildcardType => "_"
+        case WildcardType => sb.append("_")
           // internal: unknown
         case NoType => sb.append("<notype>")
         case NoPrefix => sb.append("<noprefix>")
