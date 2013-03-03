@@ -39,34 +39,33 @@
 
 package org.netbeans.modules.scala.editor.imports
 
-import java.awt.event.ActionEvent;
-import javax.swing.text.JTextComponent;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import java.awt.event.ActionEvent
+import javax.swing.text.JTextComponent
+import java.util.logging.Logger
+import java.util.logging.Level
 import org.netbeans.modules.csl.api.OffsetRange
-import org.netbeans.modules.editor.NbEditorUtilities;
-import org.netbeans.editor.BaseAction;
+import org.netbeans.modules.editor.NbEditorUtilities
+import org.netbeans.editor.BaseAction
 import org.openide.{DialogDescriptor, DialogDisplayer, NotifyDescriptor}
-import org.openide.util.NbBundle;
-import org.openide.util.RequestProcessor;
+import org.openide.util.NbBundle
+import org.openide.util.RequestProcessor
 import org.netbeans.editor.BaseDocument
-import org.netbeans.modules.parsing.api.ParserManager;
-import org.netbeans.modules.parsing.api.ResultIterator;
-import org.netbeans.modules.parsing.api.Source;
-import org.netbeans.modules.parsing.api.UserTask;
-import org.netbeans.modules.parsing.spi.ParseException;
-import org.netbeans.modules.scala.core.ScalaParserResult;
-import org.openide.util.Exceptions;
+import org.netbeans.modules.parsing.api.ParserManager
+import org.netbeans.modules.parsing.api.ResultIterator
+import org.netbeans.modules.parsing.api.Source
+import org.netbeans.modules.parsing.api.UserTask
+import org.netbeans.modules.parsing.spi.ParseException
+import org.netbeans.modules.scala.core.ScalaParserResult
+import org.openide.util.Exceptions
 import scala.collection.mutable.ArrayBuffer
 
 /**
  *
  * @author schmidtm
  */
-class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImportsAction],
-                                                              "fix-scala-imports"), 0)
+class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImportsAction], "fix-scala-imports"), 0)
                           with Runnable {
-  private val LOG = Logger.getLogger(classOf[FixImportsAction].getName)
+  private val log = Logger.getLogger(classOf[FixImportsAction].getName)
 
   var doc: BaseDocument = _
 
@@ -77,7 +76,7 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
   }
 
   def actionPerformed(evt: ActionEvent, comp: JTextComponent) {
-    LOG.log(Level.FINEST, "actionPerformed(final JTextComponent comp)")
+    log.log(Level.FINEST, "actionPerformed(final JTextComponent comp)")
 
     assert(comp ne null)
     comp.getDocument match {
@@ -91,7 +90,7 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
   def run {
     val dob = NbEditorUtilities.getDataObject(doc)
     if (dob eq null) {
-      LOG.log(Level.FINEST, "Could not get DataObject for document")
+      log.log(Level.FINEST, "Could not get DataObject for document")
       return
     }
 
@@ -103,11 +102,11 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
       ParserManager.parse(java.util.Collections.singleton(source), new UserTask {
           @throws(classOf[Exception])
           override def run(resultIterator: ResultIterator)  {
-            val pResult = resultIterator.getParserResult.asInstanceOf[ScalaParserResult]
-            if (pResult ne null) {
-              val errors = pResult.getDiagnostics
+            val pr = resultIterator.getParserResult.asInstanceOf[ScalaParserResult]
+            if (pr ne null) {
+              val errors = pr.getDiagnostics
               if (errors eq null) {
-                LOG.log(Level.FINEST, "Could not get list of errors")
+                log.log(Level.FINEST, "Could not get list of errors")
                 return
               }
 
@@ -144,7 +143,7 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
 
     // * do we have multiple candidate? In this case we need to present a chooser
     if (!multipleCandidates.isEmpty) {
-      LOG.log(Level.FINEST, "multipleCandidates.size(): " + multipleCandidates.size)
+      log.log(Level.FINEST, "multipleCandidates.size(): " + multipleCandidates.size)
       for (ImportCandidate(missing, fqn, range, icon, importantsLevel) <- presentChooser(multipleCandidates)) {
         FixImportsHelper.doImport(doc, missing, fqn, range)
       }
@@ -152,7 +151,7 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
   }
 
   private def presentChooser(multipleCandidates: Map[String, List[ImportCandidate]]): Array[ImportCandidate] = {
-    LOG.log(Level.FINEST, "presentChooser()")
+    log.log(Level.FINEST, "presentChooser()")
 
     val panel = new ImportChooserInnerPanel
     panel.initPanel(multipleCandidates)

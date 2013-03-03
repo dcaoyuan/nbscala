@@ -198,7 +198,7 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
             val doc = context.doc
 
             val th = TokenHierarchy.get(doc)
-            val ts = ScalaLexUtil.getTokenSequence(th, 0).get
+            val ts = ScalaLexUtil.getTokenSequence(doc, th, 0).get
             val start = calcErrorStartPosition(offsetRange, name, ts)
             var collecting = false
             val result = context.parserResult.asInstanceOf[ScalaParserResult]

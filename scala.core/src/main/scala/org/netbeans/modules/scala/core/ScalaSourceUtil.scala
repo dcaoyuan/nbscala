@@ -289,10 +289,8 @@ object ScalaSourceUtil {
 
     val th = pr.getSnapshot.getTokenHierarchy
 
-    //doc.readLock // Read-lock due to token hierarchy use
     val offset = 0//element.getBoundsOffset(th)
-    val range = ScalaLexUtil.getDocumentationRange(th, offset)
-    //doc.readUnlock
+    val range = ScalaLexUtil.getDocumentationRange(doc, th, offset)
 
     if (range.getEnd < doc.getLength) {
       try {
@@ -309,9 +307,7 @@ object ScalaSourceUtil {
       case x => x
     }
 
-    //doc.readLock // Read-lock due to token hierarchy use
-    val range = ScalaLexUtil.getDocCommentRangeBefore(th, symbolOffset)
-    //doc.readUnlock
+    val range = ScalaLexUtil.getDocCommentRangeBefore(doc, th, symbolOffset)
 
     if (range != OffsetRange.NONE && range.getEnd < doc.getLength) {
       try {
@@ -669,11 +665,10 @@ object ScalaSourceUtil {
             val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
             val root = pr.rootScope
             val global = pr.global
-            import global._
             
-            def getAllDfns(scope: AstScope, kind: ElementKind, result: ArrayBuffer[ScalaDfn]): Seq[ScalaDfn] = {
+            def getAllDfns(scope: AstScope, kind: ElementKind, result: ArrayBuffer[global.ScalaDfn]): Seq[global.ScalaDfn] = {
               scope.dfns foreach {dfn =>
-                if (dfn.getKind == kind)  result += dfn.asInstanceOf[ScalaDfn]
+                if (dfn.getKind == kind)  result += dfn.asInstanceOf[global.ScalaDfn]
               }
               scope.subScopes foreach {
                 childScope => getAllDfns(childScope, kind, result)
@@ -682,17 +677,17 @@ object ScalaSourceUtil {
             }
 
             // * get all dfns will return all visible packages from the root and down
-            getAllDfns(root, ElementKind.PACKAGE, new ArrayBuffer[ScalaDfn]) foreach {packaging => 
+            getAllDfns(root, ElementKind.PACKAGE, new ArrayBuffer[global.ScalaDfn]) foreach {packaging => 
               // * only go through the defs for each package scope.
               // * Sub-packages are handled by the fact that
               // * getAllDefs will find them.
               packaging.bindingScope.dfns foreach {dfn =>
-                if (isMainMethodExists(dfn.asInstanceOf[ScalaDfn])) result += dfn.asInstanceOf[ScalaDfn]
+                if (isMainMethodExists(dfn.asInstanceOf[global.ScalaDfn])) result += dfn.asInstanceOf[global.ScalaDfn]
               }
             }
             
             root.visibleDfns(ElementKind.MODULE) foreach {dfn =>
-              if (isMainMethodExists(dfn.asInstanceOf[ScalaDfn])) result += dfn.asInstanceOf[ScalaDfn]
+              if (isMainMethodExists(dfn.asInstanceOf[global.ScalaDfn])) result += dfn.asInstanceOf[global.ScalaDfn]
             }
           }
 

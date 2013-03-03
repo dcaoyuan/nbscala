@@ -83,7 +83,7 @@ trait LexUtil {
   val LPAREN: TokenId
   val RPAREN: TokenId
 
-  def getDocCommentRangeBefore(th: TokenHierarchy[_], lexOffset: Int): OffsetRange
+  def getDocCommentRangeBefore(doc: BaseDocument, th: TokenHierarchy[_], lexOffset: Int): OffsetRange
 
   /**
    * Return the comment sequence (if any) for the comment prior to the given offset.
@@ -162,47 +162,47 @@ trait LexUtil {
 
   /** Find the token sequence (in case it's embedded in something else at the top level */
   final def getTokenSequence(doc: BaseDocument, offset: Int): Option[TokenSequence[TokenId]] = {
-    doc.readLock
-    try {
-      val th = TokenHierarchy.get(doc)
-      getTokenSequence(th, offset)
-    } finally {
-      doc.readUnlock
-    }
+    val th = TokenHierarchy.get(doc)
+    getTokenSequence(doc, th, offset)
   }
 
-  final def getTokenSequence(th: TokenHierarchy[_], offset: Int): Option[TokenSequence[TokenId]] = {
-    var ts = th.tokenSequence(LANGUAGE)
-    if (ts eq null) {
-      // Possibly an embedding scenario such as an RHTML file
-      // First try with backward bias true
-      var list = th.embeddedTokenSequences(offset, true)
-      var itr = list.iterator
-      var break = false
-      while (itr.hasNext && !break) {
-        val t = itr.next
-        if (t.language == LANGUAGE) {
-          ts = t.asInstanceOf[TokenSequence[TokenId]]
-
-          break = true
-        }
-      }
-
+  final def getTokenSequence(doc: BaseDocument, th: TokenHierarchy[_], offset: Int): Option[TokenSequence[TokenId]] = {
+    doc.readLock
+    try {
+      var ts = th.tokenSequence(LANGUAGE)
       if (ts eq null) {
-        list = th.embeddedTokenSequences(offset, false)
-        itr = list.iterator
-        break = false
+        // Possibly an embedding scenario such as an RHTML file
+        // First try with backward bias true
+        var list = th.embeddedTokenSequences(offset, true)
+        var itr = list.iterator
+        var break = false
         while (itr.hasNext && !break) {
           val t = itr.next
           if (t.language == LANGUAGE) {
             ts = t.asInstanceOf[TokenSequence[TokenId]]
+
             break = true
           }
         }
-      }
-    }
 
-    Option(ts)
+        if (ts eq null) {
+          list = th.embeddedTokenSequences(offset, false)
+          itr = list.iterator
+          break = false
+          while (itr.hasNext && !break) {
+            val t = itr.next
+            if (t.language == LANGUAGE) {
+              ts = t.asInstanceOf[TokenSequence[TokenId]]
+              break = true
+            }
+          }
+        }
+      }
+
+      Option(ts)
+    } finally {
+      doc.readUnlock
+    }
   }
 
   def getPositionedSequence(doc: BaseDocument, offset: Int): Option[TokenSequence[TokenId]] = {
@@ -1041,13 +1041,13 @@ trait LexUtil {
    }
    */
 
-  def getDocumentationRange(th: TokenHierarchy[_], nodeOffset: Int): OffsetRange = {
+  def getDocumentationRange(doc: BaseDocument, th: TokenHierarchy[_], nodeOffset: Int): OffsetRange = {
     val astOffset = nodeOffset
     // XXX This is wrong; I should do a
     //int lexOffset = LexUtilities.getLexerOffset(result, astOffset);
     // but I don't have the CompilationInfo in the ParseResult handed to the indexer!!
     val lexOffset = astOffset
-    getDocCommentRangeBefore(th, lexOffset)
+    getDocCommentRangeBefore(doc, th, lexOffset)
   }
 
   /**

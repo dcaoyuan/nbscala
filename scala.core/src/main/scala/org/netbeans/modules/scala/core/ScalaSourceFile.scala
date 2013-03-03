@@ -3,6 +3,7 @@ package org.netbeans.modules.scala.core
 import java.lang.ref.Reference
 import java.lang.ref.WeakReference
 import org.netbeans.api.lexer.TokenHierarchy
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.parsing.api.Snapshot
 import org.netbeans.modules.parsing.api.Source
 import org.openide.filesystems.FileObject
@@ -64,6 +65,7 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
     _snapshot = source.createSnapshot
   }
   
+  def doc = source.getDocument(false).asInstanceOf[BaseDocument]
   def tokenHierarchy: TokenHierarchy[_] = snapshot.getTokenHierarchy
   def content = snapshot.getText.toString.toCharArray
   

@@ -42,6 +42,7 @@ package org.netbeans.modules.scala.editor
 import javax.swing.text.Document
 import org.netbeans.api.lexer.{TokenHierarchy, TokenSequence}
 import org.netbeans.modules.csl.api.{DeclarationFinder, OffsetRange}
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.csl.api.DeclarationFinder.DeclarationLocation
 import org.netbeans.modules.csl.spi.ParserResult
 //import org.netbeans.modules.parsing.spi.indexing.support.QuerySupport
@@ -59,7 +60,7 @@ class ScalaDeclarationFinder extends DeclarationFinder {
   def getReferenceSpan(document: Document, lexOffset: Int): OffsetRange = {
     val th = TokenHierarchy.get(document)
 
-    val ts = ScalaLexUtil.getTokenSequence(th, lexOffset).getOrElse(return OffsetRange.NONE)
+    val ts = ScalaLexUtil.getTokenSequence(document.asInstanceOf[BaseDocument], th, lexOffset).getOrElse(return OffsetRange.NONE)
     ts.move(lexOffset)
     if (!ts.moveNext && !ts.movePrevious) {
       return OffsetRange.NONE
@@ -89,6 +90,7 @@ class ScalaDeclarationFinder extends DeclarationFinder {
   override 
   def findDeclaration(info: ParserResult, lexOffset: Int): DeclarationLocation = {
     val pr = info.asInstanceOf[ScalaParserResult]
+    val doc = pr.getSnapshot.getSource.getDocument(false).asInstanceOf[BaseDocument]
     val global = pr.global
 
     val root = pr.rootScope
@@ -109,26 +111,31 @@ class ScalaDeclarationFinder extends DeclarationFinder {
         val offset = dfn.idOffset(th)
         new DeclarationLocation(info.getSnapshot.getSource.getFileObject, offset, dfn)
       case None =>
-        val ts = ScalaLexUtil.getTokenSequence(th, lexOffset).getOrElse(return DeclarationLocation.NONE)
-        ts.move(lexOffset)
-        if (!ts.moveNext && !ts.movePrevious) return DeclarationLocation.NONE
+        doc.readLock
+        try {
+          val ts = ScalaLexUtil.getTokenSequence(doc, th, lexOffset).getOrElse(return DeclarationLocation.NONE)
+          ts.move(lexOffset)
+          if (!ts.moveNext && !ts.movePrevious) return DeclarationLocation.NONE
         
-        val token = ts.token
-        token.id match {
-          case ScalaTokenId.Identifier | ScalaTokenId.SymbolLiteral =>
-            root.findItemsAt(th, token.offset(th)) match {
-              case Nil => DeclarationLocation.NONE
-              case xs =>
-                val item = global.ScalaUtil.importantItem(xs).asInstanceOf[global.ScalaItem]
-                val remoteDfn = global.ScalaElement(item.symbol, info)
-                val location = new DeclarationLocation(remoteDfn.getFileObject, remoteDfn.getOffset, remoteDfn)
-                if (remoteDfn.getFileObject eq null) {
-                  // even fo is null, we should return a location to enable popping up a declaration string
-                  location.setInvalidMessage("No source file found!")
-                }
-                location
-            }
-          case _ => DeclarationLocation.NONE
+          val token = ts.token
+          token.id match {
+            case ScalaTokenId.Identifier | ScalaTokenId.SymbolLiteral =>
+              root.findItemsAt(th, token.offset(th)) match {
+                case Nil => DeclarationLocation.NONE
+                case xs =>
+                  val item = global.ScalaUtil.importantItem(xs).asInstanceOf[global.ScalaItem]
+                  val remoteDfn = global.ScalaElement(item.symbol, info)
+                  val location = new DeclarationLocation(remoteDfn.getFileObject, remoteDfn.getOffset, remoteDfn)
+                  if (remoteDfn.getFileObject eq null) {
+                    // even fo is null, we should return a location to enable popping up a declaration string
+                    location.setInvalidMessage("No source file found!")
+                  }
+                  location
+              }
+            case _ => DeclarationLocation.NONE
+          }
+        } finally {
+          doc.readUnlock
         }
 
         

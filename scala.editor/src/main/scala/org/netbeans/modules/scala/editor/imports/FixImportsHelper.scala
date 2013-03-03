@@ -158,7 +158,7 @@ object FixImportsHelper{
 
   def doImport(doc: BaseDocument, missing: String, fqn: String, offsetRange: OffsetRange) = {
     val th = TokenHierarchy.get(doc)
-    val ts = ScalaLexUtil.getTokenSequence(th, 0).get
+    val ts = ScalaLexUtil.getTokenSequence(doc, th, 0).get
     ts.move(0)
 
     val imports = allGlobalImports(doc)

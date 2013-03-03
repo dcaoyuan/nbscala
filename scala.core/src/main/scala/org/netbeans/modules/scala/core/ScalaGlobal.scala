@@ -189,7 +189,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   private def askForSemanticRoot(source: ScalaSourceFile, rootTree: Tree): ScalaRootScope = {
     askForResponse {() =>
       val start = System.currentTimeMillis
-      val rootScope = astVisit(source, rootTree, source.tokenHierarchy)
+      val rootScope = astVisit(source, rootTree)
       log1.info("Visited " + source.file.file.getName + " in " + (System.currentTimeMillis - start) + "ms")
       rootScope
     } get match {
@@ -258,7 +258,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
             })
         }
 
-        astVisit(source, unit.body, source.tokenHierarchy)
+        astVisit(source, unit.body)
       case None => ScalaRootScope.EMPTY
     }
   }

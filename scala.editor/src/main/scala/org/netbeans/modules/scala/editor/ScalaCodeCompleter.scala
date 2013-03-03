@@ -66,11 +66,12 @@ import org.netbeans.modules.scala.core.rats.ParserScala
  * that's good. But then, we may need to make sure the prResult had been reset first and 
  * go to semantic analysis when root is required.
  */
-class ScalaCodeCompleter(val pResult: ScalaParserResult) {
+class ScalaCodeCompleter(val pr: ScalaParserResult) {
   import ScalaCodeCompleter._
 
-  val global = pResult.global
-  val th = pResult.getSnapshot.getTokenHierarchy
+  val global = pr.global
+  private val th = pr.getSnapshot.getTokenHierarchy
+  private val doc = pr.getSnapshot.getSource.getDocument(false).asInstanceOf[BaseDocument]
   
   private object completionProposals extends {
     val global = ScalaCodeCompleter.this.global
@@ -87,7 +88,6 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
   var anchor: Int = _
   var lexOffset: Int = _
   var astOffset: Int = _
-  var doc: BaseDocument = _
   var prefix: String = _
   var kind: QuerySupport.Kind = _
   var queryType: QueryType = _
@@ -231,7 +231,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
    * we show available constructors.
    */
   def completeNew(proposals: java.util.List[CompletionProposal]): Boolean = {
-    val ts = ScalaLexUtil.getTokenSequence(th, lexOffset).getOrElse(return true)
+    val ts = ScalaLexUtil.getTokenSequence(doc, th, lexOffset).getOrElse(return true)
     ts.move(lexOffset)
     if (!ts.moveNext && !ts.movePrevious) {
       return true
@@ -291,7 +291,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
            * 1. get Type name
            * 2. get constructors of this type when use pressed enter
            */
-          val cpInfo = ScalaSourceUtil.getClasspathInfo(pResult.getSnapshot.getSource.getFileObject).getOrElse(return true)
+          val cpInfo = ScalaSourceUtil.getClasspathInfo(pr.getSnapshot.getSource.getFileObject).getOrElse(return true)
           val tpElements = cpInfo.getClassIndex.getDeclaredTypes(prefix, NameKind.CASE_INSENSITIVE_PREFIX,
                                                                  java.util.EnumSet.allOf(classOf[ClassIndex.SearchScope]))
 
@@ -356,8 +356,8 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
                                   anchorOffsetHolder: Array[Int],
                                   alternativesHolder: Array[Set[global.Function]]): Boolean = {
     try {
-      val pResult = info.asInstanceOf[ScalaParserResult]
-      val root = pResult.rootScope
+      val pr = info.asInstanceOf[ScalaParserResult]
+      val root = pr.rootScope
 
       var targetMethod: ExecutableElement = null
       var index = -1
@@ -376,7 +376,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
         astOffset - (lexOffset - newLexOffset)
       } else astOffset
 
-      val ts = ScalaLexUtil.getTokenSequence(th, lexOffset).getOrElse(return false)
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, lexOffset).getOrElse(return false)
       ts.move(lexOffset)
       if (!ts.moveNext && !ts.movePrevious) {
         return false
@@ -475,7 +475,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
   def completeLocals(proposals: java.util.List[CompletionProposal]) {
     //pResult.toTyped
     
-    val pos = global.rangePos(pResult.srcFile, lexOffset, lexOffset, lexOffset)
+    val pos = global.rangePos(pr.srcFile, lexOffset, lexOffset, lexOffset)
     val resp = new global.Response[List[global.Member]]
     global.askScopeCompletion(pos, resp)
     resp.get match {
@@ -497,7 +497,7 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
     
     val offset = baseToken.offset(th)
     val endOffset = offset + baseToken.length - 1
-    val pos = global.rangePos(pResult.srcFile, offset, offset, endOffset)
+    val pos = global.rangePos(pr.srcFile, offset, offset, endOffset)
     val resp = new global.Response[List[global.Member]]
     global.askTypeCompletion(pos, resp)
     resp.get match {
@@ -525,16 +525,16 @@ class ScalaCodeCompleter(val pResult: ScalaParserResult) {
     var element: global.ScalaElement = null
     var proposal: CompletionProposal = null
     if (sym.isMethod) {
-      element = global.ScalaElement(sym, pResult)
+      element = global.ScalaElement(sym, pr)
       proposal = FunctionProposal(element, this)
     } else if (sym.isVariable) {
-      element = global.ScalaElement(sym, pResult)
+      element = global.ScalaElement(sym, pr)
       proposal = PlainProposal(element, this)
     } else if (sym.isValue) {
-      element = global.ScalaElement(sym, pResult)
+      element = global.ScalaElement(sym, pr)
       proposal = PlainProposal(element, this)
     } else if (sym.isClass || sym.isTrait || sym.isModule || sym.isPackage) {
-      element = global.ScalaElement(sym, pResult)
+      element = global.ScalaElement(sym, pr)
       proposal = PlainProposal(element, this)
     }
 

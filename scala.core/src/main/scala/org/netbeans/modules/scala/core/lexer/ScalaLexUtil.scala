@@ -140,8 +140,9 @@ object ScalaLexUtil extends LexUtil {
     ScalaTokenId.Wild
   )
 
-  override def getDocCommentRangeBefore(th: TokenHierarchy[_], lexOffset: Int): OffsetRange = {
-    val ts = getTokenSequence(th, lexOffset).getOrElse(return OffsetRange.NONE)
+  override def getDocCommentRangeBefore(doc: BaseDocument, th: TokenHierarchy[_], lexOffset: Int): OffsetRange = {
+    
+    val ts = getTokenSequence(doc, th, lexOffset).getOrElse(return OffsetRange.NONE)
 
     ts.move(lexOffset)
     var offset = -1
@@ -227,8 +228,8 @@ object ScalaLexUtil extends LexUtil {
     }
   }
 
-  def findImportPrefix(th: TokenHierarchy[_], lexOffset: Int): List[Token[TokenId]] = {
-    val ts = getTokenSequence(th, lexOffset).getOrElse(return Nil)
+  def findImportPrefix(doc: BaseDocument, th: TokenHierarchy[_], lexOffset: Int): List[Token[TokenId]] = {
+    val ts = getTokenSequence(doc, th, lexOffset).getOrElse(return Nil)
     ts.move(lexOffset)
     var lbraceMet = false
     var lbraceExpected = false
@@ -275,8 +276,9 @@ object ScalaLexUtil extends LexUtil {
 
   case class ImportTokens(start: Token[TokenId], end: Token[TokenId], qual: List[Token[TokenId]], selectors: List[(Token[TokenId], Token[TokenId])])
   val NullImportTokens = ImportTokens(null, null, Nil, Nil)
-  def findImportAt(th: TokenHierarchy[_], offsetInImporting: Int): ImportTokens = {
-    val ts = getTokenSequence(th, offsetInImporting).getOrElse(return NullImportTokens)
+  
+  def findImportAt(doc: BaseDocument, th: TokenHierarchy[_], offsetInImporting: Int): ImportTokens = {
+    val ts = getTokenSequence(doc, th, offsetInImporting).getOrElse(return NullImportTokens)
     ts.move(offsetInImporting)
     ts.moveNext
     val importToken = findPrevious(ts, ScalaTokenId.Import).getOrElse(return NullImportTokens)

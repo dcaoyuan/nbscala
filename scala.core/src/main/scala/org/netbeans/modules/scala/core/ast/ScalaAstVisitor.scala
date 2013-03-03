@@ -44,11 +44,11 @@ import org.netbeans.api.lexer.TokenId
 import org.netbeans.api.lexer.TokenHierarchy
 import org.netbeans.api.lexer.TokenSequence
 import org.netbeans.modules.csl.api.{ElementKind}
-import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileUtil
 import org.netbeans.api.language.util.ast.AstItem
 import org.netbeans.api.language.util.ast.AstScope
 import org.netbeans.modules.scala.core.ScalaGlobal
+import org.netbeans.modules.scala.core.ScalaSourceFile
 import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.netbeans.modules.scala.core.lexer.ScalaTokenId
 import scala.reflect.internal.Flags
@@ -70,14 +70,16 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
   /**
    * call this method only via askForResponse to avoid race condition upon interactive presnetation compiler
    */
-  protected def astVisit(srcFile: SourceFile, rootTree: Tree, th: TokenHierarchy[_]): ScalaRootScope = {
-    new treeTraverser(srcFile, rootTree, th).apply()
+  protected def astVisit(srcFile: ScalaSourceFile, rootTree: Tree): ScalaRootScope = {
+    new treeTraverser(srcFile, rootTree).apply()
   }
 
-  private class treeTraverser(srcFile: SourceFile, rootTree: Tree, th: TokenHierarchy[_]) {
+  private class treeTraverser(srcFile: ScalaSourceFile, rootTree: Tree) {
     private val debug = false
 
-    private val docLength = srcFile.content.length
+    private val doc = srcFile.doc
+    private val th = srcFile.tokenHierarchy
+    private val contentLength = srcFile.content.length
     private val fo = {
       val file = new File(srcFile.path)
       if (file != null && file.exists) { // it's a real file instead of archive file
@@ -85,7 +87,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       } else None
     }
 
-    private val rootScope: ScalaRootScope = ScalaRootScope(getBoundsTokens(0, docLength))
+    private val rootScope: ScalaRootScope = ScalaRootScope(getBoundsTokens(0, contentLength))
     private val scopes = new Stack[AstScope]
     private val owners = new Stack[Symbol]
 
@@ -672,7 +674,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
         endOffset = math.max(endOffset, offset + forward)
       }
 
-      val ts = ScalaLexUtil.getTokenSequence(th, offset) getOrElse {return None}
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, offset) getOrElse {return None}
       ts.move(offset)
       if (!ts.moveNext && !ts.movePrevious) {
         assert(false, "Should not happen!")
@@ -711,7 +713,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
         endOffset = math.max(endOffset, offset + forward)
       }
     
-      val ts = ScalaLexUtil.getTokenSequence(th, offset) getOrElse {return None} 
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, offset) getOrElse {return None} 
       ts.move(offset)
       if (!ts.moveNext && !ts.movePrevious) {
         assert(false, "Should not happen!")
@@ -740,7 +742,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
               // * bug in scalac, wrong RangePosition for "list filter {...}", the range only contains "list"
               ts.move(endOffset)
               if (ts.moveNext && ts.movePrevious) {
-                val end = math.min(endOffset + 100, docLength - 1)
+                val end = math.min(endOffset + 100, contentLength - 1)
                 findIdTokenForward(ts, name, endOffset, end)
               } else None
             case x => x
@@ -828,7 +830,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
     private def getBoundsToken(offset: Int): Option[Token[TokenId]]  = {
       if (offset < 0) return None
 
-      val ts = ScalaLexUtil.getTokenSequence(th, offset).getOrElse(return None)
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, offset).getOrElse(return None)
       ts.move(offset)
       if (!ts.moveNext && !ts.movePrevious) {
         assert(false, "Should not happen!")
@@ -849,7 +851,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
     private def getBoundsEndToken(endOffset: Int): Option[Token[TokenId]] = {
       if (endOffset == -1) return None
 
-      val ts = ScalaLexUtil.getTokenSequence(th, endOffset).getOrElse{return None}
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, endOffset).getOrElse{return None}
       ts.move(endOffset)
       if (!ts.movePrevious && !ts.moveNext) {
         assert(false, "Should not happen!")

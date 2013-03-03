@@ -47,27 +47,17 @@ import scala.collection.immutable
 import org.netbeans.modules.csl.api.Hint
 import org.netbeans.modules.csl.api.HintFix
 import org.netbeans.modules.csl.api.HintSeverity
-import org.netbeans.modules.csl.api.OffsetRange
 import org.netbeans.modules.csl.api.RuleContext
 import org.netbeans.modules.scala.editor.util.NbBundler
 import java.{util=>ju}
-import java.util.prefs.Preferences;
-import javax.swing.JComponent;
-import java.util.regex.{Pattern, Matcher}
-import org.netbeans.api.java.source.ElementHandle
+import java.util.prefs.Preferences
+import javax.swing.JComponent
 import javax.swing.JPanel
-import org.openide.filesystems.FileObject
 import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
-import org.netbeans.api.language.util.ast.{AstRef, AstDfn, AstItem, AstRootScope}
-import org.netbeans.api.lexer.{Language, Token, TokenHierarchy, TokenId, TokenSequence}
-
-import org.netbeans.modules.csl.api.EditList
 import org.netbeans.modules.scala.core.lexer.ScalaTokenId
 import org.netbeans.editor.BaseDocument
-
 import org.netbeans.modules.scala.core.ast.ScalaItems
 import org.netbeans.modules.scala.core.ast.ScalaRootScope
-import org.netbeans.modules.scala.editor.imports.FixImportsHelper
 import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.api.language.util.ast._
 import scala.tools.nsc.symtab._
@@ -125,13 +115,13 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
 
   def createHints(context : ScalaRuleContext, scope : ScalaRootScope) : List[Hint] = {
     val pr = context.parserResult.asInstanceOf[ScalaParserResult]
-    import pr.global._
+    val global = pr.global
 
     val th = pr.getSnapshot.getTokenHierarchy
     val content = pr.getSnapshot.getText
-    val doc = pr.getSnapshot.getSource.getDocument(false)
+    val doc = pr.getSnapshot.getSource.getDocument(false).asInstanceOf[BaseDocument]
     val usages = findTypeUsages(scope)
-    val importings = scope.importingItems.asInstanceOf[Set[ScalaItem]]
+    val importings = scope.importingItems.asInstanceOf[Set[global.ScalaItem]]
 
     def qualName(qName: String) = qName.lastIndexOf(".") match {
       case -1 => ""
@@ -162,7 +152,7 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
       var endOffset = item.idEndOffset(th)
       var text = item.idToken.text
 
-      ScalaLexUtil.findImportAt(th, offset) match {
+      ScalaLexUtil.findImportAt(doc, th, offset) match {
         case me@ScalaLexUtil.ImportTokens(start, end, qual, hd :: Nil) => // has only one selector
           offset = start.offset(th)
           endOffset = end.offset(th) + end.length
@@ -178,10 +168,11 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
 
   private def findTypeUsages(scope: AstRootScope): Set[String] = {
     val imported = scope.importingItems
-    (for ((idToken, items) <- scope.idTokenToItems;
-          item <- items if !imported.contains(item);
-          sym = item.asInstanceOf[ScalaItems#ScalaItem].symbol if sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule
-      ) yield sym.fullName) toSet
+    (for {
+        (idToken, items) <- scope.idTokenToItems
+        item <- items if !imported.contains(item)
+        sym = item.asInstanceOf[ScalaItems#ScalaItem].symbol if sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule
+      } yield sym.fullName) toSet
   }
 
   /* def createHints(context : ScalaRuleContext, scope : ScalaRootScope) : List[Hint] = {
@@ -196,117 +187,117 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
    val imports = FixImportsHelper.allGlobalImports(context.doc)
 
    val candidates = for (i <- mapImports(imports)
-   if !defs.exists(a => a == i._1))
-   yield i
+                         if !defs.exists(a => a == i._1))
+                           yield i
    //        candidates.foreach( a => println("candidate" + a._3))
    val toRet = mutable.ListBuffer[Hint]()
    for ((imp, (start, end, text)) <- candidates) {
-   val rangeOpt = context.calcOffsetRange(start, end)
-   toRet +=  new Hint(this, "Remove Unused Import " + imp, context.getFileObject, rangeOpt.get,
-   new ju.ArrayList() /**new RemoveImportFix(context, start, end, text)) */, DEFAULT_PRIORITY)
-   }
+      val rangeOpt = context.calcOffsetRange(start, end)
+      toRet +=  new Hint(this, "Remove Unused Import " + imp, context.getFileObject, rangeOpt.get,
+                         new ju.ArrayList() /**new RemoveImportFix(context, start, end, text)) */, DEFAULT_PRIORITY)
+    }
    toRet ++= removeDuplicateHints(imports, context)
    toRet.toList
    }
 
    private def mapImports(imports : List[(Int, Int, String)]) = {
-   var toRet = Map[String, (Int, Int, String)]()
-   for (imp@(starter, finisher, text) <- imports) {
-   if (!text.contains("_") && !text.contains("=>")) {
-   val leftBrack = text.indexOf("{")
-   val rightBrack = text.indexOf("}")
-   if (leftBrack >= 0 && rightBrack > leftBrack) {
-   val pack = text.substring(0, leftBrack)
-   for (single <- text.substring(leftBrack + 1, rightBrack).split(",")) {
-   toRet = toRet + ((pack + single) -> imp)
-   }
-   } else {
-   toRet = toRet + (text -> imp)
-   }
-   }
-   }
-   toRet
-   }
+      var toRet = Map[String, (Int, Int, String)]()
+      for (imp@(starter, finisher, text) <- imports) {
+        if (!text.contains("_") && !text.contains("=>")) {
+          val leftBrack = text.indexOf("{")
+          val rightBrack = text.indexOf("}")
+          if (leftBrack >= 0 && rightBrack > leftBrack) {
+            val pack = text.substring(0, leftBrack)
+            for (single <- text.substring(leftBrack + 1, rightBrack).split(",")) {
+              toRet = toRet + ((pack + single) -> imp)
+            }
+          } else {
+            toRet = toRet + (text -> imp)
+          }
+        }
+      }
+      toRet
+    }
 
    private def findTypeUsages(scope: AstRootScope): Set[String] = {
-   val imported = scope.importedItems
-   (for ((idToken, items) <- scope.idTokenToItems;
-   item <- items if !imported.contains(item);
-   sym = item.asInstanceOf[ScalaItems#ScalaItem].symbol if sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule
-   ) yield sym.fullName) toSet
-   }
+      val imported = scope.importedItems
+      (for ((idToken, items) <- scope.idTokenToItems;
+            item <- items if !imported.contains(item);
+            sym = item.asInstanceOf[ScalaItems#ScalaItem].symbol if sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule
+        ) yield sym.fullName) toSet
+    }
    
    private def findDefinitions(scope : AstScope) : List[String] = {
-   val buf = mutable.HashSet[String]()
-   //        val defs = scope.dfns.filter(a => a.getKind == ElementKind.CLASS || a.getKind == ElementKind.INTERFACE || a.getKind == ElementKind.TYPE_PARAMETER)
-   //        println("defs size=" + defs.size)
-   //        println("scope= " + scope.bindingDfn.getOrElse("xxx"));
-   for (d <- scope.refs) {
-   val sym = d.symbol.asInstanceOf[scala.reflect.internal.Symbols#Symbol]
-   //            println("symbol=" + sym)
-   if (sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule) {
-   buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
+      val buf = mutable.HashSet[String]()
+      //        val defs = scope.dfns.filter(a => a.getKind == ElementKind.CLASS || a.getKind == ElementKind.INTERFACE || a.getKind == ElementKind.TYPE_PARAMETER)
+      //        println("defs size=" + defs.size)
+      //        println("scope= " + scope.bindingDfn.getOrElse("xxx"));
+      for (d <- scope.refs) {
+        val sym = d.symbol.asInstanceOf[scala.reflect.internal.Symbols#Symbol]
+        //            println("symbol=" + sym)
+        if (sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule) {
+          buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
 
-   }
-   if (sym.isType || sym.isTypeParameter) {
-   buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
-   }
-   if (sym.isValueParameter) {
-   //                printSymbolDetails("valparam ref", sym)
-   buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
-   }
-   if (sym.isMethod || sym.isConstructor) {
-   //              printSymbolDetails( (if (sym.isConstructor) "constructor" else "method" ) + " ref", sym)
-   for (ss <- sym.tpe.typeArgs) buf.add(ss.trimPrefix(ss.toString))
-   for (meth <- sym.tpe.paramTypes) {
-   //                  println("meth param=" + meth)
-   buf.add(meth.trimPrefix(meth.toString))
-   for (ss <- meth.typeArgs) buf.add(ss.trimPrefix(ss.toString))
-   //add type params
-   }
-   val res = sym.tpe.resultType
-   //              println("result type=" + res.trimPrefix(res.toString))
-   buf.add(res.trimPrefix(res.toString))
-   for (ss <- res.typeArgs) buf.add(ss.trimPrefix(ss.toString))
-   }
+        }
+        if (sym.isType || sym.isTypeParameter) {
+          buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
+        }
+        if (sym.isValueParameter) {
+          //                printSymbolDetails("valparam ref", sym)
+          buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
+        }
+        if (sym.isMethod || sym.isConstructor) {
+          //              printSymbolDetails( (if (sym.isConstructor) "constructor" else "method" ) + " ref", sym)
+          for (ss <- sym.tpe.typeArgs) buf.add(ss.trimPrefix(ss.toString))
+          for (meth <- sym.tpe.paramTypes) {
+            //                  println("meth param=" + meth)
+            buf.add(meth.trimPrefix(meth.toString))
+            for (ss <- meth.typeArgs) buf.add(ss.trimPrefix(ss.toString))
+            //add type params
+          }
+          val res = sym.tpe.resultType
+          //              println("result type=" + res.trimPrefix(res.toString))
+          buf.add(res.trimPrefix(res.toString))
+          for (ss <- res.typeArgs) buf.add(ss.trimPrefix(ss.toString))
+        }
 
-   }
-   for (d <- scope.dfns) {
-   val sym = d.symbol.asInstanceOf[scala.reflect.internal.Symbols#Symbol]
-   //            println("symbol2=" + sym)
-   if (sym.isValueParameter) {
-   buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
-   }
-   if (sym.isType || sym.isTypeParameter) {
-   buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
-   }
-   if (sym.isMethod || sym.isConstructor) {
-   //              printSymbolDetails( (if (sym.isConstructor) "constructor" else "method" ) + " def", sym)
-   for (ss <- sym.tpe.typeArgs) buf.add(ss.trimPrefix(ss.toString))
-   for (meth <- sym.tpe.paramTypes) {
-   //                  println("meth param=" + meth)
-   buf.add(meth.trimPrefix(meth.toString))
-   for (ss <- meth.typeArgs) buf.add(ss.trimPrefix(ss.toString))
-   //add type params
-   }
-   val res = sym.tpe.resultType
-   //              println("result type=" + res.trimPrefix(res.toString))
-   buf.add(res.trimPrefix(res.toString))
-   for (ss <- res.typeArgs) buf.add(ss.trimPrefix(ss.toString))
-   }
-   }
-   //        println("scope end=================================")
-   for (sc <- scope.subScopes) {
-   buf.addAll(findDefinitions(sc))
-   }
-   buf.toList
-   }
+      }
+      for (d <- scope.dfns) {
+        val sym = d.symbol.asInstanceOf[scala.reflect.internal.Symbols#Symbol]
+        //            println("symbol2=" + sym)
+        if (sym.isValueParameter) {
+          buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
+        }
+        if (sym.isType || sym.isTypeParameter) {
+          buf.add(sym.tpe.trimPrefix(sym.tpe.toString))
+        }
+        if (sym.isMethod || sym.isConstructor) {
+          //              printSymbolDetails( (if (sym.isConstructor) "constructor" else "method" ) + " def", sym)
+          for (ss <- sym.tpe.typeArgs) buf.add(ss.trimPrefix(ss.toString))
+          for (meth <- sym.tpe.paramTypes) {
+            //                  println("meth param=" + meth)
+            buf.add(meth.trimPrefix(meth.toString))
+            for (ss <- meth.typeArgs) buf.add(ss.trimPrefix(ss.toString))
+            //add type params
+          }
+          val res = sym.tpe.resultType
+          //              println("result type=" + res.trimPrefix(res.toString))
+          buf.add(res.trimPrefix(res.toString))
+          for (ss <- res.typeArgs) buf.add(ss.trimPrefix(ss.toString))
+        }
+      }
+      //        println("scope end=================================")
+      for (sc <- scope.subScopes) {
+        buf.addAll(findDefinitions(sc))
+      }
+      buf.toList
+    }
    */
 
-  //debug method
-  private def printSymbolDetails(prefix : String, s : scala.reflect.internal.Symbols#Symbol) : Unit = {
-    println(prefix + "=" + s)
-    println("    fullname=" + s.fullName)
-  }
+   //debug method
+   private def printSymbolDetails(prefix : String, s : scala.reflect.internal.Symbols#Symbol) : Unit = {
+      println(prefix + "=" + s)
+      println("    fullname=" + s.fullName)
+    }
 
-}
+   }

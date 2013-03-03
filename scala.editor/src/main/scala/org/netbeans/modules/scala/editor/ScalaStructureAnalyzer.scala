@@ -108,7 +108,7 @@ class ScalaStructureAnalyzer extends StructureScanner {
       case x => x
     }
 
-    val ts = ScalaLexUtil.getTokenSequence(th, 1).getOrElse(return emptyFolds)
+    val ts = ScalaLexUtil.getTokenSequence(doc, th, 1).getOrElse(return emptyFolds)
     
     val folds = new java.util.HashMap[String, java.util.List[OffsetRange]]
     val codefolds = new java.util.ArrayList[OffsetRange]

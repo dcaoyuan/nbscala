@@ -118,10 +118,10 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       case _ => return CodeCompletionResult.NONE
     }
     
-    val pResult = context.getParserResult.asInstanceOf[ScalaParserResult]
+    val pr = context.getParserResult.asInstanceOf[ScalaParserResult]
     
     def needSemantice() = {
-      pResult.rootScope // call lazy val rootScope
+      pr.rootScope // call lazy val rootScope
     }
 
     val lexOffset = context.getCaretOffset
@@ -130,12 +130,12 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       case x => x
     }
 
-    val doc = pResult.getSnapshot.getSource.getDocument(true) match {
+    val doc = pr.getSnapshot.getSource.getDocument(true) match {
       case null => return CodeCompletionResult.NONE
       case x => x.asInstanceOf[BaseDocument]
     }
 
-    val astOffset = ScalaLexUtil.getAstOffset(pResult, lexOffset) match {
+    val astOffset = ScalaLexUtil.getAstOffset(pr, lexOffset) match {
       case -1 => return CodeCompletionResult.NONE
       case x => x
     }
@@ -146,15 +146,12 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     // Read-lock due to Token hierarchy use
     doc.readLock
     try {
-      val th = pResult.getSnapshot.getTokenHierarchy
-
-      val completer = new ScalaCodeCompleter(pResult)
+      val completer = new ScalaCodeCompleter(pr)
       completer.completionResult = completionResult
       completer.caseSensitive = context.isCaseSensitive
       completer.queryType = context.getQueryType
       completer.lexOffset = lexOffset
       completer.astOffset = astOffset
-      completer.doc = doc
       completer.prefix = prefix
       completer.kind = QuerySupport.Kind.PREFIX
       completer.anchor = lexOffset - prefix.length
@@ -179,7 +176,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
         case _ =>
       }
 
-      val ts = ScalaLexUtil.getTokenSequence(th, lexOffset - 1).getOrElse(return completionResult)
+      val th = pr.getSnapshot.getTokenHierarchy
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, lexOffset - 1).getOrElse(return completionResult)
       ts.move(lexOffset - 1)
       if (!ts.moveNext && !ts.movePrevious) {
         return completionResult
@@ -205,7 +203,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       
       // ----- try to complete import first
 
-      (ScalaLexUtil.findImportPrefix(th, lexOffset) match {
+      (ScalaLexUtil.findImportPrefix(doc, th, lexOffset) match {
           case Nil => None
           case List(selector, dot, qual, _*) if dot.id == ScalaTokenId.Dot => Some((qual, selector.text.toString))
           case List(dot, qual, _*) if dot.id == ScalaTokenId.Dot => Some(qual, "")
@@ -596,7 +594,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       //                return doc.getText(requireStart, lexOffset - requireStart);
       //            }
 
-      val ts = ScalaLexUtil.getTokenSequence(th, lexOffset).getOrElse(return null)
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, lexOffset).getOrElse(return null)
       ts.move(lexOffset)
       if (!ts.moveNext && !ts.movePrevious) {
         return null
