@@ -47,7 +47,6 @@ import javax.swing.text.JTextComponent
 import javax.swing.text.Position
 import javax.swing.text.StyledDocument
 import org.netbeans.modules.csl.api.UiUtils
-import org.openide.filesystems.FileObject
 import org.openide.text.Annotation
 import org.openide.text.NbDocument
 import org.openide.util.NbBundle

@@ -49,7 +49,6 @@ import scala.reflect.internal.ClassfileConstants._
 import scala.reflect.internal.Flags
 
 abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasure {
-
   import JavaStubGenerator._
 
   private final val LOGGER = Logger.getLogger(this.getClass.getName)
@@ -275,17 +274,17 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
       member match {
         case _ if member.isTrait || member.isClass || member.isModule =>
-          return "" // @todo
+          "" // @todo
         case _ if member.isConstructor =>
-          return genJavaConstructor(sym, member, memberType)
+          genJavaConstructor(sym, member, memberType)
         case _ if member.isMethod =>
-          return genJavaMethod(member, memberType)
+          genJavaMethod(member, memberType)
         case _ if member.isVariable =>
-          return "" // do nothing
+          "" // do nothing
         case _ if member.isValue =>
-          return genJavaValue(member, memberType)
+          genJavaValue(member, memberType)
         case _ =>
-          return ""
+          ""
       }
     }
 
@@ -376,13 +375,13 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     sb.toString
   }
 
-  def classSName(sym: Symbol): String = {
+  private[editor] def classSName(sym: Symbol): String = {
     if (isNestedTemplate(sym)) {
       classSName(sym.owner) + "$" + encodeName(sym.nameString)
     } else encodeName(sym.nameString)
   }
 
-  def isNestedTemplate(sym: Symbol): Boolean = {
+  private def isNestedTemplate(sym: Symbol): Boolean = {
     (sym.isTrait || sym.isModule || sym.isClass) && !sym.isRoot && !sym.owner.isPackageClass
   }
   
@@ -410,11 +409,10 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       } else {
         sb.append("a")
         sb.append(i)
+        i += 1
       }
       
       if (itr.hasNext) sb.append(", ")
-      
-      i += 1
     }
 
     sb.append(")")
@@ -422,7 +420,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     sb.toString
   }
 
-  def getGenericPart(classJavaSig: String): String = {
+  private def getGenericPart(classJavaSig: String): String = {
     classJavaSig.indexOf('<') match {
       case -1 => ""
       case i  => classJavaSig.substring(i, classJavaSig.length)
@@ -439,7 +437,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
   /** The Java signature of type 'info', for symbol sym. The symbol is used to give the right return
    *  type for constructors.
    */
-  def javaSig(sym0: Symbol, info: Type): Option[String] = beforeErasure {
+  private def javaSig(sym0: Symbol, info: Type): Option[String] = beforeErasure {
     val isTraitSignature = sym0.enclClass.isTrait
 
     def superSig(parents: List[Type]) = {

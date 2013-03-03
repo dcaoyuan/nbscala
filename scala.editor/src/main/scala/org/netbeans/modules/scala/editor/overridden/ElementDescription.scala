@@ -42,11 +42,8 @@ package org.netbeans.modules.scala.editor.overridden
 
 import javax.swing.Icon
 import org.openide.filesystems.FileObject
-import org.openide.util.NbBundle
 
 import org.netbeans.modules.csl.api.Modifier
-import org.netbeans.modules.csl.api.UiUtils
-import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.element.ScalaElements
 
 /**

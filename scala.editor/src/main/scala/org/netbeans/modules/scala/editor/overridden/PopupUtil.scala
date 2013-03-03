@@ -43,10 +43,8 @@ package org.netbeans.modules.scala.editor.overridden
 
 import java.awt.AWTEvent
 import java.awt.Component
-import java.awt.Container
 import java.awt.Frame
 import java.awt.Point
-import java.awt.Rectangle
 import java.awt.Toolkit
 import java.awt.event.AWTEventListener
 import java.awt.event.ComponentAdapter
@@ -57,7 +55,6 @@ import java.awt.event.MouseEvent
 import java.awt.event.WindowEvent
 import java.awt.event.WindowStateListener
 import javax.swing.AbstractAction
-import javax.swing.Action
 import javax.swing.JComponent
 import javax.swing.JDialog
 import javax.swing.KeyStroke
@@ -206,7 +203,9 @@ object PopupUtil  {
                 if (par eq null) {
                   hidePopup
                 }
-              case _ => hidePopup; return
+              case _ => 
+                hidePopup
+                return
             }
           }
         case _ =>

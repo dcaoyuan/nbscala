@@ -41,35 +41,35 @@
 
 package org.netbeans.modules.scala.editor.overridden
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Position;
-import javax.swing.text.StyledDocument;
-import org.netbeans.api.java.classpath.ClassPath;
-import org.netbeans.api.java.queries.SourceForBinaryQuery;
-import org.netbeans.api.java.source.CancellableTask;
-import org.netbeans.api.java.source.Task;
-import org.netbeans.api.java.source.ClassIndex.SearchKind;
-import org.netbeans.api.java.source.ClasspathInfo;
-import org.netbeans.api.java.source.CompilationController;
-import org.netbeans.api.java.source.CompilationInfo;
-import org.netbeans.api.java.source.SourceUtils;
-import org.netbeans.api.java.source.ClassIndex;
-import org.netbeans.modules.parsing.api.{ResultIterator}
+import java.io.IOException
+import java.net.URL
+import java.util.logging.Level
+import java.util.logging.Logger
+import javax.swing.text.BadLocationException
+import javax.swing.text.Position
+import javax.swing.text.StyledDocument
+import org.netbeans.api.java.classpath.ClassPath
+import org.netbeans.api.java.queries.SourceForBinaryQuery
+import org.netbeans.api.java.source.CancellableTask
+import org.netbeans.api.java.source.Task
+import org.netbeans.api.java.source.ClassIndex.SearchKind
+import org.netbeans.api.java.source.ClasspathInfo
+import org.netbeans.api.java.source.CompilationController
+import org.netbeans.api.java.source.CompilationInfo
+import org.netbeans.api.java.source.SourceUtils
+import org.netbeans.api.java.source.ClassIndex
+import org.netbeans.modules.parsing.api.ResultIterator
 import org.netbeans.modules.parsing.spi.{ParserResultTask, ParseException, Scheduler, SchedulerEvent}
 import org.netbeans.modules.parsing.spi.SchedulerTask
 import org.netbeans.spi.java.classpath.support.ClassPathSupport
-import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
-import org.openide.text.NbDocument;
-import org.openide.util.Exceptions;
-import org.openide.util.NbBundle;
-import org.openide.util.RequestProcessor;
-import org.openide.util.TopologicalSortException;
-import org.openide.util.Utilities;
+import org.openide.filesystems.FileObject
+import org.openide.filesystems.FileUtil
+import org.openide.text.NbDocument
+import org.openide.util.Exceptions
+import org.openide.util.NbBundle
+import org.openide.util.RequestProcessor
+import org.openide.util.TopologicalSortException
+import org.openide.util.Utilities
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
@@ -261,46 +261,48 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
     Log.log(Level.FINE, "reverseSourceRoots: {0}", reverseSourceRoots) //NOI18N
         
     val annotations = new ArrayBuffer[IsOverriddenAnnotation]
+    global.askForResponse {() =>
+      for {
+        (idToken, items) <- root.idTokenToItems
+        item <- items if item.isInstanceOf[global.ScalaDfn]
+        sym = item.asInstanceOf[global.ScalaDfn].symbol if sym != global.NoSymbol
+        pos = getPosition(doc, item.idOffset(th)) if pos ne null
+      } {
+        if (isCanceled) return Nil
+        
+        val overridees = sym.allOverriddenSymbols
+        if (!overridees.isEmpty) {
+          val seenMethods = new HashSet[global.Symbol]
+          val descs = overridees filter (seenMethods add _) map (x =>
+            new ElementDescription(global.ScalaElement(x, pr))
+          )
 
-    for ((idToken, items) <- root.idTokenToItems;
-         item <- items if item.isInstanceOf[global.ScalaDfn];
-         sym = item.asInstanceOf[global.ScalaDfn].symbol if sym != global.NoSymbol;
-         pos = getPosition(doc, item.idOffset(th)) if pos ne null
-    ) {
-      if (isCanceled) return Nil
-
-      val overridees = sym.allOverriddenSymbols
-      if (!overridees.isEmpty) {
-        val seenMethods = new HashSet[global.Symbol]
-        val descs = overridees filter (seenMethods add _) map (x =>
-          new ElementDescription(global.ScalaElement(x, pr))
-        )
-
-        if (!descs.isEmpty) {
-          val tooltip = new StringBuffer
-          var wasOverrides = false
+          if (!descs.isEmpty) {
+            val tooltip = new StringBuffer
+            var wasOverrides = false
                     
-          var newline = false
+            var newline = false
                     
-          for (desc <- descs) {
-            if (newline) {
-              tooltip.append("\n") //NOI18N
-            }
+            for (desc <- descs) {
+              if (newline) {
+                tooltip.append("\n") //NOI18N
+              }
 
-            newline = true
+              newline = true
 
-            if (desc.handle.symbol.hasFlag(Flags.DEFERRED)) {
-              tooltip.append(NbBundle.getMessage(classOf[IsOverriddenAnnotationHandler], "TP_Implements", desc.getDisplayName))
-            } else {
-              tooltip.append(NbBundle.getMessage(classOf[IsOverriddenAnnotationHandler], "TP_Overrides",  desc.getDisplayName))
-              wasOverrides = true
+              if (desc.handle.symbol.hasFlag(Flags.DEFERRED)) {
+                tooltip.append(NbBundle.getMessage(classOf[IsOverriddenAnnotationHandler], "TP_Implements", desc.getDisplayName))
+              } else {
+                tooltip.append(NbBundle.getMessage(classOf[IsOverriddenAnnotationHandler], "TP_Overrides",  desc.getDisplayName))
+                wasOverrides = true
+              }
             }
+                    
+            annotations += (new IsOverriddenAnnotation(doc, pos, if (wasOverrides) AnnotationType.OVERRIDES else AnnotationType.IMPLEMENTS, tooltip.toString, descs))
           }
-                    
-          annotations += (new IsOverriddenAnnotation(doc, pos, if (wasOverrides) AnnotationType.OVERRIDES else AnnotationType.IMPLEMENTS, tooltip.toString, descs))
         }
       }
-    }
+    } get
         
     /* for (td <- v.type2Declaration.keySet) {
      if (isCanceled)

@@ -38,26 +38,26 @@
  * Version 2 license, then the option applies only if the new code is
  * made subject to such option by the copyright holder.
  */
-package org.netbeans.modules.scala.editor.overridden;
+package org.netbeans.modules.scala.editor.overridden
 
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.util.logging.Level;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.JTextComponent;
-import org.netbeans.editor.AnnotationDesc;
-import org.netbeans.editor.BaseDocument;
-import org.netbeans.editor.ImplementationProvider;
-import org.netbeans.editor.JumpList;
-import org.netbeans.editor.Utilities;
-import org.openide.ErrorManager;
-import org.openide.filesystems.FileObject;
-import org.openide.loaders.DataObject;
-import org.openide.util.Exceptions;
-import org.openide.util.NbBundle;
+import java.awt.Point
+import java.awt.event.ActionEvent
+import java.util.logging.Level
+import javax.swing.AbstractAction
+import javax.swing.Action
+import javax.swing.text.BadLocationException
+import javax.swing.text.Document
+import javax.swing.text.JTextComponent
+import org.netbeans.editor.AnnotationDesc
+import org.netbeans.editor.BaseDocument
+import org.netbeans.editor.ImplementationProvider
+import org.netbeans.editor.JumpList
+import org.netbeans.editor.Utilities
+import org.openide.ErrorManager
+import org.openide.filesystems.FileObject
+import org.openide.loaders.DataObject
+import org.openide.util.Exceptions
+import org.openide.util.NbBundle
 
 /**
  *

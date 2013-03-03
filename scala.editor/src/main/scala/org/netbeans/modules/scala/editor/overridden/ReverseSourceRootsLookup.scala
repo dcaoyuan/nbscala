@@ -40,14 +40,10 @@
  */
 package org.netbeans.modules.scala.editor.overridden
 
-import java.util.logging.Level
-import java.util.logging.Logger
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.java.classpath.GlobalPathRegistry
 import org.netbeans.api.java.queries.SourceForBinaryQuery
 import org.openide.filesystems.FileObject
-import org.openide.filesystems.FileStateInvalidException
-import org.openide.filesystems.FileUtil
 import scala.collection.mutable.HashSet
 
 /**

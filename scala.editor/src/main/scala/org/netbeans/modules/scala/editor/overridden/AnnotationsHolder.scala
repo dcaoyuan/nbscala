@@ -38,17 +38,17 @@
  * Version 2 license, then the option applies only if the new code is
  * made subject to such option by the copyright holder.
  */
-package org.netbeans.modules.scala.editor.overridden;
+package org.netbeans.modules.scala.editor.overridden
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
-import org.openide.cookies.EditorCookie;
-import org.openide.filesystems.FileObject;
-import org.openide.loaders.DataObject;
+import java.beans.PropertyChangeEvent
+import java.beans.PropertyChangeListener
+import java.io.IOException
+import java.util.logging.Level
+import java.util.logging.Logger
+import javax.swing.SwingUtilities
+import org.openide.cookies.EditorCookie
+import org.openide.filesystems.FileObject
+import org.openide.loaders.DataObject
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 
