@@ -86,7 +86,7 @@ public class ScalaLanguage extends DefaultLanguageConfig {
     public static String SOURCE = "scala/classpath/source";
 
     @MultiViewElement.Registration(displayName = "#LBL_ScalaEditorTab",
-    iconBase = "org/netbeans/modules/scala/editor/resources/scala16x16.png",
+    iconBase = "org/netbeans/modules/scala/editor/resources/scalaFile16x16.png",
     persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED,
     preferredID = "scala.source",
     mimeType = "text/x-scala",

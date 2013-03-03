@@ -203,8 +203,8 @@
     <folder name="Loaders">
         <folder name="text">
             <folder name="x-scala">
-                <attr name="SystemFileSystem.icon" urlvalue="nbresloc:/org/netbeans/modules/scala/editor/resources/scala16x16.png"/>
-                <attr name="iconBase" stringvalue="org/netbeans/modules/scala/editor/resources/scala16x16.png"/>
+                <attr name="SystemFileSystem.icon" urlvalue="nbresloc:/org/netbeans/modules/scala/editor/resources/scalaFile16x16.png"/>
+                <attr name="iconBase" stringvalue="org/netbeans/modules/scala/editor/resources/scalaFile16x16.png"/>
                 <folder name="Actions">
                     <file name="CopyAction.shadow">
                         <attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-CopyAction.instance"/>
