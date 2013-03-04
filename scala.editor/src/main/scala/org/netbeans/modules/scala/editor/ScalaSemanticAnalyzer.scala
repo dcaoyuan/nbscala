@@ -88,7 +88,6 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
   @throws(classOf[Exception])
   override 
   def run(pr: ScalaParserResult, event: SchedulerEvent) {
-    log.info("ScalaSemanticAnalyzer run.")
     cancelled = false
 
     if (isCancelled) return
@@ -126,20 +125,18 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
   private def visitItems(global: ScalaGlobal, th: TokenHierarchy[_], root: ScalaRootScope): java.util.HashMap[OffsetRange, java.util.Set[ColoringAttributes]] = {
 
-    import global._
-
     val highlights = new java.util.HashMap[OffsetRange, java.util.Set[ColoringAttributes]](100)
   
-    def isSingletonType(sym: Symbol) = try {
-      sym.tpe.resultType.isInstanceOf[SingletonType]
+    def isSingletonType(sym: global.Symbol) = try {
+      sym.tpe.resultType.isInstanceOf[global.SingletonType]
     } catch {
       case _: Throwable => false
     }
 
-    askForResponse {() =>
+    global.askForResponse {() =>
       for {
         (idToken, items) <- root.idTokenToItems
-        item = ScalaUtil.importantItem(items)
+        item = global.ScalaUtil.importantItem(items)
         name = item.getName if name != "this" && name != "super"
       } {
       
@@ -154,7 +151,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
           
             item match {
             
-              case dfn: ScalaDfn =>
+              case dfn: global.ScalaDfn =>
               
                 if (sym.isModule) {
 
@@ -210,7 +207,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
                 
                 } 
               
-              case ref: ScalaRef =>
+              case ref: global.ScalaRef =>
               
                 if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter || sym.isConstructor) {
 
