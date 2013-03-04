@@ -41,7 +41,6 @@ package org.netbeans.modules.scala.core.ast
 import java.io.File
 import org.netbeans.api.lexer.Token
 import org.netbeans.api.lexer.TokenId
-import org.netbeans.api.lexer.TokenHierarchy
 import org.netbeans.api.lexer.TokenSequence
 import org.netbeans.modules.csl.api.{ElementKind}
 import org.openide.filesystems.FileUtil
@@ -53,7 +52,7 @@ import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.netbeans.modules.scala.core.lexer.ScalaTokenId
 import scala.reflect.internal.Flags
 import scala.reflect.internal.Flags._
-import scala.reflect.internal.util.{SourceFile, OffsetPosition}
+import scala.reflect.internal.util.OffsetPosition
 import scala.collection.mutable.{Stack, HashSet, HashMap}
 
 /**
@@ -74,6 +73,10 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
     new treeTraverser(srcFile, rootTree).apply()
   }
 
+  /**
+   * Since ScalaAstVisitor is to be mixed in to ScalaGlobal, we'd like to define
+   * a new class to avoid exposing too much fields and methods.
+   */
   private class treeTraverser(srcFile: ScalaSourceFile, rootTree: Tree) {
     private val debug = false
 
@@ -112,7 +115,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
     }
 
     private def traverse(tree: Tree) {
-      if (isCancelingSemantic) return
+      if (isCancelled(srcFile)) return
       if (!visited.add(tree))  return // has visited
 
       tree match {

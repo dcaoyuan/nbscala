@@ -41,9 +41,6 @@
 package org.netbeans.modules.scala.core
 
 import java.util.logging.Logger
-import javax.swing.text.BadLocationException
-import org.netbeans.editor.BaseDocument
-import org.netbeans.editor.Utilities
 import org.netbeans.modules.csl.api.Error
 import org.netbeans.modules.csl.spi.DefaultError
 import org.netbeans.modules.csl.spi.ParserResult
@@ -57,81 +54,104 @@ import scala.tools.nsc.reporters.Reporter
  * @author Caoyuan Deng
  */
 class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapshot) {
-  private val fileObject = snapshot.getSource.getFileObject
-  val global = ScalaGlobal.getGlobal(fileObject)
+  private val fo = snapshot.getSource.getFileObject
+  val global = ScalaGlobal.getGlobal(fo)
   val srcFile = {
-    val x = ScalaSourceFile.sourceFileOf(fileObject)
+    val x = ScalaSourceFile.sourceFileOf(fo)
     x.snapshot = snapshot
     x
   }
 
   @volatile private var isAskingSemantic = false
-  @volatile private var _root: ScalaRootScope = ScalaRootScope.EMPTY
-  private var _errors: java.util.List[Error] = java.util.Collections.emptyList[Error]
+  @volatile private var _root: Option[ScalaRootScope] = None
+  @volatile private var _errors: java.util.List[Error] = java.util.Collections.emptyList[Error]
 
-  /** reset the _root and unit of srcFile */
-  private def reset: Unit = _root synchronized {
-    //global.resetUnitOf(srcFile)
-    _root = ScalaRootScope.EMPTY
-    _errors = java.util.Collections.emptyList[Error]
-  }
-
-  private def isInvalid = _root eq ScalaRootScope.EMPTY
-  
   /**
-   * Utility method to get the raw end in doc, reserved here for reference
+   * @see http://forums.netbeans.org/topic43738.html
+   * The Result.invalidate method does not (AFAIK) mean that the outcome of 
+   * the parsing process is no longer valid. Result.invalidate is called 
+   * after invocation of each Task. The intention is to use this to ensure 
+   * that the Tasks are not keeping the results somewhere, which might lead 
+   * to memory leaks. E.g. Java creates a fresh new Result on each invocation 
+   * of getResult, wrapping the actual internal parsing data, which are kept 
+   * across invocations of getResult, and then may validate that all access 
+   * to the parsing data is done only from inside appropriate Tasks. It is 
+   * AFAIK safe to ignore the invalidate method if you do not need to check 
+   * that the tasks are behaving correctly. 
    */
-  private def getRawEnd(doc: org.netbeans.editor.BaseDocument, offset: Int) = {
-    val end = try {
-      org.netbeans.editor.Utilities.getRowLastNonWhite(doc, offset) + 1 // * @Note row should plus 1 to equal NetBeans' doc offset
-    } catch {
-      case ex: javax.swing.text.BadLocationException => -1
-    }
-
-    if (end != -1 && end <= offset) {
-      end + 1
-    } else end
-  }
-  
   override 
   protected def invalidate {
-    // do nothing, so we can maintain the status of parsed result by ourselves
+    // do nothing
   }
 
-  /** @todo since only call rootScope will cause actual parsing, those parsing task
+  /** 
+   * @TODO since only call rootScope will cause actual parsing, those parsing task
    * that won't get rootScope will not be truly parsed, I choose this approach because
    * the TaskListIndexer will re-parse all dependent source files, with bad scala
    * compiler performance right now, it's better to bypass it.
    *
-   * When background scanning project truly no to block the code-completion and
+   * When background scanning project truly do no to block the code-completion and
    * other editor behavior, or, the performance of complier is not the bottleneck
    * any more, I'll add it back.
    */
   override 
   def getDiagnostics: java.util.List[_ <: Error] = _errors
-  
-  def toSemanticed: Unit = _root synchronized {
-    // although the unit may have been ahead to typed phase during autocompletion, 
-    // the typed trees may not be correct for semantic analysis, it's better to reset 
-    // the unit to get the best error report.
-    // An example is that when try completing on x. and then press esc, the error won't
-    // be reported if do not call reset here 
-    reset
+
+  /**
+   * If toSemanticed procedure is cancelled, a new ScalaParserResult will be created, 
+   * so it's safe to use 'val' instead of 'def' here.
+   * 
+   * In the theory, if a cancel request called, the parse should reparse later, but 
+   * that's not true for current parsing api (bug?). Anyway, when root is ScalaRootScope.EMPTY,
+   * we may try to re-parse always for my best (XXX need more thinking).
+   */
+  lazy val rootScope: ScalaRootScope = _root synchronized {
+    _root match {
+      case None => toSemanticed
+        //case Some(ScalaRootScope.EMPTY) => toSemanticed
+      case _ =>
+    }
+    
+    // for some race conditions during cancel, the root may still be None,
+    // so at lease return a ScalaRootScope.EMPTY
+    _root getOrElse ScalaRootScope.EMPTY
+  }
+
+  private def toSemanticed() {
+    isAskingSemantic = true
     _root = global.askForSemantic(srcFile)
     _errors = collectErrors(global.reporter)
-  }
-  
-  def cancelSemantic: Boolean = {
-    val willCancel = if (isAskingSemantic) {
-      global.cancelSemantic(srcFile)
-    } else false
-    
-    if (willCancel) reset
-    
     isAskingSemantic = false
-    willCancel
   }
   
+  /**
+   * @Note _root synchronized call here will cause whole things blocked, why? 
+   *       The cause may happen when cancelSemantic and toSemanticed both synchronized 
+   *       on _root
+   *       
+   * Actually, we need not to care about the root that is fetched during cancelSemantic,
+   * since NetBeans' parsing system should try to get a new one later.
+   * 
+   * Some other concerns: 
+   * Although the unit may have been ahead to typed phase during autocompletion, 
+   * the typed trees may not be correct for semantic analysis, it's better to reset 
+   * the unit to get the best error report.
+   * An example is that when try completing on x. and then press esc, the error won't
+   * be reported if do not call reset here 
+   */
+  private[core] def cancelSemantic() {
+    if (isAskingSemantic) {
+      // @Note under whatever condiction, isAskingSemantic should be decided by toSemanticed, ie. 
+      // we can only make sure the status after global.askForSemantic is done.
+      if (global.cancelSemantic(srcFile)) {
+        // only reset when global confirmed that the target srcFile is exactly the working one
+        // reset the _root and _errors
+        _root = None
+        _errors = java.util.Collections.emptyList[Error]
+      }
+    }
+  }
+
   private def collectErrors(reporter: Reporter) = {
     reporter match {
       case ErrorReporter(Nil) => java.util.Collections.emptyList[Error]
@@ -144,7 +164,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
             val end = pos.endOrPoint
 
             val isLineError = (end == -1)
-            val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fileObject, offset, end, isLineError, severity)
+            val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fo, offset, end, isLineError, severity)
             //error.setParameters(Array(offset, msg))                
 
             errs.add(error)
@@ -157,24 +177,17 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     }
   }
 
-  /**
-   * If toSemanticed procedure is canceled, a new ScalaParserResult will be created, so it's safe to use 'val' instead of 'def' here.
-   */
-  lazy val rootScope: ScalaRootScope = _root synchronized {
-    if (isInvalid) {
-      isAskingSemantic = true
-      toSemanticed
-      isAskingSemantic = false
-    }
-    _root
-  }
-
   lazy val rootScopeForDebug: ScalaRootScope = {
-    ScalaGlobal.getGlobal(fileObject, true).compileSourceForDebug(srcFile)
+    ScalaGlobal.getGlobal(fo, true).compileSourceForDebug(srcFile)
   }
   
   override 
-  def toString = "ParserResult(file=" + fileObject.getNameExt + ")"
+  def toString = "ParserResult of " + fo.getNameExt + ", root is " + (_root match {
+      case None => "None"
+      case Some(ScalaRootScope.EMPTY) => "Empty"
+      case _ => "Ok"
+    }
+  )
 }
 
 object ScalaParserResult {

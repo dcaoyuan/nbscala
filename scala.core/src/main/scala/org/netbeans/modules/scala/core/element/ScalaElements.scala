@@ -242,9 +242,12 @@ trait ScalaElements {self: ScalaGlobal =>
              * position via the AST Tree, or use a tree visitor to update
              * all symbols Position
              */
-            val root = askForSemantic(srcFile)
-            root.findDfnMatched(symbol) match {
-              case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
+            val root = askForSemantic(srcFile) match {
+              case Some(root) =>
+                root.findDfnMatched(symbol) match {
+                  case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
+                  case None =>
+                }
               case None =>
             }
           } catch {case ex: BadLocationException => Exceptions.printStackTrace(ex)}

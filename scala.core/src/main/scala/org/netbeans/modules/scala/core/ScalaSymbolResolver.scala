@@ -51,22 +51,25 @@ abstract class ScalaSymbolResolver {
   import global._
 
   def resolveQualifiedName(srcPkg: String, fqn: String): Option[AstItem] = {
-    val sb = new StringBuilder
-    if (srcPkg.length > 0) {
-      sb.append("package ").append(srcPkg)
-    }
-    sb.append("object NetBeansErrorRecover {")
-    sb.append(fqn).append(".") // should put a `.` at the end to create a Select tree and corresponding selectTypeErrors
-    sb.append("}")
-
     // @todo
     val srcFile = ScalaSourceFile.sourceFileOf(null)
-    val th = TokenHierarchy.create(sb.toString, ScalaTokenId.language)
-    val rootScope = global.askForSemantic(srcFile)
-    
-    val lastDot = fqn.lastIndexOf('.')
-    val lastPart = if (lastDot == -1) fqn else fqn.substring(lastDot + 1, fqn.length)
+    global.askForSemantic(srcFile) match {
+      case Some(root) =>
+        val sb = new StringBuilder
+        if (srcPkg.length > 0) {
+          sb.append("package ").append(srcPkg)
+        }
+        sb.append("object NetBeansErrorRecover {")
+        sb.append(fqn).append(".") // should put a `.` at the end to create a Select tree and corresponding selectTypeErrors
+        sb.append("}")
 
-    rootScope.findFirstItemWithName(lastPart)
+        TokenHierarchy.create(sb.toString, ScalaTokenId.language)
+        val lastDot = fqn.lastIndexOf('.')
+        val lastPart = if (lastDot == -1) fqn else fqn.substring(lastDot + 1, fqn.length)
+
+        root.findFirstItemWithName(lastPart)
+      case None => None
+    }
+    
   }
 }

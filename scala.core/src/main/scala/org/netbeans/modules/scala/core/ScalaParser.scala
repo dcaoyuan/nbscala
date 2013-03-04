@@ -55,41 +55,66 @@ import org.openide.filesystems.{FileObject, FileUtil}
 class ScalaParser extends Parser {
   private val log = Logger.getLogger(this.getClass.getName)
 
-  private var _result: Option[ScalaParserResult] = None
+  private var _result: ScalaParserResult = null
 
+  /**
+   * Called when some task needs some result of parsing. Task parameter contains 
+   * UserTask, or SchedulerTask instance, that requests Parser.Result.
+   * 
+   * @param task - A task asking for parsing result.
+   * @return Result of parsing or null.
+   */
   @throws(classOf[ParseException])
   override 
   def getResult(task: Task): Parser.Result = {
-    assert(_result.isDefined, "getResult() called prior parse(.) or parse(.) returned a null result") //NOI18N
-    _result.get
+    assert(_result != null, "getResult() called prior parse(.) or parse(.) returned a null result") //NOI18N
+    _result
   }
 
   override 
   def cancel(reason: Parser.CancelReason, event: SourceModificationEvent) {
     reason match {
       case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => 
-        log.info("Get cancel request from event: " + event.getModifiedSource.getFileObject.getNameExt + ", sourceChanged=" + event.sourceChanged)
+        val fo = event.getModifiedSource.getFileObject
+        log.info("Get cancel request from event for: " + fo.getNameExt + ", sourceChanged=" + event.sourceChanged)
         // We'll cancelSemantic only when the event is saying sourceChanged, since only in this case, we can expect a
-        // follow up parse(..) call. There are other cases there won't be a sfollow up parse(..) call.
-        if (event.sourceChanged) _result foreach (_.cancelSemantic)
+        // followed parse(..) call. Under other cases there may be no followed parse(..) call.
+        // Or even worse, in this case, there may still no followed parse(..) call, anyway, 
+        // we have to make strict condition to cancel 
+        if (event.sourceChanged && _result != null) _result.cancelSemantic
       case _ =>
     }
   }
 
+  /**
+   * @see http://forums.netbeans.org/topic43738.html
+   * As far as I know, the Parser.parse does not need to actually parse 
+   * anything, it can defer the parsing until getResult method is called. The 
+   * task there is used to create a background channel to pass additional 
+   * language-specific information from the client (Task creator) to the 
+   * parser. This is used in Java to pass the Java ClassPath. The Tasks 
+   * should IMO be passed into the getResult method in the order the they are 
+   * executed (for embedded cases the situation is more complex as I guess 
+   * one might get one task more than once as different embeddings are being 
+   * processed). 
+   */
   @throws(classOf[ParseException])
   override 
   def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent) {
+    val fo = event.getModifiedSource.getFileObject
+    log.info("Ready to parse " + fo.getNameExt + ", prev parserResult is " + _result)
     // The SourceModificationEvent seems set sourceModified=true even when switch between editor windows, 
     // so one solution is try to avoid redundant parsing by checking if the content is acutally modified,
     // but we cannot rely on that, since other source may have been changed and cause the current file must
-    // refect to this change to make sure if the reference to that file is still correct, i.e. we need re-parsing
-    // it anyway.
-    log.fine("Request to parse " + event.getModifiedSource.getFileObject.getNameExt + ", prev parserResult=" + _result)
-    log.info("Ready to parse " + snapshot.getSource.getFileObject.getNameExt)
-    //  will lazily do true parsing in ScalaParserResult
-    _result = Some(ScalaParserResult(snapshot))
+    // refect to this change to make sure if the reference to that file is still correct, 
+    // i.e. we need re-parsing it anyway. 
+    // But we can make the actual parsing procedure lazily in parser result. @see ScalaParserResult#toSemanticed
+    _result = ScalaParserResult(snapshot)
   }
 
+  /**
+   * Not used here anymore. keep here for reference.
+   */
   private def isIndexUpToDate(fo: FileObject): Boolean = {
     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
     if (srcCp ne null) {
@@ -115,31 +140,5 @@ class ScalaParser extends Parser {
   private final class Factory extends ParserFactory {
     override 
     def createParser(snapshots: java.util.Collection[Snapshot]): Parser = new ScalaParser
-  }
-}
-
-object ScalaParser {
-
-  private var version: Long = _
-  private val profile = Array(0.0f, 0.0f)
-
-  /** Attempts to sanitize the input buffer */
-  abstract class Sanitize
-  object Sanitize {
-    /** Only parse the current file accurately, don't try heuristics */
-    case object NEVER extends Sanitize
-    /** Perform no sanitization */
-    case object NONE extends Sanitize
-    /** Try to remove the trailing . at the caret line */
-    case object EDITED_DOT extends Sanitize
-    /** Try to remove the trailing . at the error position, or the prior
-     * line, or the caret line */
-    case object ERROR_DOT extends Sanitize
-    /** Try to cut out the error line */
-    case object ERROR_LINE extends Sanitize
-    /** Try to cut out the current edited line, if known */
-    case object EDITED_LINE extends Sanitize
-    /** Attempt to add an "end" to the end of the buffer to make it compile */
-    case object MISSING_END extends Sanitize
   }
 }

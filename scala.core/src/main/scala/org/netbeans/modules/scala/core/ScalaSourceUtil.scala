@@ -27,7 +27,7 @@
  */
 package org.netbeans.modules.scala.core
 
-import java.io.{File}
+import java.io.File
 import java.net.URL
 import java.util.logging.Logger
 import javax.swing.text.BadLocationException
@@ -36,6 +36,7 @@ import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.java.classpath.GlobalPathRegistry
 import org.netbeans.api.java.queries.SourceForBinaryQuery
 import org.netbeans.api.java.source.ClasspathInfo
+import org.netbeans.api.language.util.ast.{AstDfn, AstScope}
 import org.netbeans.api.lexer.TokenHierarchy
 import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.classfile.ClassFile
@@ -44,16 +45,13 @@ import org.netbeans.modules.csl.spi.ParserResult
 import org.netbeans.modules.parsing.api.{ParserManager, ResultIterator, Source, UserTask}
 import org.netbeans.modules.parsing.impl.indexing.friendapi.IndexingController
 import org.netbeans.modules.parsing.spi.{ParseException, Parser}
+import org.netbeans.modules.scala.core.ast.{ScalaDfns}
+import org.netbeans.modules.scala.core.element.{JavaElements}
+import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.netbeans.spi.java.classpath.support.ClassPathSupport
 import org.openide.filesystems.{FileObject, FileUtil}
 import org.openide.text.NbDocument
 import org.openide.util.{Exceptions}
-
-import org.netbeans.api.language.util.ast.{AstDfn, AstScope}
-import org.netbeans.modules.scala.core.ast.{ScalaDfns}
-import org.netbeans.modules.scala.core.element.{JavaElements}
-import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
@@ -852,4 +850,21 @@ object ScalaSourceUtil {
    val PathKind_COMPILE = ClasspathInfo.PathKind.COMPILE
    val PathKind_SOURCE = ClasspathInfo.PathKind.SOURCE */
 
+  /**
+   * Utility method to get the raw end in doc, reserved here for reference
+   */
+  private def getRawEnd(doc: org.netbeans.editor.BaseDocument, offset: Int) = {
+    val end = try {
+      org.netbeans.editor.Utilities.getRowLastNonWhite(doc, offset) + 1 // * @Note row should plus 1 to equal NetBeans' doc offset
+    } catch {
+      case ex: javax.swing.text.BadLocationException => -1
+    }
+
+    if (end != -1 && end <= offset) {
+      end + 1
+    } else end
+  }
+  
+  
+  
 }

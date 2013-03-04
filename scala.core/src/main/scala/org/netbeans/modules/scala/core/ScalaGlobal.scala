@@ -109,8 +109,21 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   private val log1 = Logger.getLogger(this.getClass.getName)
   
   @volatile private var workingSource: Option[SourceFile] = None
-  @volatile var isCancelingSemantic = false
-
+  private val sourceToResponse = new java.util.concurrent.ConcurrentHashMap[SourceFile, Response[_]]
+  
+  protected def isCancelled(srcFile: SourceFile) = {
+    sourceToResponse.get(srcFile) match {
+      case null => false
+      case resp => resp.isCancelled
+    }
+  }
+  
+  private def newResponse[T](srcFile: SourceFile) = {
+    val resp = new Response[T]
+    sourceToResponse.put(srcFile, resp)
+    resp
+  }
+  
   private def resetReporter {
     reporter match {
       case x: ErrorReporter => x.reset
@@ -123,6 +136,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     
     val resp = new Response[Unit]
     askReload(srcFiles, resp)
+    
     resp.get match {
       case Left(_) =>
       case Right(ex) => ex match {
@@ -141,32 +155,62 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
   /**
    * We should carefully design askForSemantic(.) and cancelSemantic(.) to make them thread safe,
-   * so cancelSemantic could be called during askForSemantic and the rootScope is always that we want.
+   * so cancelSemantic could be called during askForSemantic and the rootScope is always which we want.
+   * @return    Some root when everything goes smooth
+   *            Empty root when exception happens
+   *            None when cancelled
    */
-  def askForSemantic(source: ScalaSourceFile): ScalaRootScope = {
+  def askForSemantic(srcFile: ScalaSourceFile): Option[ScalaRootScope] = {
+    workingSource = Some(srcFile)
+
     resetReporter
-
-    askForReload(List(source))
-
-    workingSource = Some(source)
-    isCancelingSemantic = false
-
     qualToRecoveredType.clear
 
     try {
-      if (isCancelingSemantic) return ScalaRootScope.EMPTY
-      
-      val typeResp = new Response[Tree]
-      askLoadedTyped(source, typeResp)
-      if (isCancelingSemantic) return ScalaRootScope.EMPTY
-      
-      typeResp.get match {
-        case Left(rootTree) => 
-          if (isCancelingSemantic) return ScalaRootScope.EMPTY
+      val loadResp = newResponse[Unit](srcFile)
+      askReload(List(srcFile), loadResp)
+      if (isCancelled(srcFile)) return None
+      loadResp.get match {
+        case Left(_) =>
+          val typeResp = newResponse[Tree](srcFile)
+          askLoadedTyped(srcFile, typeResp)
+          if (isCancelled(srcFile)) return None
+          typeResp.get match {
+            case Left(rootTree) => 
+              val rootResp = newResponse[Option[ScalaRootScope]](srcFile)
+              askSemanticRoot(srcFile, rootTree, rootResp)
+              if (isCancelled(srcFile)) return None
+              rootResp get match {
+                case Left(x) => x
+                case Right(ex) => ex match {
+                    case _: AssertionError =>
+                      /**
+                       * @Note: avoid scala nsc's assert error. Since global's
+                       * symbol table may have been broken, we have to reset ScalaGlobal
+                       * to clean this global
+                       */
+                      ScalaGlobal.resetLate(this, ex)
+                      Some(ScalaRootScope.EMPTY)
+                    case _: java.lang.Error => Some(ScalaRootScope.EMPTY) // avoid scala nsc's Error error
+                    case _: Throwable => Some(ScalaRootScope.EMPTY) // just ignore all ex
+                  }
+              }
           
-          askForSemanticRoot(source, rootTree)
-          
-        case Right(ex) => ex match { 
+            case Right(ex) => ex match { 
+                case _: AssertionError =>
+                  /**
+                   * @Note: avoid scala nsc's assert error. Since global's
+                   * symbol table may have been broken, we have to reset ScalaGlobal
+                   * to clean this global
+                   */
+                  ScalaGlobal.resetLate(this, ex)
+                  Some(ScalaRootScope.EMPTY)
+                case _: java.lang.Error => Some(ScalaRootScope.EMPTY) // avoid scala nsc's Error error
+                case _: Throwable => Some(ScalaRootScope.EMPTY) // just ignore all ex
+              }
+          }
+
+        case Right(ex) => ex match {
             case _: AssertionError =>
               /**
                * @Note: avoid scala nsc's assert error. Since global's
@@ -174,41 +218,58 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
                * to clean this global
                */
               ScalaGlobal.resetLate(this, ex)
-              ScalaRootScope.EMPTY
-            case _: java.lang.Error => ScalaRootScope.EMPTY // avoid scala nsc's Error error
-            case _: Throwable => ScalaRootScope.EMPTY // just ignore all ex
+              return Some(ScalaRootScope.EMPTY)
+            case _: java.lang.Error => return Some(ScalaRootScope.EMPTY) // avoid scala nsc's Error error
+            case _: Throwable => return Some(ScalaRootScope.EMPTY) // just ignore all ex
           }
       }
-      
+
     } finally {
+      sourceToResponse.remove(srcFile)
       workingSource = None
     }
   }
     
-  
-  private def askForSemanticRoot(source: ScalaSourceFile, rootTree: Tree): ScalaRootScope = {
-    askForResponse {() =>
+  private def askSemanticRoot(source: ScalaSourceFile, rootTree: Tree, resp: Response[Option[ScalaRootScope]]) {
+    askForResponse(resp) {() =>
       val start = System.currentTimeMillis
       val rootScope = astVisit(source, rootTree)
       log1.info("Visited " + source.file.file.getName + " in " + (System.currentTimeMillis - start) + "ms")
-      rootScope
-    } get match {
-      case Left(x) => x
-      case Right(ex) => ScalaRootScope.EMPTY
+      if (isCancelled(source)) None else Some(rootScope)
     }
   }
-    
-  /**
-   * @return will cancel
+  
+  /** Asks for a computation to be done on presentation compiler thread, returning
+   *  a response with the result or an exception
+   *  Also @see scala.tools.nsc.interactive.CompilerControl#askForResponse
    */
-  def cancelSemantic(source: SourceFile): Boolean = {
+  protected def askForResponse[A](r: Response[A])(op: () => A) = {
+    if (onCompilerThread) {
+      try   { r set op() }
+      catch { case exc: Throwable => r raise exc }
+      r
+    } else {
+      val ir = scheduler askDoQuickly op
+      ir onComplete {
+        case Left(result) => r set result
+        case Right(exc)   => r raise exc
+      }
+      r
+    }
+  }
+
+  /**
+   * @return will cancel or not
+   */
+  def cancelSemantic(srcFile: SourceFile): Boolean = {
     workingSource match {
       case Some(x) =>
         val fileA = x.file.file
-        val fileB = source.file.file
+        val fileB = srcFile.file.file
         if ((fileA ne null) && (fileB ne null) && fileA.getAbsolutePath == fileB.getAbsolutePath) {
           log1.info("Cancel semantic " + fileA.getName)
-          isCancelingSemantic = true
+          // do not try to call resp.cancel, which seems not consistent yet.
+          sourceToResponse.remove(srcFile)
           true
         } else {
           false
