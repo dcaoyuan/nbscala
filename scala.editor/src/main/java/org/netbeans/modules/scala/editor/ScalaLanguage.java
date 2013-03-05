@@ -39,6 +39,7 @@
 package org.netbeans.modules.scala.editor;
 
 import java.util.Set;
+import org.netbeans.api.java.classpath.ClassPath;
 import org.netbeans.api.lexer.Language;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.text.MultiViewEditorElement;
@@ -77,13 +78,12 @@ import org.openide.windows.TopComponent;
  * @author Caoyuan Deng
  */
 @LanguageRegistration(mimeType = "text/x-scala", useMultiview = true)
-@PathRecognizerRegistration(mimeTypes = "text/x-scala", sourcePathIds = "scala/classpath/source", libraryPathIds = "scala/classpath/boot", binaryLibraryPathIds = {})
+@PathRecognizerRegistration(
+        mimeTypes = "text/x-scala", 
+        sourcePathIds = ClassPath.SOURCE, 
+        libraryPathIds = ClassPath.BOOT, 
+        binaryLibraryPathIds = {})
 public class ScalaLanguage extends DefaultLanguageConfig {
-
-    public static String BOOT = "scala/classpath/boot";
-    public static String COMPILE = "scala/classpath/compile";
-    public static String EXECUTE = "scala/classpath/execute";
-    public static String SOURCE = "scala/classpath/source";
 
     @MultiViewElement.Registration(displayName = "#LBL_ScalaEditorTab",
     iconBase = "org/netbeans/modules/scala/editor/resources/scalaFile16x16.png",
@@ -125,12 +125,12 @@ public class ScalaLanguage extends DefaultLanguageConfig {
      */
     @Override
     public Set<String> getLibraryPathIds() {
-        return java.util.Collections.singleton(BOOT);
+        return java.util.Collections.singleton(ClassPath.BOOT);
     }
 
     @Override
     public Set<String> getSourcePathIds() {
-        return java.util.Collections.singleton(SOURCE);
+        return java.util.Collections.singleton(ClassPath.SOURCE);
     }
 
     @Override
