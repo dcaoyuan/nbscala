@@ -40,8 +40,8 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
   }
         
   override
-  def mouseClicked(e: MouseEvent) {
-    val offset = textPane.viewToModel(e.getPoint)
+  def mouseClicked(evt: MouseEvent) {
+    val offset = textPane.viewToModel(evt.getPoint)
     val element = textPane.getStyledDocument.getCharacterElement(offset)
     element.getAttributes.getAttribute("file") match {
       case filePath: String => 
@@ -62,38 +62,40 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
         openFile(file, lineNo)
       case _ =>
     }
-          
-    // [Issue 91208]  avoid of putting cursor in console on line where is not a prompt
-    val mouseX = e.getX
-    val mouseY = e.getY
-    // Ensure that this is done after the textpane's own mouse listener
-    SwingUtilities.invokeLater(new Runnable() {
-        def run() {
-          // Attempt to force the mouse click to appear on the last line of the text input
-          var pos = textPane.getDocument.getEndPosition.getOffset - 1
-          if (pos == -1) {
-            return
-          }
-
-          try {
-            val r = textPane.modelToView(pos)
-            if (mouseY >= r.y) {
-              // The click was on the last line; try to set the X to the position where
-              // the user clicked since perhaps it was an attempt to edit the existing
-              // input string. Later I could perhaps cast the text document to a StyledDocument,
-              // then iterate through the document positions and locate the end of the
-              // input prompt (by comparing to the promptStyle in TextAreaReadline).
-              r.x = mouseX
-              pos = textPane.viewToModel(r.getLocation)
+    
+    if (evt.getClickCount != 2) { // double click may be a text selection action
+      // [Issue 91208]  avoid of putting cursor in console on line where is not a prompt
+      val mouseX = evt.getX
+      val mouseY = evt.getY
+      // Ensure that this is done after the textpane's own mouse listener
+      SwingUtilities.invokeLater(new Runnable() {
+          def run() {
+            // Attempt to force the mouse click to appear on the last line of the text input
+            var pos = textPane.getDocument.getEndPosition.getOffset - 1
+            if (pos == -1) {
+              return
             }
 
-            textPane.getCaret.setDot(pos)
-          } catch {
-            case ex: BadLocationException => Exceptions.printStackTrace(ex)
+            try {
+              val r = textPane.modelToView(pos)
+              if (mouseY >= r.y) {
+                // The click was on the last line; try to set the X to the position where
+                // the user clicked since perhaps it was an attempt to edit the existing
+                // input string. Later I could perhaps cast the text document to a StyledDocument,
+                // then iterate through the document positions and locate the end of the
+                // input prompt (by comparing to the promptStyle in TextAreaReadline).
+                r.x = mouseX
+                pos = textPane.viewToModel(r.getLocation)
+              }
+
+              textPane.getCaret.setDot(pos)
+            } catch {
+              case ex: BadLocationException => Exceptions.printStackTrace(ex)
+            }
           }
         }
-      }
-    )
+      )
+    }
   }
     
   private def openFile(file: File, lineNo: Int) {
@@ -101,10 +103,10 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
         override 
         def run() {
           try {
-            val fileObj = FileUtil.toFileObject(file)
-            val dob = DataObject.find(fileObj)
+            val fo = FileUtil.toFileObject(file)
+            val dob = DataObject.find(fo)
             val ed = dob.getLookup.lookup(classOf[EditorCookie])
-            if (ed != null && /* not true e.g. for *_ja.properties */ (fileObj eq dob.getPrimaryFile)) {
+            if (ed != null && /* not true e.g. for *_ja.properties */ (fo eq dob.getPrimaryFile)) {
               if (lineNo == -1) {
                 // OK, just open it.
                 ed.open
@@ -149,8 +151,8 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
   }
         
   // Fix for IZ#97727 - warning dialogue for opening large files is meaningless if opened via a hyperlink
-  private def askUserAndDoOpen(_e: UserQuestionException, cookie: EditorCookie ): Boolean = {
-    var e = _e
+  private def askUserAndDoOpen(_ex: UserQuestionException, cookie: EditorCookie ): Boolean = {
+    var e = _ex
     while (e != null) {
       val nd = new NotifyDescriptor.Confirmation(e.getLocalizedMessage, NotifyDescriptor.YES_NO_OPTION)
       nd.setOptions(Array[AnyRef](NotifyDescriptor.YES_OPTION, NotifyDescriptor.NO_OPTION ))
