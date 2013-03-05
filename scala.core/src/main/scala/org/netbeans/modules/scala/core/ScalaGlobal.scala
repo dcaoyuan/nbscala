@@ -327,10 +327,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 }
 
 object ScalaGlobal {
-  private val logger = Logger.getLogger(this.getClass.getName)
+  private val log = Logger.getLogger(this.getClass.getName)
 
-  private val nbUserPath = System.getProperty("netbeans.user")
-  
   /** index of globals */
   private val Global = 0
   private val GlobalForTest = 1
@@ -350,8 +348,8 @@ object ScalaGlobal {
 
   def resetLate(global: ScalaGlobal, reason: Throwable) = synchronized {
     reason match {
-      case NormalReason(msg) => logger.info("Will reset global late due to: " + msg)
-      case _ => logger.log(Level.WARNING, "Will reset global late due to:", reason)
+      case NormalReason(msg) => log.info("Will reset global late due to: " + msg)
+      case _ => log.log(Level.WARNING, "Will reset global late due to:", reason)
     }
 
     if (globalForStdLib.isDefined && global == globalForStdLib.get) {
@@ -386,7 +384,7 @@ object ScalaGlobal {
    */
   def resetBadGlobals = synchronized {
     for ((global, project) <- toResetGlobals) {
-      logger.info("Reset global: " + global)
+      log.info("Reset global: " + global)
 
       // * this will cause global create a new TypeRun so as to release all unitbuf and filebuf.
       // * But, it seems askReset will only reset current unit, when exception is throw inside
@@ -409,7 +407,7 @@ object ScalaGlobal {
   /**
    * Scala's global is not thread safed
    */
-  def getGlobal(fo: FileObject, forDebug: Boolean = false): ScalaGlobal = synchronized {
+  def getGlobal(fo: FileObject, isForDebug: Boolean = false): ScalaGlobal = synchronized {
     resetBadGlobals
     
     val project = FileOwnerQuery.getOwner(fo)
@@ -423,14 +421,13 @@ object ScalaGlobal {
     }
 
     val resource = ProjectResources.findProjectResource(project)
-
-    val forTest = ProjectResources.isForTest(resource, fo)
+    val isForTest = ProjectResources.isForTest(resource, fo)
 
     // * Do not use `srcCp` as the key, different `fo` under same src dir seems returning diff instance of srcCp
-    val idx = if (forDebug) {
-      if (forTest) GlobalForTestDebug else GlobalForDebug
+    val idx = if (isForDebug) {
+      if (isForTest) GlobalForTestDebug else GlobalForDebug
     } else {
-      if (forTest) GlobalForTest else Global
+      if (isForTest) GlobalForTest else Global
     }
 
     val globals = projectToGlobals.get(project) getOrElse {
@@ -464,19 +461,21 @@ object ScalaGlobal {
     val inStdLib =
       if (bootCp == null || compCp == null) {
         true // * in case of `fo` in standard libaray
-      } else false
+      } else {
+        false
+      }
 
-    logger.info("scala.home: " + System.getProperty("scala.home"))
+    log.info("scala.home: " + System.getProperty("scala.home"))
 
     // ----- set bootclasspath, classpath
     
     val bootCpStr = ProjectResources.toClassPathString(bootCp)
     settings.bootclasspath.value = bootCpStr
-    logger.info("Project's bootclasspath: " + settings.bootclasspath.value)
+    log.info("Project's bootclasspath: " + settings.bootclasspath.value)
 
     val compCpStr = ProjectResources.toClassPathString(compCp)
     settings.classpath.value = compCpStr
-    logger.info("Project's classpath: " + settings.classpath.value)
+    log.info("Project's classpath: " + settings.classpath.value)
 
     // Should set extdirs to empty, otherwise all jars under scala.home/lib will be added
     // which brings unwanted scala runtime (scala runtime should be set in compCpStr).
@@ -487,7 +486,7 @@ object ScalaGlobal {
     // which may bring uncompitable verions of scala's runtime call
     // @see scala.tools.util.PathResolver.Defaults
     val pluginJarsDir = ProjectResources.getPluginJarsDir
-    logger.info("Bundled plugin jars dir is: " + pluginJarsDir)
+    log.info("Bundled plugin jars dir is: " + pluginJarsDir)
     settings.pluginsDir.value = if (pluginJarsDir != null) pluginJarsDir.getAbsolutePath else ""
     settings.plugin.value = Nil
 
@@ -495,7 +494,7 @@ object ScalaGlobal {
     
     var outPath = ""
     var srcPaths: List[String] = Nil
-    for ((src, out) <- if (forTest) resource.testSrcOutDirsPath else resource.srcOutDirsPath) {
+    for ((src, out) <- if (isForTest) resource.testSrcOutDirsPath else resource.mianSrcOutDirsPath) {
       srcPaths ::= src
 
       // we only need one out path
@@ -518,12 +517,12 @@ object ScalaGlobal {
     settings.sourcepath.tryToSet(srcPaths.reverse)
     settings.outdir.value = outPath
 
-    logger.info("Project's source paths set for global: " + srcPaths)
-    logger.info("Project's output paths set for global: " + outPath)
+    log.info("Project's source paths set for global: " + srcPaths)
+    log.info("Project's output paths set for global: " + outPath)
     if (srcCp ne null){
-      logger.info(srcCp.getRoots.map(_.getPath).mkString("Project's srcCp: [", ", ", "]"))
+      log.info(srcCp.getRoots.map(_.getPath).mkString("Project's srcCp: [", ", ", "]"))
     } else {
-      logger.info("Project's srcCp is null !")
+      log.info("Project's srcCp is null !")
     }
     
     // @Note: settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?
@@ -548,7 +547,7 @@ object ScalaGlobal {
       project.getProjectDirectory.getFileSystem.addFileChangeListener(compCpListener)
     }
    
-    if (!forDebug) {
+    if (!isForDebug) {
       // we have to do following step to get mixed java sources visible to scala sources
       if (srcCp ne null) {
         val srcCpListener = new SrcCpListener(global, srcCp)
@@ -571,7 +570,7 @@ object ScalaGlobal {
       }
     }
 
-    logger.info("Project's global.settings: " + global.settings)
+    log.info("Project's global.settings: " + global.settings)
     
     global
   }
@@ -626,7 +625,7 @@ object ScalaGlobal {
     private def isUnderCompCp(fo: FileObject) = {
       // * when there are series of folder/file created, only top created folder can be listener
       val found = compRoots find {x => FileUtil.isParentOf(fo, x) || x == fo}
-      if (found.isDefined) logger.finest("under compCp: fo=" + fo + ", found=" + found)
+      if (found.isDefined) log.finest("under compCp: fo=" + fo + ", found=" + found)
       found isDefined
     }
 
@@ -634,7 +633,7 @@ object ScalaGlobal {
     def fileFolderCreated(fe: FileEvent) {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && (global ne null)) {
-        logger.finest("folder created: " + fo)
+        log.finest("folder created: " + fo)
         resetLate(global, compCpChanged)
       }
     }
@@ -643,7 +642,7 @@ object ScalaGlobal {
     def fileDataCreated(fe: FileEvent) {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && (global ne null)) {
-        logger.finest("data created: " + fo)
+        log.finest("data created: " + fo)
         resetLate(global, compCpChanged)
       }
     }
@@ -653,7 +652,7 @@ object ScalaGlobal {
       val a: AnyRef = ""
       val fo = fe.getFile
       if (isUnderCompCp(fo) && (global ne null)) {
-        logger.finest("file changed: " + fo)
+        log.finest("file changed: " + fo)
         resetLate(global, compCpChanged)
       }
     }
@@ -662,7 +661,7 @@ object ScalaGlobal {
     def fileRenamed(fe: FileRenameEvent) {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && (global ne null)) {
-        logger.finest("file renamed: " + fo)
+        log.finest("file renamed: " + fo)
         resetLate(global, compCpChanged)
       }
     }
@@ -671,7 +670,7 @@ object ScalaGlobal {
     def fileDeleted(fe: FileEvent) {
       val fo = fe.getFile
       if (isUnderCompCp(fo) && (global ne null)) {
-        logger.finest("file deleted: " + fo)
+        log.finest("file deleted: " + fo)
         resetLate(global, compCpChanged)
       }
     }

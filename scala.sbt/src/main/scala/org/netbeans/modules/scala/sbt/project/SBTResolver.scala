@@ -22,7 +22,8 @@ case class ProjectContext(
   testScalaSrcs:  Array[(File, File)], 
   mainCps:        Array[File], 
   testCps:        Array[File],
-  depPrjs:        Array[File],
+  mainDepPrjs:    Array[File],
+  testDepPrjs:    Array[File],
   aggPrjs:        Array[File]
 )
 
@@ -103,13 +104,16 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
   private def parseClasspathXml(file: File): ProjectContext = {
     var name: String = null
     var id: String = null
+    var mainOutput: File = null
+    var testOutput: File = null
     val mainJavaSrcs  = new ArrayBuffer[(File, File)]()
     val testJavaSrcs  = new ArrayBuffer[(File, File)]()
     val mainScalaSrcs = new ArrayBuffer[(File, File)]()
     val testScalaSrcs = new ArrayBuffer[(File, File)]()
     val mainCps = new ArrayBuffer[File]()
     val testCps = new ArrayBuffer[File]()
-    val depPrjs = new ArrayBuffer[File]()
+    val mainDepPrjs = new ArrayBuffer[File]()
+    val testDepPrjs = new ArrayBuffer[File]()
     val aggPrjs = new ArrayBuffer[File]()
 
     val projectFo = project.getProjectDirectory
@@ -157,7 +161,11 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                   val base = (entry \ "@base").text.trim.replace("\\", "/")
                   val baseDir = new File(base)
                   if (baseDir.exists) {
-                    depPrjs += baseDir
+                    if (isTest) {
+                      testDepPrjs += baseDir
+                    } else {
+                      mainDepPrjs += baseDir
+                    }
                   }
                 }
               
@@ -196,7 +204,8 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                    testScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
                    mainCps map FileUtil.normalizeFile toArray,
                    testCps map FileUtil.normalizeFile toArray,
-                   depPrjs map FileUtil.normalizeFile toArray,
+                   mainDepPrjs map FileUtil.normalizeFile toArray,
+                   testDepPrjs map FileUtil.normalizeFile toArray,
                    aggPrjs map FileUtil.normalizeFile toArray)
   }
 
@@ -208,26 +217,14 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     pcs.removePropertyChangeListener(propertyChangeListener)
   }
 
-  def getName: String = {
-    if (projectContext != null) {
-      projectContext.name 
-    } else {
-      null
-    }
-  }
+  def getName: String = projectContext.name 
   
-  def getId: String = {
-    if (projectContext != null) {
-      projectContext.id 
-    } else {
-      null
-    }
-  }
+  def getId: String = projectContext.id
 
   def getResolvedLibraries(scope: String, isTest: Boolean): Array[File] = {
     scope match {
-      case ClassPath.COMPILE => if (isTest) projectContext.testCps else projectContext.mainCps
-      case ClassPath.EXECUTE => if (isTest) projectContext.testCps else projectContext.mainCps
+      case ClassPath.COMPILE => if (isTest) projectContext.mainCps ++ projectContext.testCps else projectContext.mainCps
+      case ClassPath.EXECUTE => if (isTest) projectContext.mainCps ++ projectContext.testCps else projectContext.mainCps
       case ClassPath.SOURCE => 
         if (isTest) {
           projectContext.testJavaSrcs ++ projectContext.testScalaSrcs map (_._1)
@@ -255,7 +252,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     }
   }
   
-  def getDependenciesProjects: Array[File] = projectContext.depPrjs
+  def getDependenciesProjects(isTest: Boolean): Array[File] = if (isTest) projectContext.testDepPrjs else projectContext.mainDepPrjs
   def getAggregateProjects: Array[File] = projectContext.aggPrjs
 }
 
@@ -273,6 +270,7 @@ object SBTResolver {
                                     Array[(File, File)](), 
                                     Array[(File, File)](), 
                                     Array[File](), 
+                                    Array[File](),
                                     Array[File](),
                                     Array[File](),
                                     Array[File]()

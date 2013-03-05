@@ -78,9 +78,5 @@ object ProjectConstants {
   val NAME_DEP_LIBRARIES    = "96DepLibraries"
   val NAME_OTHERSOURCE      = "98OtherSourceRoot"  
   
-  trait FileType 
-  case object SOURCE extends FileType
-  case object TEST_SOURCE extends FileType
-  case object UNKNOWN extends FileType
 }
 

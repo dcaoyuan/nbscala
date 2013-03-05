@@ -4,7 +4,6 @@ import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import java.io.File
 import java.net.URL
-import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 import org.netbeans.spi.java.queries.SourceForBinaryQueryImplementation2
 import org.openide.filesystems.FileObject
@@ -19,6 +18,7 @@ import org.netbeans.modules.scala.sbt.nodes.ArtifactInfo
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.java.queries.JavadocForBinaryQueryImplementation
+import org.openide.util.ChangeSupport
 import scala.collection.mutable
 
 /**
@@ -28,7 +28,7 @@ import scala.collection.mutable
  * @author Caoyuan Deng
  */
 class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImplementation2 with JavadocForBinaryQueryImplementation {
-  private val map = new mutable.HashMap[String, SrcResult]()
+  private val cache = new mutable.HashMap[String, SrcResult]()
   private lazy val sbtResolver = {
     val x = project.getLookup.lookup(classOf[SBTResolver])
     
@@ -37,9 +37,9 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
         def propertyChange(evt: PropertyChangeEvent) {
           evt.getPropertyName match {
             case SBTResolver.DESCRIPTOR_CHANGE =>
-              map synchronized {
-                map.values foreach (_.fireChanged)
-                map.clear
+              cache synchronized {
+                cache.values foreach (_.fireChange)
+                cache.clear
               }
             case _ =>
           }
@@ -54,8 +54,8 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
   def findSourceRoots(url: URL): SourceForBinaryQuery.Result = findSourceRoots2(url)
 
   override
-  def findSourceRoots2(url: URL): SourceForBinaryQueryImplementation2.Result = map synchronized {
-    map.getOrElseUpdate(url.toURI.normalize.toString, new SrcResult(url))
+  def findSourceRoots2(url: URL): SourceForBinaryQueryImplementation2.Result = cache synchronized {
+    cache.getOrElseUpdate(url.toURI.normalize.toString, new SrcResult(getSrcRoot(url)))
   }
     
   /**
@@ -71,19 +71,20 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
    *         be listened to, or null if the binary root is not recognized
    */
   override
-  def findJavadoc(url: URL): JavadocForBinaryQuery.Result = new DocResult(url)
+  def findJavadoc(url: URL): JavadocForBinaryQuery.Result = new DocResult(getJavadocRoot(url))
     
   def jarify(path: String): String = { // #200088
     if (path != null) path.replaceFirst("[.][^./]+$", ".jar") else null
   }
     
   private def getSrcRoot(url: URL): Array[FileObject] = {
+    import ProjectConstants._
     val toReturn = url.getProtocol match {
       case "file" =>
         // true for directories.
         val uri = url.toURI.normalize
-        val mainSrcs = sbtResolver.getSources(ProjectConstants.SOURCES_TYPE_JAVA, false) ++ sbtResolver.getSources(ProjectConstants.SOURCES_TYPE_SCALA, false)
-        val testSrcs = sbtResolver.getSources(ProjectConstants.SOURCES_TYPE_JAVA, true)  ++ sbtResolver.getSources(ProjectConstants.SOURCES_TYPE_SCALA, true)
+        val mainSrcs = sbtResolver.getSources(SOURCES_TYPE_JAVA, false) ++ sbtResolver.getSources(SOURCES_TYPE_SCALA, false)
+        val testSrcs = sbtResolver.getSources(SOURCES_TYPE_JAVA, true)  ++ sbtResolver.getSources(SOURCES_TYPE_SCALA, true)
         
         val mains = (mainSrcs filter {case (s, o) => uri == FileUtil.urlForArchiveOrDir(o).toURI.normalize} map (_._1))
         val tests = (testSrcs filter {case (s, o) => uri == FileUtil.urlForArchiveOrDir(o).toURI.normalize} map (_._1))
@@ -115,61 +116,50 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
     toReturn map FileUtil.toFileObject
   }
     
-  private def getJavadocRoot: Array[URL] = {
+  private def getJavadocRoot(url: URL): Array[URL] = {
     //TODO shall we delegate to "possibly" generated javadoc in project or in site?
     Array[URL]()
   }
     
-  class SrcResult(url: URL) extends SourceForBinaryQueryImplementation2.Result  {
-    private val listeners = new mutable.ArrayBuffer[ChangeListener]()
+  class SrcResult(roots: Array[FileObject]) extends SourceForBinaryQueryImplementation2.Result  {
+    private val changeSupport = new ChangeSupport(this)
         
     override
-    def getRoots: Array[FileObject] = getSrcRoot(url)
+    def getRoots: Array[FileObject] = roots
         
-    override 
-    def addChangeListener(changeListener: ChangeListener): Unit = listeners synchronized {
-      listeners += changeListener
+    def addChangeListener(l: ChangeListener) {
+      changeSupport.addChangeListener(l)
     }
-        
-    override 
-    def removeChangeListener(changeListener: ChangeListener): Unit = listeners synchronized {
-      listeners -= changeListener
+
+    def removeChangeListener(l: ChangeListener) {
+      changeSupport.removeChangeListener(l)
     }
-        
-    def fireChanged {
-      val lists = new mutable.ArrayBuffer[ChangeListener]()
-      listeners synchronized {
-        lists ++= listeners
-      }
-      lists foreach (_.stateChanged(new ChangeEvent(this)))
+
+    def fireChange {
+      changeSupport.fireChange
     }
 
     override 
     def preferSources: Boolean = true
   }
     
-  private class DocResult(url: URL) extends JavadocForBinaryQuery.Result  {
-    private val listeners = new mutable.ArrayBuffer[ChangeListener]()
+  private class DocResult(roots: Array[URL]) extends JavadocForBinaryQuery.Result  {
+    private val changeSupport = new ChangeSupport(this)
         
     override 
-    def addChangeListener(changeListener: ChangeListener): Unit = listeners synchronized {
-      listeners += changeListener
+    def getRoots: Array[URL] = roots
+
+    def addChangeListener(l: ChangeListener) {
+      changeSupport.addChangeListener(l)
+    }
+
+    def removeChangeListener(l: ChangeListener) {
+      changeSupport.removeChangeListener(l)
+    }
+
+    def fireChange {
+      changeSupport.fireChange
     }
         
-    override 
-    def removeChangeListener(changeListener: ChangeListener): Unit = listeners synchronized {
-      listeners -= changeListener
-    }
-        
-    def fireChanged {
-      val lists = new mutable.ArrayBuffer[ChangeListener]()
-      listeners synchronized {
-        lists ++= listeners
-      }
-      lists foreach (_.stateChanged(new ChangeEvent(this)))
-    }
-        
-    override 
-    def getRoots: Array[URL] = getJavadocRoot
   }
 }

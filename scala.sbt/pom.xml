@@ -135,6 +135,11 @@
             <artifactId>org-netbeans-modules-scala-console</artifactId>
             <version>${scala.console.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-scala-core</artifactId>
+            <version>${scala.core.version}</version>
+        </dependency>
 
         <!-- sbt-launcher.jar contains a redundant copy of scala runtime packages, which may be conflict
              on standard scala runtime dependencies, and causes something like:

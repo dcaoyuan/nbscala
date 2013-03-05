@@ -114,7 +114,7 @@ The Project targets version 2.10.x of the scala release.
 
 ## Scala Console Integration
 
-### A new Scala shell console is developed recently (since Feb 27, 2013)
+### A new Scala shell console was implemented recently (since Feb 27, 2013)
 
 ### To open it, right click on project, and choose "Open Scala Console"
 
@@ -151,7 +151,7 @@ The Project targets version 2.10.x of the scala release.
 
 * Add nbsbt to your plugin definition file. You can use either the global one at  **~/.sbt/plugins/plugins.sbt** or the project-specific one at **PROJECT_DIR/project/plugins.sbt**
 
-        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.0.1")
+        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.0.2")
 
 
 ## FAQ
@@ -169,7 +169,7 @@ The Project targets version 2.10.x of the scala release.
 
     rm -r ~/.ivy2/local/org.netbeans.nbsbt
 
-and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt> again.
+and redo 'publish-local' the NetBeans sbt plugin <https://github.com/dcaoyuan/nbsbt>.
 
 
 **Q**: I got:

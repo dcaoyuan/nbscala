@@ -1,52 +1,52 @@
 package org.netbeans.modules.scala.sbt.classpath
 
-/**
- * Defines the various class paths for a sbt project.
- */
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import org.netbeans.api.java.classpath.ClassPath
-import org.netbeans.api.java.queries.UnitTestForSourceQuery
 import org.netbeans.api.project.Project
-import org.netbeans.api.project.ProjectUtils
+import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.netbeans.spi.java.classpath.ClassPathFactory
 import org.netbeans.spi.java.classpath.ClassPathImplementation
 import org.netbeans.spi.java.classpath.ClassPathProvider
 import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileUtil
-
 import scala.collection.mutable
 
 /**
+ * Defines the various class paths for a sbt project.
  * 
  * @author Caoyuan Deng
  */
 class SBTClassPathProvider(project: Project) extends ClassPathProvider with PropertyChangeListener {
   import ProjectConstants._
-  
-  private val reentrantLock = new ReentrantReadWriteLock()
-  private val rlock = reentrantLock.readLock
-  private val wlock = reentrantLock.writeLock
-  private var sourceRoots: List[FileObject] = _
-  private var testSourceRoots: List[FileObject] = _
+
+  private trait FileType 
+  private case object MAIN_SOURCE extends FileType
+  private case object TEST_SOURCE extends FileType
+  private case object UNKNOWN extends FileType
+
+  private val rock = new ReentrantReadWriteLock()
+  private var mainSrcRoots: Set[FileObject] = _
+  private var testSrcRoots: Set[FileObject] = _
   private val cache = new mutable.HashMap[String, ClassPath]()
 
   def findClassPath(fileObject: FileObject, scope: String): ClassPath = {
     getFileType(fileObject) match {
-      case SOURCE => getClassPath(scope, isTest = false)
+      case MAIN_SOURCE => getClassPath(scope, isTest = false)
       case TEST_SOURCE => getClassPath(scope, isTest = true)
       case _ => null
     }
   }
 
-  def getClassPath(scope: String, isTest: Boolean): ClassPath = synchronized {
-    cache.getOrElseUpdate(scope, {
-        val scpi = new SBTClassPath(project, scope, isTest)
-        val cp = ClassPathFactory.createClassPath(scpi)
-        scpi.addPropertyChangeListener(this)
-        cache += scope -> cp
+  def getClassPath(scope: String, isTest: Boolean): ClassPath = cache synchronized {
+    val cacheKey = scope + (if (isTest) "/main" else "/test")
+    cache.getOrElseUpdate(cacheKey, {
+        val cpi = new SBTClassPath(project, scope, isTest)
+        val cp = ClassPathFactory.createClassPath(cpi)
+        cpi.addPropertyChangeListener(this)
+        cache += cacheKey -> cp
         cp
       }
     )
@@ -54,50 +54,46 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
 
   def propertyChange(evt: PropertyChangeEvent) {
     evt.getPropertyName match {
-      case ClassPathImplementation.PROP_RESOURCES => clearCache
+      case ClassPathImplementation.PROP_RESOURCES => cache synchronized {
+          clearCache
+          mainSrcRoots = null
+          testSrcRoots = null
+        }
       case _ =>
     }
   }
   
-  def getFileType(fo: FileObject): FileType = {
-    rlock.lock
+  private def getFileType(fo: FileObject): FileType = {
+    rock.readLock.lock
     try {
-      if (sourceRoots == null) {
+      if (mainSrcRoots == null) {
         try {
-          rlock.unlock
-          wlock.lock
-          val sources = ProjectUtils.getSources(project)
-          val allSources = sources.getSourceGroups(SOURCES_TYPE_JAVA) ++ sources.getSourceGroups(SOURCES_TYPE_SCALA)
-          sourceRoots = List[FileObject]()
-          testSourceRoots = List[FileObject]()
-          for (sourceGroup <- allSources) {
-            val sourceFo = sourceGroup.getRootFolder
-            if (UnitTestForSourceQuery.findSources(sourceFo).length > 0) {
-              testSourceRoots ::= sourceFo
-            } else {
-              sourceRoots ::= sourceFo
-            }
-          }
+          rock.readLock.unlock
+          rock.writeLock.lock
+          val (mainSrcs, testSrcs) = ProjectResources.findMainAndTestSrcs(project)
+          mainSrcRoots = mainSrcs
+          testSrcRoots = testSrcs
         } finally {
-          rlock.lock
-          wlock.unlock
+          rock.readLock.lock
+          rock.writeLock.unlock
         }
       }
 
-      def contains(root: FileObject) = (root eq fo) || FileUtil.isParentOf(root, fo)
-      sourceRoots find contains match {
+      mainSrcRoots find contains(fo) match {
         case None =>
-          testSourceRoots find contains match {
+          testSrcRoots find contains(fo) match {
             case None => UNKNOWN
             case _ => TEST_SOURCE
           }
-        case _ => SOURCE
+        case _ => MAIN_SOURCE
       }
     } finally {
-      rlock.unlock
+      rock.readLock.unlock
     }
   }
 
+  private def contains(fo: FileObject)(root: FileObject) = root.equals(fo) || FileUtil.isParentOf(root, fo)
+  
   private def clearCache {
     cache.clear
   }

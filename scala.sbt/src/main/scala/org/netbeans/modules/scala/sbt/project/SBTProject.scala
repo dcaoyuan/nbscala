@@ -8,6 +8,7 @@ import org.netbeans.api.project.ProjectInformation
 import org.netbeans.api.project.ProjectManager
 import org.netbeans.modules.scala.sbt.classpath.SBTClassPathProvider
 import org.netbeans.modules.scala.sbt.classpath.SBTSources
+import org.netbeans.modules.scala.sbt.queries.SBTBinaryForSourceQuery
 import org.netbeans.modules.scala.sbt.queries.SBTSourceForBinaryQuery
 import org.netbeans.spi.project.ProjectState
 import org.openide.filesystems.FileObject
@@ -29,7 +30,8 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
     new SBTSources(this),
     new SBTProjectOpenedHook(this),
     new SBTActionProvider(this),
-    new SBTSourceForBinaryQuery(this)
+    new SBTSourceForBinaryQuery(this),
+    new SBTBinaryForSourceQuery(this)
   )
   
   override

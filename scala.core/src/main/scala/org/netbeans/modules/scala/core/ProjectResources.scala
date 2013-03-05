@@ -35,14 +35,14 @@ object ProjectResources {
   private val projectToResources = new mutable.WeakHashMap[Project, ProjectResource]
 
   class ProjectResource {
-    var srcToOut:  Map[FileObject, FileObject] = Map()
-    var testToOut: Map[FileObject, FileObject] = Map()
+    var mainSrcToOut = Map[FileObject, FileObject]()
+    var testSrcToOut = Map[FileObject, FileObject]()
 
-    def srcOutDirsPath = toDirPaths(srcToOut)
-    def testSrcOutDirsPath = toDirPaths(testToOut)
+    def mianSrcOutDirsPath = toDirPaths(mainSrcToOut)
+    def testSrcOutDirsPath = toDirPaths(testSrcToOut)
 
-    def scalaSrcToOut:  Map[AbstractFile, AbstractFile] = toScalaDirs(srcToOut)
-    def scalaTestToOut: Map[AbstractFile, AbstractFile] = toScalaDirs(testToOut)
+    def scalaMainSrcToOut: Map[AbstractFile, AbstractFile] = toScalaDirs(mainSrcToOut)
+    def scalaTestSrcToOut: Map[AbstractFile, AbstractFile] = toScalaDirs(testSrcToOut)
 
     private def toDirPaths(dirs: Map[FileObject, FileObject]): Map[String, String] = {
       for ((src, out) <- dirs) yield (toDirPath(src), toDirPath(out))
@@ -69,7 +69,7 @@ object ProjectResources {
       projectToResources.getOrElseUpdate(project, findProjectResource(project))
     }
 
-    if (isForTest(resource, fo)) resource.testToOut else resource.srcToOut
+    if (isForTest(resource, fo)) resource.testSrcToOut else resource.mainSrcToOut
   }
 
   def getSrcFileObjects(fo: FileObject, refresh: Boolean): Array[FileObject] = {
@@ -97,7 +97,7 @@ object ProjectResources {
   
   /** is this `fo` under test source? */
   def isForTest(resource: ProjectResource, fo: FileObject) = {
-    resource.testToOut exists {case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo)}
+    resource.testSrcToOut exists {case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo)}
   }
   
   def findAllSourcesOf(mimeType: String, result: mutable.ListBuffer[FileObject])(dirFo: FileObject) {
@@ -119,6 +119,25 @@ object ProjectResources {
   
   def findProjectResource(project: Project): ProjectResource = {
     val resource = new ProjectResource
+    
+    val (mainSrcs, testSrcs) = findMainAndTestSrcs(project)
+
+    mainSrcs foreach {src =>
+      val out = findOutDir(project, src)
+      resource.mainSrcToOut += (src -> out)
+    }
+    
+    testSrcs foreach {src =>
+      val out = findOutDir(project, src)
+      resource.testSrcToOut += (src -> out)
+    }
+
+    resource
+  }
+  
+  def findMainAndTestSrcs(project: Project): (Set[FileObject], Set[FileObject]) = {
+    var mainSrcs = Set[FileObject]()
+    var testSrcs = Set[FileObject]()
 
     val sources = ProjectUtils.getSources(project)
     val scalaSgs = sources.getSourceGroups(SOURCES_TYPE_SCALA)
@@ -128,25 +147,18 @@ object ProjectResources {
     log.fine((javaSgs  map (_.getRootFolder.getPath)).mkString("Project's src group[Java]  dir: [", ", ", "]"))
 
     List(scalaSgs, javaSgs) foreach {
-      case Array(srcSg) =>
-        val src = srcSg.getRootFolder
-        val out = findOutDir(project, src)
-        resource.srcToOut += (src -> out)
+      case Array(mainSg) =>
+        mainSrcs += mainSg.getRootFolder
 
-      case Array(srcSg, testSg, _*) =>
-        val src = srcSg.getRootFolder
-        val out = findOutDir(project, src)
-        resource.srcToOut += (src -> out)
-
-        val test = testSg.getRootFolder
-        val testOut = findOutDir(project, test)
-        resource.testToOut += (test -> testOut)
-
-      case x =>
+      case Array(mainSg, testSg, _*) =>
+        mainSrcs += mainSg.getRootFolder
+        testSrcs += testSg.getRootFolder
+        
+      case _ =>
         // @todo add other srcs
     }
     
-    resource
+    (mainSrcs, testSrcs)
   }
 
   def findOutDir(project: Project, srcRoot: FileObject): FileObject = {
@@ -160,7 +172,7 @@ object ProjectResources {
 
     var out: FileObject = null
     val query = project.getLookup.lookup(classOf[BinaryForSourceQueryImplementation])
-    if ((query != null) && (srcRootUrl != null)) {
+    if (query != null && srcRootUrl != null) {
       val result = query.findBinaryRoots(srcRootUrl)
       if (result != null) {
         var break = false
@@ -212,7 +224,7 @@ object ProjectResources {
       val projectDir = project.getProjectDirectory
       if (projectDir != null && projectDir.isFolder) {
         try {
-          val tmpClasses = "build.classes"
+          val tmpClasses = "build.classes.tmp"
           out = projectDir.getFileObject(tmpClasses) match {
             case null => projectDir.createFolder(tmpClasses)
             case x => x
@@ -264,7 +276,7 @@ object ProjectResources {
     val execCps = new mutable.HashSet[ClassPath]()
 
     val resource = findProjectResource(project)
-    for ((src, out) <- resource.srcToOut) {
+    for ((src, out) <- resource.mainSrcToOut) {
       ClassPath.getClassPath(src, ClassPath.BOOT) match {
         case null =>
         case cp => bootCps += cp
