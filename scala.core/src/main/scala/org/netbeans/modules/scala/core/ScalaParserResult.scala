@@ -62,7 +62,6 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     x
   }
 
-  @volatile private var isAskingSemantic = false
   @volatile private var _root: Option[ScalaRootScope] = None
   @volatile private var _errors: java.util.List[Error] = java.util.Collections.emptyList[Error]
 
@@ -118,10 +117,8 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
   }
 
   private def toSemanticed() {
-    isAskingSemantic = true
     _root = global.askForSemantic(srcFile)
     _errors = collectErrors(global.reporter)
-    isAskingSemantic = false
   }
   
   /**
@@ -139,16 +136,12 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
    * An example is that when try completing on x. and then press esc, the error won't
    * be reported if do not call reset here 
    */
-  private[core] def cancelSemantic() {
-    if (isAskingSemantic) {
-      // @Note under whatever condiction, isAskingSemantic should be decided by toSemanticed, ie. 
-      // we can only make sure the status after global.askForSemantic is done.
-      if (global.cancelSemantic(srcFile)) {
-        // only reset when global confirmed that the target srcFile is exactly the working one
-        // reset the _root and _errors
-        _root = None
-        _errors = java.util.Collections.emptyList[Error]
-      }
+  private[core] def tryCancelSemantic() {
+    // only reset when global confirmed that the target srcFile is exactly the working one
+    if (global.tryCancelSemantic(srcFile)) {
+      // reset the _root and _errors
+      _root = None
+      _errors = java.util.Collections.emptyList[Error]
     }
   }
 

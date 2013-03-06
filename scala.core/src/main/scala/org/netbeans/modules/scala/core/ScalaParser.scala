@@ -81,7 +81,7 @@ class ScalaParser extends Parser {
         // followed parse(..) call. Under other cases there may be no followed parse(..) call.
         // Or even worse, in this case, there may still no followed parse(..) call, anyway, 
         // we have to make strict condition to cancel 
-        if (event.sourceChanged && _result != null) _result.cancelSemantic
+        if (event.sourceChanged && _result != null) _result.tryCancelSemantic
       case _ =>
     }
   }

@@ -108,7 +108,6 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
   private val log1 = Logger.getLogger(this.getClass.getName)
   
-  @volatile private var workingSource: Option[SourceFile] = None
   private val sourceToResponse = new java.util.concurrent.ConcurrentHashMap[SourceFile, Response[_]]
   
   protected def isCancelled(srcFile: SourceFile) = {
@@ -154,16 +153,14 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   }
 
   /**
-   * We should carefully design askForSemantic(.) and cancelSemantic(.) to make them thread safe,
-   * so cancelSemantic could be called during askForSemantic and the rootScope is always which we want.
+   * We should carefully design askForSemantic(.) and tryCancelSemantic(.) to make them thread safe,
+   * so tryCancelSemantic could be called during askForSemantic and the rootScope is always which we want.
    * @return    Some root when everything goes smooth
    *            Empty root when exception happens
    *            None when cancelled
    */
   def askForSemantic(srcFile: ScalaSourceFile): Option[ScalaRootScope] = {
-    workingSource = Some(srcFile)
-
-    resetReporter
+    resetReporter // is reporter thread safe? or, since it's a global report, do not need to care.
     qualToRecoveredType.clear
 
     try {
@@ -226,7 +223,6 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
     } finally {
       sourceToResponse.remove(srcFile)
-      workingSource = None
     }
   }
     
@@ -261,20 +257,13 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   /**
    * @return will cancel or not
    */
-  def cancelSemantic(srcFile: SourceFile): Boolean = {
-    workingSource match {
-      case Some(x) =>
-        val fileA = x.file.file
-        val fileB = srcFile.file.file
-        if ((fileA ne null) && (fileB ne null) && fileA.getAbsolutePath == fileB.getAbsolutePath) {
-          log1.info("Cancel semantic " + fileA.getName)
-          // do not try to call resp.cancel, which seems not consistent yet.
-          sourceToResponse.remove(srcFile)
-          true
-        } else {
-          false
-        }
-      case _ => false
+  private[core] def tryCancelSemantic(srcFile: SourceFile): Boolean = {
+    if (srcFile != null && sourceToResponse.contains(srcFile)) {
+      sourceToResponse.remove(srcFile)
+      log1.info("Cancel semantic " + srcFile.file.file.getName)
+      true
+    } else {
+      false
     }
   }
 
