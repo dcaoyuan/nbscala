@@ -257,7 +257,7 @@ object FixImportsHelper{
     while (itr.hasNext) {
       val typeName = itr.next
       typeName.getKind match {
-        case ek@(javax.lang.model.element.ElementKind.CLASS | javax.lang.model.element.ElementKind.INTERFACE) =>
+        case ek if ek.isClass | ek.isInterface =>
           val fqn = typeName.getQualifiedName
           val icon = ElementIcons.getElementIcon(ek, null)
           val level = getImportanceLevel(fqn)
