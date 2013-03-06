@@ -45,8 +45,8 @@ object ScalaSourceFile {
 class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
   
   lazy val file: AbstractFile = {
-    val file = if (fileObject ne null) FileUtil.toFile(fileObject) else null
-    if (file ne null) new PlainFile(file) else new VirtualFile("<current>", "")
+    val javaIoFile = if (fileObject ne null) FileUtil.toFile(fileObject) else null
+    if (javaIoFile ne null) new PlainFile(javaIoFile) else new VirtualFile("<current>", "")
   }
   
   lazy val source = Source.create(fileObject) // if has been created, will return existed one
@@ -69,12 +69,6 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
   def tokenHierarchy: TokenHierarchy[_] = snapshot.getTokenHierarchy
   def content = snapshot.getText.toString.toCharArray
   
-  override def equals(that : Any) = that match {
-    case that : BatchSourceFile => file.path == that.file.path && start == that.start
-    case that : ScalaSourceFile => file.path == that.file.path && start == that.start
-    case _ => false
-  }
-  override def hashCode = file.path.## + start.##
   def length = content.length
   def start = 0
   def isSelfContained = true
@@ -124,4 +118,15 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
     }
     findLine(0, lines.length - 1) // use (lines.length - 1) instead of lines.length here
   }
+  
+  override 
+  def hashCode = file.file.hashCode
+
+  override 
+  def equals(that : Any) = that match {
+    case that : BatchSourceFile => file.path == that.file.path && start == that.start
+    case that : ScalaSourceFile => file.file == that.file.file // compare underlying java io file.
+    case _ => false
+  }
+
 }
