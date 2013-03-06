@@ -68,7 +68,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
   override 
   def cancel: Unit = synchronized {
-    log.info("Try to cancel in Hightlighting, but we ignore it, @todo")
+    log.info("Ignore cancel. @todo")
     //cancelled = true
   }
 

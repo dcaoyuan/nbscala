@@ -182,7 +182,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
 
   Logger.getLogger("TIMER").log(Level.FINE, "IsOverriddenAnnotationHandler", Array(file, this).asInstanceOf[Array[Object]]) //NOI18N
 
-  private var canceled: Boolean = _
+  private var cancelled: Boolean = _
 
   private var results: List[IsOverriddenAnnotation] = Nil
 
@@ -193,20 +193,20 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
   }
 
   override def cancel: Unit = synchronized {
-    canceled = true
+    cancelled = true
     wakeUp
   }
 
   private def resume: Unit = synchronized {
-    canceled = false
+    cancelled = false
   }
 
   private def wakeUp: Unit = synchronized {
     notifyAll
   }
 
-  private def isCanceled: Boolean = synchronized {
-    canceled
+  private def isCancelled: Boolean = synchronized {
+    cancelled
   }
 
   @throws(classOf[ParseException])
@@ -235,7 +235,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
 
   protected def process(pr: ScalaParserResult): List[IsOverriddenAnnotation] = {
     synchronized {
-      if (isCanceled) return Nil
+      if (isCancelled) return Nil
     }
 
     val root = pr.rootScope
@@ -268,7 +268,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
         sym = item.asInstanceOf[global.ScalaDfn].symbol if sym != global.NoSymbol
         pos = getPosition(doc, item.idOffset(th)) if pos ne null
       } {
-        if (isCanceled) return Nil
+        if (isCancelled) return Nil
         
         val overridees = sym.allOverriddenSymbols
         if (!overridees.isEmpty) {
@@ -467,7 +467,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
      }
      } */
         
-    if (isCanceled) Nil else annotations.toList
+    if (isCancelled) Nil else annotations.toList
   }
 
   private def findSourceRoot: FileObject = {

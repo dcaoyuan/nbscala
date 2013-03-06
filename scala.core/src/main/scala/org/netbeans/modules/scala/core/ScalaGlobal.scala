@@ -258,11 +258,12 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
    * @return will cancel or not
    */
   private[core] def tryCancelSemantic(srcFile: SourceFile): Boolean = {
-    if (srcFile != null && sourceToResponse.contains(srcFile)) {
+    if (srcFile != null && sourceToResponse.containsKey(srcFile)) {
       sourceToResponse.remove(srcFile)
-      log1.info("Cancel semantic " + srcFile.file.file.getName)
+      log1.info("Will cancel semantic " + srcFile.file.file.getName)
       true
     } else {
+      log1.info("Won't cancel semantic " + srcFile.file.file.getName + ", since it's not under semantic.")
       false
     }
   }
@@ -460,11 +461,9 @@ object ScalaGlobal {
     
     val bootCpStr = ProjectResources.toClassPathString(bootCp)
     settings.bootclasspath.value = bootCpStr
-    log.info("Project's bootclasspath: " + settings.bootclasspath.value)
 
     val compCpStr = ProjectResources.toClassPathString(compCp)
     settings.classpath.value = compCpStr
-    log.info("Project's classpath: " + settings.classpath.value)
 
     // Should set extdirs to empty, otherwise all jars under scala.home/lib will be added
     // which brings unwanted scala runtime (scala runtime should be set in compCpStr).
@@ -506,12 +505,10 @@ object ScalaGlobal {
     settings.sourcepath.tryToSet(srcPaths.reverse)
     settings.outdir.value = outPath
 
-    log.info("Project's source paths set for global: " + srcPaths)
-    log.info("Project's output paths set for global: " + outPath)
     if (srcCp ne null){
       log.info(srcCp.getRoots.map(_.getPath).mkString("Project's srcCp: [", ", ", "]"))
     } else {
-      log.info("Project's srcCp is null !")
+      log.warning("Project's srcCp is null !")
     }
     
     // @Note: settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?
