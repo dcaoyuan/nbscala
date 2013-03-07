@@ -111,12 +111,37 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     val combo: JComboBox[String]
     var invokeOffset: Int = 0
     
+    def matches(input: String, candicate: String): Int = {
+      val start = (if (CompleteTriggerChar != -1) {
+          input.lastIndexOf(CompleteTriggerChar)
+        } else {
+          input.lastIndexOf(' ')
+        }
+      ) match {
+        case -1 => input.lastIndexOf('\t')
+        case idx => idx
+      }
+      
+      if (start == -1) {
+        backMatches(input, candicate) // best try
+      } else if (start == input.length - 1) { // exactly the last char
+        0
+      } else {
+        val word = input.substring(start + 1, input.length)
+        if (candicate.startsWith(word)) {
+          word.length
+        } else {
+          -1
+        }
+      }
+    }
+    
     /**
      * matches backward maximal length
      */
-    def matches(input: String, candicate: String): Int = {
+    private def backMatches(input: String, candicate: String): Int = {
       val len = math.min(input.length, candicate.length)
-      var matchedLength = 0
+      var matchedLength = -1
       var i = 0
       while (i < len) {
         val toCompare = candicate.substring(0, i + 1)
@@ -127,6 +152,24 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       }
       matchedLength
     }
+    
+    /**
+     * matches backward maximal length
+     */
+    def wordMatches(word: String, candicate: String): Int = {
+      val len = math.min(word.length, candicate.length)
+      var matchedLength = 0
+      var i = 0
+      while (i < len) {
+        val toCompare = candicate.substring(0, i + 1)
+        if (word.endsWith(toCompare)) {
+          matchedLength = i + 1
+        }
+        i += 1
+      }
+      matchedLength
+    }
+    
   }
 
   /** buffer which will be used for the next line */
@@ -510,7 +553,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       while (i < count) {
         val candidate = completer.combo.getItemAt(i)
         val matchedLength = completer.matches(input, candidate)
-        if (matchedLength > 0) {
+        if (matchedLength >= 0) {
           candidates += candidate
         }
         i += 1
@@ -537,7 +580,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
         if (pos >= 0) {
           val input = getInputingLine
           val matchedLength = completer.matches(input, selectedText)
-          if (matchedLength > 0) {
+          if (matchedLength >= 0) {
             val toAppend = selectedText.substring(matchedLength, selectedText.length)
             if (toAppend.length > 0) {
               terminalInput.write(toAppend.getBytes("utf-8"))
