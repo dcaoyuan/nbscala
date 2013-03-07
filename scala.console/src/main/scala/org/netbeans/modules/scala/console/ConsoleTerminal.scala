@@ -798,16 +798,100 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
   // @Note before do any ansi cursor command, we should flush first to keep the 
   // proper caret position which is sensitive to the order of ansi command and chars to print
   override 
-  protected def processCursorToColumn(col: Int) {
+  protected def processCursorToColumn(screenCol: Int) {
     term.doFlushWith(false) { 
       try {
-        val lineOffset = getLineStartOffsetForPos(doc, area.getCaretPosition)
-        val toPos = lineOffset + col - 1
+        val (lineOffset, lineEndOffset) = getLineOffsetOfPos(doc, area.getCaretPosition)
+        val toPos = lineOffset + screenCol - 1 
+        if (toPos < lineEndOffset) { 
+          area.setCaretPosition(toPos)
+        } else { // may have to move to previous line
+          val (lineOffset1, lineEndOffset1) = getLineOffsetOfPos(doc, lineOffset - 1)
+          val toPos1 = lineOffset1 + screenCol - 1 
+          if (lineOffset1 >= 0 && toPos < lineEndOffset1) {
+            area.setCaretPosition(toPos)
+          } // else no idea now, do nothing
+        }
+      } catch {
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+      }
+    }
+  }
+  
+  override 
+  protected def processCursorLeft(count: Int) {
+    term.doFlushWith(false) {
+      try {
+        val pos = area.getCaretPosition
+        if (pos - count >= 0) {
+          area.setCaretPosition(pos - count)
+        } else {
+          area.setCaretPosition(0)
+        }
+      } catch {
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+      }
+    }    
+  }
+
+  override 
+  protected def processCursorRight(count: Int) {
+    term.doFlushWith(false) {
+      try {
+        val pos = area.getCaretPosition
+        if (pos + count < doc.getLength) {
+          area.setCaretPosition(pos + count)
+        } else {
+          val append = count - (doc.getLength - 1 - pos)
+          var i = 0
+          while (i < count) {
+            out.write(' ')
+            i += 1
+          }
+          area.setCaretPosition(doc.getLength - 1)
+        }
+      } catch {
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+      }
+    }    
+  }
+
+  override 
+  protected def processCursorDown(count: Int) {
+    term.doFlushWith(false) {
+      try {
+        val pos = area.getCaretPosition
+        val root = doc.getDefaultRootElement
+        val lineNo = root.getElementIndex(pos)
+        val line = root.getElement(lineNo)
+        val col = pos - line.getStartOffset
+        val toLineNo = math.min(lineNo + count, root.getElementCount - 1)
+        val toLine = root.getElement(toLineNo)
+        val toPos = math.min(toLine.getStartOffset + col, toLine.getEndOffset - 1)
         area.setCaretPosition(toPos)
       } catch {
         case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
+  }
+
+  override 
+  protected def processCursorUp(count: Int) {
+    term.doFlushWith(false) {
+      try {
+        val pos = area.getCaretPosition
+        val root = doc.getDefaultRootElement
+        val lineNo = root.getElementIndex(pos)
+        val line = root.getElement(lineNo)
+        val col = pos - line.getStartOffset
+        val toLineNo = math.max(lineNo - count, 0)
+        val toLine = root.getElement(toLineNo)
+        val toPos = math.min(toLine.getStartOffset + col, toLine.getEndOffset - 1)
+        area.setCaretPosition(toPos)
+      } catch {
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+      }
+    }    
   }
   
   /**
@@ -821,8 +905,8 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
       case 0 => 
         term.doFlushWith(false) {
           try {
-            val currPos = area.getCaretPosition
-            doc.remove(currPos, doc.getLength - currPos)
+            val pos = area.getCaretPosition
+            doc.remove(pos, doc.getLength - pos)
           } catch {
             case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
           }
@@ -837,14 +921,33 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
       case 0 => 
         term.doFlushWith(false) {
           try {
-            val currPos = area.getCaretPosition
-            doc.remove(currPos, doc.getLength - currPos)
+            val pos = area.getCaretPosition
+            doc.remove(pos, doc.getLength - pos)
           } catch {
             case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
           }
         }
       case _ =>
     }
+  }
+
+  override
+  protected def processReportCursorPosition() {
+    val DEFAULT_HEIGHT = 24
+    term.doFlushWith(false) {
+      try {
+        val pos = area.getCaretPosition
+        val root = doc.getDefaultRootElement
+        val lineNo = root.getElementIndex(pos)
+        val line = root.getElement(lineNo)
+        val screenCol = pos - line.getStartOffset + 1
+        val screenRow = DEFAULT_HEIGHT - ((root.getElementCount - 1 - lineNo) % DEFAULT_HEIGHT)
+        val report = "\u001b[" + screenRow + ";" + screenCol + "R"
+        term.terminalInput.write(report.getBytes("utf-8"))
+      } catch {
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+      }
+    }    
   }
 
 }
@@ -951,8 +1054,8 @@ object AnsiConsoleOutputStream {
    */
   def getLineNumber(doc: Document, pos: Int): Int = {
     // a document is modelled as a list of lines (Element)=> index = line number
-    val rrot = doc.getDefaultRootElement
-    rrot.getElementIndex(pos)
+    val root = doc.getDefaultRootElement
+    root.getElementIndex(pos)
   }
 
   /* not used alone... always together with the line. so we minimize mismatch with offset !
@@ -968,7 +1071,7 @@ object AnsiConsoleOutputStream {
    }*/
 
   /** 
-   * @return the {line,column}, first is 0
+   * @return the {line,column}, start from 0
    */
   def getLineColumnNumbers(doc: Document, pos: Int): Array[Int] = {
     val root = doc.getDefaultRootElement
@@ -977,17 +1080,24 @@ object AnsiConsoleOutputStream {
     Array(line, pos - lineElt.getStartOffset)
   }
 
-  def getLineStartOffsetForPos(doc: Document, pos: Int): Int = {
+  /**
+   * @return (startOffset, endOffset). Line endOffset is always point to '\n'
+   */
+  def getLineOffsetOfPos(doc: Document, pos: Int): (Int, Int) = {
     // a document is modelled as a list of lines (Element)=> index = line number
-    doc match {
+    val line = doc match {
       case sDoc: StyledDocument =>
-        val line = sDoc.getParagraphElement(pos)
-        line.getStartOffset
+        sDoc.getParagraphElement(pos)
       case _ =>
         val root = doc.getDefaultRootElement
-        val line = root.getElementIndex(pos)
-        val lineElt = root.getElement(line)
-        lineElt.getStartOffset
+        val lineIdx = root.getElementIndex(pos)
+        root.getElement(lineIdx)
+    }
+    
+    if (line != null) {
+      (line.getStartOffset, line.getEndOffset)
+    } else {
+      (-1, -1)
     }
   }
 

@@ -254,11 +254,14 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
         case 'u' =>
           processRestoreCursorPosition
           true
+        case 'n' if optionInt(options, 0, -1) == 6 =>
+          processReportCursorPosition
+          true
         case _ =>
-          if ('a' <= command && 'z' <= command) {
+          if ('a' <= command && command <= 'z') {
             processUnknownExtension(options, command)
             true
-          } else if ('A' <= command && 'Z' <= command) {
+          } else if ('A' <= command && command <= 'Z') {
             processUnknownExtension(options, command)
             true
           } else {
@@ -302,6 +305,9 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
     }
   }
 	
+  @throws(classOf[IOException])
+  protected def processReportCursorPosition() {}
+
   @throws(classOf[IOException])
   protected def processRestoreCursorPosition() {}
   
