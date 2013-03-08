@@ -9,20 +9,6 @@ package org.netbeans.modules.scala.sbt.project
 object ProjectConstants {
 
   /**
-   * Java package root sources type.
-   * @see org.netbeans.api.project.Sources
-   */
-  val SOURCES_TYPE_JAVA = "java" // NOI18N
-
-  /**
-   * Package root sources type for resources, if these are not put together with Java sources.
-   * @see org.netbeans.api.project.Sources
-   * @since org.netbeans.modules.java.project/1 1.11
-   */
-  val SOURCES_TYPE_RESOURCES = "resources" // NOI18N
-
-
-  /**
    * Hint for <code>SourceGroupModifier</code> to create a <code>SourceGroup</code>
    * for main project codebase.
    * @see org.netbeans.api.project.SourceGroupModifier
@@ -66,17 +52,17 @@ object ProjectConstants {
    */
   val COMMAND_DEBUG_FIX = "debug.fix" // NOI18N
   
-  val SOURCES_TYPE_SCALA = "scala"
-  
   val PROJECT_FOLDER_NAME = "project"
   
-  val NAME_SCALASOURCE      = "81ScalaSourceRoot"
-  val NAME_SCALATESTSOURCE  = "82ScalaTestSourceRoot"
-  val NAME_JAVATESTSOURCE   = "91JavaTestSourceRoot"
-  val NAME_JAVASOURCE       = "92JavaSourceRoot"
-  val NAME_DEP_PROJECTS     = "95DepProjects"
-  val NAME_DEP_LIBRARIES    = "96DepLibraries"
-  val NAME_OTHERSOURCE      = "98OtherSourceRoot"  
+  val NAME_SCALASOURCE       = "81ScalaSourceRoot"
+  val NAME_SCALATESTSOURCE   = "82ScalaTestSourceRoot"
+  val NAME_JAVASOURCE        = "91JavaSourceRoot"
+  val NAME_JAVATESTSOURCE    = "92JavaTestSourceRoot"
+  val NAME_MANAGEDSOURCE     = "93JavaSourceRoot"
+  val NAME_MANAGEDTESTSOURCE = "94JavaTestSourceRoot"
+  val NAME_DEP_PROJECTS      = "95DepProjects"
+  val NAME_DEP_LIBRARIES     = "96DepLibraries"
+  val NAME_OTHERSOURCE       = "98OtherSourceRoot"  
   
 }
 

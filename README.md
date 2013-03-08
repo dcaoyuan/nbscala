@@ -165,11 +165,12 @@ The Project targets version 2.10.x of the scala release.
 
     [error] sbt.IncompatiblePluginsException: Binary incompatibility in plugins detected.
 
-**A**: Try to remove published nbsbt plugin from your local .ivy2 repository:
+**A**: Try to remove published nbsbt plugin from your local .ivy2 repository and sbt plugins cache:
 
     rm -r ~/.ivy2/local/org.netbeans.nbsbt
+    rm -r ~/.sbt/plugins/target
 
-and redo 'publish-local' the NetBeans sbt plugin <https://github.com/dcaoyuan/nbsbt>.
+and redo 'publish-local' for the NetBeans sbt plugin <https://github.com/dcaoyuan/nbsbt>.
 
 
 **Q**: I got:

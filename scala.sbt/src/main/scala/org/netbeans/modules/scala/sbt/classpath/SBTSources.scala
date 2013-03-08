@@ -3,6 +3,7 @@ package org.netbeans.modules.scala.sbt.classpath
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import javax.swing.event.ChangeListener
+import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.SourceGroup
@@ -36,7 +37,6 @@ class SBTSources(project: Project) extends Sources {
     
     x
   }  
-  private var isSbtControllerListenerAdded = false
 
   import ProjectConstants._
   
@@ -49,7 +49,7 @@ class SBTSources(project: Project) extends Sources {
         val projectDir = project.getProjectDirectory
         Array(GenericSources.group(project, projectDir, projectDir.getNameExt, projectDir.getNameExt, null, null))
       
-      case SOURCES_TYPE_JAVA | SOURCES_TYPE_SCALA =>
+      case ProjectResources.SOURCES_TYPE_JAVA | ProjectResources.SOURCES_TYPE_SCALA | ProjectResources.SOURCES_TYPE_MANAGED =>
         val mainSrcs = maybeAddGroup(tpe, false)
         val testSrcs = maybeAddGroup(tpe, true)
         // We should keep the order Array(main, test), @see org.netbeans.modules.scala.core.ProjectResourcs#findMainAndTestSrcs
@@ -72,9 +72,9 @@ class SBTSources(project: Project) extends Sources {
     } else {
       // best try
       tpe match {
-        case SOURCES_TYPE_JAVA =>
+        case ProjectResources.SOURCES_TYPE_JAVA =>
           Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/java"))
-        case SOURCES_TYPE_SCALA =>
+        case ProjectResources.SOURCES_TYPE_SCALA =>
           Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/scala"))
         case _ => 
           Array[FileObject]()
@@ -82,21 +82,23 @@ class SBTSources(project: Project) extends Sources {
     }
     
     val name = tpe match {
-      case SOURCES_TYPE_JAVA =>
+      case ProjectResources.SOURCES_TYPE_JAVA =>
         if (isTest) NAME_JAVATESTSOURCE else NAME_JAVASOURCE
-      case SOURCES_TYPE_SCALA =>
+      case ProjectResources.SOURCES_TYPE_SCALA =>
         if (isTest) NAME_SCALATESTSOURCE else NAME_SCALASOURCE
-      case _ => 
-        NAME_OTHERSOURCE
+      case ProjectResources.SOURCES_TYPE_MANAGED =>
+        if (isTest) NAME_MANAGEDTESTSOURCE else NAME_MANAGEDSOURCE
+      case _ => NAME_OTHERSOURCE
     }
     
     val displayName = tpe match {
-      case SOURCES_TYPE_JAVA =>
+      case ProjectResources.SOURCES_TYPE_JAVA =>
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_JavaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_JavaSources")
-      case SOURCES_TYPE_SCALA =>
+      case ProjectResources.SOURCES_TYPE_SCALA =>
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ScalaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ScalaSources")
-      case _ =>
-        NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
+      case ProjectResources.SOURCES_TYPE_MANAGED =>
+        if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ManagedSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ManagedSources")
+      case _ => NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
     }
     
     for (root <- roots if root != null) yield GenericSources.group(project, root, name, displayName, null, null)

@@ -7,7 +7,7 @@ import javax.swing.event.ChangeListener
 import org.netbeans.api.java.queries.BinaryForSourceQuery
 import org.netbeans.api.java.queries.BinaryForSourceQuery.Result
 import org.netbeans.api.project.Project
-import org.netbeans.modules.scala.sbt.project.ProjectConstants
+import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.java.queries.BinaryForSourceQueryImplementation
 import org.openide.util.ChangeSupport
@@ -44,13 +44,13 @@ class SBTBinaryForSourceQuery(project: Project) extends BinaryForSourceQueryImpl
   def findBinaryRoots(sourceRoot: URL): Result = cache synchronized {
     assert(sourceRoot != null)
     cache.getOrElseUpdate(sourceRoot.toURI.normalize.toString, {
-        import ProjectConstants._
-        val mainSrcs = sbtResolver.getSources(SOURCES_TYPE_JAVA, false) ++ sbtResolver.getSources(SOURCES_TYPE_SCALA, false)
+        import ProjectResources._
+        val mainSrcs = sbtResolver.getSources(SOURCES_TYPE_JAVA, false) ++ sbtResolver.getSources(SOURCES_TYPE_SCALA, false) ++ sbtResolver.getSources(SOURCES_TYPE_MANAGED, false)
         val found = mainSrcs filter {_._1.toURI.toURL == sourceRoot}
         if (found.length > 0) {
           new BinResult(found map (_._2.toURI.toURL))
         } else {
-          val testSrcs = sbtResolver.getSources(SOURCES_TYPE_JAVA, true) ++ sbtResolver.getSources(SOURCES_TYPE_SCALA, true)
+          val testSrcs = sbtResolver.getSources(SOURCES_TYPE_JAVA, true) ++ sbtResolver.getSources(SOURCES_TYPE_SCALA, true) ++ sbtResolver.getSources(SOURCES_TYPE_MANAGED, true)
           val found = testSrcs filter {_._1.toURI.toURL == sourceRoot}
           if (found.length > 0) {
             new BinResult(found map (_._2.toURI.toURL))

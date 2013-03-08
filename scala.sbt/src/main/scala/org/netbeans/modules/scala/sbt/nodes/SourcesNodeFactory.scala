@@ -4,7 +4,7 @@ import javax.swing.event.ChangeListener
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ProjectUtils
 import org.netbeans.api.project.SourceGroup
-import org.netbeans.modules.scala.sbt.project.ProjectConstants
+import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.java.project.support.ui.PackageView
 import org.netbeans.spi.project.ui.support.NodeFactory
@@ -26,10 +26,12 @@ object SourcesNodeFactory {
       val theKeys = new java.util.ArrayList[SourceGroup]()
       
       val sources = ProjectUtils.getSources(project)
-      val javasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_JAVA)
-      javasgs foreach theKeys.add
-      val scalasgs = sources.getSourceGroups(ProjectConstants.SOURCES_TYPE_SCALA)
-      scalasgs foreach theKeys.add
+      val javaSgs = sources.getSourceGroups(ProjectResources.SOURCES_TYPE_JAVA)
+      javaSgs foreach theKeys.add
+      val scalaSgs = sources.getSourceGroups(ProjectResources.SOURCES_TYPE_SCALA)
+      scalaSgs foreach theKeys.add
+      val managedSgs = sources.getSourceGroups(ProjectResources.SOURCES_TYPE_MANAGED)
+      managedSgs foreach theKeys.add
       
       java.util.Collections.sort(theKeys, new java.util.Comparator[SourceGroup]() {
           def compare(o1: SourceGroup, o2: SourceGroup) = o1.getName.compareTo(o2.getName)

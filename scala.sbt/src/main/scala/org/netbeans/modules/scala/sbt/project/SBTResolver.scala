@@ -8,6 +8,7 @@ import java.util.logging.Logger
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 import org.netbeans.api.java.classpath.ClassPath
+import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
 import org.openide.filesystems.FileUtil
 import org.openide.util.NbBundle
@@ -16,15 +17,17 @@ import scala.collection.mutable.ArrayBuffer
 case class ProjectContext(
   name: String,
   id: String,
-  mainJavaSrcs:   Array[(File, File)], 
-  testJavaSrcs:   Array[(File, File)], 
-  mainScalaSrcs:  Array[(File, File)], 
-  testScalaSrcs:  Array[(File, File)], 
-  mainCps:        Array[File], 
-  testCps:        Array[File],
-  mainDepPrjs:    Array[File],
-  testDepPrjs:    Array[File],
-  aggPrjs:        Array[File]
+  mainJavaSrcs:     Array[(File, File)], 
+  testJavaSrcs:     Array[(File, File)], 
+  mainScalaSrcs:    Array[(File, File)], 
+  testScalaSrcs:    Array[(File, File)], 
+  mainManagedSrcs:  Array[(File, File)], 
+  testManagedSrcs:  Array[(File, File)], 
+  mainCps:          Array[File], 
+  testCps:          Array[File],
+  mainDepPrjs:      Array[File],
+  testDepPrjs:      Array[File],
+  aggPrjs:          Array[File]
 )
 
 /**
@@ -110,6 +113,8 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     val testJavaSrcs  = new ArrayBuffer[(File, File)]()
     val mainScalaSrcs = new ArrayBuffer[(File, File)]()
     val testScalaSrcs = new ArrayBuffer[(File, File)]()
+    val mainManagedSrcs = new ArrayBuffer[(File, File)]()
+    val testManagedSrcs = new ArrayBuffer[(File, File)]()
     val mainCps = new ArrayBuffer[File]()
     val testCps = new ArrayBuffer[File]()
     val mainDepPrjs = new ArrayBuffer[File]()
@@ -129,6 +134,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
               case "src" =>
                 val path = (entry \ "@path").text.trim.replace("\\", "/")
                 val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
+                val isManaged = (entry \ "@managed").text.trim.equalsIgnoreCase("true")
                 val isDepProject = !((entry \ "@exported") isEmpty)
                 
                 val srcFo = projectFo.getFileObject(path)
@@ -144,9 +150,17 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                   val isJava = srcFo.getPath.split("/") find (_ == "java") isDefined
                   val srcDir = FileUtil.toFile(srcFo)
                   val srcs = if (isTest) {
-                    if (isJava) testJavaSrcs else testScalaSrcs
-                  } else {
-                    if (isJava) mainJavaSrcs else mainScalaSrcs
+                    if (isManaged) {
+                      testManagedSrcs
+                    } else {
+                      if (isJava) testJavaSrcs else testScalaSrcs
+                    }
+                  } else { // main
+                    if (isManaged) {
+                      mainManagedSrcs
+                    } else {
+                      if (isJava) mainJavaSrcs else mainScalaSrcs
+                    }
                   }
                   srcs += srcDir -> outDir
                 }
@@ -202,6 +216,8 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                    testJavaSrcs  map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
                    mainScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
                    testScalaSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                   mainManagedSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
+                   testManagedSrcs map {case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o)} toArray,
                    mainCps map FileUtil.normalizeFile toArray,
                    testCps map FileUtil.normalizeFile toArray,
                    mainDepPrjs map FileUtil.normalizeFile toArray,
@@ -244,14 +260,16 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
 
   def getSources(tpe: String, isTest: Boolean): Array[(File, File)] = {
     tpe match {
-      case ProjectConstants.SOURCES_TYPE_JAVA =>
+      case ProjectResources.SOURCES_TYPE_JAVA =>
         if (isTest) projectContext.testJavaSrcs else projectContext.mainJavaSrcs
-      case ProjectConstants.SOURCES_TYPE_SCALA =>
+      case ProjectResources.SOURCES_TYPE_SCALA =>
         if (isTest) projectContext.testScalaSrcs else projectContext.mainScalaSrcs
+      case ProjectResources.SOURCES_TYPE_MANAGED =>
+        if (isTest) projectContext.testManagedSrcs else projectContext.mainManagedSrcs
       case _ => Array()
     }
   }
-  
+
   def getDependenciesProjects(isTest: Boolean): Array[File] = if (isTest) projectContext.testDepPrjs else projectContext.mainDepPrjs
   def getAggregateProjects: Array[File] = projectContext.aggPrjs
 }
@@ -265,6 +283,8 @@ object SBTResolver {
   
   val EmptyContext = ProjectContext(null,
                                     null,
+                                    Array[(File, File)](), 
+                                    Array[(File, File)](), 
                                     Array[(File, File)](), 
                                     Array[(File, File)](), 
                                     Array[(File, File)](), 

@@ -31,7 +31,11 @@ object ProjectResources {
   val SOURCES_TYPE_JAVA = "java"
   /** a source group type for separate scala source roots, as seen in maven projects for example */
   val SOURCES_TYPE_SCALA = "scala"
-  
+  /** a source group type for managed source roots, as seen in sbt projects for example */
+  val SOURCES_TYPE_MANAGED = "managed"
+  /** @see org.netbeans.api.project.Sources Package root sources type for resources, if these are not put together with Java sources. */
+  val SOURCES_TYPE_RESOURCES = "resources" // NOI18N
+
   private val projectToResources = new mutable.WeakHashMap[Project, ProjectResource]
 
   class ProjectResource {
@@ -114,6 +118,7 @@ object ProjectResources {
     val sources = ProjectUtils.getSources(project)
     val scalaSgs = sources.getSourceGroups(SOURCES_TYPE_SCALA)
     val javaSgs  = sources.getSourceGroups(SOURCES_TYPE_JAVA)
+    val managedSgs = sources.getSourceGroups(SOURCES_TYPE_JAVA)
     scalaSgs ++ javaSgs
   }
   

@@ -14,8 +14,8 @@ import org.netbeans.api.java.queries.JavadocForBinaryQuery
 import org.netbeans.api.java.queries.SourceForBinaryQuery
 import org.netbeans.api.java.queries.SourceForBinaryQuery.Result
 import org.netbeans.api.project.Project
+import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.sbt.nodes.ArtifactInfo
-import org.netbeans.modules.scala.sbt.project.ProjectConstants
 import org.netbeans.modules.scala.sbt.project.SBTResolver
 import org.netbeans.spi.java.queries.JavadocForBinaryQueryImplementation
 import org.openide.util.ChangeSupport
@@ -78,7 +78,7 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
   }
     
   private def getSrcRoot(url: URL): Array[FileObject] = {
-    import ProjectConstants._
+    import ProjectResources._
     val toReturn = url.getProtocol match {
       case "file" =>
         // true for directories.
