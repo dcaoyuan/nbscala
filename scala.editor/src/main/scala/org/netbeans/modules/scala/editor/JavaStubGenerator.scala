@@ -465,13 +465,14 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     def paramSig(tsym: Symbol) = tsym.name + boundsSig(hiBounds(tsym.info.bounds))
     def polyParamSig(tparams: List[Symbol]) = (
       if (tparams.isEmpty) ""
-      else tparams map paramSig mkString ("<", "", ">")
+      else tparams map paramSig mkString ("<", ",", ">")
     )
 
     // Anything which could conceivably be a module (i.e. isn't known to be
     // a type parameter or similar) must go through here or the signature is
     // likely to end up with Foo<T>.Empty where it needs Foo<T>.Empty$.
-    def fullNameInSig(sym: Symbol) = "Array<" + beforeIcode(sym.javaBinaryName) + ">" // "L" + beforeIcode(sym.javaBinaryName)
+    def fullNameInSig(sym: Symbol) = beforeIcode(sym.javaBinaryName)
+      //"L" + beforeIcode(sym.javaBinaryName)
 
     def jsig(tp0: Type, existentiallyBound: List[Symbol] = Nil, toplevel: Boolean = false, primitiveOK: Boolean = true): String = {
       val tp = tp0.dealias
@@ -497,29 +498,28 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
                 if (needsJavaSig(preRebound)) {
                   val s = jsig(preRebound, existentiallyBound)
                   if (s.charAt(0) == 'L') {
-                    "Array<" + s.substring(1, s.length - 1) + "." + sym.javaSimpleName + ">"
-                    //s.substring(0, s.length - 1) + "." + sym.javaSimpleName
+                    s.substring(0, s.length - 1) + "." + sym.javaSimpleName
                   }
                   else fullNameInSig(sym)
                 }
                 else fullNameInSig(sym)
               ) + (
                 if (args.isEmpty) "" else
-                  "<"+(args map argSig).mkString+">"
-              ) + (
+                  (args map argSig).mkString("<", ",", ">")
+              ) /* + (
                 ";"
-              )
-            )
+              ) */
+            ).replace('/', '.')
           }
 
           // If args isEmpty, Array is being used as a type constructor
           if (sym == ArrayClass && args.nonEmpty) {
             if (unboundedGenericArrayLevel(tp) == 1) jsig(ObjectClass.tpe)
-            else ARRAY_TAG.toString+(args map (jsig(_))).mkString
+            else ARRAY_TAG.toString+(args map (jsig(_))).mkString(",")
           }
           else if (isTypeParameterInSig(sym, sym0)) {
             assert(!sym.isAliasType, "Unexpected alias type: " + sym)
-            "" + TVAR_TAG + sym.name + ";"
+            "" + sym.name
           }
           else if (sym == AnyClass || sym == AnyValClass || sym == SingletonClass)
             jsig(ObjectClass.tpe)
@@ -555,9 +555,11 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
           poly + jsig(restpe)
 
         case MethodType(params, restpe) =>
-          val buf = new StringBuffer("(")
-          params foreach (p => buf append jsig(p.tpe))
-          buf append ")"
+          val buf = new StringBuffer()
+          buf append (params map (p => jsig(p.tpe)) mkString("(", ",", ")"))
+          //val buf = new StringBuffer("(")
+          //params foreach (p => buf append jsig(p.tpe))
+          //buf append ")"
           buf append (if (restpe.typeSymbol == UnitClass || sym0.isConstructor) VOID_TAG.toString else jsig(restpe))
           buf.toString
 
