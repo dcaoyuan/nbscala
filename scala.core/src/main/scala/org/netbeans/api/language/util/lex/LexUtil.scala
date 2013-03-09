@@ -166,8 +166,11 @@ trait LexUtil {
     getTokenSequence(doc, th, offset)
   }
 
+  /**
+   * @param doc the doc instance to be readLocked when traverse tokenSequence, could be null
+   */
   final def getTokenSequence(doc: BaseDocument, th: TokenHierarchy[_], offset: Int): Option[TokenSequence[TokenId]] = {
-    doc.readLock
+    if (doc != null) doc.readLock
     try {
       var ts = th.tokenSequence(LANGUAGE)
       if (ts eq null) {
@@ -201,7 +204,7 @@ trait LexUtil {
 
       Option(ts)
     } finally {
-      doc.readUnlock
+      if (doc != null) doc.readUnlock
     }
   }
 
