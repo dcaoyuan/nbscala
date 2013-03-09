@@ -361,10 +361,10 @@ object FmtOptions {
           val df = getDefaultAsBoolean(optionID)
           checkBox.setSelected( node.getBoolean(optionID, df))
 
-        case cb: JComboBox[ComboItem] =>
+        case cb: JComboBox[_] =>
           val value = node.get(optionID, getDefaultAsString(optionID))
           val model = createModel(value)
-          cb.setModel(model)
+          cb.asInstanceOf[JComboBox[ComboItem]].setModel(model)
           val item = whichItem(value, model)
           cb.setSelectedItem(item)
 
@@ -404,7 +404,7 @@ object FmtOptions {
           else
             node.putBoolean(optionID, checkBox.isSelected)
 
-        case comboBox: JComboBox[ComboItem] =>
+        case comboBox: JComboBox[_] =>
           val value = comboBox.getSelectedItem.asInstanceOf[ComboItem].value
           if (getDefaultAsString(optionID).equals(value))
             node.remove(optionID)
@@ -424,7 +424,7 @@ object FmtOptions {
         case checkBox: JCheckBox =>
           checkBox.addActionListener(this)
 
-        case cb: JComboBox[ComboItem] =>
+        case cb: JComboBox[_] =>
           cb.addActionListener(this)
           
         case _ =>
