@@ -46,16 +46,24 @@ final class SBTClassPath(project: Project, scope: String, isTest: Boolean) exten
       result.addAll(getJavaBootResources)
     }
 
-    for (file <- sbtResolver.getResolvedLibraries(scope, isTest)) {
+    for (file <- sbtResolver.getResolvedClassPath(scope, isTest)) {
       val fo = FileUtil.toFileObject(file)
       try {
-        val rootUrl = if (fo != null && FileUtil.isArchiveFile(fo)) {
-          FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
-          FileUtil.getArchiveRoot(fo).toURL
-        } else {
-          // file is a classes *folder* and may not exist, we must add a slash at the end.
-          URI.create(file.toURI + "/").toURL
-        }
+        val rootUrl = 
+          if (fo != null) {
+            if (FileUtil.isArchiveFile(fo)) {
+              FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
+              FileUtil.getArchiveRoot(fo).toURL
+            } else {
+              file.toURI.toURL
+            }
+          } else { // fo is null, file does not exist
+            // file is a classes/srcs *folder* and may not exist yet, we must add a slash at the end.
+            // to tell ClassPathSupport that it's a folder instead of a general file
+            // @Note should avoid url string ends with doubled "/", i.e. "//"
+            val uriStr = file.toURI.toString
+            URI.create(if (uriStr.endsWith("/")) uriStr else uriStr + "/").toURL
+          }
         result.add(ClassPathSupport.createResource(rootUrl))
       } catch {
         case ex: FileStateInvalidException => Exceptions.printStackTrace(ex)
