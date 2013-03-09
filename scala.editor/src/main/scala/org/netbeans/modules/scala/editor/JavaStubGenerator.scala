@@ -51,7 +51,7 @@ import scala.reflect.internal.Flags
 abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasure {
   import JavaStubGenerator._
 
-  private final val LOGGER = Logger.getLogger(this.getClass.getName)
+  private val log = Logger.getLogger(this.getClass.getName)
 
   val global: ScalaGlobal
   import global._
@@ -681,7 +681,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
   @inline
   private def logResult[T](msg: => String)(result: T): T = {
-    LOGGER.warning(msg + ": " + result)
+    log.warning(msg + ": " + result)
     result
   }
 }
