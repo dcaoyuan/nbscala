@@ -66,12 +66,12 @@
         <languages.execution.version>1.6.1</languages.execution.version>
         <scala.debugger.version>1.6.1</scala.debugger.version>
         <scala.debugger.projects.version>1.6.1</scala.debugger.projects.version>
-        <scala.core.version>1.6.1</scala.core.version>
-        <scala.editor.version>1.6.1</scala.editor.version>
+        <scala.core.version>1.6.1.1</scala.core.version>
+        <scala.editor.version>1.6.1.1</scala.editor.version>
         <scala.console.version>1.6.1</scala.console.version>
         <scala.maven.version>1.6.1</scala.maven.version>
         <scala.platform.version>1.6.1</scala.platform.version>
-        <scala.sbt.version>1.6.1</scala.sbt.version>
+        <scala.sbt.version>1.6.1.1</scala.sbt.version>
         <scala.stdplatform.version>1.6.1</scala.stdplatform.version>
         <scala.project.version>1.6.1</scala.project.version>
         <scala.refactoring.version>1.6.1</scala.refactoring.version>
