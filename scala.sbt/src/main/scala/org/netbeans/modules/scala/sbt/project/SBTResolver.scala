@@ -237,15 +237,18 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
   
   def getId: String = projectContext.id
 
-  def getResolvedLibraries(scope: String, isTest: Boolean): Array[File] = {
+  def getResolvedClassPath(scope: String, isTest: Boolean): Array[File] = {
     scope match {
-      case ClassPath.COMPILE => if (isTest) projectContext.mainCps ++ projectContext.testCps else projectContext.mainCps
-      case ClassPath.EXECUTE => if (isTest) projectContext.mainCps ++ projectContext.testCps else projectContext.mainCps
+      case ClassPath.COMPILE => 
+        if (isTest) projectContext.mainCps ++ projectContext.testCps else projectContext.mainCps
+      case ClassPath.EXECUTE => 
+        if (isTest) projectContext.mainCps ++ projectContext.testCps else projectContext.mainCps
       case ClassPath.SOURCE => 
         if (isTest) {
-          projectContext.testJavaSrcs ++ projectContext.testScalaSrcs map (_._1)
+          projectContext.mainJavaSrcs ++ projectContext.mainScalaSrcs ++ projectContext.mainManagedSrcs ++
+          projectContext.testJavaSrcs ++ projectContext.testScalaSrcs ++ projectContext.testManagedSrcs map (_._1)
         } else {
-          projectContext.mainJavaSrcs ++ projectContext.mainScalaSrcs map (_._1)
+          projectContext.mainJavaSrcs ++ projectContext.mainScalaSrcs ++ projectContext.mainManagedSrcs map (_._1)
         }
       case ClassPath.BOOT => projectContext.mainCps filter {cp =>
           val name = cp.getName

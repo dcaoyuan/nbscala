@@ -33,7 +33,7 @@ private class ScopesChildFactory(project: Project, scope: String, isTest: Boolea
 
   override 
   protected def createKeys(toPopulate: java.util.List[ArtifactInfo]): Boolean = {
-    val artifacts = sbtResolver.getResolvedLibraries(scope, isTest) map FileUtil.toFileObject filter {fo => 
+    val artifacts = sbtResolver.getResolvedClassPath(scope, isTest) map FileUtil.toFileObject filter {fo => 
       fo != null && FileUtil.isArchiveFile(fo)
     } map {fo =>
       ArtifactInfo(fo.getNameExt, "", "", FileUtil.toFile(fo), null, null)
