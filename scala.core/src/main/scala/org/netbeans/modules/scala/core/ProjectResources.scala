@@ -42,7 +42,7 @@ object ProjectResources {
     var mainSrcToOut = Map[FileObject, FileObject]()
     var testSrcToOut = Map[FileObject, FileObject]()
 
-    def mianSrcOutDirsPath = toDirPaths(mainSrcToOut)
+    def mainSrcOutDirsPath = toDirPaths(mainSrcToOut)
     def testSrcOutDirsPath = toDirPaths(testSrcToOut)
 
     def scalaMainSrcToOut: Map[AbstractFile, AbstractFile] = toScalaDirs(mainSrcToOut)
@@ -101,7 +101,12 @@ object ProjectResources {
   
   /** is this `fo` under test source? */
   def isForTest(resource: ProjectResource, fo: FileObject) = {
-    resource.testSrcToOut exists {case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo)}
+    // we should check mainSrcs first, since I'm not sure if the testSrcs includes this fo too.
+    if (resource.mainSrcToOut exists {case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo)}) {
+      false 
+    } else {
+      resource.testSrcToOut exists {case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo)}
+    }
   }
   
   def findAllSourcesOf(mimeType: String, result: mutable.ListBuffer[FileObject])(dirFo: FileObject) {
@@ -116,10 +121,10 @@ object ProjectResources {
   
   def getScalaJavaSourceGroups(project: Project): Array[SourceGroup] = {
     val sources = ProjectUtils.getSources(project)
-    val scalaSgs = sources.getSourceGroups(SOURCES_TYPE_SCALA)
-    val javaSgs  = sources.getSourceGroups(SOURCES_TYPE_JAVA)
-    val managedSgs = sources.getSourceGroups(SOURCES_TYPE_JAVA)
-    scalaSgs ++ javaSgs
+    val scalaSgs   = sources.getSourceGroups(SOURCES_TYPE_SCALA)
+    val javaSgs    = sources.getSourceGroups(SOURCES_TYPE_JAVA)
+    val managedSgs = sources.getSourceGroups(SOURCES_TYPE_MANAGED)
+    scalaSgs ++ javaSgs ++ managedSgs
   }
   
   def findProjectResource(project: Project): ProjectResource = {
@@ -145,13 +150,15 @@ object ProjectResources {
     var testSrcs = Set[FileObject]()
 
     val sources = ProjectUtils.getSources(project)
-    val scalaSgs = sources.getSourceGroups(SOURCES_TYPE_SCALA)
-    val javaSgs  = sources.getSourceGroups(SOURCES_TYPE_JAVA)
+    val scalaSgs   = sources.getSourceGroups(SOURCES_TYPE_SCALA)
+    val javaSgs    = sources.getSourceGroups(SOURCES_TYPE_JAVA)
+    val managedSgs = sources.getSourceGroups(SOURCES_TYPE_MANAGED)
 
-    log.fine((scalaSgs map (_.getRootFolder.getPath)).mkString("Project's src group[Scala] dir: [", ", ", "]"))
-    log.fine((javaSgs  map (_.getRootFolder.getPath)).mkString("Project's src group[Java]  dir: [", ", ", "]"))
+    log.fine((scalaSgs   map (_.getRootFolder.getPath)).mkString("Project's src group[Scala]    dir: [", ", ", "]"))
+    log.fine((javaSgs    map (_.getRootFolder.getPath)).mkString("Project's src group[Java]     dir: [", ", ", "]"))
+    log.fine((managedSgs map (_.getRootFolder.getPath)).mkString("Project's src group[Managed]  dir: [", ", ", "]"))
 
-    List(scalaSgs, javaSgs) foreach {
+    List(scalaSgs, javaSgs, managedSgs) foreach {
       case Array(mainSg) =>
         mainSrcs += mainSg.getRootFolder
 
@@ -239,6 +246,23 @@ object ProjectResources {
     }
 
     out
+  }
+  
+  /**
+   * @return (javaSources, scalaSources)
+   */
+  def findAllSources(srcCp: ClassPath): (List[FileObject], List[FileObject]) = {
+    if (srcCp != null) {
+      val javaSrcs = new mutable.ListBuffer[FileObject]
+      srcCp.getRoots foreach findAllSourcesOf("text/x-java", javaSrcs)
+
+      val scalaSrcs = new mutable.ListBuffer[FileObject]
+      srcCp.getRoots foreach findAllSourcesOf("text/x-scala", scalaSrcs)
+
+      (javaSrcs.toList, scalaSrcs.toList)
+    } else {
+      (Nil, Nil)
+    }
   }
 
   def toClassPathString(cp: ClassPath): String = {

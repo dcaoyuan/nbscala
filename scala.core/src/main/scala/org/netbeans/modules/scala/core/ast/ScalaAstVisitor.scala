@@ -80,7 +80,8 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
   private class treeTraverser(srcFile: ScalaSourceFile, rootTree: Tree) {
     private val debug = false
 
-    private val doc = srcFile.doc
+    /** doc may be null if under batched parsing, for example, indexing */
+    private val doc = srcFile.doc 
     private val th = srcFile.tokenHierarchy
     private val contentLength = srcFile.content.length
     private val fo = {
