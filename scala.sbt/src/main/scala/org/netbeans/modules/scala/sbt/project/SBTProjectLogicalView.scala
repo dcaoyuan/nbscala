@@ -70,8 +70,9 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
       CommonProjectActions.newFileAction,
       CommonProjectActions.copyProjectAction,
       CommonProjectActions.deleteProjectAction,
-      CommonProjectActions.closeProjectAction
-    )
+      CommonProjectActions.closeProjectAction,
+      null
+    ) ++ CommonProjectActions.forType(PROJECT_TYPE)
 
     override
     def getIcon(tpe: Int): Image = SBTProject.SBT_ICON
@@ -141,5 +142,6 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
 }
 
 object SBTProjectLogicalView {
-  val NODE_FACTORY_FOLDER_PATH = "Projects/org-netbeans-modules-scala-sbt/Nodes"
+  val PROJECT_TYPE = "org-netbeans-modules-scala-sbt"
+  val NODE_FACTORY_FOLDER_PATH = "Projects/" + PROJECT_TYPE + "/Nodes"
 }

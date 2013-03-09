@@ -3,34 +3,6 @@
 <filesystem>
     <folder name="Projects">
         <folder name="org-netbeans-modules-scala-sbt">
-            <folder name="Lookup">
-                <!--                <file name="org-netbeans-modules-scala-maven-ScalaRootProvider.instance">
-                    org.netbeans.modules.scala.maven.ScalaRootProvider
-                    <attr
-                        methodvalue="org.netbeans.modules.projectapi.LazyLookupProviders.forProjectServiceProvider" name="instanceCreate"/>
-                    <attr name="class" stringvalue="org.netbeans.modules.scala.maven.ScalaRootProvider"/>
-                    <attr name="service" stringvalue="org.netbeans.modules.maven.spi.queries.JavaLikeRootProvider"/>
-                </file>
-                <file name="org-netbeans-modules-scala-maven-ScalaPrivs.instance">
-                    org.netbeans.modules.scala.maven.ScalaPrivs
-                    <attr
-                        methodvalue="org.netbeans.modules.projectapi.LazyLookupProviders.forProjectServiceProvider" name="instanceCreate"/>
-                    <attr name="class" stringvalue="org.netbeans.modules.scala.maven.ScalaPrivs"/>
-                    <attr name="service" stringvalue="org.netbeans.spi.project.ui.PrivilegedTemplates"/>
-                </file>-->
-                <!--                <file name="org-netbeans-modules-scala-sbt-SBTSources.instance">
-                    <attr methodvalue="org.netbeans.modules.projectapi.LazyLookupProviders.forProjectServiceProvider" name="instanceCreate"/>
-                    <attr name="class" stringvalue="org.netbeans.modules.scala.sbt.SBTSources"/>
-                    <attr name="service" stringvalue="org.netbeans.api.project.Sources,org.netbeans.spi.project.SourceGroupModifierImplementation"/>
-                </file>-->
-                <!--                <file name="org-netbeans-modules-scala-maven-ScalaReplaceTokenProvider.instance">
-                    org.netbeans.modules.scala.maven.ScalaReplaceTokenProvider
-                    <attr
-                        methodvalue="org.netbeans.modules.projectapi.LazyLookupProviders.forProjectServiceProvider" name="instanceCreate"/>
-                    <attr name="class" stringvalue="org.netbeans.modules.scala.maven.ScalaReplaceTokenProvider"/>
-                    <attr name="service" stringvalue="org.netbeans.modules.maven.spi.actions.ReplaceTokenProvider,org.netbeans.modules.maven.spi.actions.ActionConvertor"/>
-                </file>-->
-            </folder>
             <folder name="Nodes">
                 <file name="org-netbeans-modules-scala-sbt-nodes-AggProjectsNodeFactory.instance">
                     org.netbeans.modules.scala.sbt.nodes.AggProjectsNodeFactory
@@ -51,6 +23,16 @@
                 <file name="org-netbeans-modules-scala-sbt-nodes-ProjectFolderNodeFactory.instance">
                     org.netbeans.modules.scala.sbt.nodes.ProjectFolderNodeFactory
                     <attr intvalue="143" name="position"/>
+                </file>
+            </folder>
+            <folder name="Actions">
+                <file name="org-openide-actions-FindAction.shadow">
+                    <attr name="originalFile" stringvalue="Actions/Edit/org-openide-actions-FindAction.instance"/>
+                    <attr name="position" intvalue="2300"/>
+                </file>
+                <file name="general.shadow">
+                    <attr name="originalFile" stringvalue="Projects/Actions"/>
+                    <attr name="position" intvalue="2400"/>
                 </file>
             </folder>
         </folder>

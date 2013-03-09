@@ -79,6 +79,7 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
         }
       }
 
+      // always find mainSrcRoots first, since the fo may also be included in testSrcRoots
       mainSrcRoots find contains(fo) match {
         case None =>
           testSrcRoots find contains(fo) match {

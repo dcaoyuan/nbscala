@@ -80,8 +80,10 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         SBTConsoleTopComponent.openInstance(rootProject, false, commands)()
         
       case _ =>
+        
     }
   }
+  
 }
 
 object SBTActionProvider {
