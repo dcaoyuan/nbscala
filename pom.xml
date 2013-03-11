@@ -85,7 +85,7 @@
         <repository>
             <id>netbeans</id>
             <name>NetBeans Platform Maven Repository</name>
-			<url>http://bits.netbeans.org/nexus/content/groups/netbeans</url>
+            <url>http://bits.netbeans.org/nexus/content/groups/netbeans</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -136,6 +136,9 @@
                         <netbeansInstallDirectory>${nb.installation}</netbeansInstallDirectory> <!-- to have the goal 'nbm:populate-repository' find the installation and populating the local repository with them, set it on your maven settings.xml -->
                         <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'nbm:run-ide' find the installation of the local netbeans -->
                         <additionalArguments>${nbm.run.arguments}</additionalArguments>
+                        <keystore>${nbm.sign.keystore}</keystore>
+                        <keystorealias>${nbm.sign.keystorealias}</keystorealias>
+                        <keystorepassword>${nbm.sign.keystorepassword}</keystorepassword>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -280,6 +283,29 @@
             </build>
         </profile>
         
+        <profile>
+            <id>sign-nbscala-nbms</id>
+            <!-- my keys/keystore was generated as (note: The keystore and key password needs to be the same):
+                 keytool -genkey -dname "CN=Caoyuan Deng, OU=nbscala, O=AIOTrade Co., L=Richmond, S=BC, C=CA" -alias nbscala -validity 1800
+                 keytool -list -v
+                 
+                 To enable it, add all three keystore related parameters in ~/m2/settings.xml as:
+                 <profiles>
+                     <profile>
+                         <id>sign-nbscala-nbms</id>
+                         <activation>
+                             <activeByDefault>true</activeByDefault>
+                         </activation>
+                         <properties>
+                             <nbm.sign.keystore>${user.home}/.keystore</nbm.sign.keystore>
+                             <nbm.sign.keystorealias>nbscala</nbm.sign.keystorealias>
+                             <nbm.sign.keystorepassword>thepassword</nbm.sign.keystorepassword>
+                         </properties>
+                     </profile>
+                 </profiles>
+            -->
+        </profile>
+
         <profile>
             <id>run-ide</id>
             <activation>
