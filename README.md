@@ -167,19 +167,6 @@ The Project targets version 2.10.x of the scala release.
 
 **A**: Edit your NetBeans configuration file (NetBeansInstallationPlace/etc/netbeans.conf), add -J-Xmx1024M (or bigger)
 
-
-**Q**: When install the plugins, I got something like:
-
-    org.netbeans.InvalidException: StandardModule:org.netbeans.modules.scala.stdplatform jarFile: 
-    C:\Users\jme\AppData\Roaming\NetBeans\7.3\modules\org-netbeans-modules-scala-stdplatform.jar:
-    java.lang.UnsupportedClassVersionError: org/netbeans/modules/scala/stdplatform/J2SEPlatformModule : 
-    Unsupported major.minor version 51.0
-
-**A**: Take a look at your NetBeans log file to make sure the NetBeans is starting upon JDK 6.0+, The log file, for example, under Mac OS, it's
-
-    ~/Library/Application Support/NetBeans/7.3/var/log/message.log
-
-
 **Q**: I got:
 
     [error] sbt.IncompatiblePluginsException: Binary incompatibility in plugins detected.
