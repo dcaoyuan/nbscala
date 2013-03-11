@@ -18,8 +18,8 @@ The project central point is [https://github.com/dcaoyuan/nbscala](). There are 
 ### Community
 Until recently, this has mostly been a one man project. Some patches were supplied by different people, but I'm still convinced that it will gather a community soon. For questions and bug reports use the [issue tracker](https://github.com/dcaoyuan/nbscala/issues). If interested in joining the project, you can write me directly or send patches/pull requests.
 
-### Snapshot Builds
-Snapshot builds can be found here [http://github.com/dcaoyuan/nbscala/downloads](https://github.com/dcaoyuan/nbscala/downloads). 
+### Where to download
+Released builds can be found here [https://sourceforge.net/projects/erlybird/files/nb-scala/](https://sourceforge.net/projects/erlybird/files/nb-scala/). Choose proper folder which begins with NetBeans version number then followed supported Scala version. If I have time, the plugins will also be uploaded to [http://plugins.netbeans.org](plugins.netbeans.org), and may be avaliable via the NetBeans Update Center automatically when it passed verification by NetBeans staffs.
 
 ### Installation
 Make sure you don't have an old version installed. (Check your netbeans installation for a 'nbscala' directory: if it exists, delete it.)
@@ -111,7 +111,7 @@ Build-Debug-Cycle: (after changed module was successfuly built)
  * After installation, it's always better to restart NetBeans
  * You may need to delete NetBeans' old cache to get improved features working. To find the cache location, read the netbeans.conf at:
 
-    ${NetBeansInstallation}/etc/netbeans.conf
+        NetBeansInstallationPlace/etc/netbeans.conf
 
 ## Project Details
 
@@ -149,7 +149,7 @@ The Project targets version 2.10.x of the scala release.
 
 ### How to
 
-* Install the newest nbscala plugins, [download directly](https://sourceforge.net/projects/erlybird/files/nb-scala/7.x_2.10.x/) or [build by yourself](https://github.com/dcaoyuan/nbscala) on NetBeans 7.2+.
+* Install the newest nbscala plugins, [download directly](https://sourceforge.net/projects/erlybird/files/nb-scala) or [build by yourself](https://github.com/dcaoyuan/nbscala) on NetBeans 7.2+.
 * Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt>:
 
         git clone git@github.com:dcaoyuan/nbsbt.git
@@ -166,6 +166,18 @@ The Project targets version 2.10.x of the scala release.
 **Q**: NetBeans' response becomes slower after a while.
 
 **A**: Edit your NetBeans configuration file (NetBeansInstallationPlace/etc/netbeans.conf), add -J-Xmx1024M (or bigger)
+
+
+**Q**: When install the plugins, I got something like:
+
+    org.netbeans.InvalidException: StandardModule:org.netbeans.modules.scala.stdplatform jarFile: 
+    C:\Users\jme\AppData\Roaming\NetBeans\7.3\modules\org-netbeans-modules-scala-stdplatform.jar:
+    java.lang.UnsupportedClassVersionError: org/netbeans/modules/scala/stdplatform/J2SEPlatformModule : 
+    Unsupported major.minor version 51.0
+
+**A**: Take a look at your NetBeans log file to make sure the NetBeans is starting upon JDK 6.0+, The log file, for example, under Mac OS, it's
+
+    ~/Library/Application Support/NetBeans/7.3/var/log/message.log
 
 
 **Q**: I got:
