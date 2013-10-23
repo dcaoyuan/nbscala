@@ -58,7 +58,7 @@
              we should build it using lower version NetBeans to get it can be installed both
              on lower and higher version, unless we use un-compatible features of higher version.
         -->
-        <netbeans.version>RELEASE72</netbeans.version>
+        <netbeans.version>RELEASE74</netbeans.version>
 
         <scala.version>2.10.1-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
         <sbt.version>0.12.2</sbt.version>
