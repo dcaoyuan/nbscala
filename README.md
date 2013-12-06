@@ -36,13 +36,13 @@ Cause of the small group of people involved in the project we only supply update
 
 ### Requirement - Run:
 * Java 1.6+
-* NetBeans 7.2
+* NetBeans 7.4
 
 ### Requirement - Build:
 * Java 1.7 (for master branch)
 * Java 1.6 (for 2.9.x branch)
 * Maven 2.x/3.x 
-* NetBeans 7.2
+* NetBeans 7.4
 
 ### Branches:
 * master -- tracking Scala 2.10.x currently
@@ -156,9 +156,9 @@ The Project targets version 2.10.x of the scala release.
         cd nbsbt
         sbt clean compile publish-local
 
-* Add nbsbt to your plugin definition file. You can use either the global one at  **~/.sbt/plugins/plugins.sbt** or the project-specific one at **PROJECT_DIR/project/plugins.sbt**
+* Add nbsbt to your plugin definition file. You can use either the global one at  **~/.sbt/0.13/plugins/plugins.sbt** or the project-specific one at **PROJECT_DIR/project/plugins.sbt**
 
-        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.0.2")
+        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.1.0")
 
 
 ## FAQ
