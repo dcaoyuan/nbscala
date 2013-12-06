@@ -43,18 +43,18 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   import SBTConsoleTopComponent._
 
   private val log = Logger.getLogger(getClass.getName)
-  
+
   private val mimeType = "text/x-sbt"
   private var console: SbtConsoleTerminal = _
- 
+
   initComponents
- 
+
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
     setName("SBT " + project.getProjectDirectory.getName)
     setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
     setIcon(ImageUtilities.loadImage(ICON_PATH, true))
-  }            
+  }
 
   /**
    * @Note this id will be escaped by PersistenceManager and for findTopCompoment(id)
@@ -67,8 +67,8 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
   override
   def canClose = true // make sure this tc can be truely closed
-  
-  override 
+
+  override
   def open() {
     /**
      * @Note
@@ -82,7 +82,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     }
     super.open
   }
-  
+
   override
   protected def componentOpened() {
     // always create a new terminal when is opened/reopend
@@ -129,7 +129,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     }
     super.componentDeactivated
   }
-  
+
   override
   def requestFocus() {
     if (console != null) {
@@ -157,10 +157,10 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
       case i: java.lang.Integer => i.intValue
     }
 
-    val font = new Font("Monospaced", Font.PLAIN, fontSize) match { 
+    val font = new Font("Monospaced", Font.PLAIN, fontSize) match {
       case null => new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
       case x => x
-    } 
+    }
 
     val textPane = new JTextPane()
     textPane.getDocument.putProperty("mimeType", mimeType)
@@ -172,7 +172,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
-      case null => 
+      case null =>
       case c => textPane.setSelectionColor(c)
     }
 
@@ -217,9 +217,6 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     val sbtHome = ScalaExecution.getSbtHome
     val sbtLaunchJar = ScalaExecution.getSbtLaunchJar(sbtHome)
-    if (sbtLaunchJar == null) {
-      return null
-    }
 
     val (executable, args) = ScalaExecution.getSbtArgs(sbtHome)
     var builder = args.foldLeft(new ExternalProcessBuilder(executable))(_ addArgument _)
@@ -230,11 +227,12 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     //builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
     val pwd = FileUtil.toFile(project.getProjectDirectory)
     builder = builder.workingDirectory(pwd)
-    
+
     val pipedIn = new PipedInputStream()
     val console = new SbtConsoleTerminal(
       textPane, pipedIn,
-      " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + " " + "sbt.home=" + sbtHome + "\n"
+      " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + "\n" +
+      "sbt-launch=" + sbtLaunchJar.getOrElse("none") + "\n"
     )
     if (ScalaExecution.isWindows) {
       console.terminalInput.terminalId = TerminalInput.JLineWindows
@@ -245,7 +243,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     val out = new PrintWriter(new PrintStream(consoleOut))
     val err = new PrintWriter(new PrintStream(consoleOut))
     val inputOutput = new ConsoleInputOutput(in, out, err)
-    
+
     val execDescriptor = new ExecutionDescriptor().frontWindow(true).inputVisible(true)
     .inputOutput(inputOutput).postExecution(new Runnable() {
         override
@@ -266,21 +264,21 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     console
   }
-  
+
 }
 
 object SBTConsoleTopComponent {
   private val log = Logger.getLogger(this.getClass.getName)
-  
+
   val defaultFg = Color.BLACK
   val defaultBg = Color.WHITE
   val linkFg = Color.BLUE
-  
+
   /**
    * path to the icon used by the component and its open action
    */
-  val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png" 
-  
+  val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png"
+
   private val compName = "SBTConsole"
   /**
    * @see org.netbeans.core.windows.persistence.PersistenceManager
@@ -295,7 +293,7 @@ object SBTConsoleTopComponent {
   private def toEscapedPreferredId(project: Project) = {
     TopComponentId.escape(compName + project.getProjectDirectory.getPath)
   }
-  
+
 
   /**
    * Obtain the SBTConsoleTopComponent instance by project
@@ -305,66 +303,66 @@ object SBTConsoleTopComponent {
         def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
       }
     )
-    
+
     val runnableTask = new Runnable() {
       def run {
         progressHandle.start
-          
+
         val tcId = toEscapedPreferredId(project)
         val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
-          case null => 
+          case null =>
             (new SBTConsoleTopComponent(project), true)
-          case tc: SBTConsoleTopComponent => 
+          case tc: SBTConsoleTopComponent =>
             (tc, false)
           case _ =>
             ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                        "There seem to be multiple components with the '" + tcId + 
+                                        "There seem to be multiple components with the '" + tcId +
                                         "' ID. That is a potential source of errors and unexpected behavior.")
             (null, false)
         }
-          
+
         if (!tc.isOpened) {
           tc.open
         }
-        
+
         if (!background) {
           tc.requestActive
         }
-              
+
         val results = commands map tc.console.runCommand
 
         if (background && !isNewCreated) {
           tc.close
         }
-              
+
         if (postAction != null) {
           postAction(results.lastOption getOrElse null)
         }
-          
+
         progressHandle.finish
       }
     }
-      
+
     SwingUtilities.invokeLater(runnableTask)
   }
-  
+
   class SbtConsoleTerminal(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleTerminal(_area, pipedIn, welcome) {
-  
+
     @throws(classOf[IOException])
-    override 
+    override
     protected def handleClose() {
-      runCommand("exit") // try to exit underlying process gracefully 
+      runCommand("exit") // try to exit underlying process gracefully
       super.handleClose()
     }
-    
-    override 
+
+    override
     protected val lineParser = new ConsoleOutputLineParser() {
-      
+
       val INFO_PREFIX    = "[info]"
       val WARN_PREFIX    = "[warn]"
       val ERROR_PREFIX   = "[error]"
       val SUCCESS_PREFIX = "[success]"
-  
+
       val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
       val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
       val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
@@ -372,7 +370,7 @@ object SBTConsoleTopComponent {
       val ROL = ".*\\s?\\s?"        // rest of line (may end with "\n" or "\r\n")
       val SEP = "\\:"               // seperator between file path and line number
       val STD_SUFFIX = FILE + SEP + LINE + ROL  // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-  
+
       val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
       val rWARN_WITH_FILE =  Pattern.compile("\\Q" + WARN_PREFIX  + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
 
@@ -400,21 +398,21 @@ object SBTConsoleTopComponent {
         StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
         x
       }
-  
+
       def parseLine(line: String): Array[(String, AttributeSet)] = {
         if (line.length < 6) {
           Array((line, defaultStyle))
         } else {
           val texts = new ArrayBuffer[(String, AttributeSet)]()
           val testRest_style = if (line.startsWith(ERROR_PREFIX)) {
-      
+
             val m = rERROR_WITH_FILE.matcher(line)
             if (m.matches && m.groupCount >= 3) {
               texts += (("[", defaultStyle))
               texts += (("error", errorStyle))
               texts += (("] ", defaultStyle))
               val textRest = line.substring(ERROR_PREFIX.length + 1, line.length)
-        
+
               val fileName = m.group(1)
               val lineNo = m.group(2)
               val linkStyle = new SimpleAttributeSet()
@@ -422,26 +420,26 @@ object SBTConsoleTopComponent {
               StyleConstants.setUnderline(linkStyle, true)
               linkStyle.addAttribute("file", fileName)
               linkStyle.addAttribute("line", lineNo)
-        
+
               (textRest, linkStyle)
             } else {
               texts += (("[", defaultStyle))
               texts += (("error", errorStyle))
               texts += (("]", defaultStyle))
               val textRest = line.substring(ERROR_PREFIX.length, line.length)
-        
+
               (textRest, errorStyle)
             }
-      
+
           } else if (line.startsWith(WARN_PREFIX)) {
-      
+
             val m = rWARN_WITH_FILE.matcher(line)
             if (m.matches && m.groupCount >= 3) {
               texts += (("[", defaultStyle))
               texts += (("warn", warnStyle))
               texts += (("] ", defaultStyle))
               val textRest = line.substring(WARN_PREFIX.length + 1, line.length)
-        
+
               val fileName = m.group(1)
               val lineNo = m.group(2)
               val linkStyle = new SimpleAttributeSet()
@@ -449,45 +447,45 @@ object SBTConsoleTopComponent {
               StyleConstants.setUnderline(linkStyle, true)
               linkStyle.addAttribute("file", fileName)
               linkStyle.addAttribute("line", lineNo)
-        
+
               (textRest, linkStyle)
             } else {
               texts += (("[", defaultStyle))
               texts += (("warn", warnStyle))
               texts += (("]", defaultStyle))
               val textRest = line.substring(WARN_PREFIX.length, line.length)
-        
+
               (textRest, warnStyle)
             }
-      
+
           } else if (line.startsWith(INFO_PREFIX)) {
-      
+
             texts += (("[", defaultStyle))
             texts += (("info", infoStyle))
             texts += (("]", defaultStyle))
             val textRest = line.substring(INFO_PREFIX.length, line.length)
-      
+
             (textRest, defaultStyle)
-      
+
           } else if (line.startsWith(SUCCESS_PREFIX)) {
-      
+
             texts += (("[", defaultStyle))
             texts += (("success", successStyle))
             texts += (("]", defaultStyle))
             val textRest = line.substring(SUCCESS_PREFIX.length, line.length)
-      
+
             (textRest, defaultStyle)
-      
+
           } else {
             (line, defaultStyle)
           }
-    
+
           texts += testRest_style
-      
+
           texts.toArray
         }
       }
     }
   }
-  
+
 }

@@ -43,6 +43,8 @@ package org.netbeans.modules.scala.console.shell
 
 import java.io.File
 import java.io.IOException
+import java.util.logging.Level
+import java.util.logging.Logger
 import org.netbeans.api.project.Project
 import org.netbeans.api.project.ui.OpenProjects
 import org.netbeans.modules.scala.core.ProjectResources
@@ -61,42 +63,43 @@ import scala.collection.mutable.ArrayBuffer
  * @author Caoyuan Deng
  */
 object ScalaExecution {
+  private val log = Logger.getLogger(this.getClass.getName)
 
-  private val SCALA_MAIN_CLASS = "scala.tools.nsc.MainGenericRunner" 
+  private val SCALA_MAIN_CLASS = "scala.tools.nsc.MainGenericRunner"
   private val SBT_MAIN_CLASS = "sbt.xMain"
-  
+
   private val JVM_DEBUG = "-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
-    
+
   def getSbtArgs(sbtHome: String): (String, Array[String]) = {
     val args = new ArrayBuffer[String]()
 
-    val executable = getJavaHome + File.separator + "bin" + File.separator + "java" // NOI18N   
+    val executable = getJavaHome + File.separator + "bin" + File.separator + "java" // NOI18N
     // XXX Do I need java.exe on Windows?
 
     args += "-Xmx512M"
     args += "-Xss1M"
     args += "-XX:+CMSClassUnloadingEnabled"
     args += "-XX:MaxPermSize=256M"
-        
+
     args += "-Dsbt.log.noformat=true"
-    /** 
+    /**
      * @Note:
-     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why? 
-     * Also, from Scala-2.7.1, jline is used for scala shell, we should 
+     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why?
+     * Also, from Scala-2.7.1, jline is used for scala shell, we should
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"?
      * And jline may cause terminal unresponsed after netbeans quited.
      */
-    //args += "-Djline.terminal=jline.UnsupportedTerminal" 
+    //args += "-Djline.terminal=jline.UnsupportedTerminal"
     args += "-Djline.WindowsTerminal.directConsole=false"
-            
+
     // TODO - turn off verifier?
 
     // Main class
     args += "-jar"
-    args += getSbtLaunchJar(sbtHome).getAbsolutePath // NOI18N
+    args += getSbtLaunchJar(sbtHome) map (_.getAbsolutePath) getOrElse "" // NOI18N
 
     // Application arguments follow
-        
+
     (executable, args.toArray)
   }
 
@@ -107,14 +110,14 @@ object ScalaExecution {
 
     // additional execution flags specified in the Scala startup script:
     args += "-Xverify:none"
-    args += "-da" 
-            
+    args += "-da"
+
     System.getenv("SCALA_EXTRA_VM_ARGS") match {
       case null =>
         args += "-Xmx512m"
         args += "-Xss1024k"
       case extraArgs =>
-        if (!extraArgs.contains("-Xmx")) { 
+        if (!extraArgs.contains("-Xmx")) {
           args += "-Xmx512m"
         }
         if (!extraArgs.contains("-Xss")) {
@@ -129,29 +132,29 @@ object ScalaExecution {
       case ex: IOException => Exceptions.printStackTrace(ex); null
     }
 
-    val scalaLib = new File(scalaHomeDir, "lib") 
+    val scalaLib = new File(scalaHomeDir, "lib")
     args += "-Xbootclasspath/a:" + mkClassPathString(scalaLib)  // @Note jline is a must for for interactive scala console
 
     if (project != null) {
       val (projectBootCpStr, projectExecCpStr) = ProjectResources.getExecuteClassPathString(project)
-      args += "-classpath" 
+      args += "-classpath"
       args += projectExecCpStr
     } else {
-      args += "-classpath" 
+      args += "-classpath"
       args += computeScalaClassPath(null, scalaLib)
     }
-    
+
     args += "-Dscala.home=" + scalaHomeDir // is this a must for interactive scala console
     args += "-Dscala.usejavacp=true"  // this is a must for -classpath can be imported under interative shell
-            
-    /** 
+
+    /**
      * @Note:
-     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why? 
-     * Also, from Scala-2.7.1, jline is used for scala shell, we should 
+     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why?
+     * Also, from Scala-2.7.1, jline is used for scala shell, we should
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
      */
-    //args += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal" 
-    args += "-Djline.WindowsTerminal.directConsole=false" 
+    //args += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal"
+    args += "-Djline.WindowsTerminal.directConsole=false"
 
     // Under Windows, you may get:
     //      Failed to created JLineReader: java.lang.NoClassDefFoundError: Could not initialize class org.fusesource.jansi.internal.Kernel32
@@ -161,43 +164,43 @@ object ScalaExecution {
     // different terminals, or, we can pretend we are a unix terminal
     // But, for jline.UnixTerminal, it will try to send stty command to init the behavior, so
     // we have to cheat it by replace jline.sh and jline.stty as a no harmful and quick command,
-    // here's what we do: 
+    // here's what we do:
     // @see jline.UnitTerminal#init and TerminalLineSettings
     System.getProperty("os.name").toLowerCase match {
-      case os if os.indexOf("windows") != -1 => 
-        args += "-Djline.terminal=unix" 
+      case os if os.indexOf("windows") != -1 =>
+        args += "-Djline.terminal=unix"
         args += "-Djline.sh=cmd"
         // add switch "/c" here to "Carries out the command specified by string and then terminates",
         // so, the process will terminate and not hang on "process.waitFor()" @see cmd /?
-        args += "-Djline.stty=/c\\ echo"  
+        args += "-Djline.stty=/c\\ echo"
       case _ =>
-        args += "-Djline.terminal=unix" 
+        args += "-Djline.terminal=unix"
         args += "-Djline.sh=sh"
         args += "-Djline.stty=echo"  // avoid to send stty command, it's not necessary for pseudo termnial
     }
-    
+
     // main class
-    args += SCALA_MAIN_CLASS 
+    args += SCALA_MAIN_CLASS
     // application arguments follow
-        
+
     (executable, args.toArray)
   }
-  
+
   def isWindows: Boolean = System.getProperty("os.name").toLowerCase match {
     case os if os.indexOf("windows") != -1 => true
     case _ => false
   }
-  
+
   def getJavaHome: String = {
-    System.getProperty("scala.java.home") match {  
-      case null => System.getProperty("java.home") 
+    System.getProperty("scala.java.home") match {
+      case null => System.getProperty("java.home")
       case x => x
     }
   }
-  
+
   def getScalaHome: String = {
-    System.getenv("SCALA_HOME") match { 
-      case null => 
+    System.getenv("SCALA_HOME") match {
+      case null =>
         val d = new NotifyDescriptor.Message(
           "SCALA_HOME environment variable may not be set, or is invalid.\n" +
           "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE
@@ -215,7 +218,7 @@ object ScalaExecution {
       case x => x
     }
   }
-  
+
   def getScala: File = {
     var scalaFo: FileObject = null
     val scalaHome = getScalaHome
@@ -249,49 +252,67 @@ object ScalaExecution {
       null
     }
   }
-    
-  def getSbtLaunchJar(sbtHome: String = null): File = {
+
+  def getSbtLaunchJar(sbtHome: String): Option[File] = {
     sbtHome match {
-      case null | "" => getEmbeddedSbtLaunchJar
-      case _ => 
+      case null | "" =>
+        getEmbeddedSbtLaunchJar
+      case _ =>
         val jar = new File(sbtHome) match {
           case homeDir if (homeDir.exists && homeDir.isDirectory) =>
             try {
               val homeFo = FileUtil.createData(homeDir)
               val binDir = homeFo.getFileObject("bin")
-              binDir.getFileObject("sbt-launch", "jar")
+              Option(binDir.getFileObject("sbt-launch", "jar"))
             } catch  {
-              case ex: IOException => Exceptions.printStackTrace(ex); null
+              case ex: Exception =>
+                log.log(Level.SEVERE, ex.getMessage, ex.getCause);
+                None
             }
-          case _ => null
+          case _ => None
         }
-        if (jar ne null) {
-          FileUtil.toFile(jar)
-        } else {
-          val msg = new NotifyDescriptor.Message(
-            "Can not found" + sbtHome + "/bin/sbt-launch.jar\n" +
-            "Please set proper sbt home first!", NotifyDescriptor.INFORMATION_MESSAGE)
-          DialogDisplayer.getDefault().notify(msg)
-          null
+        jar match {
+          case Some(x) =>
+            Option(FileUtil.toFile(x))
+          case None =>
+            val msg = "Can not found" + sbtHome + "/bin/sbt-launch.jar\n" +
+            "Please set proper sbt home first!"
+            log.severe(msg)
+            DialogDisplayer.getDefault.notify(new NotifyDescriptor.Message(msg, NotifyDescriptor.INFORMATION_MESSAGE))
+            None
         }
     }
   }
-  
-  private def getEmbeddedSbtLaunchJar: File = {
-    val sbtDir = InstalledFileLocator.getDefault.locate("modules/ext/org.scala-sbt",  "org.netbeans.libs.sbt", false)
+
+  private def getEmbeddedSbtLaunchJar: Option[File] = {
+    val sbtDir = InstalledFileLocator.getDefault.locate("modules/ext/org.netbeans.libs.sbt",  "org.netbeans.libs.sbt", false)
     if (sbtDir != null && sbtDir.exists && sbtDir.isDirectory) {
-      sbtDir.listFiles find {jar =>
-        val name = jar.getName
-        (name == "sbt-launch" || name.startsWith("sbt-launch-")) && name.endsWith(".jar")
-      } foreach {return _}
-    }
-    
-    null
+      findFileRecursively(sbtDir){file =>
+        val name = file.getName
+        name == "sbt-launch.jar" || name.startsWith("sbt-launch-") && name.endsWith(".jar")
+      }
+    } else None
   }
-  
+
+  private def findFileRecursively(file: File)(condition: File => Boolean): Option[File] = {
+    if (file.isDirectory) {
+      val children = file.listFiles
+      var i = 0
+      while (i < children.length) {
+        findFileRecursively(children(i))(condition) match {
+          case None => i += 1
+          case some => return some
+        }
+      }
+      None
+    } else {
+      if (condition(file)) Some(file) else None
+    }
+  }
+
   private def mkClassPathString(dir: File, jarNames: Array[String]): String = {
-    val dirPath = dir.getAbsolutePath 
-    jarNames map (dirPath + File.separator + _) filter {fileName => 
+    val dirPath = dir.getAbsolutePath
+    jarNames map (dirPath + File.separator + _) filter {fileName =>
       try {
         val file = new File(fileName)
         file.exists && file.canRead
@@ -304,13 +325,13 @@ object ScalaExecution {
   private def mkClassPathString(dir: File): String = {
     dir.listFiles filter (_.getName.endsWith("jar")) map (_.getAbsolutePath) mkString (File.pathSeparator)
   }
-  
+
   /** Package-private for unit test. */
   def computeScalaClassPath(extraCp: String, scalaLib: File): String = {
     val sb = new StringBuilder()
     val libs = scalaLib.listFiles
 
-    libs filter (_.getName.endsWith("jar")) foreach {lib => 
+    libs filter (_.getName.endsWith("jar")) foreach {lib =>
       if (sb.length > 0) sb.append(File.pathSeparatorChar)
       sb.append(lib.getAbsolutePath)
     }
@@ -323,16 +344,16 @@ object ScalaExecution {
       // (:) and filesystem separators, e.g. I might have C:\foo:D:\bar but
       // obviously only the path separator after "foo" should be changed to ;
       var pathOffset = 0
-      extraCp foreach {c => 
+      extraCp foreach {c =>
         if (c == ':' && pathOffset != 1) {
           p += File.pathSeparatorChar
-          pathOffset = 0           
+          pathOffset = 0
         } else {
           pathOffset += 1
           p += c
         }
       }
-      
+
     }
 
     if (p.isEmpty && (System.getenv("SCALA_EXTRA_CLASSPATH") ne null)) {
@@ -351,7 +372,7 @@ object ScalaExecution {
     }
     if (Utilities.isWindows)  "\"" + sb.toString + "\""  else sb.toString // NOI18N
   }
-  
+
   def getMainProjectWorkPath: File = {
     var pwd: File = null
     val mainProject = OpenProjects.getDefault.getMainProject
@@ -374,5 +395,5 @@ object ScalaExecution {
     }
     pwd
   }
-     
+
 }
