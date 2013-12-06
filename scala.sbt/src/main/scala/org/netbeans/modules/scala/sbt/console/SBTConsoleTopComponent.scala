@@ -231,7 +231,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     val pipedIn = new PipedInputStream()
     val console = new SbtConsoleTerminal(
       textPane, pipedIn,
-      " " + NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + "\n" +
+      NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + "\n" +
       "sbt-launch=" + sbtLaunchJar.getOrElse("none") + "\n"
     )
     if (ScalaExecution.isWindows) {

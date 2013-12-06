@@ -14,7 +14,7 @@
         <name>NetBeans</name>
         <url>http://netbeans.org</url>
     </organization>
-    
+
     <developers>
         <developer>
             <id>dcaoyuan</id>
@@ -32,13 +32,13 @@
             <email>sreimers [at] gmail.com</email>
             <url>http://nbguru.blogspot.com</url>
             <timezone>+2</timezone>
-        </developer>        
+        </developer>
         <developer>
             <id>og0815</id>
             <name>Oliver Guenther</name>
             <email>oliver.guenther [at] gg-net.de</email>
             <timezone>+2</timezone>
-        </developer>        
+        </developer>
     </developers>
 
     <licenses>
@@ -54,28 +54,28 @@
         <brandingToken>nbscala</brandingToken>
         <deploy.version>snapshots</deploy.version>
 
-        <!-- Since this project has implementation dependencies on NetBeans no-friend module, 
+        <!-- Since this project has implementation dependencies on NetBeans no-friend module,
              we should build it using lower version NetBeans to get it can be installed both
              on lower and higher version, unless we use un-compatible features of higher version.
         -->
         <netbeans.version>RELEASE74</netbeans.version>
 
         <scala.version>2.10.1-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
-        <sbt.version>0.12.2</sbt.version>
-        
+        <sbt.version>0.13.0</sbt.version>
+
         <!-- module versions -->
         <libs.scala.version>2.10.1.0</libs.scala.version>
-        <libs.sbt.version>0.12.2.1</libs.sbt.version>
+        <libs.sbt.version>0.13.0.0</libs.sbt.version>
         <libs.xtc.version>1.15.1</libs.xtc.version>
         <languages.execution.version>1.6.1</languages.execution.version>
         <scala.debugger.version>1.6.1</scala.debugger.version>
         <scala.debugger.projects.version>1.6.1</scala.debugger.projects.version>
         <scala.core.version>1.6.1.1</scala.core.version>
         <scala.editor.version>1.6.1.1</scala.editor.version>
-        <scala.console.version>1.6.1</scala.console.version>
+        <scala.console.version>1.6.1.1</scala.console.version>
         <scala.maven.version>1.6.1</scala.maven.version>
         <scala.platform.version>1.6.1</scala.platform.version>
-        <scala.sbt.version>1.6.1.1</scala.sbt.version>
+        <scala.sbt.version>1.6.1.2</scala.sbt.version>
         <scala.stdplatform.version>1.6.1</scala.stdplatform.version>
         <scala.project.version>1.6.1</scala.project.version>
         <scala.refactoring.version>1.6.1</scala.refactoring.version>
@@ -98,7 +98,7 @@
             <id>repository.jboss.org-public</id>
             <name>JBoss.org Maven repository</name>
             <url>http://repository.jboss.org/nexus/content/groups/public</url>
-        </repository>  
+        </repository>
 
         <repository>
             <id>Typesafe releases</id>
@@ -108,9 +108,9 @@
             <id>Typesafe snapshots</id>
             <url>http://repo.typesafe.com/typesafe/ivy-snapshots</url>
         </repository>
-        
+
     </repositories>
-  
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -145,7 +145,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>2.4</version>
-                    <configuration>                        
+                    <configuration>
                         <!-- to have the jar plugin pickup the nbm generated manifest -->
                         <useDefaultManifestFile>true</useDefaultManifestFile>
                     </configuration>
@@ -163,22 +163,22 @@
                         <target>1.6</target>
                     </configuration>
                 </plugin>
-                
+
                 <!-- Scala plugin for compiling and running Scala -->
-                <plugin>                    
+                <plugin>
                     <groupId>net.alchim31.maven</groupId>
                     <artifactId>scala-maven-plugin</artifactId>
                     <version>3.1.0</version>
-                    <executions>  
+                    <executions>
                         <execution>
                             <phase>process-resources</phase> <!-- to support mix java/scala -->
                             <goals>
                                 <goal>add-source</goal> <!-- to support mix java/scala -->
                                 <goal>compile</goal>
                                 <goal>testCompile</goal>
-                            </goals>  
-                        </execution>  
-                    </executions> 
+                            </goals>
+                        </execution>
+                    </executions>
                     <configuration>
                         <scalaVersion>${scala.version}</scalaVersion>
                         <!--recompileMode>incremental</recompileMode-->
@@ -202,17 +202,17 @@
                                 <artifactId>continuations</artifactId>
                                 <version>${scala.version}</version>
                             </complierPlugin>
-                        </compilerPlugins> 
+                        </compilerPlugins>
                     </configuration>
-                </plugin>  
-                
+                </plugin>
+
                 <!-- Adds artifacts to the local maven repository -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-install-plugin</artifactId>
                     <version>2.4</version>
                 </plugin>
-                
+
             </plugins>
         </pluginManagement>
     </build>
@@ -228,7 +228,7 @@
                     <value>Sun Microsystems Inc.</value>
                 </property>
             </activation>
-            
+
             <dependencies>
                 <dependency>
                     <groupId>com.sun</groupId>
@@ -239,7 +239,7 @@
                 </dependency>
             </dependencies>
         </profile>
-        
+
         <profile>
             <!-- The following code includes tools.jar for JDKs on Windows, Linux and Solaris (it is already included in the runtime for Mac OS X and some free JDKs). -->
             <!-- @see http://maven.apache.org/general.html#tools-jar-dependency -->
@@ -250,7 +250,7 @@
                     <value>Oracle Corporation</value>
                 </property>
             </activation>
-            
+
             <dependencies>
                 <dependency>
                     <groupId>com.sun</groupId>
@@ -282,67 +282,67 @@
                 </plugins>
             </build>
         </profile>
-        
+
         <profile>
             <id>sign-nbscala-nbms</id>
             <!-- my keys/keystore was generated as (note: The keystore and key password needs to be the same):
                  keytool -genkey -dname "CN=Caoyuan Deng, OU=nbscala, O=AIOTrade Co., L=Richmond, S=BC, C=CA" -alias nbscala -validity 1800
                  keytool -list -v
-                 
-                 To enable it, add all three keystore related parameters in ~/m2/settings.xml as:
-                 <profiles>
-                     <profile>
-                         <id>sign-nbscala-nbms</id>
-                         <activation>
-                             <activeByDefault>true</activeByDefault>
-                         </activation>
-                         <properties>
-                             <nbm.sign.keystore>${user.home}/.keystore</nbm.sign.keystore>
-                             <nbm.sign.keystorealias>nbscala</nbm.sign.keystorealias>
-                             <nbm.sign.keystorepassword>thepassword</nbm.sign.keystorepassword>
-                         </properties>
-                     </profile>
-                 </profiles>
-            -->
-        </profile>
 
-        <profile>
-            <id>run-ide</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <nbm.run.arguments></nbm.run.arguments>
-            </properties>
-        </profile>
-        <profile>
-            <id>debug-ide</id>
-            <properties>
-                <nbm.run.arguments>-J-Xdebug -J-Xnoagent -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000</nbm.run.arguments>
-            </properties>
-        </profile>
-    </profiles>
+           To enable it, add all three keystore related parameters in ~/m2/settings.xml as:
+           <profiles>
+               <profile>
+                   <id>sign-nbscala-nbms</id>
+                   <activation>
+                       <activeByDefault>true</activeByDefault>
+                   </activation>
+                   <properties>
+                       <nbm.sign.keystore>${user.home}/.keystore</nbm.sign.keystore>
+                       <nbm.sign.keystorealias>nbscala</nbm.sign.keystorealias>
+                       <nbm.sign.keystorepassword>thepassword</nbm.sign.keystorepassword>
+                   </properties>
+               </profile>
+           </profiles>
+      -->
+    </profile>
 
-    <modules>
-        <module>libs.local</module>
-        <module>libs.scala.compiler</module>
-        <module>libs.scala.continuations</module>
-        <module>libs.scala.library</module>
-        <module>libs.scala.reflect</module>
-        <module>libs.sbt</module>
-        <module>libs.xtc</module>
-        <module>scala.core</module>
-        <module>scala.editor</module>
-        <module>scala.console</module>
-        <module>scala.debugger.projects</module>
-        <module>scala.debugger</module>
-        <module>scala.maven</module>
-        <module>scala.platform</module>
-        <module>scala.sbt</module>
-        <module>scala.stdplatform</module>
-        <module>scala.project</module>
-        <module>scala.refactoring</module>
-        <module>scala.kit</module>
-    </modules>
+    <profile>
+      <id>run-ide</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <nbm.run.arguments></nbm.run.arguments>
+      </properties>
+    </profile>
+    <profile>
+      <id>debug-ide</id>
+      <properties>
+        <nbm.run.arguments>-J-Xdebug -J-Xnoagent -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000</nbm.run.arguments>
+      </properties>
+    </profile>
+  </profiles>
+
+  <modules>
+    <module>libs.local</module>
+    <module>libs.scala.compiler</module>
+    <module>libs.scala.continuations</module>
+    <module>libs.scala.library</module>
+    <module>libs.scala.reflect</module>
+    <module>libs.sbt</module>
+    <module>libs.xtc</module>
+    <module>scala.core</module>
+    <module>scala.editor</module>
+    <module>scala.console</module>
+    <module>scala.debugger.projects</module>
+    <module>scala.debugger</module>
+    <module>scala.maven</module>
+    <module>scala.platform</module>
+    <module>scala.sbt</module>
+    <module>scala.stdplatform</module>
+    <module>scala.project</module>
+    <module>scala.refactoring</module>
+    <module>scala.kit</module>
+  </modules>
 
 </project>
