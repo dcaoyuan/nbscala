@@ -39,7 +39,6 @@
 
 package org.netbeans.modules.scala.editor
 
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -67,7 +66,6 @@ import org.netbeans.modules.csl.spi.ParserResult
 
 import scala.collection.JavaConversions._
 
-
 /**
  *
  * @author Caoyuan Deng
@@ -79,20 +77,19 @@ class JavaIndex(index: ClassIndex, pResult: ScalaParserResult) {
 
   def getPackages(fqnPrefix: String): Set[String] = {
     val pkgNames = index.getPackageNames(fqnPrefix, true, java.util.EnumSet.allOf(classOf[SearchScope]))
-    pkgNames.map{x => x}.toSet
+    pkgNames.map { x ⇒ x }.toSet
   }
-
 
 }
 object JavaIndex {
 
   def get(fo: FileObject, pResult: ScalaParserResult): Option[JavaIndex] = {
     ScalaSourceUtil.getClasspathInfo(fo) match {
-      case Some(cpInfo) => cpInfo.getClassIndex match {
-          case null => None
-          case index => Some(new JavaIndex(index, pResult))
-        }
-      case None => None
+      case Some(cpInfo) ⇒ cpInfo.getClassIndex match {
+        case null ⇒ None
+        case index ⇒ Some(new JavaIndex(index, pResult))
+      }
+      case None ⇒ None
     }
   }
 }

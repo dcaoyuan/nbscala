@@ -42,7 +42,7 @@ import java.io.File
 import org.netbeans.api.lexer.Token
 import org.netbeans.api.lexer.TokenId
 import org.netbeans.api.lexer.TokenSequence
-import org.netbeans.modules.csl.api.{ElementKind}
+import org.netbeans.modules.csl.api.{ ElementKind }
 import org.openide.filesystems.FileUtil
 import org.netbeans.api.language.util.ast.AstItem
 import org.netbeans.api.language.util.ast.AstScope
@@ -53,7 +53,7 @@ import org.netbeans.modules.scala.core.lexer.ScalaTokenId
 import scala.reflect.internal.Flags
 import scala.reflect.internal.Flags._
 import scala.reflect.internal.util.OffsetPosition
-import scala.collection.mutable.{Stack, HashSet, HashMap}
+import scala.collection.mutable.{ Stack, HashSet, HashMap }
 
 /**
  *
@@ -61,10 +61,10 @@ import scala.collection.mutable.{Stack, HashSet, HashMap}
  *   object scalaAstVisitor extends {
  *     val global: Global.this.type = Global.this
  *   } with ScalaAstVisitor
- * 
+ *
  * @author Caoyuan Deng
  */
-trait ScalaAstVisitor {self: ScalaGlobal =>
+trait ScalaAstVisitor { self: ScalaGlobal ⇒
 
   /**
    * call this method only via askForResponse to avoid race condition upon interactive presnetation compiler
@@ -81,7 +81,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
     private val debug = false
 
     /** doc may be null if under batched parsing, for example, indexing */
-    private val doc = srcFile.doc 
+    private val doc = srcFile.doc
     private val th = srcFile.tokenHierarchy
     private val contentLength = srcFile.content.length
     private val fo = {
@@ -105,7 +105,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       owners push rootMirror.RootClass
 
       traverse(rootTree)
-      
+
       // clear after visit to free memory
       visited.clear
       treeToKnownType.clear
@@ -117,17 +117,17 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
 
     private def traverse(tree: Tree) {
       if (isCancelled(srcFile)) return
-      if (!visited.add(tree))  return // has visited
+      if (!visited.add(tree)) return // has visited
 
       tree match {
-        case EmptyTree =>
-          
-        case PackageDef(pid, stats) =>
+        case EmptyTree ⇒
+
+        case PackageDef(pid, stats) ⇒
           val scope = ScalaScope(getBoundsTokens(tree))
           scopes.top.addScope(scope)
 
           val sym = tree.symbol
-          withIdToken(getIdToken(tree)) {token =>
+          withIdToken(getIdToken(tree)) { token ⇒
             val dfn = ScalaDfn(sym, token, ElementKind.PACKAGE, scope, fo)
             if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
@@ -137,14 +137,14 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
             traverseTrees(stats)
           }
 
-        case ClassDef(mods, name, tparams, impl) =>
+        case ClassDef(mods, name, tparams, impl) ⇒
           val scope = ScalaScope(getBoundsTokens(tree))
           scopes.top.addScope(scope)
 
           (if (mods.isTrait) "trait " else "class ")
 
           val sym = tree.symbol
-          withIdToken(getIdToken(tree)) {token =>
+          withIdToken(getIdToken(tree)) { token ⇒
             val dfn = ScalaDfn(sym, token, ElementKind.CLASS, scope, fo)
             if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
@@ -156,12 +156,12 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
             traverse(impl)
           }
 
-        case ModuleDef(mods, name, impl) =>
+        case ModuleDef(mods, name, impl) ⇒
           val scope = ScalaScope(getBoundsTokens(tree))
           scopes.top.addScope(scope)
 
           val sym = tree.symbol
-          withIdToken(getIdToken(tree)) {token =>
+          withIdToken(getIdToken(tree)) { token ⇒
             val dfn = ScalaDfn(sym, token, ElementKind.MODULE, scope, fo)
             if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
@@ -172,14 +172,14 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
             traverse(impl)
           }
 
-        case ValDef(mods, name, tpt, rhs) =>
+        case ValDef(mods, name, tpt, rhs) ⇒
           val scope = ScalaScope(getBoundsTokens(tree))
           scopes.top.addScope(scope)
 
           val sym = tree.symbol
           // * special case for: val (a, b, c) = (1, 2, 3)
           if (!isTupleClass(tpt.symbol)) {
-            withIdToken(getIdToken(tree, name.decode)) {token =>
+            withIdToken(getIdToken(tree, name.decode)) { token ⇒
               val dfn = ScalaDfn(sym, token, ElementKind.OTHER, scope, fo)
               if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
             }
@@ -192,14 +192,14 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
             traverse(rhs)
           }
 
-        case DefDef(mods, name, tparams, vparamss, tpt, rhs) =>
+        case DefDef(mods, name, tparams, vparamss, tpt, rhs) ⇒
           val scope = ScalaScope(getBoundsTokens(tree))
           scopes.top.addScope(scope)
 
           val kind = if (tree.symbol.isConstructor) ElementKind.CONSTRUCTOR else ElementKind.METHOD
 
           val sym = tree.symbol
-          withIdToken(getIdToken(tree)) {token =>
+          withIdToken(getIdToken(tree)) { token ⇒
             val dfn = ScalaDfn(sym, token, kind, scope, fo)
             if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
@@ -213,14 +213,14 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
             traverse(rhs)
           }
 
-        case TypeDef(mods, name, tparams, rhs) =>
+        case TypeDef(mods, name, tparams, rhs) ⇒
           val scope = ScalaScope(getBoundsTokens(tree))
           scopes.top.addScope(scope)
 
           val sym = tree.symbol
           if ((sym ne null) && sym != NoSymbol) {
             if (!sym.hasFlag(Flags.SYNTHETIC)) {
-              withIdToken(getIdToken(tree, name.decode)) {token =>
+              withIdToken(getIdToken(tree, name.decode)) { token ⇒
                 val dfn = ScalaDfn(sym, token, ElementKind.CLASS, scope, fo)
                 if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
               }
@@ -231,46 +231,46 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
             traverseAnnots(sym)
             traverseTrees(mods.annotations)
             traverseTrees(tparams)
-            if ((sym ne null) && sym != NoSymbol)  {
+            if ((sym ne null) && sym != NoSymbol) {
               (rhs, sym.info) match {
-                case (TypeBoundsTree(lo, hi), TypeBounds(loTpe, hiTpe)) =>
+                case (TypeBoundsTree(lo, hi), TypeBounds(loTpe, hiTpe)) ⇒
                   // * specical case: type of lo, hi are hidden in sym.info (not in sym.tpe)
                   // * example code: Array[_ <: String]
                   val loSym = loTpe.typeSymbol
-                  withIdToken(getIdToken(lo, loSym.nameString)) {token =>
+                  withIdToken(getIdToken(lo, loSym.nameString)) { token ⇒
                     val loRef = ScalaRef(loSym, token, ElementKind.CLASS, fo)
                     if (scopes.top.addRef(loRef)) logInfo("\tAdded: ", loRef)
                   }
 
                   val hiSym = hiTpe.typeSymbol
-                  withIdToken(getIdToken(hi, hiSym.nameString)) {token =>
+                  withIdToken(getIdToken(hi, hiSym.nameString)) { token ⇒
                     val hiRef = ScalaRef(hiSym, token, ElementKind.CLASS, fo)
                     if (scopes.top.addRef(hiRef)) logInfo("\tAdded: ", hiRef)
                   }
-                case _ => traverse(rhs)
+                case _ ⇒ traverse(rhs)
               }
             } else traverse(rhs)
           }
 
-        case Function(vparams, body) =>
+        case Function(vparams, body) ⇒
           val sym = tree.symbol
 
           atOwner(sym) {
             traverseTrees(vparams)
             traverse(body)
           }
-          
-        case LabelDef(name, params, rhs) =>
+
+        case LabelDef(name, params, rhs) ⇒
           traverseTrees(params); traverse(rhs)
-        case Import(expr, selectors) =>
+        case Import(expr, selectors) ⇒
           val qual = tree.symbol.tpe match {
-            case analyzer.ImportType(expr0) => expr0
-            case _ => expr
+            case analyzer.ImportType(expr0) ⇒ expr0
+            case _ ⇒ expr
           }
 
           val qualSym = qual.symbol
           if (qualSym ne null) {
-            withIdToken(getIdToken(qual)) {token =>
+            withIdToken(getIdToken(qual)) { token ⇒
               val ref = ScalaRef(qualSym, token, if (qualSym.hasFlag(Flags.PACKAGE)) ElementKind.PACKAGE else ElementKind.OTHER, fo)
               if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
             }
@@ -278,9 +278,9 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
 
           //println("import: qual=" + qual.tpe + ", selectors=" + selectors.mkString("{", ",", "}" ))
           selectors foreach {
-            case ImportSelector(nme.WILDCARD, _, _, _) =>
+            case ImportSelector(nme.WILDCARD, _, _, _) ⇒
               // * idToken == "_", sym == qualSym
-              withIdToken(getIdToken(tree, nme.WILDCARD.decode)) {token =>
+              withIdToken(getIdToken(tree, nme.WILDCARD.decode)) { token ⇒
                 val ref = ScalaRef(qualSym, token, ElementKind.OTHER, fo)
                 if (scopes.top.addRef(ref)) {
                   logInfo("\tAdded: ", ref)
@@ -288,10 +288,10 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
                 }
               }
 
-            case ImportSelector(from, _, to, _) =>
+            case ImportSelector(from, _, to, _) ⇒
               val xsym = importedSymbol(qual, from, to)
               if (xsym ne null) {
-                withIdToken(getIdToken(tree, from.decode)) {idToken =>
+                withIdToken(getIdToken(tree, from.decode)) { idToken ⇒
                   val ref = ScalaRef(xsym, idToken, ElementKind.OTHER, fo)
                   if (scopes.top.addRef(ref)) {
                     logInfo("\tAdded: ", ref)
@@ -301,7 +301,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
 
                 if (to ne null) {
                   val ysym = xsym
-                  withIdToken(getIdToken(tree, to.decode)) {token =>
+                  withIdToken(getIdToken(tree, to.decode)) { token ⇒
                     val ref = ScalaRef(ysym, token, ElementKind.OTHER, fo)
                     if (scopes.top.addRef(ref)) {
                       logInfo("\tAdded: ", ref)
@@ -312,83 +312,83 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
               }
           }
 
-          //traverse(expr)
-        case Annotated(annot, arg) =>
+        //traverse(expr)
+        case Annotated(annot, arg) ⇒
           traverse(annot); traverse(arg)
-        case DocDef(comment, definition) =>
+        case DocDef(comment, definition) ⇒
           traverse(definition)
-        case Template(parents, self, body) =>
+        case Template(parents, self, body) ⇒
           traverseTrees(parents)
           if (!self.isEmpty) traverse(self)
           traverseStats(body, tree.symbol)
-        case Block(stats, expr) =>
+        case Block(stats, expr) ⇒
           traverseTrees(stats); traverse(expr)
-        case CaseDef(pat, guard, body) =>
+        case CaseDef(pat, guard, body) ⇒
           traverse(pat); traverse(guard); traverse(body)
-        case Alternative(trees) =>
+        case Alternative(trees) ⇒
           traverseTrees(trees)
-        case Star(elem) =>
+        case Star(elem) ⇒
           traverse(elem)
-        case Bind(name, body) =>
+        case Bind(name, body) ⇒
           val scope = ScalaScope(getBoundsTokens(tree))
           scopes.top.addScope(scope)
-          
+
           // * "case c => println(c)", will define a bind val "c"
-          withIdToken(getIdToken(tree)) {token =>
+          withIdToken(getIdToken(tree)) { token ⇒
             val dfn = ScalaDfn(tree.symbol, token, ElementKind.VARIABLE, scope, fo)
             if (scopes.top.addDfn(dfn)) logInfo("\tAdded: ", dfn)
           }
 
           traverse(body)
 
-        case UnApply(fun, args) =>
+        case UnApply(fun, args) ⇒
           traverse(fun); traverseTrees(args)
-        case ArrayValue(elemtpt, trees) =>
+        case ArrayValue(elemtpt, trees) ⇒
           traverse(elemtpt); traverseTrees(trees)
-        case Assign(lhs, rhs) =>
+        case Assign(lhs, rhs) ⇒
           traverse(lhs); traverse(rhs)
-        case AssignOrNamedArg(lhs, rhs) =>
+        case AssignOrNamedArg(lhs, rhs) ⇒
           traverse(lhs); traverse(rhs)
-        case If(cond, thenp, elsep) =>
+        case If(cond, thenp, elsep) ⇒
           traverse(cond); traverse(thenp); traverse(elsep)
-        case Match(selector, cases) =>
+        case Match(selector, cases) ⇒
           traverse(selector); traverseTrees(cases)
-        case Return(expr) =>
+        case Return(expr) ⇒
           traverse(expr)
-        case Try(block, catches, finalizer) =>
+        case Try(block, catches, finalizer) ⇒
           traverse(block); traverseTrees(catches); traverse(finalizer)
-        case Throw(expr) =>
+        case Throw(expr) ⇒
           traverse(expr)
-        case New(tpt) =>
+        case New(tpt) ⇒
           traverse(tpt)
-        case Typed(expr, tpt) =>
+        case Typed(expr, tpt) ⇒
           traverse(expr); traverse(tpt)
-        case TypeApply(fun, args) =>
+        case TypeApply(fun, args) ⇒
           traverse(fun); traverseTrees(args)
-        case Apply(fun, args) =>
+        case Apply(fun, args) ⇒
           // * this tree's `fun` part is extractly an `Ident` tree, so add ref at Ident(name) instead here
           traverse(fun); traverseTrees(args)
-        case ApplyDynamic(qual, args) =>
+        case ApplyDynamic(qual, args) ⇒
           traverse(qual); traverseTrees(args)
-        case Super(qual, mix) =>
+        case Super(qual, mix) ⇒
           val sym = tree.symbol
           if (sym ne null) {
-            withIdToken(getIdToken(tree, "super")) {token =>
+            withIdToken(getIdToken(tree, "super")) { token ⇒
               val ref = ScalaRef(sym, token, ElementKind.OTHER, fo)
               if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
             }
           }
 
-        case This(qual) =>
+        case This(qual) ⇒
           val sym = tree.symbol
           if (sym ne null) {
-            withIdToken(getIdToken(tree, "this")) {token =>
+            withIdToken(getIdToken(tree, "this")) { token ⇒
               val ref = ScalaRef(sym, token, ElementKind.OTHER, fo)
               if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
             }
           }
 
-        case Select(qualifier, selector) =>
+        case Select(qualifier, selector) ⇒
           /**
            * For error Select tree, for example a.p, the error part's offset will be set to 'p',
            * The tree.qualifier() part's offset will be 'a'
@@ -410,18 +410,18 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
               // * for Select tree that is implicit call, will look forward for the nearest item and change its kind to ElementKind.RULE
               val pos = tree.pos
               if (pos.isDefined) {
-                rootScope.findNeastItemsAt(th, pos.startOrPoint) foreach {_.kind = ElementKind.RULE}
+                rootScope.findNeastItemsAt(th, pos.startOrPoint) foreach { _.kind = ElementKind.RULE }
               }
             } else {
               val name = selector.decode
-              withIdToken(getIdToken(tree, name)) {token =>
+              withIdToken(getIdToken(tree, name)) { token ⇒
                 val ref = ScalaRef(sym, token, kind, fo)
                 /**
                  * @Note: this symbol may has wrong tpe, for example, an error tree,
                  * to get the proper resultType, we'll check if the qualierMaybeType isDefined
                  */
                 if ((sym ne null) && !sym.exists) {
-                  recoveredType(tree) foreach {tpex => ref.resultType = tpex}
+                  recoveredType(tree) foreach { tpex ⇒ ref.resultType = tpex }
                 }
                 if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
               }
@@ -430,59 +430,59 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
 
           traverse(qualifier)
 
-        case Ident(name) =>
+        case Ident(name) ⇒
           val sym = tree.symbol
           if (sym ne null) {
             val sym1 = if (sym == NoSymbol) {
               treeToKnownType.get(tree) match {
-                case Some(x) => x.typeSymbol
-                case None => sym
+                case Some(x) ⇒ x.typeSymbol
+                case None ⇒ sym
               }
             } else sym
 
-            withIdToken(getIdToken(tree, name.decode)) {token =>
+            withIdToken(getIdToken(tree, name.decode)) { token ⇒
               val ref = ScalaRef(sym1, token, ElementKind.OTHER, fo)
               /**
                * @Note: this symbol may has wrong tpe, for example, an error tree,
                * to get the proper resultType, we'll check if the qualierMaybeType isDefined
                */
               if (!sym1.exists) {
-                recoveredType(tree) foreach {tpex => ref.resultType = tpex}
+                recoveredType(tree) foreach { tpex ⇒ ref.resultType = tpex }
               }
               // * set ref.resultType before addRef to scope, otherwise, it may not be added if there is same symbol had been added
               if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
             }
           }
 
-        case Literal(value) =>
+        case Literal(value) ⇒
           value.value match {
-            case tpe: Type => addRefForTypeDirectly(tree)(tpe)
-            case _ =>
+            case tpe: Type ⇒ addRefForTypeDirectly(tree)(tpe)
+            case _ ⇒
           }
 
-        case tt@TypeTree() =>
+        case tt @ TypeTree() ⇒
           tree.symbol match {
-            case null =>
-              // * in case of: <type ?>
-              //println("Null symbol found, tree is:" + tree)
-            case NoSymbol =>
+            case null ⇒
+            // * in case of: <type ?>
+            //println("Null symbol found, tree is:" + tree)
+            case NoSymbol ⇒
               // * type tree in case def, for example: case Some(_),
               // * since the symbol is NoSymbol, we should visit its original type
               val original = tt.original
               if ((original ne null) && original != tree && !isTupleClass(original.symbol)) {
                 traverse(original)
               }
-            case sym =>
+            case sym ⇒
               // * We'll drop tuple type, since all elements in tuple have their own type trees:
               // * for example: val (a, b), where (a, b) as a whole has a type tree, but we only
               // * need binding trees of a and b
               if (!isTupleClass(sym)) {
                 tree.tpe match {
                   // special case for `classOf[.....]` etc
-                  case TypeRef(pre, sym, argTpes) if sym.fullName == "java.lang.Class" =>
+                  case TypeRef(pre, sym, argTpes) if sym.fullName == "java.lang.Class" ⇒
                     argTpes foreach addRefForTypeDirectly(tree)
-                  case _ =>
-                    withIdToken(getIdToken(tree)) {token =>
+                  case _ ⇒
+                    withIdToken(getIdToken(tree)) { token ⇒
                       val ref = ScalaRef(sym, token, ElementKind.CLASS, fo)
                       if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
                     }
@@ -492,28 +492,28 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
               val orig = tt.original
               if ((orig ne null) && orig != tree) {
                 (orig, tree.tpe) match {
-                  case (att: AppliedTypeTree, tref: TypeRef) =>
+                  case (att: AppliedTypeTree, tref: TypeRef) ⇒
                     // * special case: type and symbols of args may hide in parent's tpe (sometimes also in orig.tpe, but not always)
                     // * example code: Array[String], Option[Array[String]]
                     treeToKnownType += (orig -> tref)
                     traverse(orig)
-                  case _ => traverse(orig)
+                  case _ ⇒ traverse(orig)
                 }
               }
           }
 
-        case SingletonTypeTree(ref) =>
+        case SingletonTypeTree(ref) ⇒
           traverse(ref)
-        case SelectFromTypeTree(qualifier, selector) =>
+        case SelectFromTypeTree(qualifier, selector) ⇒
           traverse(qualifier)
-        case CompoundTypeTree(templ) =>
+        case CompoundTypeTree(templ) ⇒
           traverse(templ)
-        case AppliedTypeTree(tpt, args) =>
+        case AppliedTypeTree(tpt, args) ⇒
           // * special case: type and symbols of args may hide in parent's tpe (sometimes also in orig.tpe, but not always)
           // * example code: Array[String], Option[Array[String]]
           treeToKnownType.get(tree) match {
             // * visit tpt and args with known types
-            case Some(TypeRef(pre, sym, argTpes)) =>
+            case Some(TypeRef(pre, sym, argTpes)) ⇒
               treeToKnownType += (tpt -> sym.tpe)
               traverse(tpt)
 
@@ -526,20 +526,20 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
                 treeToKnownType += (argTree -> argTpe)
                 traverse(argTree)
               }
-            case _ =>
+            case _ ⇒
               traverse(tpt)
               traverseTrees(args)
           }
 
-        case TypeBoundsTree(lo, hi) =>
+        case TypeBoundsTree(lo, hi) ⇒
           traverse(lo); traverse(hi)
-        case ExistentialTypeTree(tpt, whereClauses) =>
+        case ExistentialTypeTree(tpt, whereClauses) ⇒
           traverse(tpt); traverseTrees(whereClauses)
-        case SelectFromArray(qualifier, selector, erasure) =>
+        case SelectFromArray(qualifier, selector, erasure) ⇒
           traverse(qualifier)
-        case Parens(ts) =>
+        case Parens(ts) ⇒
           traverseTrees(ts)
-        case _ =>
+        case _ ⇒
           logInfo("Unknow tree: " + tree)
       }
     }
@@ -553,7 +553,7 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
     }
 
     private def traverseStats(stats: List[Tree], exprOwner: Symbol) {
-      stats foreach (stat =>
+      stats foreach (stat ⇒
         if (exprOwner != owners.top && stat.isTerm) {
           atOwner(exprOwner) {
             traverse(stat)
@@ -562,13 +562,13 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
     }
 
     private def traverseAnnots(sym: Symbol) {
-      for (me@AnnotationInfo(atp, args, assocs) <- sym.annotations) {
+      for (me @ AnnotationInfo(atp, args, assocs) ← sym.annotations) {
         addRefForTypeDirectly(me.pos)(atp)
         traverseTrees(args)
       }
     }
 
-    private def atOwner(owner: Symbol, scope: AstScope = null)(traverse: => Unit) {
+    private def atOwner(owner: Symbol, scope: AstScope = null)(traverse: ⇒ Unit) {
       if (scope ne null) scopes push scope
       owners push owner
       traverse
@@ -578,9 +578,9 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
 
     private def isTupleClass(symbol: Symbol): Boolean = {
       if (symbol ne null) {
-        symbol.ownerChain.map{_.rawname.decode} match {
-          case List(a, "scala", "<root>") if a.startsWith("Tuple") => true
-          case _ => false
+        symbol.ownerChain.map { _.rawname.decode } match {
+          case List(a, "scala", "<root>") if a.startsWith("Tuple") ⇒ true
+          case _ ⇒ false
         }
       } else false
     }
@@ -591,19 +591,19 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       val idToken = onTree.pos match {
         // tree.pos in case of `classOf[...]` may be set as an OffsetPosition instead of RangePosition,
         // I have to add forward looking char length. @todo get range between "[..., [..],.]"
-        case _: OffsetPosition => getIdToken(onTree, sym.name.decode, 20, sym)
-        case _ => getIdToken(onTree, sym.name.decode, -1, sym)
+        case _: OffsetPosition ⇒ getIdToken(onTree, sym.name.decode, 20, sym)
+        case _ ⇒ getIdToken(onTree, sym.name.decode, -1, sym)
       }
-      
-      withIdToken(idToken) {token =>
+
+      withIdToken(idToken) { token ⇒
         val ref = ScalaRef(sym, token, ElementKind.CLASS, fo)
         if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
       }
 
       // if tpe is TypeRef, we need to add args type
       tpe match {
-        case TypeRef(_, _, argTpes) => argTpes foreach addRefForTypeDirectly(onTree)
-        case _ =>
+        case TypeRef(_, _, argTpes) ⇒ argTpes foreach addRefForTypeDirectly(onTree)
+        case _ ⇒
       }
     }
 
@@ -613,23 +613,22 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       val idToken = pos match {
         // tree.pos in case of `classOf[...]` may be set as an OffsetPosition instead of RangePosition,
         // I have to add forward looking char length. @todo get range between "[..., [..],.]"
-        case _: OffsetPosition => getIdTokenViaPos(pos, sym.name.decode, 20, sym)
-        case _ => getIdTokenViaPos(pos, sym.name.decode, -1, sym)
+        case _: OffsetPosition ⇒ getIdTokenViaPos(pos, sym.name.decode, 20, sym)
+        case _ ⇒ getIdTokenViaPos(pos, sym.name.decode, -1, sym)
       }
 
-      withIdToken(idToken) {token =>
+      withIdToken(idToken) { token ⇒
         val ref = ScalaRef(sym, token, ElementKind.CLASS, fo)
         if (scopes.top.addRef(ref)) logInfo("\tAdded: ", ref)
       }
 
       // if tpe is TypeRef, we need to add args type
       tpe match {
-        case TypeRef(_, _, argTpes) => argTpes foreach addRefForTypeDirectly(pos)
-        case _ =>
+        case TypeRef(_, _, argTpes) ⇒ argTpes foreach addRefForTypeDirectly(pos)
+        case _ ⇒
       }
     }
-    
-    
+
     // ---- Helper methods
 
     /**
@@ -642,16 +641,16 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       val members = try {
         qual.tpe.members
       } catch {
-        case ex: Throwable => EmptyScope
+        case ex: Throwable ⇒ EmptyScope
       }
 
-      val result = members filter {_.name.toTermName == targetName}
+      val result = members filter { _.name.toTermName == targetName }
 
       // * prefer type over object
       result find ScalaUtil.isProperType getOrElse result.headOption.getOrElse(null)
     }
 
-    private def withIdToken(idToken: Option[Token[TokenId]])(op: Token[TokenId] => Unit) {
+    private def withIdToken(idToken: Option[Token[TokenId]])(op: Token[TokenId] ⇒ Unit) {
       if (idToken.isDefined) op(idToken.get)
     }
 
@@ -678,17 +677,17 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
         endOffset = math.max(endOffset, offset + forward)
       }
 
-      val ts = ScalaLexUtil.getTokenSequence(doc, th, offset) getOrElse {return None}
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, offset) getOrElse { return None }
       ts.move(offset)
       if (!ts.moveNext && !ts.movePrevious) {
         assert(false, "Should not happen!")
       }
 
       val token = findIdTokenForward(ts, name, offset, endOffset)
-    
+
       token match {
-        case Some(x) if x.isFlyweight => Some(ts.offsetToken)
-        case x => x
+        case Some(x) if x.isFlyweight ⇒ Some(ts.offsetToken)
+        case x ⇒ x
       }
     }
 
@@ -716,53 +715,53 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       if (forward != -1) {
         endOffset = math.max(endOffset, offset + forward)
       }
-    
-      val ts = ScalaLexUtil.getTokenSequence(doc, th, offset) getOrElse {return None} 
+
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, offset) getOrElse { return None }
       ts.move(offset)
       if (!ts.moveNext && !ts.movePrevious) {
         assert(false, "Should not happen!")
       }
 
       val token = tree match {
-        case _: This => ScalaLexUtil.findNext(ts, ScalaTokenId.This)
-        case _: Super => ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
-        case _ if name == "this" => ScalaLexUtil.findNext(ts, ScalaTokenId.This)
-        case _ if name == "super" => ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
-        case _ if name == "expected" => Some(ts.token)
-        case _: ValDef if sym hasFlag SYNTHETIC =>
+        case _: This ⇒ ScalaLexUtil.findNext(ts, ScalaTokenId.This)
+        case _: Super ⇒ ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
+        case _ if name == "this" ⇒ ScalaLexUtil.findNext(ts, ScalaTokenId.This)
+        case _ if name == "super" ⇒ ScalaLexUtil.findNext(ts, ScalaTokenId.Super)
+        case _ if name == "expected" ⇒ Some(ts.token)
+        case _: ValDef if sym hasFlag SYNTHETIC ⇒
           // * is it a placeholder '_' token ?
-          ScalaLexUtil.findNext(ts, ScalaTokenId.Wild) find {_.offset(th) <= endOffset}
-        
-        case _: Select if name == "apply" =>
+          ScalaLexUtil.findNext(ts, ScalaTokenId.Wild) find { _.offset(th) <= endOffset }
+
+        case _: Select if name == "apply" ⇒
           // * for Select tree that is `apple` call, will look forward for the nearest id token
           //val content = getContent(offset, endOffset)
           ScalaLexUtil.findNextIn(ts, ScalaLexUtil.PotentialIdTokens)
 
-        case _: Select if endOffset > 0 =>
+        case _: Select if endOffset > 0 ⇒
           // * for Select tree, will look backward from endOffset
           ts.move(endOffset)
           findIdTokenBackward(ts, name, offset, endOffset) match {
-            case None =>
+            case None ⇒
               // * bug in scalac, wrong RangePosition for "list filter {...}", the range only contains "list"
               ts.move(endOffset)
               if (ts.moveNext && ts.movePrevious) {
                 val end = math.min(endOffset + 100, contentLength - 1)
                 findIdTokenForward(ts, name, endOffset, end)
               } else None
-            case x => x
+            case x ⇒ x
           }
 
-        case _: Import =>
+        case _: Import ⇒
           //println("import tree content=" + getContent(offset, endOffset) + ", name=" + name)
           ts.move(endOffset)
           findIdTokenBackward(ts, name, offset, endOffset)
-        
-        case _ => findIdTokenForward(ts, name, offset, endOffset)
+
+        case _ ⇒ findIdTokenForward(ts, name, offset, endOffset)
       }
 
       token match {
-        case Some(x) if x.isFlyweight => Some(ts.offsetToken)
-        case x => x
+        case Some(x) if x.isFlyweight ⇒ Some(ts.offsetToken)
+        case x ⇒ x
       }
     }
 
@@ -777,8 +776,8 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       }
 
       token match {
-        case Some(x) if tokenNameEquals(x, name) => token
-        case _ => None
+        case Some(x) if tokenNameEquals(x, name) ⇒ token
+        case _ ⇒ None
       }
     }
 
@@ -795,20 +794,20 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       }
 
       token match {
-        case Some(x) if tokenNameEquals(x, name) => token
-        case _ => None
+        case Some(x) if tokenNameEquals(x, name) ⇒ token
+        case _ ⇒ None
       }
     }
-  
+
     private def tokenNameEquals(token: Token[_], name: String): Boolean = {
       val text = token.text.toString
       token.id match {
-        case ScalaTokenId.SymbolLiteral => text.substring(1, text.length - 1) == name // strip '`'
-        case ScalaTokenId.LArrow if name == "foreach" || name == "map" => true
-        case ScalaTokenId.Identifier if name == "apply" || name.startsWith("<error") => true // return the first matched identifier token
-        case _ if name.endsWith("_=") => text == name || text + "_=" == name
-        case _ if name == "Sequence"  => text == name || text == "Seq" // Seq may have symbol name "Sequence"
-        case _ => text == name
+        case ScalaTokenId.SymbolLiteral ⇒ text.substring(1, text.length - 1) == name // strip '`'
+        case ScalaTokenId.LArrow if name == "foreach" || name == "map" ⇒ true
+        case ScalaTokenId.Identifier if name == "apply" || name.startsWith("<error") ⇒ true // return the first matched identifier token
+        case _ if name.endsWith("_=") ⇒ text == name || text + "_=" == name
+        case _ if name == "Sequence" ⇒ text == name || text == "Seq" // Seq may have symbol name "Sequence"
+        case _ ⇒ text == name
       }
     }
 
@@ -827,11 +826,11 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       val (offset, endOffset) = if (tree.pos.isDefined) {
         (pos.startOrPoint, pos.endOrPoint)
       } else (-1, -1)
-    
+
       getBoundsTokens(offset, endOffset)
     }
-  
-    private def getBoundsToken(offset: Int): Option[Token[TokenId]]  = {
+
+    private def getBoundsToken(offset: Int): Option[Token[TokenId]] = {
       if (offset < 0) return None
 
       val ts = ScalaLexUtil.getTokenSequence(doc, th, offset).getOrElse(return None)
@@ -841,8 +840,8 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       }
 
       val startToken = ScalaLexUtil.findPreviousNoWsNoComment(ts) match {
-        case Some(x) if x.isFlyweight => Some(ts.offsetToken)
-        case x => x
+        case Some(x) if x.isFlyweight ⇒ Some(ts.offsetToken)
+        case x ⇒ x
       }
 
       if (startToken == None) {
@@ -855,15 +854,15 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
     private def getBoundsEndToken(endOffset: Int): Option[Token[TokenId]] = {
       if (endOffset == -1) return None
 
-      val ts = ScalaLexUtil.getTokenSequence(doc, th, endOffset).getOrElse{return None}
+      val ts = ScalaLexUtil.getTokenSequence(doc, th, endOffset).getOrElse { return None }
       ts.move(endOffset)
       if (!ts.movePrevious && !ts.moveNext) {
         assert(false, "Should not happen!")
       }
-    
+
       val endToken = ScalaLexUtil.findPreviousNoWsNoComment(ts) match {
-        case Some(x) if x.isFlyweight => Some(ts.offsetToken)
-        case x => x
+        case Some(x) if x.isFlyweight ⇒ Some(ts.offsetToken)
+        case x ⇒ x
       }
 
       endToken
@@ -888,8 +887,8 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
       }
 
       val idTokenStr = getIdToken(tree) match {
-        case None => "<null>"
-        case Some(x) => x.text.toString
+        case None ⇒ "<null>"
+        case Some(x) ⇒ x.text.toString
       }
 
       val symbol = tree.symbol
@@ -924,8 +923,8 @@ trait ScalaAstVisitor {self: ScalaGlobal =>
           curr = next
         } else {
           curr.parent match {
-            case Some(x) => curr.boundsEndToken = x.boundsEndToken
-            case None =>
+            case Some(x) ⇒ curr.boundsEndToken = x.boundsEndToken
+            case None ⇒
           }
           curr = null
         }

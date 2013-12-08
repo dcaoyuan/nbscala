@@ -51,7 +51,7 @@ import org.netbeans.modules.scala.core.element.ScalaElements
  * @author Caoyuan Deng
  */
 class ElementDescription(val handle: ScalaElements#ScalaElement) {
- 
+
   private val displayName = handle.symbol.nameString + " of " + handle.symbol.owner.fullName
 
   def getSourceFile: FileObject = handle.getFileObject
@@ -61,9 +61,9 @@ class ElementDescription(val handle: ScalaElements#ScalaElement) {
   def getOffset = handle.getOffset
 
   def getIcon: Icon = handle.getIcon
-    
+
   def getDisplayName: String = displayName
-    
+
   def getModifiers: java.util.Collection[Modifier] = handle.getModifiers
 
 }

@@ -56,7 +56,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Position.Bias;
 import org.netbeans.api.java.source.ClasspathInfo
-import org.netbeans.api.language.util.ast.{AstDfn, AstScope}
+import org.netbeans.api.language.util.ast.{ AstDfn, AstScope }
 import org.netbeans.api.language.util.text.BoyerMoore
 import org.netbeans.api.lexer.Token
 import org.netbeans.api.lexer.TokenHierarchy;
@@ -68,9 +68,9 @@ import org.netbeans.modules.csl.api.ElementKind;
 import org.netbeans.modules.csl.api.OffsetRange;
 import org.netbeans.modules.csl.spi.support.ModificationResult;
 import org.netbeans.modules.csl.spi.support.ModificationResult.Difference;
-import org.netbeans.modules.scala.core.{ScalaMimeResolver, ScalaParserResult}
-import org.netbeans.modules.scala.core.ast.{ScalaItems, ScalaRootScope}
-import org.netbeans.modules.scala.core.lexer.{ScalaTokenId, ScalaLexUtil}
+import org.netbeans.modules.scala.core.{ ScalaMimeResolver, ScalaParserResult }
+import org.netbeans.modules.scala.core.ast.{ ScalaItems, ScalaRootScope }
+import org.netbeans.modules.scala.core.lexer.{ ScalaTokenId, ScalaLexUtil }
 import org.netbeans.modules.parsing.spi.Parser
 import org.netbeans.modules.refactoring.api._
 import org.openide.filesystems.FileObject
@@ -92,7 +92,7 @@ import scala.reflect.internal.Flags
  * The actual Renaming refactoring work for Python.
  *
  * @author Tor Norbye
- * 
+ *
  * @todo Perform index lookups to determine the set of files to be checked!
  * @todo Check that the new name doesn't conflict with an existing name
  * @todo Check unknown files!
@@ -108,7 +108,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
   private val logger = Logger.getLogger(this.getClass.getName)
 
   type SItem = ScalaItems#ScalaItem
-  
+
   private val refactoring = rename
   private var searchHandle: SItem = _
   private var overriddenByMethods: Seq[_] = null // methods that override the method to be renamed
@@ -121,7 +121,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
   private val targetName = searchHandle.getName
   private val samePlaceSyms = searchHandle.samePlaceSymbols.asInstanceOf[Seq[SItem#S]]
   private var samePlaceSymToDSimpleSig: Seq[(SItem#S, String)] = Nil
-  
+
   /** Creates a new instance of RenameRefactoring */
   private def init {
     val item = rename.getRefactoringSource.lookup(classOf[SItem])
@@ -131,22 +131,22 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       val source = Source.create(rename.getRefactoringSource.lookup(classOf[FileObject]))
       try {
         ParserManager.parse(java.util.Collections.singleton(source), new UserTask {
-            @throws(classOf[Exception])
-            override def run(ri: ResultIterator) {
-              if (ri.getSnapshot.getMimeType == ScalaMimeResolver.MIME_TYPE) {
-                val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
-                val root = pr.rootScope
-                val tmpls = new ArrayBuffer[AstDfn]
-                RetoucheUtils.getTopTemplates(List(root), tmpls)
-                if (!tmpls.isEmpty) {
-                  // @todo multiple tmpls
-                  searchHandle = tmpls(0).asInstanceOf[ScalaItems#ScalaItem]
-                  refactoring.getContext.add(ri)
-                }
+          @throws(classOf[Exception])
+          override def run(ri: ResultIterator) {
+            if (ri.getSnapshot.getMimeType == ScalaMimeResolver.MIME_TYPE) {
+              val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
+              val root = pr.rootScope
+              val tmpls = new ArrayBuffer[AstDfn]
+              RetoucheUtils.getTopTemplates(List(root), tmpls)
+              if (!tmpls.isEmpty) {
+                // @todo multiple tmpls
+                searchHandle = tmpls(0).asInstanceOf[ScalaItems#ScalaItem]
+                refactoring.getContext.add(ri)
               }
             }
-          })
-      } catch {case ex: ParseException => Logger.getLogger(classOf[RenameRefactoringPlugin].getName).log(Level.WARNING, null, ex)}
+          }
+        })
+      } catch { case ex: ParseException ⇒ Logger.getLogger(classOf[RenameRefactoringPlugin].getName).log(Level.WARNING, null, ex) }
     }
   }
 
@@ -185,7 +185,6 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
      return fastCheckProblem;
      } else*/
 
-
     // by Caoyuan
     /* if (kind == ElementKind.METHOD && !JsUtils.isValidJsMethodName(newName)) {
      val s = getString("ERR_InvalidMethodName"); //NOI18N
@@ -203,58 +202,57 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
      fastCheckProblem = ScalaRefactoringPlugin.createProblem(fastCheckProblem, false, msg);
      } */
     // ----- by Caoyuan
-    
+
     // TODO
-//        System.out.println("TODO - look for variable clashes etc");
+    //        System.out.println("TODO - look for variable clashes etc");
 
-
-//        if (kind.isClass() && !((TypeElement) element).getNestingKind().isNested()) {
-//            if (doCheckName) {
-//                String oldfqn = RetoucheUtils.getQualifiedName(treePathHandle);
-//                String newFqn = oldfqn.substring(0, oldfqn.lastIndexOf(oldName));
-//
-//                String pkgname = oldfqn;
-//                int i = pkgname.indexOf('.');
-//                if (i>=0)
-//                    pkgname = pkgname.substring(0,i);
-//                else
-//                    pkgname = "";
-//
-//                String fqn = "".equals(pkgname) ? newName : pkgname + '.' + newName;
-//                FileObject fo = treePathHandle.getFileObject();
-//                ClassPath cp = ClassPath.getClassPath(fo, ClassPath.SOURCE);
-//                if (RetoucheUtils.typeExist(treePathHandle, newFqn)) {
-//                    String msg = new MessageFormat(getString("ERR_ClassClash")).format(
-//                            Array(newName, pkgname).asInstanceOf[Array[Object]])
-//                    fastCheckProblem = createProblem(fastCheckProblem, true, msg);
-//                    return fastCheckProblem;
-//                }
-//            }
-//            FileObject primFile = treePathHandle.getFileObject();
-//            FileObject folder = primFile.getParent();
-//            FileObject[] children = folder.getChildren();
-//            for (int x = 0; x < children.length; x++) {
-//                if (children[x] != primFile && !children[x].isVirtual() && children[x].getName().equals(newName) && "java".equals(children[x].getExt())) { //NOI18N
-//                    String msg = new MessageFormat(getString("ERR_ClassClash")).format(
-//                            Array(newName, folder.getPath)).asInstanceOf[Array[Object]])
-//                    );
-//                    fastCheckProblem = createProblem(fastCheckProblem, true, msg);
-//                    break;
-//                }
-//            } // for
-//        } else if (kind == ElementKind.LOCAL_VARIABLE || kind == ElementKind.PARAMETER) {
-//            String msg = variableClashes(newName,treePath, info);
-//            if (msg ne null) {
-//                fastCheckProblem = createProblem(fastCheckProblem, true, msg);
-//                return fastCheckProblem;
-//            }
-//        } else {
-//            String msg = clashes(element, newName, info);
-//            if (msg ne null) {
-//                fastCheckProblem = createProblem(fastCheckProblem, true, msg);
-//                return fastCheckProblem;
-//            }
-//        }
+    //        if (kind.isClass() && !((TypeElement) element).getNestingKind().isNested()) {
+    //            if (doCheckName) {
+    //                String oldfqn = RetoucheUtils.getQualifiedName(treePathHandle);
+    //                String newFqn = oldfqn.substring(0, oldfqn.lastIndexOf(oldName));
+    //
+    //                String pkgname = oldfqn;
+    //                int i = pkgname.indexOf('.');
+    //                if (i>=0)
+    //                    pkgname = pkgname.substring(0,i);
+    //                else
+    //                    pkgname = "";
+    //
+    //                String fqn = "".equals(pkgname) ? newName : pkgname + '.' + newName;
+    //                FileObject fo = treePathHandle.getFileObject();
+    //                ClassPath cp = ClassPath.getClassPath(fo, ClassPath.SOURCE);
+    //                if (RetoucheUtils.typeExist(treePathHandle, newFqn)) {
+    //                    String msg = new MessageFormat(getString("ERR_ClassClash")).format(
+    //                            Array(newName, pkgname).asInstanceOf[Array[Object]])
+    //                    fastCheckProblem = createProblem(fastCheckProblem, true, msg);
+    //                    return fastCheckProblem;
+    //                }
+    //            }
+    //            FileObject primFile = treePathHandle.getFileObject();
+    //            FileObject folder = primFile.getParent();
+    //            FileObject[] children = folder.getChildren();
+    //            for (int x = 0; x < children.length; x++) {
+    //                if (children[x] != primFile && !children[x].isVirtual() && children[x].getName().equals(newName) && "java".equals(children[x].getExt())) { //NOI18N
+    //                    String msg = new MessageFormat(getString("ERR_ClassClash")).format(
+    //                            Array(newName, folder.getPath)).asInstanceOf[Array[Object]])
+    //                    );
+    //                    fastCheckProblem = createProblem(fastCheckProblem, true, msg);
+    //                    break;
+    //                }
+    //            } // for
+    //        } else if (kind == ElementKind.LOCAL_VARIABLE || kind == ElementKind.PARAMETER) {
+    //            String msg = variableClashes(newName,treePath, info);
+    //            if (msg ne null) {
+    //                fastCheckProblem = createProblem(fastCheckProblem, true, msg);
+    //                return fastCheckProblem;
+    //            }
+    //        } else {
+    //            String msg = clashes(element, newName, info);
+    //            if (msg ne null) {
+    //                fastCheckProblem = createProblem(fastCheckProblem, true, msg);
+    //                return fastCheckProblem;
+    //            }
+    //        }
     fastCheckProblem
   }
 
@@ -269,9 +267,9 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       steps += overridesMethods.size
     }
 
-    fireProgressListenerStart(AbstractRefactoring.PARAMETERS_CHECK, 8 + 3*steps);
+    fireProgressListenerStart(AbstractRefactoring.PARAMETERS_CHECK, 8 + 3 * steps);
 
-//        Element element = treePathHandle.resolveElement(info);
+    //        Element element = treePathHandle.resolveElement(info);
 
     fireProgressListenerStep
     fireProgressListenerStep
@@ -279,47 +277,46 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
     // TODO - check more parameters
     //System.out.println("TODO - need to check parameters for hiding etc.");
 
-
-//        if (treePathHandle.getKind() == ElementKind.METHOD) {
-//            checkProblem = checkMethodForOverriding((ExecutableElement)element, refactoring.getNewName(), checkProblem, info);
-//            fireProgressListenerStep();
-//            fireProgressListenerStep();
-//        } else if (element.getKind().isField()) {
-//            fireProgressListenerStep();
-//            fireProgressListenerStep();
-//            Element hiddenField = hides(element, refactoring.getNewName(), info);
-//            fireProgressListenerStep();
-//            fireProgressListenerStep();
-//            fireProgressListenerStep();
-//            if (hiddenField ne null) {
-//                msg = new MessageFormat(getString("ERR_WillHide")).format(
-//                        new Object[] {SourceUtils.getEnclosingTypeElement(hiddenField).toString()}
-//                );
-//                checkProblem = createProblem(checkProblem, false, msg);
-//            }
-//        }
+    //        if (treePathHandle.getKind() == ElementKind.METHOD) {
+    //            checkProblem = checkMethodForOverriding((ExecutableElement)element, refactoring.getNewName(), checkProblem, info);
+    //            fireProgressListenerStep();
+    //            fireProgressListenerStep();
+    //        } else if (element.getKind().isField()) {
+    //            fireProgressListenerStep();
+    //            fireProgressListenerStep();
+    //            Element hiddenField = hides(element, refactoring.getNewName(), info);
+    //            fireProgressListenerStep();
+    //            fireProgressListenerStep();
+    //            fireProgressListenerStep();
+    //            if (hiddenField ne null) {
+    //                msg = new MessageFormat(getString("ERR_WillHide")).format(
+    //                        new Object[] {SourceUtils.getEnclosingTypeElement(hiddenField).toString()}
+    //                );
+    //                checkProblem = createProblem(checkProblem, false, msg);
+    //            }
+    //        }
     fireProgressListenerStop
     checkProblem
   }
 
-//        private Problem checkMethodForOverriding(ExecutableElement m, String newName, Problem problem, CompilationInfo info) {
-//            ElementUtilities ut = info.getElementUtilities();
-//            //problem = willBeOverridden(m, newName, argTypes, problem);
-//            fireProgressListenerStep();
-//            problem = willOverride(m, newName, problem, info);
-//            fireProgressListenerStep();
-//            return problem;
-//        }
-//
-//    private Set<searchHandle<ExecutableElement>> allMethods;
+  //        private Problem checkMethodForOverriding(ExecutableElement m, String newName, Problem problem, CompilationInfo info) {
+  //            ElementUtilities ut = info.getElementUtilities();
+  //            //problem = willBeOverridden(m, newName, argTypes, problem);
+  //            fireProgressListenerStep();
+  //            problem = willOverride(m, newName, problem, info);
+  //            fireProgressListenerStep();
+  //            return problem;
+  //        }
+  //
+  //    private Set<searchHandle<ExecutableElement>> allMethods;
 
   override def preCheck: Problem = {
     if (searchHandle eq null) {
       return null
     }
     searchHandle.fo match {
-      case Some(x) if x.isValid => return null
-      case _ => return new Problem(true, NbBundle.getMessage(classOf[RenameRefactoringPlugin], "DSC_ElNotAvail")) // NOI18N
+      case Some(x) if x.isValid ⇒ return null
+      case _ ⇒ return new Problem(true, NbBundle.getMessage(classOf[RenameRefactoringPlugin], "DSC_ElNotAvail")) // NOI18N
     }
   }
 
@@ -327,11 +324,11 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
     val cpInfo = getClasspathInfo(refactoring)
     val set = new HashSet[FileObject]
 
-    searchHandle.fo foreach {fo =>
+    searchHandle.fo foreach { fo ⇒
       set.add(fo)
 
       // is there any symbol in this place not private?
-      val notLocal = samePlaceSyms exists {x => !x.hasFlag(Flags.PRIVATE)}
+      val notLocal = samePlaceSyms exists { x ⇒ !x.hasFlag(Flags.PRIVATE) }
       if (notLocal) {
         val srcCp = cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE)
         if (srcCp ne null) {
@@ -340,11 +337,11 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       }
     }
 
-    (set filter {x =>
-        try {
-          BoyerMoore.indexOf(x.asText, targetName) != -1
-        } catch {case _: IOException => true}
-      }).toSet
+    (set filter { x ⇒
+      try {
+        BoyerMoore.indexOf(x.asText, targetName) != -1
+      } catch { case _: IOException ⇒ true }
+    }).toSet
 
     /*
      try {
@@ -438,7 +435,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 
       val results = processFiles(files, transform)
       elements.registerTransaction(new ScalaTransaction(results))
-      for (result <- results) {
+      for (result ← results) {
         val fItr = result.getModifiedFileObjects.iterator
         while (fItr.hasNext) {
           val fo = fItr.next
@@ -446,7 +443,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
           while (dItr.hasNext) {
             val diff = dItr.next
             val old = diff.getOldText
-            if (old!=null) {
+            if (old != null) {
               //TODO: workaround
               //generator issue?
               elements.add(refactoring, DiffElement(diff, fo, result))
@@ -459,7 +456,6 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 
     null
   }
-
 
   private def getString(key: String): String = {
     NbBundle.getMessage(classOf[RenameRefactoringPlugin], key)
@@ -490,40 +486,37 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       val root = workingCopy.rootScope
       val workingCopyFo = workingCopy.getSnapshot.getSource.getFileObject
       val global = workingCopy.global
-      
-
 
       if (root != ScalaRootScope.EMPTY) {
         val doc = GsfUtilities.getDocument(workingCopyFo, true)
-        global.askForResponse {() =>
+        global.askForResponse { () ⇒
           import global._
           try {
             if (doc ne null) doc.readLock
 
             if (samePlaceSymToDSimpleSig.isEmpty) {
-              samePlaceSymToDSimpleSig = samePlaceSyms map {case x: Symbol => (x, ScalaUtil.symSimpleSig(x))}
+              samePlaceSymToDSimpleSig = samePlaceSyms map { case x: Symbol ⇒ (x, ScalaUtil.symSimpleSig(x)) }
             }
-
 
             def isRef(sym: Symbol) = try {
               lazy val overriddens = sym.allOverriddenSymbols
               val mySig = ScalaUtil.symSimpleSig(sym)
               val myQName = sym.fullName
               samePlaceSymToDSimpleSig exists {
-                case (symx, sigx) if mySig == sigx =>
+                case (symx, sigx) if mySig == sigx ⇒
                   val qNamex = symx.fullName
                   if (myQName == qNamex) true
-                  else overriddens exists {_.fullName == qNamex}
-                case _ => false
+                  else overriddens exists { _.fullName == qNamex }
+                case _ ⇒ false
               }
             } catch {
-              case _: Throwable => false
+              case _: Throwable ⇒ false
             }
 
             val tokens = new HashSet[Token[_]]
             for {
-              (token, items) <- root.idTokenToItems
-              item <- items
+              (token, items) ← root.idTokenToItems
+              item ← items
               sym = item.asInstanceOf[ScalaItem].symbol
               // * tokens.add(token) should be last condition
               if token.text.toString == sym.nameString && isRef(sym) && tokens.add(token)
@@ -536,8 +529,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
             if (doc ne null) doc.readUnlock
           }
         } get match {
-          case Left(_) =>
-          case Right(_) =>
+          case Left(_) ⇒
+          case Right(_) ⇒
         }
       } else {
         //System.out.println("Skipping file " + workingCopy.getFileObject());
@@ -608,21 +601,21 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
           val id = token.id
 
           id.primaryCategory match {
-            case "comment" | "block-comment" => // NOI18N
+            case "comment" | "block-comment" ⇒ // NOI18N
               // search this comment
               val tokenText = token.text
               if ((tokenText ne null) && (oldName ne null)) {
                 val index = TokenUtilities.indexOf(tokenText, oldName) match {
-                  case -1 =>
-                  case idx =>
+                  case -1 ⇒
+                  case idx ⇒
                     val text = tokenText.toString
                     // TODO make sure it's its own word. Technically I could
                     // look at identifier chars like "_" here but since they are
                     // used for other purposes in comments, consider letters
                     // and numbers as enough
-                    if ((idx == 0 || !Character.isLetterOrDigit(text.charAt(idx-1))) &&
-                        (idx+oldName.length >= text.length ||
-                         !Character.isLetterOrDigit(text.charAt(idx+oldName.length)))) {
+                    if ((idx == 0 || !Character.isLetterOrDigit(text.charAt(idx - 1))) &&
+                      (idx + oldName.length >= text.length ||
+                        !Character.isLetterOrDigit(text.charAt(idx + oldName.length)))) {
                       val start = ts.offset + idx
                       val end = start + oldName.length
                       if (ces eq null) {
@@ -636,10 +629,10 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
                     }
                 }
               }
-            case _ =>
+            case _ ⇒
               ts.embedded.asInstanceOf[TokenSequence[TokenId]] match {
-                case null =>
-                case embedded => searchTokenSequence(embedded)
+                case null ⇒
+                case embedded ⇒ searchTokenSequence(embedded)
               }
           }
         } while (ts.moveNext)
@@ -696,20 +689,20 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
           val lineEnd = Utilities.getRowLastNonWhite(doc, start) + 1 // +1: after last char
           if (lineStart == -1 || lineEnd == -1) { // We're really on the wrong line!
             println("Empty line entry in " + FileUtil.getFileDisplayName(workingCopy.getSnapshot.getSource.getFileObject) +
-                    "; no match for " + oldCode + " in line " + start + " referenced by node " +
-                    item + " of type " + item.symbol)
-            return;
+              "; no match for " + oldCode + " in line " + start + " referenced by node " +
+              item + " of type " + item.symbol)
+            return ;
           }
 
           if (lineStart < 0 || lineEnd - lineStart < 0) {
-            return; // Can't process this one
+            return ; // Can't process this one
           }
 
           val line = doc.getText(lineStart, lineEnd - lineStart);
           if (line.indexOf(oldCode) == -1) {
             println("Skipping entry in " + FileUtil.getFileDisplayName(workingCopy.getSnapshot.getSource.getFileObject) +
-                    "; no match for " + oldCode + " in line " + line + " referenced by node " +
-                    item + " of type " + item.symbol)
+              "; no match for " + oldCode + " in line " + line + " referenced by node " +
+              item + " of type " + item.symbol)
           } else {
             val lineOffset = start - lineStart
             var newOffset = -1
@@ -719,12 +712,12 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
             while (distance < line.length && !break) {
               // Ahead first
               if (lineOffset + distance + oldCode.length <= line.length &&
-                  oldCode.equals(line.substring(lineOffset + distance, lineOffset + distance + oldCode.length))) {
+                oldCode.equals(line.substring(lineOffset + distance, lineOffset + distance + oldCode.length))) {
                 newOffset = lineOffset + distance
                 break = true
               }
               if (lineOffset - distance >= 0 && lineOffset - distance + oldCode.length() <= line.length() &&
-                  oldCode.equals(line.substring(lineOffset - distance, lineOffset - distance + oldCode.length))) {
+                oldCode.equals(line.substring(lineOffset - distance, lineOffset - distance + oldCode.length))) {
                 newOffset = lineOffset - distance
                 break = true
               }
@@ -739,8 +732,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
           }
         }
       } catch {
-        case ex: IOException => Exceptions.printStackTrace(ex)
-        case ex: BadLocationException => Exceptions.printStackTrace(ex)
+        case ex: IOException ⇒ Exceptions.printStackTrace(ex)
+        case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex)
       } finally {
         if (doc ne null) {
           doc.readUnlock

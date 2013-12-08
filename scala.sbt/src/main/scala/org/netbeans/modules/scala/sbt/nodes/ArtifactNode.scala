@@ -23,34 +23,29 @@ case class ArtifactInfo(name: String, version: String, organization: String, jar
 }
 
 class ArtifactNode(artifactInfo: ArtifactInfo, project: Project) extends AbstractNode(
-  new ArtifactNode.JarContentFilterChildren(PackageView.createPackageView(new ArtifactNode.ArtifactSourceGroup(artifactInfo)))
-) {
+  new ArtifactNode.JarContentFilterChildren(PackageView.createPackageView(new ArtifactNode.ArtifactSourceGroup(artifactInfo)))) {
   import ArtifactNode._
-    
+
   setIconBaseWithExtension(LIBRARIES_ICON)
 
-  override
-  def getDisplayName: String = {
+  override def getDisplayName: String = {
     artifactInfo.name + " " + artifactInfo.version
   }
 
-  override
-  def getName: String = {
+  override def getName: String = {
     artifactInfo.name + " " + artifactInfo.version
   }
-  
+
   /**
    * Tooltip
    */
-  override 
-  def getShortDescription = if (artifactInfo.hasJar) artifactInfo.jarFile.getAbsolutePath else getDisplayName
+  override def getShortDescription = if (artifactInfo.hasJar) artifactInfo.jarFile.getAbsolutePath else getDisplayName
 
-  override
-  def getIcon(tpe: Int): Image = {
+  override def getIcon(tpe: Int): Image = {
     var icon = super.getIcon(tpe)
     if (artifactInfo.hasDoc) {
       var badge = ImageUtilities.loadImage(JAVADOC_BADGE_ICON)
-      badge = ImageUtilities.addToolTipToImage(badge, toolTipJavadoc)               
+      badge = ImageUtilities.addToolTipToImage(badge, toolTipJavadoc)
       icon = ImageUtilities.mergeImages(icon, badge, 12, 0)
     }
     if (artifactInfo.hasSource) {
@@ -63,17 +58,15 @@ class ArtifactNode(artifactInfo: ArtifactInfo, project: Project) extends Abstrac
       badge = ImageUtilities.addToolTipToImage(badge, toolTipMissing)
       icon = ImageUtilities.mergeImages(icon, badge, 0, 0)
     }
-    
+
     icon
   }
 
-  override
-  def getOpenedIcon(tpe: Int): Image = {
+  override def getOpenedIcon(tpe: Int): Image = {
     getIcon(tpe)
   }
 
-  override
-  def getActions(context: Boolean): Array[Action] = {
+  override def getActions(context: Boolean): Array[Action] = {
     Array[Action]()
   }
 }
@@ -84,9 +77,9 @@ object ArtifactNode {
   private val JAVADOC_BADGE_ICON = "org/netbeans/modules/scala/sbt/resources/DependencyJavadocIncluded.png" //NOI18N
   private val MISSING_JAR_BADGE_ICON = "org/netbeans/modules/scala/sbt/resources/ResourceNotIncluded.gif" //NOI18N
 
-  private val toolTipJavadoc = "<img src=\"" + classOf[ArtifactNode].getClassLoader.getResource(JAVADOC_BADGE_ICON) + "\">&nbsp;" + NbBundle.getMessage(classOf[ArtifactNode], "ICON_JavadocBadge")//NOI18N
-  private val toolTipSource = "<img src=\"" + classOf[ArtifactNode].getClassLoader.getResource(SOURCE_BADGE_ICON) + "\">&nbsp;" + NbBundle.getMessage(classOf[ArtifactNode], "ICON_SourceBadge")//NOI18N
-  private val toolTipMissing = "<img src=\"" + classOf[ArtifactNode].getClassLoader.getResource(MISSING_JAR_BADGE_ICON) + "\">&nbsp;" + NbBundle.getMessage(classOf[ArtifactNode], "ICON_MissingBadge")//NOI18N
+  private val toolTipJavadoc = "<img src=\"" + classOf[ArtifactNode].getClassLoader.getResource(JAVADOC_BADGE_ICON) + "\">&nbsp;" + NbBundle.getMessage(classOf[ArtifactNode], "ICON_JavadocBadge") //NOI18N
+  private val toolTipSource = "<img src=\"" + classOf[ArtifactNode].getClassLoader.getResource(SOURCE_BADGE_ICON) + "\">&nbsp;" + NbBundle.getMessage(classOf[ArtifactNode], "ICON_SourceBadge") //NOI18N
+  private val toolTipMissing = "<img src=\"" + classOf[ArtifactNode].getClassLoader.getResource(MISSING_JAR_BADGE_ICON) + "\">&nbsp;" + NbBundle.getMessage(classOf[ArtifactNode], "ICON_MissingBadge") //NOI18N
 
   private class ArtifactSourceGroup(artInfo: ArtifactInfo) extends SourceGroup {
 
@@ -116,8 +109,7 @@ object ArtifactNode {
   }
 
   private class JarContentFilterChildren(original: Node) extends FilterNode.Children(original) {
-    override
-    protected def copyNode(node: Node): Node = new JarFilterNode(node)
+    override protected def copyNode(node: Node): Node = new JarFilterNode(node)
   }
 
   private class JarFilterNode(original: Node) extends FilterNode(original, new JarContentFilterChildren(original))

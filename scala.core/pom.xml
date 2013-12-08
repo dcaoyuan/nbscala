@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-api-java-classpath</artifactId>    
+            <artifactId>org-netbeans-api-java-classpath</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
         <dependency>
@@ -169,7 +169,7 @@
             <artifactId>org-openide-windows</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
-        
+
         <!-- scalac transitive dependencies (scalac will check class dependencies deeply): <scope>provided</scope> -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
@@ -177,7 +177,7 @@
             <version>${netbeans.version}</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <!-- subproject dependencies -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
@@ -204,7 +204,7 @@
             <artifactId>org-netbeans-libs-xtc</artifactId>
             <version>${libs.xtc.version}</version>
         </dependency>
-        
+
     </dependencies>
 
     <build>
@@ -212,21 +212,14 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
             </plugin>
-            <plugin>                    
+            <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <executions>  
-                    <execution>  
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>  
-                    </execution>  
-                </executions> 
+            </plugin>
+            <plugin>
+                <groupId>org.scalariform</groupId>
+                <artifactId>scalariform-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -242,7 +235,7 @@
                             <id>org.netbeans.api:org-netbeans-modules-parsing-api</id>
                             <type>impl</type>
                         </dependency>
-                    </moduleDependencies> 
+                    </moduleDependencies>
                     <publicPackages>
                         <publicPackage>org.netbeans.api.language.util.lex</publicPackage>
                         <publicPackage>org.netbeans.api.language.util.ast</publicPackage>

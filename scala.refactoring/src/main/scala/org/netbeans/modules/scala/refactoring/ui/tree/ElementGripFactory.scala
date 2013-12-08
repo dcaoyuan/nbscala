@@ -51,7 +51,7 @@ import scala.collection.mutable.WeakHashMap
  *
  * Based on the Java refactoring one, but hacked for Ruby (plus I didn't fully understand
  * what this class was for so it probably needs some cleanup and some work)
- * 
+ *
  * @author Jan Becicka
  * @author Tor Norbye
  */
@@ -67,19 +67,19 @@ object ElementGripFactory {
 class ElementGripFactory {
 
   private val map = new WeakHashMap[FileObject, Interval]
-    
+
   def cleanUp {
     map.clear
   }
-    
+
   def get(fileObject: FileObject, position: Int): ElementGrip = {
     val start = map.get(fileObject).getOrElse(return null)
     try {
       return start.get(position).item
-    } catch {case ex: RuntimeException => return start.item}
+    } catch { case ex: RuntimeException ⇒ return start.item }
   }
-    
-  def getParent(el: ElementGrip): ElementGrip =  {
+
+  def getParent(el: ElementGrip): ElementGrip = {
     val start = map.get(el.fileObject).get
     start.getParent(el)
   }
@@ -92,7 +92,6 @@ class ElementGripFactory {
     }
   }
 
-
   private object Interval {
     // TODO - figure out what is intended here!?
     def apply(range: OffsetRange, name: String, icon: Icon,
@@ -102,26 +101,26 @@ class ElementGripFactory {
       //long end = info.getTrees().getSourcePositions().getEndPosition(info.getCompilationUnit(), t);
       val start = range.getStart
       val end = range.getEnd
-//                Element current = info.getTrees().getElement(tp);
-//                Tree.Kind kind = tp.getLeaf().getKind();
-//                if (kind != Tree.Kind.CLASS && kind != Tree.Kind.METHOD) {
-//                    if (tp.getParentPath().getLeaf().getKind() == Tree.Kind.COMPILATION_UNIT) {
-//                        //xxx: rather workaround. should be fixed better.
-//                        return null;
-//                    } else {
-//                        return createInterval(tp.getParentPath(), info, root, p, parentFile);
-//                    }
-//                }
+      //                Element current = info.getTrees().getElement(tp);
+      //                Tree.Kind kind = tp.getLeaf().getKind();
+      //                if (kind != Tree.Kind.CLASS && kind != Tree.Kind.METHOD) {
+      //                    if (tp.getParentPath().getLeaf().getKind() == Tree.Kind.COMPILATION_UNIT) {
+      //                        //xxx: rather workaround. should be fixed better.
+      //                        return null;
+      //                    } else {
+      //                        return createInterval(tp.getParentPath(), info, root, p, parentFile);
+      //                    }
+      //                }
       var i: Interval = null
-//                if (root ne null) {
-//                    Interval o = root.get(start);
-//                    if (one null && o.item.resolveElement(info).equals(current)) {
-//                        if (p!=null)
-//                            o.subintervals.add(p);
-//                        return null;
-//                    }
-//                }
-      if (i==null)
+      //                if (root ne null) {
+      //                    Interval o = root.get(start);
+      //                    if (one null && o.item.resolveElement(info).equals(current)) {
+      //                        if (p!=null)
+      //                            o.subintervals.add(p);
+      //                        return null;
+      //                    }
+      //                }
+      if (i == null)
         i = new Interval
       if (i.from != start) {
         i.from = start
@@ -129,26 +128,26 @@ class ElementGripFactory {
         val currentHandle2 = new ElementGrip(name, parentFile, icon)
         i.item = currentHandle2
       }
-      if (p!=null) {
+      if (p != null) {
         i.subintervals.add(p)
       }
-//                if (tp.getParentPath().getLeaf().getKind() == Tree.Kind.COMPILATION_UNIT) {
+      //                if (tp.getParentPath().getLeaf().getKind() == Tree.Kind.COMPILATION_UNIT) {
       i
-//                }
-//                return createInterval(tp.getParentPath(), info, root, i, parentFile);
-//            }
+      //                }
+      //                return createInterval(tp.getParentPath(), info, root, i, parentFile);
+      //            }
     }
 
   }
   private class Interval {
     var from: Long = -1
     var to: Long = -1
-    val subintervals= new HashSet[Interval]
+    val subintervals = new HashSet[Interval]
     var item: ElementGrip = null
-        
+
     def get(position: Long): Interval = {
       if (from <= position && to >= position) {
-        for (o <- subintervals) {
+        for (o ← subintervals) {
           val ob = o.get(position)
           if (ob ne null)
             return ob
@@ -158,9 +157,9 @@ class ElementGripFactory {
 
       null
     }
-        
+
     def getParent(eh: ElementGrip): ElementGrip = {
-      for (i <- subintervals) {
+      for (i ← subintervals) {
         if (i.item.equals(eh)) {
           return this.item;
         } else {
@@ -170,10 +169,10 @@ class ElementGripFactory {
           }
         }
       }
-      
+
       null
     }
-        
+
   }
 }
-    
+

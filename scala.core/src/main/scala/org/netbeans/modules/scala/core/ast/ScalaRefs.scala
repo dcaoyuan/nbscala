@@ -38,40 +38,38 @@
  */
 package org.netbeans.modules.scala.core.ast
 
-import org.netbeans.api.lexer.{Token, TokenId}
+import org.netbeans.api.lexer.{ Token, TokenId }
 import org.netbeans.modules.csl.api.ElementKind
 
 import org.netbeans.api.language.util.ast.AstRef
-import org.netbeans.modules.scala.core.{ScalaGlobal, ScalaMimeResolver}
+import org.netbeans.modules.scala.core.{ ScalaGlobal, ScalaMimeResolver }
 
 import org.openide.filesystems.FileObject
 
 /**
  * Mirror with AstDfn information
- * 
+ *
  * Represent usage/reference of an AstDfn, which will be enabled in ScalaGlobal
- * 
+ *
  * @author Caoyuan Deng
  */
-trait ScalaRefs {self: ScalaGlobal =>
+trait ScalaRefs { self: ScalaGlobal ⇒
 
-  object ScalaRef{
+  object ScalaRef {
     def apply(symbol: Symbol, idToken: Token[TokenId], kind: ElementKind, fo: Option[FileObject]) = {
       new ScalaRef(symbol, idToken, kind, fo)
     }
   }
 
-  class ScalaRef(asymbol: Symbol, aidToken: Token[TokenId], akind: ElementKind, afo: Option[FileObject]
-  ) extends ScalaItem with AstRef {
+  class ScalaRef(asymbol: Symbol, aidToken: Token[TokenId], akind: ElementKind, afo: Option[FileObject]) extends ScalaItem with AstRef {
 
     make(aidToken, akind, afo)
 
     symbol = asymbol
-    
+
     def getMimeType: String = ScalaMimeResolver.MIME_TYPE
 
-    override 
-    def isOccurrence(ref: AstRef): Boolean = {
+    override def isOccurrence(ref: AstRef): Boolean = {
       if (ref.getName == getName) {
         //        if (isSameNameAsEnclClass() || ref.isSameNameAsEnclClass()) {
         //          return getSymbol().enclClass() == ref.getSymbol().enclClass();

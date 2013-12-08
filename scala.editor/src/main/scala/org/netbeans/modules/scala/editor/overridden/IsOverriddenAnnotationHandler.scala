@@ -59,7 +59,7 @@ import org.netbeans.api.java.source.CompilationInfo
 import org.netbeans.api.java.source.SourceUtils
 import org.netbeans.api.java.source.ClassIndex
 import org.netbeans.modules.parsing.api.ResultIterator
-import org.netbeans.modules.parsing.spi.{ParserResultTask, ParseException, Scheduler, SchedulerEvent}
+import org.netbeans.modules.parsing.spi.{ ParserResultTask, ParseException, Scheduler, SchedulerEvent }
 import org.netbeans.modules.parsing.spi.SchedulerTask
 import org.netbeans.spi.java.classpath.support.ClassPathSupport
 import org.openide.filesystems.FileObject
@@ -74,8 +74,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 
-import org.netbeans.modules.scala.core.{ScalaMimeResolver, ScalaParserResult}
-import org.netbeans.modules.scala.core.ast.{ScalaRootScope}
+import org.netbeans.modules.scala.core.{ ScalaMimeResolver, ScalaParserResult }
+import org.netbeans.modules.scala.core.ast.{ ScalaRootScope }
 import scala.reflect.internal.Flags
 import scala.reflect.internal.Symbols
 
@@ -166,7 +166,7 @@ object IsOverriddenAnnotationHandler {
         if (offset < 0 || offset >= doc.getLength) return
         try {
           pos = doc.createPosition(offset - NbDocument.findLineColumn(doc, offset))
-        } catch {case ex: BadLocationException => Log.log(Level.FINE, null, ex)} //should not happen?
+        } catch { case ex: BadLocationException ⇒ Log.log(Level.FINE, null, ex) } //should not happen?
       }
     }
 
@@ -216,20 +216,20 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
     val startTime = System.currentTimeMillis
     try {
       results = process(pr.asInstanceOf[ScalaParserResult])
-      
+
       if (results.isEmpty) return
-            
+
       newAnnotations(results)
     } finally {
       Logger.getLogger("TIMER").log(Level.FINE, "Overridden in", //NOI18N
-                                    Array(file, System.currentTimeMillis - startTime).asInstanceOf[Array[Object]])
+        Array(file, System.currentTimeMillis - startTime).asInstanceOf[Array[Object]])
     }
   }
 
   private def newAnnotations(as: List[IsOverriddenAnnotation]) {
     AnnotationsHolder(file) match {
-      case null =>
-      case x => x.setNewAnnotations(as)
+      case null ⇒
+      case x ⇒ x.setNewAnnotations(as)
     }
   }
 
@@ -242,48 +242,47 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
     val th = pr.getSnapshot.getTokenHierarchy
 
     if (root == ScalaRootScope.EMPTY || (th eq null)) return Nil
-    
+
     val doc = pr.getSnapshot.getSource.getDocument(true) match {
-      case x: StyledDocument => x
-      case _ => return Nil
+      case x: StyledDocument ⇒ x
+      case _ ⇒ return Nil
     }
 
     val global = pr.global
-    
+
     val thisSourceRoot = findSourceRoot
     if (thisSourceRoot eq null) return Nil
-    
+
     val reverseSourceRoots = if (enableReverseLookups) {
       //XXX: special case "this" source root (no need to create a new JS and load the classes again for it):
       findReverseSourceRoots(thisSourceRoot, pr.getSnapshot.getSource.getFileObject) + thisSourceRoot
     } else null
-        
+
     Log.log(Level.FINE, "reverseSourceRoots: {0}", reverseSourceRoots) //NOI18N
-        
+
     val annotations = new ArrayBuffer[IsOverriddenAnnotation]
-    global.askForResponse {() =>
+    global.askForResponse { () ⇒
       for {
-        (idToken, items) <- root.idTokenToItems
-        item <- items if item.isInstanceOf[global.ScalaDfn]
+        (idToken, items) ← root.idTokenToItems
+        item ← items if item.isInstanceOf[global.ScalaDfn]
         sym = item.asInstanceOf[global.ScalaDfn].symbol if sym != global.NoSymbol
         pos = getPosition(doc, item.idOffset(th)) if pos ne null
       } {
         if (isCancelled) return Nil
-        
+
         val overridees = sym.allOverriddenSymbols
         if (!overridees.isEmpty) {
           val seenMethods = new HashSet[global.Symbol]
-          val descs = overridees filter (seenMethods add _) map (x =>
-            new ElementDescription(global.ScalaElement(x, pr))
-          )
+          val descs = overridees filter (seenMethods add _) map (x ⇒
+            new ElementDescription(global.ScalaElement(x, pr)))
 
           if (!descs.isEmpty) {
             val tooltip = new StringBuffer
             var wasOverrides = false
-                    
+
             var newline = false
-                    
-            for (desc <- descs) {
+
+            for (desc ← descs) {
               if (newline) {
                 tooltip.append("\n") //NOI18N
               }
@@ -293,17 +292,17 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
               if (desc.handle.symbol.hasFlag(Flags.DEFERRED)) {
                 tooltip.append(NbBundle.getMessage(classOf[IsOverriddenAnnotationHandler], "TP_Implements", desc.getDisplayName))
               } else {
-                tooltip.append(NbBundle.getMessage(classOf[IsOverriddenAnnotationHandler], "TP_Overrides",  desc.getDisplayName))
+                tooltip.append(NbBundle.getMessage(classOf[IsOverriddenAnnotationHandler], "TP_Overrides", desc.getDisplayName))
                 wasOverrides = true
               }
             }
-                    
+
             annotations += (new IsOverriddenAnnotation(doc, pos, if (wasOverrides) AnnotationType.OVERRIDES else AnnotationType.IMPLEMENTS, tooltip.toString, descs))
           }
         }
       }
     } get
-        
+
     /* for (td <- v.type2Declaration.keySet) {
      if (isCanceled)
      return Nil
@@ -466,15 +465,15 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
      }
      }
      } */
-        
+
     if (isCancelled) Nil else annotations.toList
   }
 
   private def findSourceRoot: FileObject = {
     // null is a valid value for files which have no source path (default filesystem).
     ClassPath.getClassPath(file, ClassPath.SOURCE) match {
-      case null => null
-      case cp => cp.getRoots find (root => FileUtil.isParentOf(root, file)) getOrElse null
+      case null ⇒ null
+      case cp ⇒ cp.getRoots find (root ⇒ FileUtil.isParentOf(root, file)) getOrElse null
     }
   }
 
@@ -484,30 +483,28 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
     val reverseSourceRoots = new HashSet[FileObject]
 
     RequestProcessor.getDefault.post(new Runnable {
-        def run {
-          val startTime = System.currentTimeMillis
-          val reverseSourceRootsInt = new HashSet[FileObject] ++= ReverseSourceRootsLookup.reverseSourceRootsLookup(thisSourceRoot)
-          val endTime = System.currentTimeMillis
+      def run {
+        val startTime = System.currentTimeMillis
+        val reverseSourceRootsInt = new HashSet[FileObject] ++= ReverseSourceRootsLookup.reverseSourceRootsLookup(thisSourceRoot)
+        val endTime = System.currentTimeMillis
 
-          Logger.getLogger("TIMER").log(Level.FINE, "Find Reverse Source Roots", //NOI18N
-                                        Array(thisFile, endTime - startTime).asInstanceOf[Array[Object]])
+        Logger.getLogger("TIMER").log(Level.FINE, "Find Reverse Source Roots", //NOI18N
+          Array(thisFile, endTime - startTime).asInstanceOf[Array[Object]])
 
-          o synchronized {
-            reverseSourceRoots ++= reverseSourceRootsInt
-          }
-
-          wakeUp
+        o synchronized {
+          reverseSourceRoots ++= reverseSourceRootsInt
         }
-      })
+
+        wakeUp
+      }
+    })
 
     try {
       wait
-    } catch {case ex: InterruptedException => Exceptions.printStackTrace(ex)}
+    } catch { case ex: InterruptedException ⇒ Exceptions.printStackTrace(ex) }
 
     reverseSourceRoots.toSet
   }
-
-
 
   /*   private val EMPTY = ClassPathSupport.createClassPath(Array[URL]())
 
@@ -665,5 +662,5 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
 
    return null;
    } */
-            
+
 }

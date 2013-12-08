@@ -20,11 +20,10 @@ object SourcesNodeFactory {
   private class SourcesNodeList(project: Project) extends NodeList[SourceGroup] {
     private val cs = new ChangeSupport(this)
     private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
-      
-    override
-    def keys: java.util.List[SourceGroup] = {
+
+    override def keys: java.util.List[SourceGroup] = {
       val theKeys = new java.util.ArrayList[SourceGroup]()
-      
+
       val sources = ProjectUtils.getSources(project)
       val javaSgs = sources.getSourceGroups(ProjectResources.SOURCES_TYPE_JAVA)
       javaSgs foreach theKeys.add
@@ -32,32 +31,29 @@ object SourcesNodeFactory {
       scalaSgs foreach theKeys.add
       val managedSgs = sources.getSourceGroups(ProjectResources.SOURCES_TYPE_MANAGED)
       managedSgs foreach theKeys.add
-      
+
       java.util.Collections.sort(theKeys, new java.util.Comparator[SourceGroup]() {
-          def compare(o1: SourceGroup, o2: SourceGroup) = o1.getName.compareTo(o2.getName)
-        })
-      
+        def compare(o1: SourceGroup, o2: SourceGroup) = o1.getName.compareTo(o2.getName)
+      })
+
       theKeys
     }
-        
-    override
-    def node(key: SourceGroup): Node = PackageView.createPackageView(key)
-        
+
+    override def node(key: SourceGroup): Node = PackageView.createPackageView(key)
+
     def addNotify() {
 
     }
 
     def removeNotify() {
-      
+
     }
 
-    override
-    def addChangeListener(l: ChangeListener) {
+    override def addChangeListener(l: ChangeListener) {
       cs.addChangeListener(l)
     }
 
-    override
-    def removeChangeListener(l: ChangeListener) {
+    override def removeChangeListener(l: ChangeListener) {
       cs.removeChangeListener(l)
     }
   }

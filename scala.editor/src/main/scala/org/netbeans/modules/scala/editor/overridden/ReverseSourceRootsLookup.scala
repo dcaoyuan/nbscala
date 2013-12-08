@@ -51,8 +51,8 @@ import scala.collection.mutable.HashSet
  * @author Jan Lahoda
  */
 object ReverseSourceRootsLookup {
-    
-  def  reverseSourceRootsLookup(baseSourceRoot: FileObject): Set[FileObject] = {
+
+  def reverseSourceRootsLookup(baseSourceRoot: FileObject): Set[FileObject] = {
     //System.err.println("baseSourceRoot=" + baseSourceRoot);
     val result = new HashSet[FileObject]
 
@@ -66,7 +66,7 @@ object ReverseSourceRootsLookup {
         while (entries.hasNext) {
           val compileClassPathElement = entries.next
           //System.err.println("checking cp element=" + compileClassPathElement);
-          for (proposedSourceRoot <- SourceForBinaryQuery.findSourceRoots(compileClassPathElement.getURL).getRoots) {
+          for (proposedSourceRoot ← SourceForBinaryQuery.findSourceRoots(compileClassPathElement.getURL).getRoots) {
             //System.err.println("proposedSourceRoot=" + FileUtil.getFileDisplayName(proposedSourceRoot));
             if (baseSourceRoot.equals(proposedSourceRoot)) {
               result.add(sourceRoot)
@@ -77,8 +77,8 @@ object ReverseSourceRootsLookup {
       }
     }
     loop
-        
+
     result.toSet
   }
-    
+
 }

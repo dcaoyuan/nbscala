@@ -39,19 +39,26 @@
 package org.netbeans.modules.scala.editor
 
 import javax.swing.ImageIcon
-import javax.swing.text.{BadLocationException}
-import org.netbeans.api.language.util.ast.{AstDfn, AstScope}
-import org.netbeans.editor.{BaseDocument, Utilities}
-import org.netbeans.modules.csl.api.{ElementHandle, ElementKind, Modifier, OffsetRange,
-                                     HtmlFormatter, StructureItem, StructureScanner}
+import javax.swing.text.{ BadLocationException }
+import org.netbeans.api.language.util.ast.{ AstDfn, AstScope }
+import org.netbeans.editor.{ BaseDocument, Utilities }
+import org.netbeans.modules.csl.api.{
+  ElementHandle,
+  ElementKind,
+  Modifier,
+  OffsetRange,
+  HtmlFormatter,
+  StructureItem,
+  StructureScanner
+}
 import org.netbeans.modules.csl.api.StructureScanner._
 import org.netbeans.modules.csl.spi.ParserResult
 import org.netbeans.modules.scala.core.ScalaParserResult
-import org.netbeans.modules.scala.core.ast.{ScalaDfns}
-import org.netbeans.modules.scala.core.lexer.{ScalaTokenId, ScalaLexUtil}
+import org.netbeans.modules.scala.core.ast.{ ScalaDfns }
+import org.netbeans.modules.scala.core.lexer.{ ScalaTokenId, ScalaLexUtil }
 import org.openide.util.Exceptions
 
-import scala.collection.mutable.{Stack}
+import scala.collection.mutable.{ Stack }
 
 /**
  *
@@ -59,57 +66,55 @@ import scala.collection.mutable.{Stack}
  */
 class ScalaStructureAnalyzer extends StructureScanner {
 
-  override 
-  def getConfiguration: Configuration = null
+  override def getConfiguration: Configuration = null
 
-  override 
-  def scan(result: ParserResult): java.util.List[StructureItem] = {
+  override def scan(result: ParserResult): java.util.List[StructureItem] = {
     result match {
-      case pResult: ScalaParserResult =>
+      case pResult: ScalaParserResult ⇒
         val rootScope = pResult.rootScope
 
         val items = new java.util.ArrayList[StructureItem]
         scanTopForms(rootScope, items, pResult)
-      
+
         items
-      case _ => java.util.Collections.emptyList[StructureItem]
+      case _ ⇒ java.util.Collections.emptyList[StructureItem]
     }
   }
 
   private def scanTopForms(scope: AstScope, items: java.util.List[StructureItem], pResult: ScalaParserResult): Unit = {
     scope.dfns foreach {
-      case dfn: ScalaDfns#ScalaDfn => dfn.getKind match {
-          case ElementKind.CLASS | ElementKind.MODULE =>
+      case dfn: ScalaDfns#ScalaDfn ⇒
+        dfn.getKind match {
+          case ElementKind.CLASS | ElementKind.MODULE ⇒
             (dfn.enclosingScope, dfn.enclosingDfn) match {
-              case (x, _) if x.isRoot => items.add(new ScalaStructureItem(dfn, pResult))
-              case (_, Some(x)) if x.getKind == ElementKind.PACKAGE => items.add(new ScalaStructureItem(dfn, pResult))
-              case _ =>
+              case (x, _) if x.isRoot ⇒ items.add(new ScalaStructureItem(dfn, pResult))
+              case (_, Some(x)) if x.getKind == ElementKind.PACKAGE ⇒ items.add(new ScalaStructureItem(dfn, pResult))
+              case _ ⇒
             }
-          case _ =>
+          case _ ⇒
         }
         scanTopForms(dfn.bindingScope, items, pResult)
     }
   }
 
   private val emptyFolds = java.util.Collections.emptyMap[String, java.util.List[OffsetRange]]
-  override 
-  def folds(result: ParserResult): java.util.Map[String, java.util.List[OffsetRange]] = {
+  override def folds(result: ParserResult): java.util.Map[String, java.util.List[OffsetRange]] = {
     if (result eq null) {
       return emptyFolds
     }
 
     val doc = result.getSnapshot.getSource.getDocument(true) match {
-      case null => return emptyFolds
-      case x => x.asInstanceOf[BaseDocument]
+      case null ⇒ return emptyFolds
+      case x ⇒ x.asInstanceOf[BaseDocument]
     }
 
     val th = result.getSnapshot.getTokenHierarchy match {
-      case null => return emptyFolds
-      case x => x
+      case null ⇒ return emptyFolds
+      case x ⇒ x
     }
 
     val ts = ScalaLexUtil.getTokenSequence(doc, th, 1).getOrElse(return emptyFolds)
-    
+
     val folds = new java.util.HashMap[String, java.util.List[OffsetRange]]
     val codefolds = new java.util.ArrayList[OffsetRange]
     folds.put("codeblocks", codefolds) // NOI18N
@@ -127,7 +132,7 @@ class ScalaStructureAnalyzer extends StructureScanner {
     while (ts.isValid && ts.moveNext) {
       val tk = ts.token
       tk.id match {
-        case ScalaTokenId.Import =>
+        case ScalaTokenId.Import ⇒
           val offset = ts.offset
           if (!startImportSet) {
             importStart = offset
@@ -136,14 +141,14 @@ class ScalaStructureAnalyzer extends StructureScanner {
           if (!endImportSet) {
             importEnd = offset
           }
-        case ScalaTokenId.BlockCommentStart | ScalaTokenId.DocCommentStart =>
+        case ScalaTokenId.BlockCommentStart | ScalaTokenId.DocCommentStart ⇒
           val commentStart = ts.offset
           val commentLines = 0
           comments push Array(commentStart, commentLines)
-        case ScalaTokenId.BlockCommentData | ScalaTokenId.DocCommentData =>
+        case ScalaTokenId.BlockCommentData | ScalaTokenId.DocCommentData ⇒
           // * does this block comment (per BlockCommentData/DocCommentData per line as lexer) span multiple lines?
           comments.top(1) = comments.top(1) + 1
-        case ScalaTokenId.BlockCommentEnd | ScalaTokenId.DocCommentEnd =>
+        case ScalaTokenId.BlockCommentEnd | ScalaTokenId.DocCommentEnd ⇒
           if (!comments.isEmpty) {
             val comment = comments.pop
             if (comment(1) > 1) {
@@ -152,10 +157,10 @@ class ScalaStructureAnalyzer extends StructureScanner {
               commentfolds.add(commentRange)
             }
           }
-        case ScalaTokenId.LBrace =>
+        case ScalaTokenId.LBrace ⇒
           val blockStart = ts.offset
           blocks push blockStart
-        case ScalaTokenId.RBrace =>
+        case ScalaTokenId.RBrace ⇒
           if (!blocks.isEmpty) {
             val blockStart = blocks.pop
             val lineEnd = Utilities.getRowEnd(doc, blockStart)
@@ -164,8 +169,8 @@ class ScalaStructureAnalyzer extends StructureScanner {
               codefolds.add(blockRange)
             }
           }
-        case ScalaTokenId.Object | ScalaTokenId.Class | ScalaTokenId.Trait => endImportSet = true
-        case _ =>
+        case ScalaTokenId.Object | ScalaTokenId.Class | ScalaTokenId.Trait ⇒ endImportSet = true
+        case _ ⇒
       }
     }
 
@@ -183,19 +188,19 @@ class ScalaStructureAnalyzer extends StructureScanner {
       }
 
       folds.put("comments", commentfolds) // NOI18N
-    } catch {case ex: BadLocationException => Exceptions.printStackTrace(ex)}
+    } catch { case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex) }
 
     folds
   }
-    
+
   @throws(classOf[BadLocationException])
   private def addCodeFolds(pResult: ScalaParserResult, doc: BaseDocument, defs: Seq[AstDfn],
                            codeblocks: java.util.List[OffsetRange]): Unit = {
     import ElementKind._
-       
-    for (dfn <- defs) {
+
+    for (dfn ← defs) {
       dfn.getKind match {
-        case FIELD | METHOD | CONSTRUCTOR | CLASS | ATTRIBUTE =>
+        case FIELD | METHOD | CONSTRUCTOR | CLASS | ATTRIBUTE ⇒
           var range = dfn.getOffsetRange(pResult)
           var start = range.getStart
           // * start the fold at the end of the line behind last non-whitespace, should add 1 to start after "->"
@@ -205,9 +210,9 @@ class ScalaStructureAnalyzer extends StructureScanner {
             range = new OffsetRange(start, end)
             codeblocks.add(range)
           }
-        case _ =>
+        case _ ⇒
       }
-    
+
       val children = dfn.bindingScope.dfns
       addCodeFolds(pResult, doc, children, codeblocks)
     }
@@ -216,46 +221,39 @@ class ScalaStructureAnalyzer extends StructureScanner {
   private class ScalaStructureItem(val dfn: ScalaDfns#ScalaDfn, pResult: ScalaParserResult) extends StructureItem {
     import ElementKind._
 
-    override 
-    def getName: String = dfn.getName
+    override def getName: String = dfn.getName
 
-    override 
-    def getSortText: String = getName
+    override def getSortText: String = getName
 
-    override 
-    def getHtml(formatter:HtmlFormatter): String = {
+    override def getHtml(formatter: HtmlFormatter): String = {
       dfn.htmlFormat(formatter)
       formatter.getText
     }
 
-    override 
-    def getElementHandle: ElementHandle = dfn
+    override def getElementHandle: ElementHandle = dfn
 
-    override 
-    def getKind: ElementKind = dfn.getKind
-        
-    override 
-    def getModifiers: java.util.Set[Modifier] = dfn.getModifiers
+    override def getKind: ElementKind = dfn.getKind
 
-    override 
-    def isLeaf: Boolean = {
+    override def getModifiers: java.util.Set[Modifier] = dfn.getModifiers
+
+    override def isLeaf: Boolean = {
       dfn.getKind match {
-        case MODULE | CLASS => false
-        case METHOD | CONSTRUCTOR | FIELD | VARIABLE | OTHER | PARAMETER | ATTRIBUTE => true
-        case _ => true
+        case MODULE | CLASS ⇒ false
+        case METHOD | CONSTRUCTOR | FIELD | VARIABLE | OTHER | PARAMETER | ATTRIBUTE ⇒ true
+        case _ ⇒ true
       }
     }
 
-    override 
-    def getNestedItems: java.util.List[StructureItem] = {
+    override def getNestedItems: java.util.List[StructureItem] = {
       val nested = dfn.bindingScope.dfns
       if (!nested.isEmpty) {
         val children = new java.util.ArrayList[StructureItem]
 
-        nested foreach {case child: ScalaDfns#ScalaDfn => 
+        nested foreach {
+          case child: ScalaDfns#ScalaDfn ⇒
             child.getKind match {
-              case PARAMETER | OTHER =>
-              case _ => children.add(new ScalaStructureItem(child, pResult))
+              case PARAMETER | OTHER ⇒
+              case _ ⇒ children.add(new ScalaStructureItem(child, pResult))
             }
         }
 
@@ -263,45 +261,39 @@ class ScalaStructureAnalyzer extends StructureScanner {
       } else java.util.Collections.emptyList[StructureItem]
     }
 
-    override 
-    def getPosition: Long = {
+    override def getPosition: Long = {
       try {
         pResult.getSnapshot.getTokenHierarchy match {
-          case null => 0
-          case th => dfn.boundsOffset(th)
+          case null ⇒ 0
+          case th ⇒ dfn.boundsOffset(th)
         }
-      } catch {case ex: Throwable => 0}
+      } catch { case ex: Throwable ⇒ 0 }
     }
 
-    override 
-    def getEndPosition: Long = {
+    override def getEndPosition: Long = {
       try {
         pResult.getSnapshot.getTokenHierarchy match {
-          case null => 0
-          case th => dfn.boundsEndOffset(th)
+          case null ⇒ 0
+          case th ⇒ dfn.boundsEndOffset(th)
         }
-      } catch {case ex: Throwable => 0}
+      } catch { case ex: Throwable ⇒ 0 }
     }
 
-    override 
-    def equals(o: Any): Boolean = o match {
-      case null => false
-      case x:ScalaStructureItem if dfn.getKind == x.dfn.getKind && getName.equals(x.getName) => true
-      case _ => false
+    override def equals(o: Any): Boolean = o match {
+      case null ⇒ false
+      case x: ScalaStructureItem if dfn.getKind == x.dfn.getKind && getName.equals(x.getName) ⇒ true
+      case _ ⇒ false
     }
 
-    override 
-    def hashCode: Int = {
+    override def hashCode: Int = {
       var hash = 7
       hash = (29 * hash) + (if (getName ne null) getName.hashCode else 0)
       hash = (29 * hash) + (if (dfn.getKind ne null) dfn.getKind.hashCode else 0)
       hash
     }
 
-    override 
-    def toString = getName
+    override def toString = getName
 
-    override 
-    def getCustomIcon: ImageIcon = null
+    override def getCustomIcon: ImageIcon = null
   }
 }

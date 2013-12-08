@@ -39,11 +39,11 @@
 package org.netbeans.api.language.util.ast
 
 import javax.swing.Icon
-import org.netbeans.api.lexer.{Token, TokenId, TokenHierarchy}
-import org.netbeans.modules.csl.api.{ElementKind, ElementHandle, Modifier, OffsetRange}
+import org.netbeans.api.lexer.{ Token, TokenId, TokenHierarchy }
+import org.netbeans.modules.csl.api.{ ElementKind, ElementHandle, Modifier, OffsetRange }
 import org.netbeans.modules.csl.api.UiUtils
-import org.netbeans.modules.csl.spi.{ParserResult}
-import org.openide.filesystems.{FileObject}
+import org.netbeans.modules.csl.spi.{ ParserResult }
+import org.openide.filesystems.{ FileObject }
 
 /**
  *
@@ -61,7 +61,7 @@ trait AstItem extends ForElementHandle {
   }
 
   var resultType: T = _
-  
+
   /**
    * @Note:
    * 1. Not all AstItem has pickToken, such as Expr etc.
@@ -95,11 +95,11 @@ trait AstItem extends ForElementHandle {
       _name = "" // should not happen?
       return
     }
-        
+
     try {
       _name = idToken.text.toString
     } catch {
-      case ex: Exception =>
+      case ex: Exception ⇒
         val l = idToken.length
         val sb = new StringBuilder(l)
         var i = 0
@@ -150,7 +150,7 @@ trait AstItem extends ForElementHandle {
   final def samePlaceSymbols: Seq[AstItem#S] = {
     samePlaceItems map (_.symbol)
   }
-  
+
   final def samePlaceItems: Seq[AstItem] = {
     rootScope.samePlaceItems(this)
   }
@@ -163,8 +163,7 @@ trait AstItem extends ForElementHandle {
     _properties += (k -> v)
   }
 
-  override 
-  def toString = {
+  override def toString = {
     symbol.toString
   }
 }
@@ -172,8 +171,8 @@ trait AstItem extends ForElementHandle {
 /**
  * Wrap functions that implemented some ElementHandle's methods
  */
-trait ForElementHandle {self: AstItem =>
-    
+trait ForElementHandle { self: AstItem ⇒
+
   def getMimeType: String
 
   def getName = self.name

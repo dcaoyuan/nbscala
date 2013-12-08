@@ -42,27 +42,25 @@ import org.netbeans.modules.csl.api.ElementKind
 
 /**
  * Mirror with AstDfn information
- * 
+ *
  * Represent usage/reference of an AstDfn
- * 
+ *
  * @author Caoyuan Deng
  */
 trait AstRef extends AstItem {
 
-  override 
-  def getKind: ElementKind = {
+  override def getKind: ElementKind = {
     super.getKind match {
       // if it's a OTHER, we could try to get its kind from its dfn
-      case x@ElementKind.OTHER => rootScope.findDfnOf(this) match {
-          case Some(dfn) => dfn.getKind
-          case None => x
-        }
-      case x => x
+      case x @ ElementKind.OTHER ⇒ rootScope.findDfnOf(this) match {
+        case Some(dfn) ⇒ dfn.getKind
+        case None ⇒ x
+      }
+      case x ⇒ x
     }
   }
-  
-  override 
-  def toString = {
+
+  override def toString = {
     "Ref: " + "name=" + name + ", idToken=" + super.idToken + ", kind=" + kind + ", symbol=" + symbol
   }
 

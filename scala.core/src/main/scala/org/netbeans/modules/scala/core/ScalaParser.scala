@@ -43,13 +43,13 @@ package org.netbeans.modules.scala.core
 import java.util.logging.Logger
 import javax.swing.event.ChangeListener
 import org.netbeans.api.java.classpath.ClassPath
-import org.netbeans.modules.parsing.api.{Snapshot, Task}
+import org.netbeans.modules.parsing.api.{ Snapshot, Task }
 import org.netbeans.modules.parsing.impl.indexing.TimeStamps
-import org.netbeans.modules.parsing.spi.{ParseException, Parser, ParserFactory, SourceModificationEvent}
-import org.openide.filesystems.{FileObject, FileUtil}
+import org.netbeans.modules.parsing.spi.{ ParseException, Parser, ParserFactory, SourceModificationEvent }
+import org.openide.filesystems.{ FileObject, FileUtil }
 
 /**
- * 
+ *
  * @author Caoyuan Deng
  */
 class ScalaParser extends Parser {
@@ -58,23 +58,21 @@ class ScalaParser extends Parser {
   private var _result: ScalaParserResult = null
 
   /**
-   * Called when some task needs some result of parsing. Task parameter contains 
+   * Called when some task needs some result of parsing. Task parameter contains
    * UserTask, or SchedulerTask instance, that requests Parser.Result.
-   * 
+   *
    * @param task - A task asking for parsing result.
    * @return Result of parsing or null.
    */
   @throws(classOf[ParseException])
-  override 
-  def getResult(task: Task): Parser.Result = {
+  override def getResult(task: Task): Parser.Result = {
     assert(_result != null, "getResult() called prior parse(.) or parse(.) returned a null result") //NOI18N
     _result
   }
 
-  override 
-  def cancel(reason: Parser.CancelReason, event: SourceModificationEvent) {
+  override def cancel(reason: Parser.CancelReason, event: SourceModificationEvent) {
     reason match {
-      case Parser.CancelReason.SOURCE_MODIFICATION_EVENT => 
+      case Parser.CancelReason.SOURCE_MODIFICATION_EVENT ⇒
         val fo = event.getModifiedSource.getFileObject
         log.info("Get cancel request for " + fo.getNameExt + ", sourceChanged=" + event.sourceChanged)
         // We'll cancelSemantic only when the event is saying sourceChanged, since only in this case, we can expect a
@@ -82,25 +80,24 @@ class ScalaParser extends Parser {
         // Or even worse, in this case, there may still no followed parse(..) call, anyway, 
         // we have to make strict condition to cancel 
         if (event.sourceChanged && _result != null) _result.tryCancelSemantic
-      case _ =>
+      case _ ⇒
     }
   }
 
   /**
    * @see http://forums.netbeans.org/topic43738.html
-   * As far as I know, the Parser.parse does not need to actually parse 
-   * anything, it can defer the parsing until getResult method is called. The 
-   * task there is used to create a background channel to pass additional 
-   * language-specific information from the client (Task creator) to the 
-   * parser. This is used in Java to pass the Java ClassPath. The Tasks 
-   * should IMO be passed into the getResult method in the order the they are 
-   * executed (for embedded cases the situation is more complex as I guess 
-   * one might get one task more than once as different embeddings are being 
-   * processed). 
+   * As far as I know, the Parser.parse does not need to actually parse
+   * anything, it can defer the parsing until getResult method is called. The
+   * task there is used to create a background channel to pass additional
+   * language-specific information from the client (Task creator) to the
+   * parser. This is used in Java to pass the Java ClassPath. The Tasks
+   * should IMO be passed into the getResult method in the order the they are
+   * executed (for embedded cases the situation is more complex as I guess
+   * one might get one task more than once as different embeddings are being
+   * processed).
    */
   @throws(classOf[ParseException])
-  override 
-  def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent) {
+  override def parse(snapshot: Snapshot, task: Task, event: SourceModificationEvent) {
     val fo = event.getModifiedSource.getFileObject
     log.info("Ready to parse " + fo.getNameExt + ", prev parserResult is " + _result)
     // The SourceModificationEvent seems set sourceModified=true even when switch between editor windows, 
@@ -118,27 +115,24 @@ class ScalaParser extends Parser {
   private def isIndexUpToDate(fo: FileObject): Boolean = {
     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
     if (srcCp ne null) {
-      srcCp.getRoots find (FileUtil.isParentOf(_, fo)) foreach {root =>
+      srcCp.getRoots find (FileUtil.isParentOf(_, fo)) foreach { root ⇒
         val timeStamps = TimeStamps.forRoot(root.toURL, false)
         return (timeStamps ne null) && timeStamps.checkAndStoreTimestamp(fo, FileUtil.getRelativePath(root, fo))
       }
     }
-    
+
     false
   }
 
-  override 
-  def addChangeListener(changeListener: ChangeListener) {
+  override def addChangeListener(changeListener: ChangeListener) {
     // no-op, we don't support state changes
   }
 
-  override 
-  def removeChangeListener(changeListener: ChangeListener) {
+  override def removeChangeListener(changeListener: ChangeListener) {
     // no-op, we don't support state changes
   }
 
   private final class Factory extends ParserFactory {
-    override 
-    def createParser(snapshots: java.util.Collection[Snapshot]): Parser = new ScalaParser
+    override def createParser(snapshots: java.util.Collection[Snapshot]): Parser = new ScalaParser
   }
 }

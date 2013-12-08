@@ -55,7 +55,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeListener;
 import org.netbeans.api.project.FileOwnerQuery
 import org.netbeans.api.project.ProjectUtils
-import org.netbeans.modules.csl.api.{ElementKind, Modifier}
+import org.netbeans.modules.csl.api.{ ElementKind, Modifier }
 import org.netbeans.modules.parsing.spi.ParseException
 import org.netbeans.modules.parsing.api.ParserManager
 import org.netbeans.modules.parsing.api.ResultIterator
@@ -70,7 +70,6 @@ import org.netbeans.modules.scala.core.ast.ScalaItems
 import org.netbeans.modules.scala.refactoring.RefactoringModule
 import scala.reflect.internal.Flags
 
-
 /**
  * @author  Jan Becicka
  */
@@ -82,8 +81,7 @@ object WhereUsedPanel {
   }
 }
 
-class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @transient parent: ChangeListener
-) extends JPanel with CustomRefactoringPanel {
+class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @transient parent: ChangeListener) extends JPanel with CustomRefactoringPanel {
   import WhereUsedPanel._
 
   private val MAX_NAME = 50
@@ -120,7 +118,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
   private var initialized = false
   private var methodDeclaringSuperClass: String = null
   private var methodDeclaringClass: String = null
-    
+
   def getMethodDeclaringClass: String = {
     if (isMethodFromBaseClass) methodDeclaringSuperClass else methodDeclaringClass
   }
@@ -134,111 +132,110 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
       if (p ne null) {
         val pi = ProjectUtils.getInformation(FileOwnerQuery.getOwner(fo))
         (new JLabel(pi.getDisplayName(), pi.getIcon(), SwingConstants.LEFT),
-         new JLabel(NbBundle.getMessage(classOf[WhereUsedPanel],"LBL_AllProjects"), pi.getIcon(), SwingConstants.LEFT))
+          new JLabel(NbBundle.getMessage(classOf[WhereUsedPanel], "LBL_AllProjects"), pi.getIcon(), SwingConstants.LEFT))
       } else (null, null)
     try {
       ParserManager.parse(java.util.Collections.singleton(source), new UserTask {
-          @throws(classOf[Exception])
-          override def run(ri: ResultIterator) {
-            val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
-            val global = pr.global
+        @throws(classOf[Exception])
+        override def run(ri: ResultIterator) {
+          val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
+          val global = pr.global
 
-            var m_isBaseClassText: String = null
-            var labelText: String = null
-            var modif = java.util.Collections.emptySet[Modifier]
+          var m_isBaseClassText: String = null
+          var labelText: String = null
+          var modif = java.util.Collections.emptySet[Modifier]
 
-            global.askForResponse {() =>
-              import global._
+          global.askForResponse { () ⇒
+            import global._
 
-              val sName = element.symbol.nameString
-              val clzName = element.symbol.enclClass.nameString
-            
-              element.kind match {
-                case ElementKind.METHOD | ElementKind.CALL =>
-                  modif = element.getModifiers
-                  methodDeclaringClass = clzName
-                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_MethodUsages", element.symbol.nameString, methodDeclaringClass) // NOI18N
+            val sName = element.symbol.nameString
+            val clzName = element.symbol.enclClass.nameString
 
-                  val overridens = element.symbol.allOverriddenSymbols
-                  if (!overridens.isEmpty) {
-                    val overriden = overridens.head
-                    m_isBaseClassText = new MessageFormat(NbBundle.getMessage(classOf[WhereUsedPanel], "LBL_UsagesOfBaseClass")).format(
-                      Array(methodDeclaringSuperClass).asInstanceOf[Array[Object]]
-                    )
-                    newElement = ScalaElement(overriden.asInstanceOf[Symbol], pr)
-                  }
-                case ElementKind.CLASS | ElementKind.MODULE =>
-                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ClassUsages", sName) // NOI18N
-                case ElementKind.CONSTRUCTOR =>
-                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ConstructorUsages", sName, clzName) // NOI18N
-                case ElementKind.FIELD =>
-                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_FieldUsages", sName, clzName) // NOI18N
-                case _ =>
-                  labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_VariableUsages", sName) // NOI18N
-              }
-            
-            } get 
+            element.kind match {
+              case ElementKind.METHOD | ElementKind.CALL ⇒
+                modif = element.getModifiers
+                methodDeclaringClass = clzName
+                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_MethodUsages", element.symbol.nameString, methodDeclaringClass) // NOI18N
 
-            val modifiers = modif
-            val isBaseClassText = m_isBaseClassText
-
-            SwingUtilities.invokeLater(new Runnable {
-                def run {
-                  remove(classesPanel)
-                  remove(methodsPanel)
-                  // WARNING for now since this feature is not ready yet
-                  //label.setText(labelText);
-                  val combinedLabelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_WhereUsedWarningInDevelopment", labelText)
-                  label.setText(combinedLabelText)
-                  
-                  global.askForResponse {() =>
-                    //import global._
-                    
-                    element.kind match {
-                      case ElementKind.METHOD =>
-                        add(methodsPanel, BorderLayout.CENTER)
-                        methodsPanel.setVisible(true)
-                        m_usages.setVisible(!modifiers.contains(Modifier.STATIC))
-                        val enclClass = element.symbol.enclClass
-                        m_overriders.setVisible(!(enclClass.hasFlag(Flags.STATIC) ||
-                                                  enclClass.hasFlag(Flags.FINAL) ||
-                                                  modifiers.contains(Modifier.STATIC) ||
-                                                  modifiers.contains(Modifier.PRIVATE)))
-                        if (methodDeclaringSuperClass ne null ) {
-                          m_isBaseClass.setVisible(true)
-                          m_isBaseClass.setSelected(true)
-                          Mnemonics.setLocalizedText(m_isBaseClass, isBaseClassText)
-                        } else {
-                          m_isBaseClass.setVisible(false)
-                          m_isBaseClass.setSelected(false)
-                        }
-                      case ElementKind.CLASS | ElementKind.MODULE =>
-                        add(classesPanel, BorderLayout.CENTER)
-                        classesPanel.setVisible(true)
-                      case _ =>
-                        remove(classesPanel)
-                        remove(methodsPanel)
-                        c_subclasses.setVisible(false)
-                        m_usages.setVisible(false)
-                        c_usages.setVisible(false)
-                        c_directOnly.setVisible(false)
-                    }
-                  } get
-                  
-                  if (currentProject ne null) {
-                    scope.setModel(new DefaultComboBoxModel(Array(allProjects, currentProject).asInstanceOf[Array[JLabel]]))
-                    val defaultItem = RefactoringModule.getOption("whereUsed.scope", 0).toInt // NOI18N
-                    scope.setSelectedIndex(defaultItem)
-                    scope.setRenderer(new JLabelRenderer)
-                  } else {
-                    scopePanel.setVisible(false)
-                  }
-                  validate
+                val overridens = element.symbol.allOverriddenSymbols
+                if (!overridens.isEmpty) {
+                  val overriden = overridens.head
+                  m_isBaseClassText = new MessageFormat(NbBundle.getMessage(classOf[WhereUsedPanel], "LBL_UsagesOfBaseClass")).format(
+                    Array(methodDeclaringSuperClass).asInstanceOf[Array[Object]])
+                  newElement = ScalaElement(overriden.asInstanceOf[Symbol], pr)
                 }
-              })
-          }
-        })
-    } catch {case ex: ParseException => throw (new RuntimeException).initCause(ex)}
+              case ElementKind.CLASS | ElementKind.MODULE ⇒
+                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ClassUsages", sName) // NOI18N
+              case ElementKind.CONSTRUCTOR ⇒
+                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ConstructorUsages", sName, clzName) // NOI18N
+              case ElementKind.FIELD ⇒
+                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_FieldUsages", sName, clzName) // NOI18N
+              case _ ⇒
+                labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_VariableUsages", sName) // NOI18N
+            }
+
+          } get
+
+          val modifiers = modif
+          val isBaseClassText = m_isBaseClassText
+
+          SwingUtilities.invokeLater(new Runnable {
+            def run {
+              remove(classesPanel)
+              remove(methodsPanel)
+              // WARNING for now since this feature is not ready yet
+              //label.setText(labelText);
+              val combinedLabelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_WhereUsedWarningInDevelopment", labelText)
+              label.setText(combinedLabelText)
+
+              global.askForResponse { () ⇒
+                //import global._
+
+                element.kind match {
+                  case ElementKind.METHOD ⇒
+                    add(methodsPanel, BorderLayout.CENTER)
+                    methodsPanel.setVisible(true)
+                    m_usages.setVisible(!modifiers.contains(Modifier.STATIC))
+                    val enclClass = element.symbol.enclClass
+                    m_overriders.setVisible(!(enclClass.hasFlag(Flags.STATIC) ||
+                      enclClass.hasFlag(Flags.FINAL) ||
+                      modifiers.contains(Modifier.STATIC) ||
+                      modifiers.contains(Modifier.PRIVATE)))
+                    if (methodDeclaringSuperClass ne null) {
+                      m_isBaseClass.setVisible(true)
+                      m_isBaseClass.setSelected(true)
+                      Mnemonics.setLocalizedText(m_isBaseClass, isBaseClassText)
+                    } else {
+                      m_isBaseClass.setVisible(false)
+                      m_isBaseClass.setSelected(false)
+                    }
+                  case ElementKind.CLASS | ElementKind.MODULE ⇒
+                    add(classesPanel, BorderLayout.CENTER)
+                    classesPanel.setVisible(true)
+                  case _ ⇒
+                    remove(classesPanel)
+                    remove(methodsPanel)
+                    c_subclasses.setVisible(false)
+                    m_usages.setVisible(false)
+                    c_usages.setVisible(false)
+                    c_directOnly.setVisible(false)
+                }
+              } get
+
+              if (currentProject ne null) {
+                scope.setModel(new DefaultComboBoxModel(Array(allProjects, currentProject).asInstanceOf[Array[JLabel]]))
+                val defaultItem = RefactoringModule.getOption("whereUsed.scope", 0).toInt // NOI18N
+                scope.setSelectedIndex(defaultItem)
+                scope.setRenderer(new JLabelRenderer)
+              } else {
+                scopePanel.setVisible(false)
+              }
+              validate
+            }
+          })
+        }
+      })
+    } catch { case ex: ParseException ⇒ throw (new RuntimeException).initCause(ex) }
 
     initialized = true
   }
@@ -250,42 +247,43 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
                                      index: Int,
                                      isSelected: Boolean,
                                      cellHasFocus: Boolean): Component = {
-            
+
       // #89393: GTK needs name to render cell renderer "natively"
       setName("ComboBox.listRenderer") // NOI18N
-            
-      if ( value ne null ) {
+
+      if (value ne null) {
         setText(value.getText)
         setIcon(value.getIcon)
       }
-            
-      if ( isSelected ) {
+
+      if (isSelected) {
         setBackground(list.getSelectionBackground)
         setForeground(list.getSelectionForeground)
       } else {
         setBackground(list.getBackground)
         setForeground(list.getForeground)
       }
-            
+
       this
     }
-        
+
     // #89393: GTK needs name to render cell renderer "natively"
     override def getName: String = {
       super.getName match {
-        case null => "ComboBox.renderer" // NOI18N
-        case x => x
+        case null ⇒ "ComboBox.renderer" // NOI18N
+        case x ⇒ x
       }
     }
   }
-    
+
   def getBaseMethod: ScalaItems#ScalaItem = newElement
-    
+
   override def requestFocus {
     super.requestFocus
   }
-    
-  /** This method is called from within the constructor to
+
+  /**
+   * This method is called from within the constructor to
    * initialize the form.
    * WARNING: Do NOT modify this code. The content of this method is
    * always regenerated by the Form Editor.
@@ -318,10 +316,10 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
 
     m_isBaseClass.setSelected(true);
     m_isBaseClass.addActionListener(new java.awt.event.ActionListener() {
-        def actionPerformed(evt: java.awt.event.ActionEvent) {
-          m_isBaseClassActionPerformed(evt);
-        }
-      });
+      def actionPerformed(evt: java.awt.event.ActionEvent) {
+        m_isBaseClassActionPerformed(evt);
+      }
+    });
     gridBagConstraints = new java.awt.GridBagConstraints()
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 3;
@@ -341,10 +339,10 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
 
     org.openide.awt.Mnemonics.setLocalizedText(m_overriders, org.openide.util.NbBundle.getMessage(classOf[WhereUsedPanel], "LBL_FindOverridingMethods")); // NOI18N
     m_overriders.addActionListener(new java.awt.event.ActionListener() {
-        def actionPerformed(evt: java.awt.event.ActionEvent) {
-          m_overridersActionPerformed(evt);
-        }
-      });
+      def actionPerformed(evt: java.awt.event.ActionEvent) {
+        m_overridersActionPerformed(evt);
+      }
+    });
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 2;
@@ -357,10 +355,10 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
     org.openide.awt.Mnemonics.setLocalizedText(m_usages, org.openide.util.NbBundle.getMessage(classOf[WhereUsedPanel], "LBL_FindUsages")); // NOI18N
     m_usages.setMargin(new java.awt.Insets(10, 2, 2, 2));
     m_usages.addActionListener(new java.awt.event.ActionListener() {
-        def actionPerformed(evt: java.awt.event.ActionEvent) {
-          m_usagesActionPerformed(evt);
-        }
-      });
+      def actionPerformed(evt: java.awt.event.ActionEvent) {
+        m_usagesActionPerformed(evt);
+      }
+    });
     gridBagConstraints = new java.awt.GridBagConstraints();
     gridBagConstraints.gridx = 0;
     gridBagConstraints.gridy = 1;
@@ -422,10 +420,10 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
     org.openide.awt.Mnemonics.setLocalizedText(searchInComments, org.openide.util.NbBundle.getBundle(classOf[WhereUsedPanel]).getString("LBL_SearchInComents")); // NOI18N
     searchInComments.setMargin(new java.awt.Insets(10, 14, 2, 2));
     searchInComments.addItemListener(new java.awt.event.ItemListener() {
-        def itemStateChanged(evt: java.awt.event.ItemEvent) {
-          searchInCommentsItemStateChanged(evt);
-        }
-      });
+      def itemStateChanged(evt: java.awt.event.ItemEvent) {
+        searchInCommentsItemStateChanged(evt);
+      }
+    });
     commentsPanel.add(searchInComments, java.awt.BorderLayout.SOUTH);
     searchInComments.getAccessibleContext().setAccessibleDescription(searchInComments.getText());
 
@@ -435,85 +433,83 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
     org.openide.awt.Mnemonics.setLocalizedText(scopeLabel, org.openide.util.NbBundle.getMessage(classOf[WhereUsedPanel], "LBL_Scope")); // NOI18N
 
     scope.addActionListener(new java.awt.event.ActionListener() {
-        def actionPerformed(evt: java.awt.event.ActionEvent) {
-          scopeActionPerformed(evt);
-        }
-      });
+      def actionPerformed(evt: java.awt.event.ActionEvent) {
+        scopeActionPerformed(evt);
+      }
+    });
 
     val scopePanelLayout = new org.jdesktop.layout.GroupLayout(scopePanel);
     scopePanel.setLayout(scopePanelLayout);
     scopePanelLayout.setHorizontalGroup(
       scopePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-      .add(scopePanelLayout.createSequentialGroup()
-           .addContainerGap()
-           .add(scopeLabel)
-           .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-           .add(scope, 0, 266, Short.MaxValue)
-           .addContainerGap())
-    );
+        .add(scopePanelLayout.createSequentialGroup()
+          .addContainerGap()
+          .add(scopeLabel)
+          .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+          .add(scope, 0, 266, Short.MaxValue)
+          .addContainerGap()));
     scopePanelLayout.setVerticalGroup(
       scopePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-      .add(scopeLabel)
-      .add(scope, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, Short.MaxValue)
-    );
+        .add(scopeLabel)
+        .add(scope, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, Short.MaxValue));
 
     scope.getAccessibleContext().setAccessibleDescription("N/A");
 
     add(scopePanel, java.awt.BorderLayout.PAGE_END);
-  }// </editor-fold>//GEN-END:initComponents
+  } // </editor-fold>//GEN-END:initComponents
 
-  private def scopeActionPerformed(evt: java.awt.event.ActionEvent) {//GEN-FIRST:event_scopeActionPerformed
+  private def scopeActionPerformed(evt: java.awt.event.ActionEvent) { //GEN-FIRST:event_scopeActionPerformed
     RefactoringModule.setOption("whereUsed.scope", scope.getSelectedIndex()); // NOI18N
-  }//GEN-LAST:event_scopeActionPerformed
+  } //GEN-LAST:event_scopeActionPerformed
 
-  private def searchInCommentsItemStateChanged(evt: java.awt.event.ItemEvent) {//GEN-FIRST:event_searchInCommentsItemStateChanged
+  private def searchInCommentsItemStateChanged(evt: java.awt.event.ItemEvent) { //GEN-FIRST:event_searchInCommentsItemStateChanged
     // used for change default value for searchInComments check-box.
     // The value is persisted and then used as default in next IDE run.
     val b = if (evt.getStateChange == ItemEvent.SELECTED) true else false
     RefactoringModule.setOption("searchInComments.whereUsed", b) // NOI18N
-  }//GEN-LAST:event_searchInCommentsItemStateChanged
+  } //GEN-LAST:event_searchInCommentsItemStateChanged
 
-  private def m_isBaseClassActionPerformed(evt: java.awt.event.ActionEvent) {//GEN-FIRST:event_m_isBaseClassActionPerformed
+  private def m_isBaseClassActionPerformed(evt: java.awt.event.ActionEvent) { //GEN-FIRST:event_m_isBaseClassActionPerformed
     parent.stateChanged(null)
-  }//GEN-LAST:event_m_isBaseClassActionPerformed
+  } //GEN-LAST:event_m_isBaseClassActionPerformed
 
-  private def m_overridersActionPerformed(evt: java.awt.event.ActionEvent) {//GEN-FIRST:event_m_overridersActionPerformed
+  private def m_overridersActionPerformed(evt: java.awt.event.ActionEvent) { //GEN-FIRST:event_m_overridersActionPerformed
     parent.stateChanged(null)
-  }//GEN-LAST:event_m_overridersActionPerformed
+  } //GEN-LAST:event_m_overridersActionPerformed
 
-  private def m_usagesActionPerformed(evt: java.awt.event.ActionEvent) {//GEN-FIRST:event_m_usagesActionPerformed
+  private def m_usagesActionPerformed(evt: java.awt.event.ActionEvent) { //GEN-FIRST:event_m_usagesActionPerformed
     parent.stateChanged(null)
-  }//GEN-LAST:event_m_usagesActionPerformed
+  } //GEN-LAST:event_m_usagesActionPerformed
 
   def isMethodFromBaseClass: Boolean = {
     m_isBaseClass.isSelected
   }
-    
+
   def isMethodOverriders: Boolean = {
     m_overriders.isSelected
   }
-    
+
   def isClassSubTypes: Boolean = {
     c_subclasses.isSelected
   }
-    
+
   def isClassSubTypesDirectOnly: Boolean = {
     c_directOnly.isSelected
   }
-    
+
   def isMethodFindUsages: Boolean = {
     m_usages.isSelected
   }
-    
+
   def isClassFindUsages: Boolean = {
     c_usages.isSelected
   }
-    
-//    public Dimension getPreferredSize() {
-//        Dimension orig = super.getPreferredSize();
-//        return new Dimension(orig.width + 30 , orig.height + 30);
-//    }
-    
+
+  //    public Dimension getPreferredSize() {
+  //        Dimension orig = super.getPreferredSize();
+  //        return new Dimension(orig.width + 30 , orig.height + 30);
+  //    }
+
   def isSearchInComments: Boolean = {
     searchInComments.isSelected
   }

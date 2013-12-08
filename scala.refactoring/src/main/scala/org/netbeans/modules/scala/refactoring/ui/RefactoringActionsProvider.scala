@@ -47,15 +47,15 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import org.netbeans.api.fileinfo.NonRecursiveFolder;
 import org.netbeans.editor.BaseDocument;
-import org.netbeans.api.language.util.ast.{AstDfn, AstScope}
+import org.netbeans.api.language.util.ast.{ AstDfn, AstScope }
 import org.netbeans.modules.csl.api.ElementKind
 import org.netbeans.modules.parsing.api.ResultIterator;
 import org.netbeans.modules.parsing.api.UserTask;
 import org.netbeans.modules.refactoring.spi.ui.UI;
 import org.netbeans.modules.refactoring.spi.ui.ActionsImplementationProvider;
 import org.netbeans.modules.refactoring.spi.ui.RefactoringUI;
-import org.netbeans.modules.scala.core.{ScalaMimeResolver, ScalaParserResult}
-import org.netbeans.modules.scala.core.ast.{ScalaItems, ScalaRootScope}
+import org.netbeans.modules.scala.core.{ ScalaMimeResolver, ScalaParserResult }
+import org.netbeans.modules.scala.core.ast.{ ScalaItems, ScalaRootScope }
 import org.netbeans.modules.scala.core.lexer.ScalaLexUtil;
 import org.netbeans.modules.scala.refactoring.RetoucheUtils;
 
@@ -116,7 +116,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
     val task: Runnable =
       if (isFromEditor(ec)) {
         new TextComponentTask(ec) {
-          
+
           override protected def createRefactoringUI(selectedElement: ScalaItems#ScalaItem, startOffset: Int, endOffset: Int, info: ScalaParserResult): RefactoringUI = {
             // If you're trying to rename a constructor, rename the enclosing class instead
             RenameRefactoringUI(selectedElement)
@@ -125,14 +125,14 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
       } else {
         new NodeToFileObjectTask(lookup.lookupAll(classOf[Node])) {
 
-          override protected def createRefactoringUI(selectedElements: Array[FileObject], handles: Seq[ScalaItems#ScalaItem]): RefactoringUI= {
+          override protected def createRefactoringUI(selectedElements: Array[FileObject], handles: Seq[ScalaItems#ScalaItem]): RefactoringUI = {
             val newName = getName(dictionary)
             if (newName ne null) {
               if (pkg(0) ne null)
                 RenameRefactoringUI(pkg(0), newName)
               else
                 RenameRefactoringUI(selectedElements(0), newName, if ((handles eq null) || handles.isEmpty) null else handles.iterator.next)
-            } else{
+            } else {
               if (pkg(0) ne null)
                 RenameRefactoringUI(pkg(0))
               else
@@ -141,7 +141,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
           }
         }
       }
-    
+
     task.run
   }
 
@@ -155,7 +155,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
     }
     val n = nodes.iterator.next
     val dob = n.getCookie(classOf[DataObject])
-    if (dob==null) {
+    if (dob == null) {
       return false;
     }
     val fo = dob.getPrimaryFile
@@ -179,8 +179,8 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
       if (isFromEditor(ec)) {
         val textC = ec.getOpenedPanes()(0)
         val d = textC.getDocument match {
-          case x: BaseDocument => x
-          case _ => return true
+          case x: BaseDocument ⇒ x
+          case _ ⇒ return true
         }
         d.readLock
         try {
@@ -223,23 +223,23 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
     if ((dob ne null) && RetoucheUtils.isScalaFile(fo)) { //NOI18N
       return true
     }
-    
+
     false
   }
 
   override def doFindUsages(lookup: Lookup) {
-       
+
     val ec = lookup.lookup(classOf[EditorCookie])
     val task: Runnable = if (isFromEditor(ec)) {
       new TextComponentTask(ec) {
-        
+
         override protected def createRefactoringUI(selectedElement: ScalaItems#ScalaItem, startOffset: Int, endOffset: Int, info: ScalaParserResult): RefactoringUI = {
           WhereUsedRefactoringUI(selectedElement)
         }
       }
     } else {
       new NodeToElementTask(lookup.lookupAll(classOf[Node])) {
-        
+
         protected def createRefactoringUI(selectedElement: ScalaItems#ScalaItem, info: ScalaParserResult): RefactoringUI = {
           WhereUsedRefactoringUI(selectedElement)
         }
@@ -272,12 +272,11 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
     private val caret = textC.getCaretPosition
     private val start = textC.getSelectionStart
     private val end = textC.getSelectionEnd
-    assert (caret != -1)
-    assert (start != -1)
-    assert (end != -1)
+    assert(caret != -1)
+    assert(start != -1)
+    assert(end != -1)
 
     private var ui: RefactoringUI = _
-
 
     @throws(classOf[ParseException])
     def run(ri: ResultIterator) {
@@ -296,13 +295,13 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
          weight(x1.asInstanceOf[ScalaItem].symbol) < weight(x2.asInstanceOf[ScalaItem].symbol)
          } */
         val inPlaceItem = root.findItemsAt(th, caret) match {
-          case Nil => return
-          case xs => xs find {_.idToken ne null} getOrElse {return}
+          case Nil ⇒ return
+          case xs ⇒ xs find { _.idToken ne null } getOrElse { return }
         }
-        
+
         val handle = root.findDfnOf(inPlaceItem) getOrElse inPlaceItem
         logger.info("Refactoring handle's token symbols: " + handle.samePlaceSymbols)
-        
+
         // @todo ("FAILURE - can't refactor a reference identifier") ?
         ui = createRefactoringUI(handle.asInstanceOf[global.ScalaItem], start, end, pr)
       } else {
@@ -317,33 +316,33 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
       try {
         val source = Source.create(textC.getDocument)
         ParserManager.parse(java.util.Collections.singleton(source), this)
-      } catch {case ex: ParseException => logger.log(Level.WARNING, null, ex); return}
+      } catch { case ex: ParseException ⇒ logger.log(Level.WARNING, null, ex); return }
 
       val activetc = TopComponent.getRegistry.getActivated
 
       if (ui ne null) {
-// XXX: what is this supposed to do??
-//                if (fo ne null) {
-//                    ClasspathInfo classpathInfoFor = RetoucheUtils.getClasspathInfoFor(fo);
-//                    if (classpathInfoFor eq null) {
-//                        JOptionPane.showMessageDialog(null, NbBundle.getMessage(RefactoringActionsProvider.class, "ERR_CannotFindClasspath"));
-//                        return;
-//                    }
-//                }
+        // XXX: what is this supposed to do??
+        //                if (fo ne null) {
+        //                    ClasspathInfo classpathInfoFor = RetoucheUtils.getClasspathInfoFor(fo);
+        //                    if (classpathInfoFor eq null) {
+        //                        JOptionPane.showMessageDialog(null, NbBundle.getMessage(RefactoringActionsProvider.class, "ERR_CannotFindClasspath"));
+        //                        return;
+        //                    }
+        //                }
 
         UI.openRefactoringUI(ui, activetc)
       } else {
         val key = if (isFindUsages) {
           "ERR_CannotFindUsages" // NOI18N
         } else "ERR_CannotRenameLoc" // NOI18N
-        JOptionPane.showMessageDialog(null,NbBundle.getMessage(classOf[RefactoringActionsProvider], key))
+        JOptionPane.showMessageDialog(null, NbBundle.getMessage(classOf[RefactoringActionsProvider], key))
       }
     }
 
     protected def createRefactoringUI(selectedElement: ScalaItems#ScalaItem, startOffset: Int, endOffset: Int, pr: ScalaParserResult): RefactoringUI
   }
 
-  abstract class NodeToElementTask(nodes: java.util.Collection[_ <: Node]) extends UserTask with Runnable  {
+  abstract class NodeToElementTask(nodes: java.util.Collection[_ <: Node]) extends UserTask with Runnable {
     assert(nodes.size == 1)
     private val node = nodes.iterator.next
     private var ui: RefactoringUI = _
@@ -372,7 +371,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
         val o = node.getCookie(classOf[DataObject])
         val source = Source.create(o.getPrimaryFile)
         ParserManager.parse(java.util.Collections.singleton(source), this)
-      } catch {case ex: ParseException => logger.log(Level.WARNING, null, ex); return}
+      } catch { case ex: ParseException ⇒ logger.log(Level.WARNING, null, ex); return }
 
       if (ui ne null) {
         UI.openRefactoringUI(ui)
@@ -383,17 +382,16 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
         JOptionPane.showMessageDialog(null, NbBundle.getMessage(classOf[RefactoringActionsProvider], key))
       }
     }
-    
+
     protected def createRefactoringUI(selectedElement: ScalaItems#ScalaItem, info: ScalaParserResult): RefactoringUI
   }
 
   abstract class NodeToFileObjectTask(nodes: java.util.Collection[_ <: Node]) extends UserTask with Runnable {
     assert(nodes ne null)
-//        private RefactoringUI ui;
-    protected val pkg =  new Array[NonRecursiveFolder](nodes.size)
-//        public WeakReference<JsParseResult> cinfo;
+    //        private RefactoringUI ui;
+    protected val pkg = new Array[NonRecursiveFolder](nodes.size)
+    //        public WeakReference<JsParseResult> cinfo;
     val handles = new ArrayBuffer[ScalaItems#ScalaItem]
-
 
     @throws(classOf[Exception])
     def run(ri: ResultIterator) {
@@ -426,7 +424,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
           val source = Source.create(fobs(i))
           try {
             ParserManager.parse(java.util.Collections.singleton(source), this)
-          } catch {case ex: ParseException => logger.log(Level.WARNING, null, ex)}
+          } catch { case ex: ParseException ⇒ logger.log(Level.WARNING, null, ex) }
           pkg(i) = node.getLookup.lookup(classOf[NonRecursiveFolder])
           i += 1
         }

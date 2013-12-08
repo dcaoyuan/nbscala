@@ -39,22 +39,21 @@
  * made subject to such option by the copyright holder.
  */
 
-package org.netbeans.modules.scala.editor.options;
+package org.netbeans.modules.scala.editor.options
 
 import java.util.prefs.Preferences
 import javax.swing.text.Document
 import org.netbeans.api.project.Project
 import org.netbeans.modules.editor.indent.spi.CodeStylePreferences
 
-
-/** 
- * 
+/**
+ *
  * @author Caoyuan Deng
  */
 object CodeStyle {
 
   private lazy val INSTANCE: CodeStyle = new CodeStyle(FmtOptions.getPreferences)
-  
+
   def getDefault(project: Project): CodeStyle = synchronized {
     if (FmtOptions.codeStyleProducer eq null) {
       FmtOptions.codeStyleProducer = new Producer
@@ -68,7 +67,7 @@ object CodeStyle {
   def get(prefs: Preferences): CodeStyle = {
     new CodeStyle(prefs)
   }
-  
+
   def get(doc: Document): CodeStyle = {
     new CodeStyle(CodeStylePreferences.get(doc).getPreferences)
   }
@@ -85,7 +84,7 @@ object CodeStyle {
  */
 class CodeStyle private (preferences: Preferences) {
   import CodeStyle._
-    
+
   def indentSize: Int = {
     preferences.getInt(FmtOptions.indentSize, FmtOptions.getDefaultAsInt(FmtOptions.indentSize))
   }
@@ -101,7 +100,7 @@ class CodeStyle private (preferences: Preferences) {
   def indentXml: Boolean = {
     preferences.getBoolean(FmtOptions.indentXml, FmtOptions.getDefaultAsBoolean(FmtOptions.indentXml))
   }
-    
+
   def rightMargin: Int = {
     preferences.getInt(FmtOptions.rightMargin, FmtOptions.getGlobalRightMargin)
   }

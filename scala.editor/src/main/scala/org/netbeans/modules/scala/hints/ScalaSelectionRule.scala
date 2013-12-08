@@ -44,6 +44,6 @@ import org.netbeans.modules.csl.api.Rule.SelectionRule
 
 abstract class ScalaSelectionRule extends SelectionRule {
 
-    def createHints(context : ScalaRuleContext, start : Int, end : Int) : List[Hint]
+  def createHints(context: ScalaRuleContext, start: Int, end: Int): List[Hint]
 
 }

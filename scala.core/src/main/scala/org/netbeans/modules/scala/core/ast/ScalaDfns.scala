@@ -38,51 +38,46 @@
  */
 package org.netbeans.modules.scala.core.ast
 
-import org.netbeans.api.lexer.{Token, TokenId, TokenHierarchy}
-import org.netbeans.modules.csl.api.{ElementKind, HtmlFormatter, Modifier}
+import org.netbeans.api.lexer.{ Token, TokenId, TokenHierarchy }
+import org.netbeans.modules.csl.api.{ ElementKind, HtmlFormatter, Modifier }
 import org.openide.filesystems.FileObject
 
-import org.netbeans.api.language.util.ast.{AstDfn, AstRef, AstScope}
-import org.netbeans.modules.scala.core.{ScalaGlobal, ScalaMimeResolver, ScalaSourceUtil}
+import org.netbeans.api.language.util.ast.{ AstDfn, AstRef, AstScope }
+import org.netbeans.modules.scala.core.{ ScalaGlobal, ScalaMimeResolver, ScalaSourceUtil }
 
 /**
  * Scala AstDfn special functions, which will be enabled in ScalaGlobal
  */
-trait ScalaDfns {self: ScalaGlobal =>
+trait ScalaDfns { self: ScalaGlobal ⇒
 
   object ScalaDfn {
     def apply(symbol: Symbol,
               idToken: Token[TokenId],
               kind: ElementKind,
               bindingScope: AstScope,
-              fo: Option[FileObject]
-    ) = new ScalaDfn(symbol, idToken, kind, bindingScope, fo)
+              fo: Option[FileObject]) = new ScalaDfn(symbol, idToken, kind, bindingScope, fo)
   }
-  
+
   class ScalaDfn(asymbol: Symbol,
                  aidToken: Token[TokenId],
                  akind: ElementKind,
                  abindingScope: AstScope,
-                 afo: Option[FileObject]
-  ) extends ScalaItem with AstDfn {
-    
+                 afo: Option[FileObject]) extends ScalaItem with AstDfn {
+
     make(aidToken, akind, abindingScope, afo)
 
     symbol = asymbol
 
-    override 
-    def getMimeType: String = ScalaMimeResolver.MIME_TYPE
+    override def getMimeType: String = ScalaMimeResolver.MIME_TYPE
 
-    override 
-    def getModifiers: java.util.Set[Modifier] = {
+    override def getModifiers: java.util.Set[Modifier] = {
       if (!_modifiers.isDefined) {
         _modifiers = Some(ScalaUtil.getModifiers(symbol))
       }
       _modifiers.get
     }
 
-    override 
-    def qualifiedName: String = symbol.fullName
+    override def qualifiedName: String = symbol.fullName
 
     /** @Note: do not call ref.getKind here, which will recursively call this function, use ref.kind ! */
     def isReferredBy(ref: AstRef): Boolean = {
@@ -92,8 +87,8 @@ trait ScalaDfns {self: ScalaGlobal =>
         //            }
         if (ref.symbol == symbol) true else {
           symbol match {
-            case me: TermSymbol => me.referenced == ref.symbol
-            case _ => false
+            case me: TermSymbol ⇒ me.referenced == ref.symbol
+            case _ ⇒ false
           }
         }
       } else false
@@ -102,8 +97,8 @@ trait ScalaDfns {self: ScalaGlobal =>
     def getDocComment: String = {
       val srcDoc = getDoc.getOrElse(return "")
       TokenHierarchy.get(srcDoc) match {
-        case null => return ""
-        case th => ScalaSourceUtil.getDocComment(srcDoc, idOffset(th))
+        case null ⇒ return ""
+        case th ⇒ ScalaSourceUtil.getDocComment(srcDoc, idOffset(th))
       }
     }
 

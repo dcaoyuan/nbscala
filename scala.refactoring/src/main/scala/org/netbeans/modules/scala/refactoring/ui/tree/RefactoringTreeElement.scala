@@ -52,13 +52,13 @@ import org.netbeans.modules.scala.refactoring.RetoucheUtils
  * @author Jan Becicka
  */
 class RefactoringTreeElement(element: RefactoringElement) extends TreeElement {
-    
+
   val thisFeature: ElementGrip = getFeature(element.getLookup.lookup(classOf[ElementGrip]))
   val parent: ElementGrip = thisFeature.getParent match {
-    case null => thisFeature
-    case x => x
+    case null ⇒ thisFeature
+    case x ⇒ x
   }
-    
+
   private def getFeature(el: ElementGrip): ElementGrip = {
     el
   }
@@ -70,7 +70,7 @@ class RefactoringTreeElement(element: RefactoringElement) extends TreeElement {
       TreeElementFactory.getTreeElement(element.getParentFile)
     }
   }
-    
+
   override def getIcon: Icon = {
     thisFeature.getIcon
   }

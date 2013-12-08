@@ -59,17 +59,13 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   /**
    * @Note this id will be escaped by PersistenceManager and for findTopCompoment(id)
    */
-  override
-  protected val preferredID = toPreferredId(project)
+  override protected val preferredID = toPreferredId(project)
 
-  override
-  def getPersistenceType = TopComponent.PERSISTENCE_NEVER
+  override def getPersistenceType = TopComponent.PERSISTENCE_NEVER
 
-  override
-  def canClose = true // make sure this tc can be truely closed
+  override def canClose = true // make sure this tc can be truely closed
 
-  override
-  def open() {
+  override def open() {
     /**
      * @Note
      * mode.dockInto(this) seems will close this first if this.isOpened()
@@ -83,28 +79,25 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     super.open
   }
 
-  override
-  protected def componentOpened() {
+  override protected def componentOpened() {
     // always create a new terminal when is opened/reopend
     console = createTerminal
     super.componentOpened
   }
 
-  override
-  protected def componentClosed() {
+  override protected def componentClosed() {
     if (console != null) {
       try {
         console.close
       } catch {
-        case ex: Exception => log.warning(ex.getMessage)
+        case ex: Exception ⇒ log.warning(ex.getMessage)
       }
       console == null
     }
     super.componentClosed
   }
 
-  override
-  protected def componentActivated() {
+  override protected def componentActivated() {
     // Make the caret visible. See comment under componentDeactivated.
     if (console != null) {
       val caret = console.area.getCaret
@@ -115,8 +108,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     super.componentActivated
   }
 
-  override
-  protected def componentDeactivated() {
+  override protected def componentDeactivated() {
     // I have to turn off the caret when the window loses focus. Text components
     // normally do this by themselves, but the TextAreaReadline component seems
     // to mess around with the editable property of the text pane, and
@@ -130,15 +122,13 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     super.componentDeactivated
   }
 
-  override
-  def requestFocus() {
+  override def requestFocus() {
     if (console != null) {
       console.area.requestFocus
     }
   }
 
-  override
-  def requestFocusInWindow: Boolean = {
+  override def requestFocusInWindow: Boolean = {
     if (console != null) {
       console.area.requestFocusInWindow
     } else {
@@ -149,17 +139,17 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   private def createTerminal: SbtConsoleTerminal = {
     // From core/output2/**/AbstractOutputPane
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
-      case null =>
+      case null ⇒
         UIManager.get("controlFont") match { // NOI18N
-          case null => 11
-          case f: Font => f.getSize
+          case null ⇒ 11
+          case f: Font ⇒ f.getSize
         }
-      case i: java.lang.Integer => i.intValue
+      case i: java.lang.Integer ⇒ i.intValue
     }
 
     val font = new Font("Monospaced", Font.PLAIN, fontSize) match {
-      case null => new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
-      case x => x
+      case null ⇒ new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
+      case x ⇒ x
     }
 
     val textPane = new JTextPane()
@@ -172,8 +162,8 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
-      case null =>
-      case c => textPane.setSelectionColor(c)
+      case null ⇒
+      case c ⇒ textPane.setSelectionColor(c)
     }
 
     //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);
@@ -232,8 +222,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     val console = new SbtConsoleTerminal(
       textPane, pipedIn,
       NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + "\n" +
-      "sbt-launch=" + sbtLaunchJar.getOrElse("none") + "\n"
-    )
+        "sbt-launch=" + sbtLaunchJar.getOrElse("none") + "\n")
     if (ScalaExecution.isWindows) {
       console.terminalInput.terminalId = TerminalInput.JLineWindows
     }
@@ -245,17 +234,15 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     val inputOutput = new ConsoleInputOutput(in, out, err)
 
     val execDescriptor = new ExecutionDescriptor().frontWindow(true).inputVisible(true)
-    .inputOutput(inputOutput).postExecution(new Runnable() {
-        override
-        def run() {
+      .inputOutput(inputOutput).postExecution(new Runnable() {
+        override def run() {
           textPane.setEditable(false)
           SwingUtilities.invokeLater(new Runnable() {
-              override
-              def run() {
-                SBTConsoleTopComponent.this.close
-                SBTConsoleTopComponent.this.removeAll
-              }
-            })
+            override def run() {
+              SBTConsoleTopComponent.this.close
+              SBTConsoleTopComponent.this.removeAll
+            }
+          })
         }
       })
 
@@ -294,15 +281,13 @@ object SBTConsoleTopComponent {
     TopComponentId.escape(compName + project.getProjectDirectory.getPath)
   }
 
-
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String => Unit = null) {
+  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String ⇒ Unit = null) {
     val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
-        def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
-      }
-    )
+      def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
+    })
 
     val runnableTask = new Runnable() {
       def run {
@@ -310,14 +295,14 @@ object SBTConsoleTopComponent {
 
         val tcId = toEscapedPreferredId(project)
         val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
-          case null =>
+          case null ⇒
             (new SBTConsoleTopComponent(project), true)
-          case tc: SBTConsoleTopComponent =>
+          case tc: SBTConsoleTopComponent ⇒
             (tc, false)
-          case _ =>
+          case _ ⇒
             ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                        "There seem to be multiple components with the '" + tcId +
-                                        "' ID. That is a potential source of errors and unexpected behavior.")
+              "There seem to be multiple components with the '" + tcId +
+                "' ID. That is a potential source of errors and unexpected behavior.")
             (null, false)
         }
 
@@ -349,30 +334,28 @@ object SBTConsoleTopComponent {
   class SbtConsoleTerminal(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleTerminal(_area, pipedIn, welcome) {
 
     @throws(classOf[IOException])
-    override
-    protected def handleClose() {
+    override protected def handleClose() {
       runCommand("exit") // try to exit underlying process gracefully
       super.handleClose()
     }
 
-    override
-    protected val lineParser = new ConsoleOutputLineParser() {
+    override protected val lineParser = new ConsoleOutputLineParser() {
 
-      val INFO_PREFIX    = "[info]"
-      val WARN_PREFIX    = "[warn]"
-      val ERROR_PREFIX   = "[error]"
+      val INFO_PREFIX = "[info]"
+      val WARN_PREFIX = "[warn]"
+      val ERROR_PREFIX = "[error]"
       val SUCCESS_PREFIX = "[success]"
 
       val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
       val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
       val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
-      val LINE = "(([1-9][0-9]*))"  // line number
-      val ROL = ".*\\s?\\s?"        // rest of line (may end with "\n" or "\r\n")
-      val SEP = "\\:"               // seperator between file path and line number
-      val STD_SUFFIX = FILE + SEP + LINE + ROL  // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+      val LINE = "(([1-9][0-9]*))" // line number
+      val ROL = ".*\\s?\\s?" // rest of line (may end with "\n" or "\r\n")
+      val SEP = "\\:" // seperator between file path and line number
+      val STD_SUFFIX = FILE + SEP + LINE + ROL // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
 
       val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-      val rWARN_WITH_FILE =  Pattern.compile("\\Q" + WARN_PREFIX  + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+      val rWARN_WITH_FILE = Pattern.compile("\\Q" + WARN_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
 
       lazy val infoStyle = {
         val x = new SimpleAttributeSet()

@@ -52,87 +52,87 @@ import scala.collection.mutable.ArrayBuffer
 object ScalaExecution {
 
   val SCALA_MAIN_CLASS = "scala.tools.nsc.MainGenericRunner" // NOI18N <- Change
-    
-//    private static final String WINDOWS_DRIVE = "(?:\\S{1}:[\\\\/])"; // NOI18N
-//    private static final String FILE_CHAR = "[^\\s\\[\\]\\:\\\"]"; // NOI18N
-//    private static final String FILE = "((?:" + FILE_CHAR + "*))"; // NOI18N
-//    private static final String FILE_WIN = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + ".*))"; // NOI18N
-//    private static final String LINE = "([1-9][0-9]*)"; // NOI18N
-//    private static final String ROL = ".*\\s?"; // NOI18N
-//    private static final String SEP = "\\:"; // NOI18N
-//    private static final String STD_SUFFIX = FILE + SEP + LINE + ROL;
-    
-//    private static List<RegexpOutputRecognizer> stdScalaRecognizers;
-//
-//    private static final RegexpOutputRecognizer SCALA_COMPILER =
-//        new RegexpOutputRecognizer(".*?" + STD_SUFFIX); // NOI18N
-//
-//    private static final RegexpOutputRecognizer SCALA_COMPILER_WIN_MY =
-//        new RegexpOutputRecognizer(".*?" + FILE_WIN + SEP + LINE + ROL); // NOI18N
-//
-//    /* Keeping old one. Get rid of this with more specific recongizers? */
-//    private static final RegexpOutputRecognizer SCALA_COMPILER_WIN =
-//        new RegexpOutputRecognizer("^(?:(?:\\[|\\]|\\-|\\:|[0-9]|\\s|\\,)*)(?:\\s*from )?" + FILE_WIN + SEP + LINE + ROL); // NOI18N
-//
-//    public static final RegexpOutputRecognizer SCALA_TEST_OUTPUT =
-//        new RegexpOutputRecognizer("\\s*test.*\\[" + STD_SUFFIX); // NOI18N
-    
-//    private String charsetName;
-//    
-//    public ScalaExecution(ExecutionDescriptor descriptor) {
-//        super(descriptor);
-//
-//        assert descriptor ne null;
-//        
-//        if (descriptor.getCmd() eq null) {
-//            descriptor.cmd(getScala());
-//        }
-//
-//        descriptor.addBinPath(true);
-//    }
+
+  //    private static final String WINDOWS_DRIVE = "(?:\\S{1}:[\\\\/])"; // NOI18N
+  //    private static final String FILE_CHAR = "[^\\s\\[\\]\\:\\\"]"; // NOI18N
+  //    private static final String FILE = "((?:" + FILE_CHAR + "*))"; // NOI18N
+  //    private static final String FILE_WIN = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + ".*))"; // NOI18N
+  //    private static final String LINE = "([1-9][0-9]*)"; // NOI18N
+  //    private static final String ROL = ".*\\s?"; // NOI18N
+  //    private static final String SEP = "\\:"; // NOI18N
+  //    private static final String STD_SUFFIX = FILE + SEP + LINE + ROL;
+
+  //    private static List<RegexpOutputRecognizer> stdScalaRecognizers;
+  //
+  //    private static final RegexpOutputRecognizer SCALA_COMPILER =
+  //        new RegexpOutputRecognizer(".*?" + STD_SUFFIX); // NOI18N
+  //
+  //    private static final RegexpOutputRecognizer SCALA_COMPILER_WIN_MY =
+  //        new RegexpOutputRecognizer(".*?" + FILE_WIN + SEP + LINE + ROL); // NOI18N
+  //
+  //    /* Keeping old one. Get rid of this with more specific recongizers? */
+  //    private static final RegexpOutputRecognizer SCALA_COMPILER_WIN =
+  //        new RegexpOutputRecognizer("^(?:(?:\\[|\\]|\\-|\\:|[0-9]|\\s|\\,)*)(?:\\s*from )?" + FILE_WIN + SEP + LINE + ROL); // NOI18N
+  //
+  //    public static final RegexpOutputRecognizer SCALA_TEST_OUTPUT =
+  //        new RegexpOutputRecognizer("\\s*test.*\\[" + STD_SUFFIX); // NOI18N
+
+  //    private String charsetName;
+  //    
+  //    public ScalaExecution(ExecutionDescriptor descriptor) {
+  //        super(descriptor);
+  //
+  //        assert descriptor ne null;
+  //        
+  //        if (descriptor.getCmd() eq null) {
+  //            descriptor.cmd(getScala());
+  //        }
+  //
+  //        descriptor.addBinPath(true);
+  //    }
 
   /** Create a Scala execution service with the given source-encoding charset */
-//    public ScalaExecution(ExecutionDescriptor descriptor, String charsetName) {
-//        this(descriptor);
-//        this.charsetName = charsetName;
-//    }
-    
-//    public synchronized static List<? extends RegexpOutputRecognizer> getStandardScalaRecognizers() {
-//        if (stdScalaRecognizers eq null) {
-//            stdScalaRecognizers = new LinkedList<RegexpOutputRecognizer>();
-//            stdScalaRecognizers.add(SCALA_COMPILER_WIN_MY);
-//            stdScalaRecognizers.add(SCALA_COMPILER);
-//            stdScalaRecognizers.add(SCALA_COMPILER_WIN);
-//        }
-//        return stdScalaRecognizers;
-//    }
+  //    public ScalaExecution(ExecutionDescriptor descriptor, String charsetName) {
+  //        this(descriptor);
+  //        this.charsetName = charsetName;
+  //    }
+
+  //    public synchronized static List<? extends RegexpOutputRecognizer> getStandardScalaRecognizers() {
+  //        if (stdScalaRecognizers eq null) {
+  //            stdScalaRecognizers = new LinkedList<RegexpOutputRecognizer>();
+  //            stdScalaRecognizers.add(SCALA_COMPILER_WIN_MY);
+  //            stdScalaRecognizers.add(SCALA_COMPILER);
+  //            stdScalaRecognizers.add(SCALA_COMPILER_WIN);
+  //        }
+  //        return stdScalaRecognizers;
+  //    }
 
   /**
    * Returns the basic Scala interpreter command and associated flags (not
    * application arguments)
    */
-//    public static List<String> getScalaArgs(String scalaHome, String cmdName) {
-//        return getScalaArgs(scalaHome, cmdName, null);
-//    }
+  //    public static List<String> getScalaArgs(String scalaHome, String cmdName) {
+  //        return getScalaArgs(scalaHome, cmdName, null);
+  //    }
 
   /**
-   * 
+   *
    * java -Xmx768M -Xms16M
-   *      -Xbootclasspath/a:/${SCALA_HOME}/lib/scala-library.jar 
+   *      -Xbootclasspath/a:/${SCALA_HOME}/lib/scala-library.jar
    *      -cp ${SCALA_HOME}/lib/jline.jar:
    *          ${SCALA_HOME}/lib/sbaz-tests.jar:
    *          ${SCALA_HOME}/lib/sbaz.jar:
    *          ${SCALA_HOME}/lib/scala-compiler.jar:
    *          ${SCALA_HOME}/lib/scala-dbc.jar:
    *          ${SCALA_HOME}/lib/scala-decoder.jar:
-   *          ${SCALA_HOME}/lib/scala-library.jar 
-   *      -Dscala.home=${SCALA_HOME} 
-   *      -Denv.classpath= 
-   *      -Denv.emacs= 
+   *          ${SCALA_HOME}/lib/scala-library.jar
+   *      -Dscala.home=${SCALA_HOME}
+   *      -Denv.classpath=
+   *      -Denv.emacs=
    *      -Djline.terminal=jline.UnsupportedTerminal
    *      scala.tools.nsc.MainGenericRunner
-   */    
-  def getScalaArgs(scalaHome:String): Array[String] = {
+   */
+  def getScalaArgs(scalaHome: String): Array[String] = {
     val argvList = new ArrayBuffer[String]()
     val javaHome = getJavaHome
 
@@ -142,12 +142,12 @@ object ScalaExecution {
     // Additional execution flags specified in the Scala startup script:
     argvList += "-Xverify:none" // NOI18N
     argvList += "-da" // NOI18N
-            
+
     val extraArgs = System.getenv("SCALA_EXTRA_VM_ARGS") // NOI18N
 
     var javaMemory = "-Xmx512m" // NOI18N
     var javaStack = "-Xss1024k" // NOI18N
-            
+
     if (extraArgs ne null) {
       if (extraArgs.indexOf("-Xmx") != -1) { // NOI18N
         javaMemory = null
@@ -158,108 +158,105 @@ object ScalaExecution {
       val scalaArgs = Utilities.parseParameters(extraArgs)
       argvList ++= scalaArgs
     }
-            
+
     if (javaMemory ne null) {
       argvList += javaMemory
     }
     if (javaStack ne null) {
       argvList += javaStack
     }
-            
+
     val scalaHomeDir = try {
       new File(scalaHome).getCanonicalFile
-    } catch  {
-      case ex:IOException => Exceptions.printStackTrace(ex); null
+    } catch {
+      case ex: IOException ⇒ Exceptions.printStackTrace(ex); null
     }
 
     val scalaLib = new File(scalaHomeDir, "lib") // NOI18N
 
     // BootClassPath
     argvList += "-Xbootclasspath/a:" + mkClassPath(Array(
-        "scala-library.jar",
-        "scala-reflect.jar",
-        "scala-compiler.jar",
-        "jline.jar"
-      ), scalaLib)   
-            
+      "scala-library.jar",
+      "scala-reflect.jar",
+      "scala-compiler.jar",
+      "jline.jar"), scalaLib)
+
     // Classpath
     argvList += "-classpath" // NOI18N
 
+    //            argvList.add(computeScalaClassPath(
+    //                    descriptor eq null ? null : descriptor.getClassPath(), scalaLib));
 
-//            argvList.add(computeScalaClassPath(
-//                    descriptor eq null ? null : descriptor.getClassPath(), scalaLib));
-            
     argvList += computeScalaClassPath(null, scalaLib)
-            
+
     argvList += "-Dscala.home=" + scalaHomeDir // NOI18N
-            
-    /** 
+
+    /**
      * @Note:
-     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why? 
-     * Also, from Scala-2.7.1, jline is used for scala shell, we should 
+     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why?
+     * Also, from Scala-2.7.1, jline is used for scala shell, we should
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"
      */
     argvList += "-Djline.terminal=scala.tools.jline.UnsupportedTerminal" //NOI18N
-            
+
     // TODO - turn off verifier?
 
     // Main class
     argvList += SCALA_MAIN_CLASS // NOI18N
 
     // Application arguments follow
-        
+
     argvList.toArray
   }
 
-//    @Override
-//    protected List<? extends String> buildArgs() {
-//        List<String> argvList = new ArrayList<String>();
-//        String scalaHome = getScalaHome();
-//        String cmdName = descriptor.getCmd().getName();
-//        argvList.addAll(getScalaArgs(scalaHome, cmdName, descriptor));
-//        argvList.addAll(super.buildArgs());
-//        return argvList;
-//    }
-    
+  //    @Override
+  //    protected List<? extends String> buildArgs() {
+  //        List<String> argvList = new ArrayList<String>();
+  //        String scalaHome = getScalaHome();
+  //        String cmdName = descriptor.getCmd().getName();
+  //        argvList.addAll(getScalaArgs(scalaHome, cmdName, descriptor));
+  //        argvList.addAll(super.buildArgs());
+  //        return argvList;
+  //    }
 
   def getJavaHome: String = {
-    System.getProperty("scala.java.home") match {  // NOI18N
-      case null => System.getProperty("java.home") // NOI18N
-      case x => x
+    System.getProperty("scala.java.home") match { // NOI18N
+      case null ⇒ System.getProperty("java.home") // NOI18N
+      case x ⇒ x
     }
   }
 
   def getScalaHome: String = {
     System.getenv("SCALA_HOME") match { // NOI18N
-      case null => 
+      case null ⇒
         val d = new NotifyDescriptor.Message(
           "SCALA_HOME environment variable may not be set, or is invalid.\n" +
-          "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
+            "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
         DialogDisplayer.getDefault().notify(d)
         null
-      case scalaHome => System.setProperty("scala.home", scalaHome); scalaHome
+      case scalaHome ⇒ System.setProperty("scala.home", scalaHome); scalaHome
     }
   }
-    
+
   def getScala: File = {
-    var scalaFo:FileObject = null
+    var scalaFo: FileObject = null
     val scalaHome = getScalaHome
     if (scalaHome ne null) {
       val scalaHomeDir = new File(getScalaHome)
       if (scalaHomeDir.exists && scalaHomeDir.isDirectory) {
         try {
           val scalaHomeFo = FileUtil.createData(scalaHomeDir)
-          val bin = scalaHomeFo.getFileObject("bin")             //NOI18N
+          val bin = scalaHomeFo.getFileObject("bin") //NOI18N
           if (Utilities.isWindows) {
             scalaFo = bin.getFileObject("scala", "exe")
             if (scalaFo eq null) {
               scalaFo = bin.getFileObject("scala", "bat")
             }
           } else {
-            scalaFo = bin.getFileObject("scala", null)    //NOI18N
+            scalaFo = bin.getFileObject("scala", null) //NOI18N
           }
-        } catch  {
-          case ex : IOException => Exceptions.printStackTrace(ex)
+        } catch {
+          case ex: IOException ⇒ Exceptions.printStackTrace(ex)
         }
       }
     }
@@ -268,40 +265,40 @@ object ScalaExecution {
     } else {
       val d = new NotifyDescriptor.Message(
         "Can not found ${SCALA_HOME}/bin/scala, the environment variable SCALA_HOME may be invalid.\n" +
-        "Please set proper SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
+          "Please set proper SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
       DialogDisplayer.getDefault().notify(d)
       null
     }
   }
-    
+
   /**
    * Add settings in the environment appropriate for running Scala:
    * add the given directory into the path, and set up SCALA_HOME
    */
-//    public @Override void setupProcessEnvironment(Map<String, String> env) {
-//        super.setupProcessEnvironment(env);
-//        env.put("JAVA_HOME", getJavaHome());
-//        env.put("SCALA_HOME", getScalaHome());
-//    }
-    
+  //    public @Override void setupProcessEnvironment(Map<String, String> env) {
+  //        super.setupProcessEnvironment(env);
+  //        env.put("JAVA_HOME", getJavaHome());
+  //        env.put("SCALA_HOME", getScalaHome());
+  //    }
+
   private def mkClassPath(jarNames: Array[String], dir: File) = {
-    val dirPath = dir.getAbsolutePath 
-    jarNames map (dirPath + File.separator + _) filter {fileName => 
+    val dirPath = dir.getAbsolutePath
+    jarNames map (dirPath + File.separator + _) filter { fileName ⇒
       try {
         val file = new File(fileName)
         (file ne null) && file.exists && file.canRead
       } catch {
-        case ex: Throwable => false
+        case ex: Throwable ⇒ false
       }
     } mkString File.pathSeparator
   }
-  
+
   /** Package-private for unit test. */
   def computeScalaClassPath(extraCp: String, scalaLib: File): String = {
     val sb = new StringBuilder()
     val libs = scalaLib.listFiles
 
-    libs filter (_.getName.endsWith("jar")) foreach {lib => 
+    libs filter (_.getName.endsWith("jar")) foreach { lib ⇒
       if (sb.length > 0) sb.append(File.pathSeparatorChar)
       sb.append(lib.getAbsolutePath)
     }
@@ -314,16 +311,16 @@ object ScalaExecution {
       // (:) and filesystem separators, e.g. I might have C:\foo:D:\bar but
       // obviously only the path separator after "foo" should be changed to ;
       var pathOffset = 0
-      extraCp foreach {c => 
+      extraCp foreach { c ⇒
         if (c == ':' && pathOffset != 1) {
           p += File.pathSeparatorChar
-          pathOffset = 0           
+          pathOffset = 0
         } else {
           pathOffset += 1
           p += c
         }
       }
-      
+
     }
 
     if (p.isEmpty && (System.getenv("SCALA_EXTRA_CLASSPATH") ne null)) {
@@ -340,7 +337,7 @@ object ScalaExecution {
       //}
       sb.append(p)
     }
-    if (Utilities.isWindows)  "\"" + sb.toString + "\""  else sb.toString // NOI18N
+    if (Utilities.isWindows) "\"" + sb.toString + "\"" else sb.toString // NOI18N
   }
-     
+
 }

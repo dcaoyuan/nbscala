@@ -16,27 +16,26 @@ import org.openide.filesystems.FileStateInvalidException
 import org.openide.filesystems.FileUtil
 import org.openide.util.Exceptions
 
-
 /**
  *
  * @author Caoyuan Deng
  */
 final class SBTClassPath(project: Project, scope: String, isTest: Boolean) extends ClassPathImplementation {
   private val pcs = new PropertyChangeSupport(this)
-  
+
   private lazy val sbtResolver = {
     val x = project.getLookup.lookup(classOf[SBTResolver])
 
     x.addPropertyChangeListener(new PropertyChangeListener() {
-        def propertyChange(evt: PropertyChangeEvent) {
-          evt.getPropertyName match {
-            case SBTResolver.DESCRIPTOR_CHANGE => 
-              pcs.firePropertyChange(ClassPathImplementation.PROP_RESOURCES, null, null)
-            case _ =>
-          }
+      def propertyChange(evt: PropertyChangeEvent) {
+        evt.getPropertyName match {
+          case SBTResolver.DESCRIPTOR_CHANGE ⇒
+            pcs.firePropertyChange(ClassPathImplementation.PROP_RESOURCES, null, null)
+          case _ ⇒
         }
-      })
-    
+      }
+    })
+
     x
   }
 
@@ -46,10 +45,10 @@ final class SBTClassPath(project: Project, scope: String, isTest: Boolean) exten
       result.addAll(getJavaBootResources)
     }
 
-    for (file <- sbtResolver.getResolvedClassPath(scope, isTest)) {
+    for (file ← sbtResolver.getResolvedClassPath(scope, isTest)) {
       val fo = FileUtil.toFileObject(file)
       try {
-        val rootUrl = 
+        val rootUrl =
           if (fo != null) {
             if (FileUtil.isArchiveFile(fo)) {
               FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
@@ -66,7 +65,7 @@ final class SBTClassPath(project: Project, scope: String, isTest: Boolean) exten
           }
         result.add(ClassPathSupport.createResource(rootUrl))
       } catch {
-        case ex: FileStateInvalidException => Exceptions.printStackTrace(ex)
+        case ex: FileStateInvalidException ⇒ Exceptions.printStackTrace(ex)
       }
     }
 

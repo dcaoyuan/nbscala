@@ -63,8 +63,8 @@ object AnnotationsHolder {
     try {
       val od = DataObject.find(file)
       fileToAnnotations.get(od) match {
-        case Some(x) => return x
-        case _ =>
+        case Some(x) ⇒ return x
+        case _ ⇒
       }
 
       val ec = od.getLookup.lookup(classOf[EditorCookie.Observable])
@@ -76,7 +76,7 @@ object AnnotationsHolder {
       fileToAnnotations.put(od, a)
 
       a
-    } catch {case ex: IOException => IsOverriddenAnnotationHandler.Log.log(Level.INFO, null, ex); null}
+    } catch { case ex: IOException ⇒ IsOverriddenAnnotationHandler.Log.log(Level.INFO, null, ex); null }
   }
 }
 
@@ -84,58 +84,58 @@ class AnnotationsHolder(file: DataObject, ec: EditorCookie.Observable) extends P
   import AnnotationsHolder._
 
   val annotations = new ArrayBuffer[IsOverriddenAnnotation]
-        
+
   ec.addPropertyChangeListener(this)
-        
+
   SwingUtilities.invokeLater(new Runnable {
-      def run {
-        checkForReset
-      }
-    })
-        
+    def run {
+      checkForReset
+    }
+  })
+
   Logger.getLogger("TIMER").log(Level.FINE, "Overridden AnnotationsHolder", Array(file.getPrimaryFile, this).asInstanceOf[Array[Object]]); //NOI18N
-    
+
   override def propertyChange(evt: PropertyChangeEvent) {
     if (EditorCookie.Observable.PROP_OPENED_PANES.endsWith(evt.getPropertyName) || (evt.getPropertyName eq null)) {
       checkForReset
     }
   }
-    
+
   private def checkForReset {
     assert(SwingUtilities.isEventDispatchThread)
-        
+
     if (ec.getOpenedPanes eq null) {
       //reset:
       classOf[AnnotationsHolder] synchronized {
         fileToAnnotations.remove(file)
       }
-            
+
       setNewAnnotations(Nil)
       ec.removePropertyChangeListener(this)
     }
   }
-    
+
   def setNewAnnotations(as: List[IsOverriddenAnnotation]): Unit = synchronized {
     val toRemove = new ArrayBuffer[IsOverriddenAnnotation] ++= annotations
-    val toAdd    = new ArrayBuffer[IsOverriddenAnnotation] ++= as
-        
+    val toAdd = new ArrayBuffer[IsOverriddenAnnotation] ++= as
+
     annotations.clear
     annotations ++= as
-        
+
     val doAttachDetach = new Runnable {
       def run {
-        toRemove foreach {_.detachImpl}
-        toAdd    foreach {_.attach}
+        toRemove foreach { _.detachImpl }
+        toAdd foreach { _.attach }
       }
     }
-        
+
     if (SwingUtilities.isEventDispatchThread) {
       doAttachDetach.run
     } else {
       SwingUtilities.invokeLater(doAttachDetach)
     }
   }
-    
+
   def getAnnotations: List[IsOverriddenAnnotation] = synchronized {
     annotations.toList
   }

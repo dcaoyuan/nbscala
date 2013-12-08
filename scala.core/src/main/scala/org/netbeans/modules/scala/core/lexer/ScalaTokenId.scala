@@ -44,32 +44,31 @@ import org.netbeans.api.lexer.{
   InputAttributes,
   LanguagePath,
   Token,
-  TokenId}
+  TokenId
+}
 import org.netbeans.spi.lexer.{
   LanguageHierarchy,
   Lexer,
-  LexerRestartInfo}
+  LexerRestartInfo
+}
 import org.netbeans.modules.scala.core.ScalaMimeResolver
 import scala.collection.mutable
 
 /**
- * 
+ *
  * @author Caoyuan Deng
  */
 class ScalaTokenId private (val ordinal: Int, val name: String, val fixedText: String, val primaryCategory: String) extends TokenId {
-  override 
-  def hashCode = ordinal
-  
-  override 
-  def equals(o: Any) = {
+  override def hashCode = ordinal
+
+  override def equals(o: Any) = {
     if (o == null) false
     else if (o.isInstanceOf[ScalaTokenId]) {
       o.asInstanceOf[ScalaTokenId].ordinal == this.ordinal
     } else false
   }
-  
-  override
-  def toString = name
+
+  override def toString = name
 }
 
 object ScalaTokenId {
@@ -82,7 +81,7 @@ object ScalaTokenId {
     values(name) = x
     x
   }
-  
+
   def tokenIdOf(name: String): Option[ScalaTokenId] = values.get(name)
 
   val IGNORED = ScalaTokenId("IGNORED", null, "ignored")
@@ -228,30 +227,28 @@ object ScalaTokenId {
       values foreach (ids add _._2)
       ids
     }
-    
+
     protected def createLexer(info: LexerRestartInfo[TokenId]): Lexer[TokenId] = ScalaLexer.create(info)
 
-    override 
-    protected def createTokenCategories: java.util.Map[String, java.util.Collection[TokenId]] = {
+    override protected def createTokenCategories: java.util.Map[String, java.util.Collection[TokenId]] = {
       val cats = new java.util.HashMap[String, java.util.Collection[TokenId]]
-      
-      for ((name, value) <- values) {
+
+      for ((name, value) ← values) {
         val category = value.primaryCategory
         val tokenIds = cats.get(category) match {
-          case null => 
+          case null ⇒
             val x = new java.util.ArrayList[TokenId]()
             cats.put(category, x)
             x
-          case x => x
+          case x ⇒ x
         }
         tokenIds.add(value)
       }
-      
+
       cats
     }
 
-    override 
-    protected def embedding(token: Token[TokenId], languagePath: LanguagePath, inputAttributes: InputAttributes) = {
+    override protected def embedding(token: Token[TokenId], languagePath: LanguagePath, inputAttributes: InputAttributes) = {
       null // No embedding
     }
   }.language

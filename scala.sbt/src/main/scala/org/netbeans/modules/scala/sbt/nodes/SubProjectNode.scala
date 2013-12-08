@@ -12,35 +12,28 @@ import org.openide.nodes.Children
 import org.openide.util.NbBundle
 
 /**
- * 
+ *
  * @author Caoyuan Deng
  */
 class SubProjectNode(project: SBTProject) extends AbstractNode(Children.LEAF) {
 
-  override
-  def getIcon(tpe: Int): Image = SBTProject.SBT_ICON
+  override def getIcon(tpe: Int): Image = SBTProject.SBT_ICON
 
-  override
-  def getOpenedIcon(tpe: Int): Image = getIcon(tpe)
+  override def getOpenedIcon(tpe: Int): Image = getIcon(tpe)
 
-  override
-  def getDisplayName: String = {
+  override def getDisplayName: String = {
     project.getDisplayName
   }
 
   /**
    * Tooltip
    */
-  override 
-  def getShortDescription = project.getProjectDirectory.getPath
+  override def getShortDescription = project.getProjectDirectory.getPath
 
-  override
-  def getPreferredAction = OpenAction
-  
-  override
-  def getActions(arg0: Boolean): Array[Action] = Array(
-    OpenAction
-  )
+  override def getPreferredAction = OpenAction
+
+  override def getActions(arg0: Boolean): Array[Action] = Array(
+    OpenAction)
 
   object OpenAction extends AbstractAction {
     putValue(Action.NAME, NbBundle.getMessage(classOf[SubProjectNode], "BTN_Open_Project"))

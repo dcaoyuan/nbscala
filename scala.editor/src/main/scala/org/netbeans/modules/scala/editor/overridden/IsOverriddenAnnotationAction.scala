@@ -65,45 +65,44 @@ import org.openide.util.NbBundle
  */
 class IsOverriddenAnnotationAction extends AbstractAction {
 
-  putValue(Action.NAME, NbBundle.getMessage(classOf[IsOverriddenAnnotationAction], 
-                                            "CTL_IsOverriddenAnnotationAction")) //NOI18N
+  putValue(Action.NAME, NbBundle.getMessage(classOf[IsOverriddenAnnotationAction],
+    "CTL_IsOverriddenAnnotationAction")) //NOI18N
   putValue("supported-annotation-types", Array(
-      "org-netbeans-modules-editor-annotations-is_overridden",
-      "org-netbeans-modules-editor-annotations-has_implementations",
-      "org-netbeans-modules-editor-annotations-implements",
-      "org-netbeans-modules-editor-annotations-overrides"
-    ))
+    "org-netbeans-modules-editor-annotations-is_overridden",
+    "org-netbeans-modules-editor-annotations-has_implementations",
+    "org-netbeans-modules-editor-annotations-implements",
+    "org-netbeans-modules-editor-annotations-overrides"))
   setEnabled(true)
-    
+
   def actionPerformed(e: ActionEvent) {
     if (!invokeDefaultAction(e.getSource.asInstanceOf[JTextComponent])) {
       val actions = ImplementationProvider.getDefault.getGlyphGutterActions(e.getSource.asInstanceOf[JTextComponent])
-            
+
       if (actions eq null) return
-            
+
       var nextAction = 0
       while (nextAction < actions.length && actions(nextAction) != this) {
         nextAction += 1
       }
       nextAction += 1
-            
+
       if (actions.length > nextAction) {
         val action = actions(nextAction)
-        if ((action ne null) && action.isEnabled){
+        if ((action ne null) && action.isEnabled) {
           action.actionPerformed(e)
         }
       }
     }
   }
-    
+
   private def getFile(component: JTextComponent): FileObject = {
     val doc = component.getDocument
     doc.getProperty(Document.StreamDescriptionProperty) match {
-      case null => null
-      case od: DataObject => od.getPrimaryFile
+      case null ⇒ null
+      case od: DataObject ⇒ od.getPrimaryFile
     }
   }
-    
+
   private def findAnnotation(component: JTextComponent, desc: AnnotationDesc, offset: Int): IsOverriddenAnnotation = {
     val file = getFile(component)
     if (file eq null) {
@@ -112,48 +111,48 @@ class IsOverriddenAnnotationAction extends AbstractAction {
       }
       return null
     }
-        
+
     val ah = AnnotationsHolder(file)
     if (ah eq null) {
       IsOverriddenAnnotationHandler.Log.log(Level.INFO, "component=" + component + " does not have attached a IsOverriddenAnnotationHandler"); //NOI18N
       return null
     }
 
-    ah.getAnnotations find (x => x.getPosition.getOffset == offset && x.getShortDescription == desc.getShortDescription) match {
-      case Some(x) => x
-      case _ => null
+    ah.getAnnotations find (x ⇒ x.getPosition.getOffset == offset && x.getShortDescription == desc.getShortDescription) match {
+      case Some(x) ⇒ x
+      case _ ⇒ null
     }
   }
-    
+
   def invokeDefaultAction(comp: JTextComponent): Boolean = {
     comp.getDocument match {
-      case doc: BaseDocument =>
+      case doc: BaseDocument ⇒
         val currentPosition = comp.getCaretPosition
         val annotations = doc.getAnnotations
         val annotation = new Array[IsOverriddenAnnotation](1)
         val p = new Array[Point](1)
-            
+
         doc.render(new Runnable {
-            def run {
-              try {
-                val line = Utilities.getLineOffset(doc, currentPosition)
-                val startOffset = Utilities.getRowStartFromLineOffset(doc, line)
-                val desc = annotations.getActiveAnnotation(line)
-                p(0) = comp.modelToView(startOffset).getLocation
-                annotation(0) = findAnnotation(comp, desc, startOffset)
-              } catch {case ex: BadLocationException => Exceptions.printStackTrace(ex)}
-            }
-          })
-            
+          def run {
+            try {
+              val line = Utilities.getLineOffset(doc, currentPosition)
+              val startOffset = Utilities.getRowStartFromLineOffset(doc, line)
+              val desc = annotations.getActiveAnnotation(line)
+              p(0) = comp.modelToView(startOffset).getLocation
+              annotation(0) = findAnnotation(comp, desc, startOffset)
+            } catch { case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex) }
+          }
+        })
+
         if (annotation(0) eq null) return false
-            
+
         JumpList.addEntry(comp, currentPosition)
-            
+
         annotation(0).mouseClicked(comp, p(0))
-            
+
         true
-      case _ => false
+      case _ ⇒ false
     }
   }
-    
+
 }

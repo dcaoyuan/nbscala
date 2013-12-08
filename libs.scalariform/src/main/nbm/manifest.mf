@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Display-Category: Scala
+AutoUpdate-Show-In-Client: true
+OpenIDE-Module-Localizing-Bundle: org/netbeans/libs/scalariform/resources/Bundle.properties

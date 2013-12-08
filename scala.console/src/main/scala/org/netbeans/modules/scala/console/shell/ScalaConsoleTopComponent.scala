@@ -41,33 +41,29 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
   import ScalaConsoleTopComponent._
 
   private val log = Logger.getLogger(getClass.getName)
-  
+
   private val mimeType = "text/x-scala"
   private var console: ScalaConsoleTerminal = _
- 
+
   initComponents
- 
+
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
     setName("Scala " + project.getProjectDirectory.getName)
     setToolTipText(NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "HINT_ScalaConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
     setIcon(ImageUtilities.loadImage(ICON_PATH, true))
-  }            
+  }
 
   /**
    * @Note this id will be escaped by PersistenceManager and for findTopCompoment(id)
    */
-  override
-  protected val preferredID = toPreferredId(project)
+  override protected val preferredID = toPreferredId(project)
 
-  override
-  def getPersistenceType = TopComponent.PERSISTENCE_NEVER
+  override def getPersistenceType = TopComponent.PERSISTENCE_NEVER
 
-  override
-  def canClose = true // make sure this tc can be truely closed
-  
-  override 
-  def open() {
+  override def canClose = true // make sure this tc can be truely closed
+
+  override def open() {
     /**
      * @Note
      * mode.dockInto(this) seems will close this first if this.isOpened()
@@ -80,29 +76,26 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
     }
     super.open
   }
-  
-  override
-  protected def componentOpened() {
+
+  override protected def componentOpened() {
     // always create a new terminal when is opened/reopend
     console = createTerminal
     super.componentOpened
   }
 
-  override
-  protected def componentClosed() {
+  override protected def componentClosed() {
     if (console != null) {
       try {
         console.close
       } catch {
-        case ex: Exception => log.warning(ex.getMessage)
+        case ex: Exception ⇒ log.warning(ex.getMessage)
       }
       console == null
     }
     super.componentClosed
   }
 
-  override
-  protected def componentActivated() {
+  override protected def componentActivated() {
     // Make the caret visible. See comment under componentDeactivated.
     if (console != null) {
       val caret = console.area.getCaret
@@ -113,8 +106,7 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
     super.componentActivated
   }
 
-  override
-  protected def componentDeactivated() {
+  override protected def componentDeactivated() {
     // I have to turn off the caret when the window loses focus. Text components
     // normally do this by themselves, but the TextAreaReadline component seems
     // to mess around with the editable property of the text pane, and
@@ -127,16 +119,14 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
     }
     super.componentDeactivated
   }
-  
-  override
-  def requestFocus() {
+
+  override def requestFocus() {
     if (console != null) {
       console.area.requestFocus
     }
   }
 
-  override
-  def requestFocusInWindow: Boolean = {
+  override def requestFocusInWindow: Boolean = {
     if (console != null) {
       console.area.requestFocusInWindow
     } else {
@@ -147,18 +137,18 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
   private def createTerminal: ScalaConsoleTerminal = {
     // From core/output2/**/AbstractOutputPane
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
-      case null =>
+      case null ⇒
         UIManager.get("controlFont") match { // NOI18N
-          case null => 11
-          case f: Font => f.getSize
+          case null ⇒ 11
+          case f: Font ⇒ f.getSize
         }
-      case i: java.lang.Integer => i.intValue
+      case i: java.lang.Integer ⇒ i.intValue
     }
 
-    val font = new Font("Monospaced", Font.PLAIN, fontSize) match { 
-      case null => new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
-      case x => x
-    } 
+    val font = new Font("Monospaced", Font.PLAIN, fontSize) match {
+      case null ⇒ new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
+      case x ⇒ x
+    }
 
     val textPane = new JTextPane()
     textPane.getDocument.putProperty("mimeType", mimeType)
@@ -170,8 +160,8 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
 
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
-      case null => 
-      case c => textPane.setSelectionColor(c)
+      case null ⇒
+      case c ⇒ textPane.setSelectionColor(c)
     }
 
     //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);
@@ -229,31 +219,28 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
     builder = builder.addEnvironmentVariable("SCALA_HOME", ScalaExecution.getScalaHome)
     val pwd = FileUtil.toFile(project.getProjectDirectory)
     builder = builder.workingDirectory(pwd)
-    
+
     val pipedIn = new PipedInputStream()
     val console = new ScalaConsoleTerminal(
       textPane, pipedIn,
-      " " + NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "ScalaConsoleWelcome") + " " + "scala.home=" + scalaHome + "\n"
-    )
-    
+      " " + NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "ScalaConsoleWelcome") + " " + "scala.home=" + scalaHome + "\n")
+
     val consoleOut = new AnsiConsoleOutputStream(console)
     val in = new InputStreamReader(pipedIn)
     val out = new PrintWriter(new PrintStream(consoleOut))
     val err = new PrintWriter(new PrintStream(consoleOut))
     val inputOutput = new ConsoleInputOutput(in, out, err)
-    
+
     val execDescriptor = new ExecutionDescriptor().frontWindow(true).inputVisible(true)
-    .inputOutput(inputOutput).postExecution(new Runnable() {
-        override
-        def run() {
+      .inputOutput(inputOutput).postExecution(new Runnable() {
+        override def run() {
           textPane.setEditable(false)
           SwingUtilities.invokeLater(new Runnable() {
-              override
-              def run() {
-                ScalaConsoleTopComponent.this.close
-                ScalaConsoleTopComponent.this.removeAll
-              }
-            })
+            override def run() {
+              ScalaConsoleTopComponent.this.close
+              ScalaConsoleTopComponent.this.removeAll
+            }
+          })
         }
       })
 
@@ -262,21 +249,21 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
 
     console
   }
-  
+
 }
 
 object ScalaConsoleTopComponent {
   private val log = Logger.getLogger(this.getClass.getName)
-  
+
   val defaultFg = Color.BLACK
   val defaultBg = Color.WHITE
   val linkFg = Color.BLUE
-  
+
   /**
    * path to the icon used by the component and its open action
    */
-  val ICON_PATH = "org/netbeans/modules/scala/console/resources/scala16x16.png" 
-  
+  val ICON_PATH = "org/netbeans/modules/scala/console/resources/scala16x16.png"
+
   private val compName = "ScalaConsole"
   /**
    * @see org.netbeans.core.windows.persistence.PersistenceManager
@@ -291,89 +278,84 @@ object ScalaConsoleTopComponent {
   private def toEscapedPreferredId(project: Project) = {
     TopComponentId.escape(compName + project.getProjectDirectory.getPath)
   }
-  
 
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String => Unit = null) {
+  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String ⇒ Unit = null) {
     val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
-        def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
-      }
-    )
-    
+      def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
+    })
+
     val runnableTask = new Runnable() {
       def run {
         progressHandle.start
-          
+
         val tcId = toEscapedPreferredId(project)
         val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
-          case null => 
+          case null ⇒
             (new ScalaConsoleTopComponent(project), true)
-          case tc: ScalaConsoleTopComponent => 
+          case tc: ScalaConsoleTopComponent ⇒
             (tc, false)
-          case _ =>
+          case _ ⇒
             ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                        "There seem to be multiple components with the '" + tcId + 
-                                        "' ID. That is a potential source of errors and unexpected behavior.")
+              "There seem to be multiple components with the '" + tcId +
+                "' ID. That is a potential source of errors and unexpected behavior.")
             (null, false)
         }
-          
+
         if (!tc.isOpened) {
           tc.open
         }
-        
+
         if (!background) {
           tc.requestActive
         }
-              
+
         val results = commands map tc.console.runCommand
 
         if (background && !isNewCreated) {
           tc.close
         }
-              
+
         if (postAction != null) {
           postAction(results.lastOption getOrElse null)
         }
-          
+
         progressHandle.finish
       }
     }
-      
+
     SwingUtilities.invokeLater(runnableTask)
   }
-  
+
   class ScalaConsoleTerminal(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleTerminal(_area, pipedIn, welcome) {
-  
+
     @throws(classOf[IOException])
-    override 
-    protected def handleClose() {
+    override protected def handleClose() {
       runCommand(":quit") // try to exit underlying process gracefully 
       super.handleClose()
     }
-    
-    override 
-    protected val CompleteTriggerChar = '.'
-    
-    override 
-    protected val lineParser = new ConsoleOutputLineParser() {
-      
-      val INFO_PREFIX    = "[info]"
-      val WARN_PREFIX    = "[warn]"
-      val ERROR_PREFIX   = "[error]"
+
+    override protected val CompleteTriggerChar = '.'
+
+    override protected val lineParser = new ConsoleOutputLineParser() {
+
+      val INFO_PREFIX = "[info]"
+      val WARN_PREFIX = "[warn]"
+      val ERROR_PREFIX = "[error]"
       val SUCCESS_PREFIX = "[success]"
-  
+
       val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
       val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
       val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
-      val LINE = "(([1-9][0-9]*))"  // line number
-      val ROL = ".*\\s?\\s?"        // rest of line (may end with "\n" or "\r\n")
-      val SEP = "\\:"               // seperator between file path and line number
-      val STD_SUFFIX = FILE + SEP + LINE + ROL  // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-  
+      val LINE = "(([1-9][0-9]*))" // line number
+      val ROL = ".*\\s?\\s?" // rest of line (may end with "\n" or "\r\n")
+      val SEP = "\\:" // seperator between file path and line number
+      val STD_SUFFIX = FILE + SEP + LINE + ROL // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+
       val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-      val rWARN_WITH_FILE =  Pattern.compile("\\Q" + WARN_PREFIX  + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+      val rWARN_WITH_FILE = Pattern.compile("\\Q" + WARN_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
 
       lazy val infoStyle = {
         val x = new SimpleAttributeSet()
@@ -399,21 +381,21 @@ object ScalaConsoleTopComponent {
         StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
         x
       }
-  
+
       def parseLine(line: String): Array[(String, AttributeSet)] = {
         if (line.length < 6) {
           Array((line, defaultStyle))
         } else {
           val texts = new ArrayBuffer[(String, AttributeSet)]()
           val testRest_style = if (line.startsWith(ERROR_PREFIX)) {
-      
+
             val m = rERROR_WITH_FILE.matcher(line)
             if (m.matches && m.groupCount >= 3) {
               texts += (("[", defaultStyle))
               texts += (("error", errorStyle))
               texts += (("] ", defaultStyle))
               val textRest = line.substring(ERROR_PREFIX.length + 1, line.length)
-        
+
               val fileName = m.group(1)
               val lineNo = m.group(2)
               val linkStyle = new SimpleAttributeSet()
@@ -421,26 +403,26 @@ object ScalaConsoleTopComponent {
               StyleConstants.setUnderline(linkStyle, true)
               linkStyle.addAttribute("file", fileName)
               linkStyle.addAttribute("line", lineNo)
-        
+
               (textRest, linkStyle)
             } else {
               texts += (("[", defaultStyle))
               texts += (("error", errorStyle))
               texts += (("]", defaultStyle))
               val textRest = line.substring(ERROR_PREFIX.length, line.length)
-        
+
               (textRest, errorStyle)
             }
-      
+
           } else if (line.startsWith(WARN_PREFIX)) {
-      
+
             val m = rWARN_WITH_FILE.matcher(line)
             if (m.matches && m.groupCount >= 3) {
               texts += (("[", defaultStyle))
               texts += (("warn", warnStyle))
               texts += (("] ", defaultStyle))
               val textRest = line.substring(WARN_PREFIX.length + 1, line.length)
-        
+
               val fileName = m.group(1)
               val lineNo = m.group(2)
               val linkStyle = new SimpleAttributeSet()
@@ -448,45 +430,45 @@ object ScalaConsoleTopComponent {
               StyleConstants.setUnderline(linkStyle, true)
               linkStyle.addAttribute("file", fileName)
               linkStyle.addAttribute("line", lineNo)
-        
+
               (textRest, linkStyle)
             } else {
               texts += (("[", defaultStyle))
               texts += (("warn", warnStyle))
               texts += (("]", defaultStyle))
               val textRest = line.substring(WARN_PREFIX.length, line.length)
-        
+
               (textRest, warnStyle)
             }
-      
+
           } else if (line.startsWith(INFO_PREFIX)) {
-      
+
             texts += (("[", defaultStyle))
             texts += (("info", infoStyle))
             texts += (("]", defaultStyle))
             val textRest = line.substring(INFO_PREFIX.length, line.length)
-      
+
             (textRest, defaultStyle)
-      
+
           } else if (line.startsWith(SUCCESS_PREFIX)) {
-      
+
             texts += (("[", defaultStyle))
             texts += (("success", successStyle))
             texts += (("]", defaultStyle))
             val textRest = line.substring(SUCCESS_PREFIX.length, line.length)
-      
+
             (textRest, defaultStyle)
-      
+
           } else {
             (line, defaultStyle)
           }
-    
+
           texts += testRest_style
-      
+
           texts.toArray
         }
       }
     }
   }
-  
+
 }

@@ -70,7 +70,7 @@ class FileTreeElement(fo: FileObject) extends TreeElement {
   override def getIcon: Icon = {
     try {
       return new ImageIcon(DataObject.find(fo).getNodeDelegate.getIcon(BeanInfo.ICON_COLOR_16x16))
-    } catch {case ex: DataObjectNotFoundException => return null}
+    } catch { case ex: DataObjectNotFoundException ⇒ return null }
   }
 
   override def getText(isLogical: Boolean): String = {

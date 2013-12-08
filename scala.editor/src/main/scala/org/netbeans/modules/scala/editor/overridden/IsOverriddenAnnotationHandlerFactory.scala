@@ -45,7 +45,7 @@ import org.netbeans.modules.parsing.spi.SchedulerTask
 import org.netbeans.modules.parsing.spi.TaskFactory
 
 /**
- * 
+ *
  * @author Caoyuan Deng
  */
 class IsOverriddenAnnotationHandlerFactory extends TaskFactory() { // XXX: Phase.RESOLVED, Priority.BELOW_NORMAL

@@ -11,12 +11,12 @@ import java.io.Reader
 import scala.collection.mutable.ArrayBuffer
 
 /**
- * 
+ *
  * @author Caoyuan Deng
  */
 class History(historyFile: File) {
   if (historyFile ne null) setHistoryFile(historyFile)
-  
+
   val history = new ArrayBuffer[String]()
 
   private var _output: PrintWriter = null
@@ -30,7 +30,7 @@ class History(historyFile: File) {
    */
   def this() = this(null)
 
-  def setHistoryFile(historyFile:File) {
+  def setHistoryFile(historyFile: File) {
     if (historyFile.isFile) {
       load(new FileInputStream(historyFile))
     }
@@ -142,11 +142,10 @@ class History(historyFile: File) {
     _output = output
   }
 
-
   /**
    * Returns the current history index.
    */
-  def currentIndex: Int = _currentIndex 
+  def currentIndex: Int = _currentIndex
 
   /**
    * Return the content of the current buffer.
@@ -196,8 +195,7 @@ class History(historyFile: File) {
    * Returns the standard {@link AbstractCollection#toString} representation
    * of the history list.
    */
-  override 
-  def toString(): String = history.toString   
+  override def toString(): String = history.toString
 
   /**
    * Moves the history index to the first entry.
@@ -213,5 +211,5 @@ class History(historyFile: File) {
       false
     }
   }
-  
+
 }

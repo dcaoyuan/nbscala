@@ -43,18 +43,17 @@ import org.netbeans.modules.csl.api.Hint
 import org.netbeans.modules.csl.api.Rule
 import org.netbeans.modules.scala.core.ast.ScalaRootScope
 
-
 abstract class ScalaAstRule extends Rule.AstRule {
-    
-    /** 
-     * Get the ElementKinds this rule should run on.
-     */
-    def getKinds() : java.util.Set[_]
 
-    def createHints(context : ScalaRuleContext, scope : ScalaRootScope) : List[Hint]
+  /**
+   * Get the ElementKinds this rule should run on.
+   */
+  def getKinds(): java.util.Set[_]
+
+  def createHints(context: ScalaRuleContext, scope: ScalaRootScope): List[Hint]
 
 }
 
 object ScalaAstRule {
-    val ROOT = "Root"
+  val ROOT = "Root"
 }

@@ -31,28 +31,27 @@ import javax.swing.text.StyleConstants
 import javax.swing.text.StyledDocument
 import scala.collection.mutable
 
-
 trait ConsoleOutputLineParser {
   def parseLine(line: String): Array[(String, AttributeSet)]
 }
 
 class ConsoleCapturer {
   import ConsoleCapturer._
-  
+
   private var _isCapturing = false
   private var _linesUnderCapturing = new StringBuilder()
   private var _endAction: EndAction = _
-  
+
   /** a temperary variable that will be injected to _endAction at once, and then reset to false */
   private var _isHidingOutput = false
-    
+
   def action = _endAction
 
   def isCapturing = _isCapturing
   def discard {
     _isCapturing = false
   }
-  
+
   /**
    * XXX The logic is too complex for jline1 and windows terminal, todo
    */
@@ -60,8 +59,8 @@ class ConsoleCapturer {
     _isHidingOutput = true
     this
   }
-    
-  def capture(endAction: EndAction => Unit) {
+
+  def capture(endAction: EndAction ⇒ Unit) {
     _isCapturing = true
     _endAction = new EndAction {
       // should keep a self copy of of _isHidingOutput as soon as possible to avoid being changed by outside
@@ -70,16 +69,16 @@ class ConsoleCapturer {
     }
     _isHidingOutput = false // reset back to default
   }
- 
+
   def endWith(lastOutput: String): EndAction = {
     _isCapturing = false
-      
+
     _endAction.lines = _linesUnderCapturing.toString
     _linesUnderCapturing.delete(0, _linesUnderCapturing.length)
     _endAction.lastOutput = lastOutput
     _endAction
   }
-    
+
   def append(str: String) {
     _linesUnderCapturing.append(str)
   }
@@ -103,25 +102,24 @@ object ConsoleCapturer {
  */
 class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends OutputStream {
   private val log = Logger.getLogger(getClass.getName)
-  
+
   def this(area: JTextPane) = this(area, null, null)
-    
+
   trait Completer {
     val popup: JPopupMenu
     val combo: JComboBox[String]
     var invokeOffset: Int = 0
-    
+
     def matches(input: String, candicate: String): Int = {
       val start = (if (CompleteTriggerChar != -1) {
-          input.lastIndexOf(CompleteTriggerChar)
-        } else {
-          input.lastIndexOf(' ')
-        }
-      ) match {
-        case -1 => input.lastIndexOf('\t')
-        case idx => idx
+        input.lastIndexOf(CompleteTriggerChar)
+      } else {
+        input.lastIndexOf(' ')
+      }) match {
+        case -1 ⇒ input.lastIndexOf('\t')
+        case idx ⇒ idx
       }
-      
+
       if (start == -1) {
         backMatches(input, candicate) // best try
       } else if (start == input.length - 1) { // exactly the last char
@@ -135,7 +133,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
         }
       }
     }
-    
+
     /**
      * matches backward maximal length
      */
@@ -152,7 +150,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       }
       matchedLength
     }
-    
+
     /**
      * matches backward maximal length
      */
@@ -169,7 +167,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       }
       matchedLength
     }
-    
+
   }
 
   /** buffer which will be used for the next line */
@@ -180,17 +178,17 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   /** override me to enable it, -1 means no trigger */
   protected val CompleteTriggerChar = -1.toChar
   protected val outputCapturer = new ConsoleCapturer()
-  
+
   lazy val defaultStyle = {
     val x = new SimpleAttributeSet()
-    StyleConstants.setForeground(x, area.getForeground)     
+    StyleConstants.setForeground(x, area.getForeground)
     StyleConstants.setBackground(x, area.getBackground)
     x
   }
 
   lazy val sequenceStyle = {
     val x = new SimpleAttributeSet()
-    StyleConstants.setForeground(x, area.getForeground)     
+    StyleConstants.setForeground(x, area.getForeground)
     StyleConstants.setBackground(x, area.getBackground)
     x
   }
@@ -206,9 +204,9 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
 
   val pipedOut = new PrintStream(new PipedOutputStream(pipedIn))
   private val doc = area.getDocument.asInstanceOf[StyledDocument]
-  
+
   private object areaMouseListener extends ConsoleMouseListener(area)
-  
+
   area.setCaret(BlockCaret)
   area.addKeyListener(terminalInput)
   area.addMouseListener(areaMouseListener)
@@ -221,7 +219,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       x.setRenderer(new DefaultListCellRenderer())
       x
     }
-    
+
     lazy val popup = {
       val x = new BasicComboPopup(combo) {
         //override def getInsets = new Insets(4, 4, 4, 4) // looks ugly under Windows
@@ -236,29 +234,27 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       x
     }
   }
-  
-        
+
   if (welcome ne null) {
     val messageStyle = new SimpleAttributeSet()
     StyleConstants.setBackground(messageStyle, area.getForeground)
     StyleConstants.setForeground(messageStyle, area.getBackground)
     overwrite(welcome, messageStyle)
   }
-  
+
   private var _underlyingTask: Option[Future[Integer]] = None
   def underlyingTask = _underlyingTask
   def underlyingTask_=(underlyingTask: Option[Future[Integer]]) {
     _underlyingTask = underlyingTask
   }
-  
+
   def runCommand(command: String): String = {
     pipedOut.println(command)
     ""
   }
-  
+
   @throws(classOf[IOException])
-  override
-  def close() {
+  override def close() {
     flush
     handleClose
   }
@@ -267,109 +263,102 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
    * This method is called when the stream is closed and it allows
    * extensions of this class to do additional tasks.
    * For example, closing an underlying stream, etc.
-   * 
+   *
    * By override this method, extra tasks can be performance before/after the
    * existed task that have been defined here.
    */
   @throws(classOf[IOException])
   protected def handleClose() {
     underlyingTask map (_.cancel(true))
-    
+
     area.removeKeyListener(terminalInput)
     area.removeMouseListener(areaMouseListener)
     area.removeMouseMotionListener(areaMouseListener)
   }
 
   @throws(classOf[IOException])
-  override
-  def write(b: Array[Byte]) {
+  override def write(b: Array[Byte]) {
     isWaitingUserInput = false
     buf.append(new String(b, 0, b.length))
   }
 
   @throws(classOf[IOException])
-  override
-  def write(b: Array[Byte], offset: Int, length: Int) {
+  override def write(b: Array[Byte], offset: Int, length: Int) {
     isWaitingUserInput = false
     buf.append(new String(b, offset, length))
   }
 
   @throws(classOf[IOException])
-  override
-  def write(b: Int) {
+  override def write(b: Int) {
     isWaitingUserInput = false
     buf.append(b.toChar)
   }
-  
+
   @throws(classOf[IOException])
-  override
-  def flush() {
+  override def flush() {
     doFlushWith(true)()
   }
-  
+
   /**
    * @param   is from a carry out flush
    * @param   an afterward action, with param 'current inputing line' which could be used or just ignore
-   * @return  the last non-teminated line. if it's waiting for user input, this 
+   * @return  the last non-teminated line. if it's waiting for user input, this
    *          line.length should > 0 (with at least one char)
    */
-  protected[console] def doFlushWith(isCarryOut: Boolean)(postAction: => Unit) {
+  protected[console] def doFlushWith(isCarryOut: Boolean)(postAction: ⇒ Unit) {
     val text = buf.toString
     buf.delete(0, buf.length)
     val (lines, nonLineTeminatedText) = readLines(text)
 
     if (isCarryOut) {
       isWaitingUserInput = nonLineTeminatedText.length > 0
-    } 
-    
+    }
+
     // @Note 
     // doFlushWith is usaully called by inputstream/outputstream processing thread, 
     // whatever, we will force Swing related code to be executed in event dispatch thread
     if (!outputCapturer.isCapturing) {
       val theIsWaitingUserInput = isWaitingUserInput // keep a copy for async call
       SwingUtilities.invokeLater(new Runnable() {
-          def run() {
-            try {
-              writeLines(lines)
-              writeNonLineTeminatedText(nonLineTeminatedText)
-              postAction
-              if (theIsWaitingUserInput) {
-                val input = getInputingLine
-                if (CompleteTriggerChar != -1 && 
-                    input.length > 0 &&
-                    input.charAt(input.length -1) == CompleteTriggerChar
-                ) {
-                  terminalInput.invokeCompleteAction
-                }
+        def run() {
+          try {
+            writeLines(lines)
+            writeNonLineTeminatedText(nonLineTeminatedText)
+            postAction
+            if (theIsWaitingUserInput) {
+              val input = getInputingLine
+              if (CompleteTriggerChar != -1 &&
+                input.length > 0 &&
+                input.charAt(input.length - 1) == CompleteTriggerChar) {
+                terminalInput.invokeCompleteAction
               }
-            } catch {
-              case ex: Throwable => log.log(Level.SEVERE, ex.getMessage, ex)
             }
+          } catch {
+            case ex: Throwable ⇒ log.log(Level.SEVERE, ex.getMessage, ex)
           }
         }
-      )
+      })
     } else {
       lines foreach outputCapturer.append
       val theIsWaitingUserInput = isWaitingUserInput // keep a copy for async call
       SwingUtilities.invokeLater(new Runnable() {
-          def run() {
-            try {
-              writeLines(lines)
-              writeNonLineTeminatedText(nonLineTeminatedText)
-              postAction
-              if (theIsWaitingUserInput) { // it's time to end capturing
-                val captureEndAction = outputCapturer.endWith(nonLineTeminatedText)
-                captureEndAction()
-              }
-            } catch {
-              case ex: Throwable => log.log(Level.SEVERE, ex.getMessage, ex)
+        def run() {
+          try {
+            writeLines(lines)
+            writeNonLineTeminatedText(nonLineTeminatedText)
+            postAction
+            if (theIsWaitingUserInput) { // it's time to end capturing
+              val captureEndAction = outputCapturer.endWith(nonLineTeminatedText)
+              captureEndAction()
             }
+          } catch {
+            case ex: Throwable ⇒ log.log(Level.SEVERE, ex.getMessage, ex)
           }
         }
-      )
+      })
     }
   }
-  
+
   /**
    * Read lines from buf, keep not-line-completed chars in buf
    * @return (lines, non-teminated line ie. current input line)
@@ -383,27 +372,27 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       val c = buf.charAt(i)
       if (c == '\n' || c == '\r') {
         // trick: '\u0000' a char that is non-equalable with '\n' or '\r'
-        val c1 = if (i + 1 < len) buf.charAt(i + 1) else '\u0000' 
-        val line = buf.substring(newLineOffset, i) + "\n"  // strip '\r' for Windows
-        if (c == '\n' && c1 == '\r' | c == '\r' && c1 == '\n') { 
-          i += 1  // bypass '\r' for Windows
+        val c1 = if (i + 1 < len) buf.charAt(i + 1) else '\u0000'
+        val line = buf.substring(newLineOffset, i) + "\n" // strip '\r' for Windows
+        if (c == '\n' && c1 == '\r' | c == '\r' && c1 == '\n') {
+          i += 1 // bypass '\r' for Windows
         }
         linesBuf += line
         readOffset = i
         newLineOffset = i + 1
       }
-      
+
       i += 1
     }
-    
+
     val rest = buf.substring(readOffset + 1, buf.length)
-    
+
     val lines = linesBuf.toArray
     linesBuf.clear
-    
+
     (lines, rest)
   }
-    
+
   @throws(classOf[Exception])
   private def writeLines(lines: Array[String]) {
     lines foreach writeLine
@@ -416,11 +405,11 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   private def writeLine(line: String) {
     lineParser.parseLine(line) foreach overwrite
   }
-  
+
   /**
-   * The non teminated text line is usaully the line that is accepting user input, ie. an editable 
+   * The non teminated text line is usaully the line that is accepting user input, ie. an editable
    * line, we should process '\b' here (JTextPane just print ' ' for '\b')
-   * @Note The '\b' from JLine, is actually a back cursor, which works with 
+   * @Note The '\b' from JLine, is actually a back cursor, which works with
    * followed overwriting in combination for non-ansi terminal to move cursor.
    */
   @throws(classOf[Exception])
@@ -429,26 +418,26 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     var i = 0
     while (i < len) {
       text.charAt(i) match {
-        case '\b' =>
+        case '\b' ⇒
           backCursor(1)
-        case c =>
+        case c ⇒
           overwrite("" + c, currentStyle)
       }
       i += 1
     }
   }
-  
+
   @throws(classOf[Exception])
   private def backCursor(num: Int) {
     val backNum = math.min(area.getCaretPosition, num)
     area.setCaretPosition(area.getCaretPosition - backNum)
   }
-  
+
   @throws(classOf[Exception])
   private def overwrite(str_style: (String, AttributeSet)) {
     overwrite(str_style._1, str_style._2)
   }
-  
+
   /**
    * @param string to overwrite
    * @param style
@@ -461,17 +450,16 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     doc.insertString(from, str, style)
     area.setCaretPosition(from + str.length)
   }
-    
 
   protected def replaceText(start: Int, end: Int, replacement: String) {
     try {
       doc.remove(start, end - start)
       doc.insertString(start, replacement, currentStyle)
     } catch {
-      case ex: Throwable => // Ifnore
+      case ex: Throwable ⇒ // Ifnore
     }
   }
-  
+
   /**
    * @see getLastLine
    */
@@ -479,7 +467,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     stripEndingCR(getLastLine)
   }
 
-  /** 
+  /**
    * A document is modelled as a list of lines (Element)=> index = line number
    *
    * @return the text at the last line, @Note the doc's always ending with a '\n' even there was never printing of this CR?
@@ -491,10 +479,10 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     try {
       doc.getText(line.getStartOffset, line.getEndOffset - line.getStartOffset)
     } catch {
-      case ex: Exception => ""
+      case ex: Exception ⇒ ""
     }
-  } 
-  
+  }
+
   private def stripEndingCR(line: String): String = {
     val len = line.length
     if (len > 0) {
@@ -511,29 +499,29 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       line
     }
   }
-  
+
   private def getTextFrom(offset: Int): String = {
     try {
       doc.getText(offset, doc.getLength - offset)
     } catch {
-      case ex: Exception => ""
+      case ex: Exception ⇒ ""
     }
   }
-  
+
   // --- complete actions
-  
+
   protected def completePopupAction(endAction: ConsoleCapturer.EndAction) {
     val text = endAction.lines
     if (text.trim == "{invalid input}") {
       return
     }
-    
+
     val candidates = text.split("\\s+") filter (_.length > 0)
     if (candidates.length > 1) {
       completer.popup.getList.setVisibleRowCount(math.min(10, candidates.length))
       completer.combo.removeAllItems
       candidates foreach completer.combo.addItem
-    
+
       val pos = area.getCaretPosition
       if (pos >= 0) {
         completer.invokeOffset = pos
@@ -542,7 +530,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       }
     }
   }
-  
+
   protected def completeIncrementalAction(endAction: ConsoleCapturer.EndAction) {
     val pos = area.getCaretPosition
     if (pos >= 0) {
@@ -558,7 +546,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
         }
         i += 1
       }
-    
+
       completer.combo.removeAllItems
       if (candidates.length > 0) {
         completer.popup.getList.setVisibleRowCount(math.min(10, candidates.length))
@@ -572,10 +560,10 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       completer.popup.setVisible(false)
     }
   }
-  
+
   protected def completeSelectedAction(evt: KeyEvent) {
     completer.combo.getSelectedItem match {
-      case selectedText: String =>
+      case selectedText: String ⇒
         val pos = area.getCaretPosition
         if (pos >= 0) {
           val input = getInputingLine
@@ -587,10 +575,10 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
             }
           }
         }
-      case _ =>
+      case _ ⇒
     }
   }
-  
+
   protected def completeUpSelectAction(evt: KeyEvent) {
     val selected = completer.combo.getSelectedIndex - 1
     if (selected >= 0) {
@@ -601,7 +589,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       }
     }
   }
-    
+
   protected def completeDownSelectAction(evt: KeyEvent) {
     val selected = completer.combo.getSelectedIndex + 1
     if (selected < completer.combo.getItemCount) {
@@ -612,7 +600,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       }
     }
   }
-  
+
   object terminalInput extends TerminalInput with KeyListener {
     import KeyEvent._
 
@@ -620,38 +608,35 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       outputCapturer.hideOutput capture completePopupAction
       keyTyped(0, VK_TAB, 0)
     }
-    
-    override 
-    def write(b: Array[Byte]) {
+
+    override def write(b: Array[Byte]) {
       pipedOut.write(b)
     }
-    
-    override 
-    def keyReleased(evt: KeyEvent) {
+
+    override def keyReleased(evt: KeyEvent) {
       evt.consume
     }
-    
-    override 
-    def keyPressed(evt: KeyEvent) {
+
+    override def keyPressed(evt: KeyEvent) {
       val keyCode = evt.getKeyCode
-      
+
       // --- complete visiblilty
       if (completer.popup.isVisible) {
         keyCode match {
-          case VK_TAB => 
-            // ignore it
-          case VK_UP =>
+          case VK_TAB ⇒
+          // ignore it
+          case VK_UP ⇒
             completeUpSelectAction(evt)
-          case VK_DOWN =>  
+          case VK_DOWN ⇒
             completeDownSelectAction(evt)
-          case VK_ENTER => 
-            // terminalInput process VK_ENTER in keyTyped, so keep completePopup visible here
-          case VK_ESCAPE => 
-            // terminalInput process VK_ESCAPE in keyTyped, so keep completePopup visible here
-          case _ if isPrintableChar(evt.getKeyChar) =>
+          case VK_ENTER ⇒
+          // terminalInput process VK_ENTER in keyTyped, so keep completePopup visible here
+          case VK_ESCAPE ⇒
+          // terminalInput process VK_ESCAPE in keyTyped, so keep completePopup visible here
+          case _ if isPrintableChar(evt.getKeyChar) ⇒
             // may be under incremental complete
             keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
-          case _ =>
+          case _ ⇒
             if (!(evt.isControlDown || evt.isAltDown || evt.isMetaDown || evt.isShiftDown)) {
               completer.popup.setVisible(false)
             }
@@ -663,163 +648,154 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
 
       // --- evt consumes 
       keyCode match {
-        case VK_C if evt.isMetaDown | evt.isControlDown =>  // copy action (@Note Ctrl+A is used to move to line begin)
-        case VK_V if evt.isMetaDown | evt.isControlDown =>  // paste action
+        case VK_C if evt.isMetaDown | evt.isControlDown ⇒ // copy action (@Note Ctrl+A is used to move to line begin)
+        case VK_V if evt.isMetaDown | evt.isControlDown ⇒ // paste action
           // for console, only paste at the end is meaningful. Anyway, just write them to terminalInput dicarding the caret position
-          val data =Toolkit.getDefaultToolkit.getSystemClipboard.getData(DataFlavor.stringFlavor).asInstanceOf[String]
+          val data = Toolkit.getDefaultToolkit.getSystemClipboard.getData(DataFlavor.stringFlavor).asInstanceOf[String]
           terminalInput.write(data.getBytes("utf-8"))
           evt.consume
-        case _ =>
+        case _ ⇒
           evt.consume
       }
     }
-  
-    override 
-    def keyTyped(evt: KeyEvent) {
+
+    override def keyTyped(evt: KeyEvent) {
       // under keyTyped, always use evt.getKeyChar
       val keyChar = evt.getKeyChar
-      
+
       if (completer.popup.isVisible) {
         keyChar match {
-          case VK_TAB => 
-            // ignore it
-            
-          case VK_ENTER => 
+          case VK_TAB ⇒
+          // ignore it
+
+          case VK_ENTER ⇒
             completeSelectedAction(evt)
             completer.popup.setVisible(false)
-            
-          case VK_ESCAPE =>
+
+          case VK_ESCAPE ⇒
             completer.popup.setVisible(false)
-            
-          case _ if isPrintableChar(keyChar) => 
+
+          case _ if isPrintableChar(keyChar) ⇒
             outputCapturer capture completeIncrementalAction
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
-            
-          case _ =>
+
+          case _ ⇒
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
       } else {
         keyChar match {
-          case VK_TAB =>
+          case VK_TAB ⇒
             if (!outputCapturer.isCapturing) {
               outputCapturer.hideOutput capture completePopupAction // do completion
               keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
             }
-            
-          case VK_ESCAPE => 
-            // ignore it. Under sbt console, <escape> followed by <backspace> behaves strange
-            
-          case _ =>
+
+          case VK_ESCAPE ⇒
+          // ignore it. Under sbt console, <escape> followed by <backspace> behaves strange
+
+          case _ ⇒
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
-        
+
       }
-      
+
       evt.consume // consume it, will be handled by echo etc
     }
-    
+
     private def getModifiers(e: KeyEvent): Int = {
       (if (e.isControlDown) TerminalInput.KEY_CONTROL else 0) |
-      (if (e.isShiftDown) TerminalInput.KEY_SHIFT else 0) |
-      (if (e.isAltDown) TerminalInput.KEY_ALT else 0) |
-      (if (e.isActionKey) TerminalInput.KEY_ACTION else 0)
+        (if (e.isShiftDown) TerminalInput.KEY_SHIFT else 0) |
+        (if (e.isAltDown) TerminalInput.KEY_ALT else 0) |
+        (if (e.isActionKey) TerminalInput.KEY_ACTION else 0)
     }
-    
+
     private def isPrintableChar(c: Char): Boolean = {
       val block = Character.UnicodeBlock.of(c)
-      
+
       !Character.isISOControl(c) &&
-      c != KeyEvent.CHAR_UNDEFINED &&
-      block != null &&
-      block != Character.UnicodeBlock.SPECIALS
+        c != KeyEvent.CHAR_UNDEFINED &&
+        block != null &&
+        block != Character.UnicodeBlock.SPECIALS
     }
   }
 }
 
 class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(term) {
   import AnsiConsoleOutputStream._
-  
+
   private val area = term.area
   private val doc = area.getDocument.asInstanceOf[StyledDocument]
-  
-  override
-  protected def processSetForegroundColor(color: Int) {
+
+  override protected def processSetForegroundColor(color: Int) {
     StyleConstants.setForeground(term.sequenceStyle, ANSI_COLOR_MAP(color))
     term.currentStyle = term.sequenceStyle
   }
 
-  override
-  protected def processSetBackgroundColor(color: Int) {
+  override protected def processSetBackgroundColor(color: Int) {
     StyleConstants.setBackground(term.sequenceStyle, ANSI_COLOR_MAP(color))
     term.currentStyle = term.sequenceStyle
   }
-  
-  override
-  protected def processDefaultTextColor {
+
+  override protected def processDefaultTextColor {
     StyleConstants.setForeground(term.sequenceStyle, term.defaultStyle.getAttribute(StyleConstants.Foreground).asInstanceOf[Color])
     term.currentStyle = term.sequenceStyle
   }
 
-  override
-  protected def processDefaultBackgroundColor {
+  override protected def processDefaultBackgroundColor {
     StyleConstants.setBackground(term.sequenceStyle, term.defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
     term.currentStyle = term.sequenceStyle
   }
 
-  override
-  protected def processSetAttribute(attribute: Int) {
+  override protected def processSetAttribute(attribute: Int) {
     import Ansi._
-    
+
     attribute match {
-      case ATTRIBUTE_CONCEAL_ON =>
-        //write("\u001B[8m")
-        //concealOn = true
-      case ATTRIBUTE_INTENSITY_BOLD =>
+      case ATTRIBUTE_CONCEAL_ON ⇒
+      //write("\u001B[8m")
+      //concealOn = true
+      case ATTRIBUTE_INTENSITY_BOLD ⇒
         StyleConstants.setBold(term.sequenceStyle, true)
-      case ATTRIBUTE_INTENSITY_NORMAL =>
+      case ATTRIBUTE_INTENSITY_NORMAL ⇒
         StyleConstants.setBold(term.sequenceStyle, false)
-      case ATTRIBUTE_UNDERLINE =>
+      case ATTRIBUTE_UNDERLINE ⇒
         StyleConstants.setUnderline(term.sequenceStyle, true)
-      case ATTRIBUTE_UNDERLINE_OFF =>
+      case ATTRIBUTE_UNDERLINE_OFF ⇒
         StyleConstants.setUnderline(term.sequenceStyle, false)
-      case ATTRIBUTE_NEGATIVE_ON =>
-      case ATTRIBUTE_NEGATIVE_Off =>
-      case _ =>
+      case ATTRIBUTE_NEGATIVE_ON ⇒
+      case ATTRIBUTE_NEGATIVE_Off ⇒
+      case _ ⇒
     }
-    
+
     term.currentStyle = term.sequenceStyle
   }
-	
-  override
-  protected def processAttributeRest() {
+
+  override protected def processAttributeRest() {
     term.currentStyle = term.defaultStyle
   }
-  
+
   // @Note before do any ansi cursor command, we should flush first to keep the 
   // proper caret position which is sensitive to the order of ansi command and chars to print
-  override 
-  protected def processCursorToColumn(screenCol: Int) {
-    term.doFlushWith(false) { 
+  override protected def processCursorToColumn(screenCol: Int) {
+    term.doFlushWith(false) {
       try {
         val (lineOffset, lineEndOffset) = getLineOffsetOfPos(doc, area.getCaretPosition)
-        val toPos = lineOffset + screenCol - 1 
-        if (toPos < lineEndOffset) { 
+        val toPos = lineOffset + screenCol - 1
+        if (toPos < lineEndOffset) {
           area.setCaretPosition(toPos)
         } else { // may have to move to previous line
           val (lineOffset1, lineEndOffset1) = getLineOffsetOfPos(doc, lineOffset - 1)
-          val toPos1 = lineOffset1 + screenCol - 1 
+          val toPos1 = lineOffset1 + screenCol - 1
           if (lineOffset1 >= 0 && toPos < lineEndOffset1) {
             area.setCaretPosition(toPos)
           } // else no idea now, do nothing
         }
       } catch {
-        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
   }
-  
-  override 
-  protected def processCursorLeft(count: Int) {
+
+  override protected def processCursorLeft(count: Int) {
     term.doFlushWith(false) {
       try {
         val pos = area.getCaretPosition
@@ -829,13 +805,12 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
           area.setCaretPosition(0)
         }
       } catch {
-        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
       }
-    }    
+    }
   }
 
-  override 
-  protected def processCursorRight(count: Int) {
+  override protected def processCursorRight(count: Int) {
     term.doFlushWith(false) {
       try {
         val pos = area.getCaretPosition
@@ -851,13 +826,12 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
           area.setCaretPosition(doc.getLength - 1)
         }
       } catch {
-        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
       }
-    }    
+    }
   }
 
-  override 
-  protected def processCursorDown(count: Int) {
+  override protected def processCursorDown(count: Int) {
     term.doFlushWith(false) {
       try {
         val pos = area.getCaretPosition
@@ -870,13 +844,12 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
         val toPos = math.min(toLine.getStartOffset + col, toLine.getEndOffset - 1)
         area.setCaretPosition(toPos)
       } catch {
-        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
   }
 
-  override 
-  protected def processCursorUp(count: Int) {
+  override protected def processCursorUp(count: Int) {
     term.doFlushWith(false) {
       try {
         val pos = area.getCaretPosition
@@ -889,50 +862,47 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
         val toPos = math.min(toLine.getStartOffset + col, toLine.getEndOffset - 1)
         area.setCaretPosition(toPos)
       } catch {
-        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
       }
-    }    
-  }
-  
-  /**
-   * Clears part of the screen. If n is zero (or missing), clear from cursor to 
-   * end of screen. If n is one, clear from cursor to beginning of the screen. 
-   * If n is two, clear entire screen (and moves cursor to upper left on MS-DOS ANSI.SYS).
-   */
-  override 
-  protected def processEraseScreen(eraseOption: Int) {
-    eraseOption match {
-      case 0 => 
-        term.doFlushWith(false) {
-          try {
-            val pos = area.getCaretPosition
-            doc.remove(pos, doc.getLength - pos)
-          } catch {
-            case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
-          }
-        }
-      case _ =>
-    }
-  }
-  
-  override 
-  protected def processEraseLine(eraseOption: Int) {
-    eraseOption match {
-      case 0 => 
-        term.doFlushWith(false) {
-          try {
-            val pos = area.getCaretPosition
-            doc.remove(pos, doc.getLength - pos)
-          } catch {
-            case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
-          }
-        }
-      case _ =>
     }
   }
 
-  override
-  protected def processReportCursorPosition() {
+  /**
+   * Clears part of the screen. If n is zero (or missing), clear from cursor to
+   * end of screen. If n is one, clear from cursor to beginning of the screen.
+   * If n is two, clear entire screen (and moves cursor to upper left on MS-DOS ANSI.SYS).
+   */
+  override protected def processEraseScreen(eraseOption: Int) {
+    eraseOption match {
+      case 0 ⇒
+        term.doFlushWith(false) {
+          try {
+            val pos = area.getCaretPosition
+            doc.remove(pos, doc.getLength - pos)
+          } catch {
+            case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+          }
+        }
+      case _ ⇒
+    }
+  }
+
+  override protected def processEraseLine(eraseOption: Int) {
+    eraseOption match {
+      case 0 ⇒
+        term.doFlushWith(false) {
+          try {
+            val pos = area.getCaretPosition
+            doc.remove(pos, doc.getLength - pos)
+          } catch {
+            case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+          }
+        }
+      case _ ⇒
+    }
+  }
+
+  override protected def processReportCursorPosition() {
     val DEFAULT_HEIGHT = 24
     term.doFlushWith(false) {
       try {
@@ -945,23 +915,22 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
         val report = "\u001b[" + screenRow + ";" + screenCol + "R"
         term.terminalInput.write(report.getBytes("utf-8"))
       } catch {
-        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
       }
-    }    
+    }
   }
 
 }
 
 object AnsiConsoleOutputStream {
   private val log = Logger.getLogger(getClass.getName)
-  
+
   private val ANSI_COLOR_MAP = Array(
-    Color.BLACK, Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN, Color.WHITE
-  )
-  
+    Color.BLACK, Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN, Color.WHITE)
+
   // --- Document utilities
-  
-  /** 
+
+  /**
    * indent the lines between the given document positions (NOT LINE NUMBERS !)
    */
   def indentLines(doc: Document, fromPos: Int, toPos: Int) {
@@ -974,42 +943,42 @@ object AnsiConsoleOutputStream {
         val li = doc.getDefaultRootElement.getElement(line)
         doc.insertString(li.getStartOffset, " ", li.getAttributes)
       } catch {
-        case ex: Exception => log.warning(ex.getMessage)
+        case ex: Exception ⇒ log.warning(ex.getMessage)
       }
       line += 1
     }
   }
 
-  /** 
+  /**
    * Indents the lines between the given document positions (positions, NOT LINE NUMBERS !)
    */
   def unindentLines(doc: Document, fromPos: Int, toPos: Int) {
-    val lineStart = getLineNumber( doc, fromPos)
-    val lineEnd = getLineNumber( doc, toPos )
+    val lineStart = getLineNumber(doc, fromPos)
+    val lineEnd = getLineNumber(doc, toPos)
 
     var line = lineStart
     while (line <= lineEnd) {
       try {
         val li = doc.getDefaultRootElement().getElement(line)
         val ci = doc.getText(li.getStartOffset, 1).charAt(0)
-        if(Character.isWhitespace(ci) && ci !='\n') {
+        if (Character.isWhitespace(ci) && ci != '\n') {
           doc.remove(li.getStartOffset, 1)
         }
       } catch {
-        case ex: Exception => log.warning(ex.getMessage)
+        case ex: Exception ⇒ log.warning(ex.getMessage)
       }
       line += 1
     }
   }
 
-  /** 
+  /**
    * comment out the lines between the given document positions (NOT LINE NUMBERS !)
    * comment out means adding "//" at the beginning of the line.
    * the uncommentout is the reverse operation
    */
   def commentOutLines(doc: Document, fromPos: Int, toPos: Int) {
-    val lineStart = getLineNumber( doc, fromPos)
-    val lineEnd = getLineNumber( doc, toPos )
+    val lineStart = getLineNumber(doc, fromPos)
+    val lineEnd = getLineNumber(doc, toPos)
 
     var line = lineStart
     while (line <= lineEnd) {
@@ -1017,32 +986,31 @@ object AnsiConsoleOutputStream {
         val li = doc.getDefaultRootElement.getElement(line);
         doc.insertString(li.getStartOffset, "//", li.getAttributes)
       } catch {
-        case ex: Exception => log.warning(ex.getMessage)
+        case ex: Exception ⇒ log.warning(ex.getMessage)
       }
       line += 1
     }
   }
 
-  /** 
+  /**
    * uncomment out the lines between the given document positions (NOT LINE NUMBERS !)
    * reverse operation of commentOut. This only removes // at the beginning
    */
   def unCommentOutLines(doc: Document, fromPos: Int, toPos: Int) {
-    val lineStart = getLineNumber( doc, fromPos)
-    val lineEnd = getLineNumber( doc, toPos )
+    val lineStart = getLineNumber(doc, fromPos)
+    val lineEnd = getLineNumber(doc, toPos)
 
     var line = lineStart
     while (line <= lineEnd) {
       try {
         val li = doc.getDefaultRootElement.getElement(line)
-        if(li.getEndOffset()-li.getStartOffset>1) {
-          if(doc.getText(li.getStartOffset, 2).equals("//"))
-          {
+        if (li.getEndOffset() - li.getStartOffset > 1) {
+          if (doc.getText(li.getStartOffset, 2).equals("//")) {
             doc.remove(li.getStartOffset, 2)
           }
         }
       } catch {
-        case ex: Exception => log.warning(ex.getMessage)
+        case ex: Exception ⇒ log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -1070,7 +1038,7 @@ object AnsiConsoleOutputStream {
    return pos-lineElt.getStartOffset();
    }*/
 
-  /** 
+  /**
    * @return the {line,column}, start from 0
    */
   def getLineColumnNumbers(doc: Document, pos: Int): Array[Int] = {
@@ -1086,14 +1054,14 @@ object AnsiConsoleOutputStream {
   def getLineOffsetOfPos(doc: Document, pos: Int): (Int, Int) = {
     // a document is modelled as a list of lines (Element)=> index = line number
     val line = doc match {
-      case sDoc: StyledDocument =>
+      case sDoc: StyledDocument ⇒
         sDoc.getParagraphElement(pos)
-      case _ =>
+      case _ ⇒
         val root = doc.getDefaultRootElement
         val lineIdx = root.getElementIndex(pos)
         root.getElement(lineIdx)
     }
-    
+
     if (line != null) {
       (line.getStartOffset, line.getEndOffset)
     } else {
@@ -1107,7 +1075,7 @@ object AnsiConsoleOutputStream {
     doc.remove(line.getStartOffset, line.getEndOffset - line.getStartOffset)
   }
 
-  /** 
+  /**
    * @return the text at the line containing the given position. With eventual carriage return and line feeds...
    */
   def getTextOfLineAtPosition(doc: StyledDocument, pos: Int): String = {
@@ -1116,32 +1084,34 @@ object AnsiConsoleOutputStream {
     try {
       doc.getText(line.getStartOffset, line.getEndOffset - line.getStartOffset)
     } catch {
-      case ex: Exception => null
+      case ex: Exception ⇒ null
     }
   }
 
-  /** @return the text at the line containing the given position
+  /**
+   * @return the text at the line containing the given position
    */
   def getTextOfLineAtPosition_onlyUpToPos(doc: StyledDocument, pos: Int): String = {
     // a document is modelled as a list of lines (Element)=> index = line number
     val line = doc.getParagraphElement(pos)
     try {
-      doc.getText(line.getStartOffset, pos-line.getStartOffset)
+      doc.getText(line.getStartOffset, pos - line.getStartOffset)
     } catch {
-      case ex: Exception => null
+      case ex: Exception ⇒ null
     }
   }
 
-  /** @return the text at the line containing the given position
+  /**
+   * @return the text at the line containing the given position
    */
   def getTextOfLine(doc: Document, line: Int): String = {
     // a document is modelled as a list of lines (Element)=> index = line number
     val map = doc.getDefaultRootElement
     val lineElt = map.getElement(line)
     try {
-      doc.getText(lineElt.getStartOffset, lineElt.getEndOffset-lineElt.getStartOffset)
+      doc.getText(lineElt.getStartOffset, lineElt.getEndOffset - lineElt.getStartOffset)
     } catch {
-      case ex: Exception => null
+      case ex: Exception ⇒ null
     }
   }
 
@@ -1151,54 +1121,52 @@ object AnsiConsoleOutputStream {
     var i = 0
     while (i < text.length && !break) {
       val ci = text.charAt(i)
-      if (Character.isWhitespace(ci) && ci!='\r' && ci!='\n') {
+      if (Character.isWhitespace(ci) && ci != '\r' && ci != '\n') {
         sb.append(text.charAt(i))
       } else {
         break = true
       }
       i += 1
     }
-    
+
     sb.toString
   }
 
-
   def scrollPosToMiddle(pos: Int, textPane: JTextPane, editorScrollPane: JScrollPane, h: Int) {
-    try
-    {
+    try {
       val r = textPane.modelToView(pos)
       //r.translate(0,-this.getHeight()/4);
       //textPane.scrollRectToVisible( r );
       //this.scroll
       //int h2 = (int)editorScrollPane.getViewport().getExtentSize().getHeight()/2;
       //System.out.println(""+h2);
-      editorScrollPane.getViewport().setViewPosition(new Point(0, Math.max(r.y - h, 0)) )
+      editorScrollPane.getViewport().setViewPosition(new Point(0, Math.max(r.y - h, 0)))
       //textPane.requestFocus(); // to make the selection visible
 
     } catch {
-      case ex: Exception =>
+      case ex: Exception ⇒
     }
   }
 
-
-  /** in fact, 1/4 below upper limit is nicer...
-   scrolls the start of the line to the middle of the screen
+  /**
+   * in fact, 1/4 below upper limit is nicer...
+   * scrolls the start of the line to the middle of the screen
    */
   def scrollToMiddle(tp: JTextComponent, pos: Int) {
     // look if a parent exists, this is only the case IF the text pane has been added in a scrollpane
     if (tp.getParent == null) return
     tp.getParent match {
-      case null => return
-      case vp: JViewport =>
+      case null ⇒ return
+      case vp: JViewport ⇒
         try {
           val pt = tp.modelToView(pos)
           var h = (pt.getY - vp.getHeight / 4).toInt
           if (h < 0) h = 0
           vp.setViewPosition(new Point(0, h))
         } catch {
-          case ex: Exception => log.warning(ex.getMessage)
+          case ex: Exception ⇒ log.warning(ex.getMessage)
         }
-      case _ =>
+      case _ ⇒
         new Throwable("parent of textpane is not a viewport !").printStackTrace
     }
   }
@@ -1213,12 +1181,13 @@ object AnsiConsoleOutputStream {
       val pt2 = new Point((pt1.getX + dim.getWidth).toInt, (pt1.getY + dim.getHeight).toInt)
       pos(1) = textPane.viewToModel(pt2)
     } catch {
-      case ex: Exception => log.warning(ex.getMessage)
+      case ex: Exception ⇒ log.warning(ex.getMessage)
     }
     pos
   }
 
-  /** @param line zero based.
+  /**
+   * @param line zero based.
    * @param column zero based
    */
   def getDocPositionFor(doc: Document, line: Int, column: Int): Int = {
@@ -1231,6 +1200,7 @@ object AnsiConsoleOutputStream {
       if (pos > doc.getLength) return doc.getLength
       pos
     } catch {
-      case ex: Exception => throw new RuntimeException(ex)}
+      case ex: Exception ⇒ throw new RuntimeException(ex)
+    }
   }
 }

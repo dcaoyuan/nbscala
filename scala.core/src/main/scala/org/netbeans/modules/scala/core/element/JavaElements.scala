@@ -38,13 +38,13 @@
  */
 package org.netbeans.modules.scala.core.element
 
-import org.netbeans.modules.csl.api.{ElementHandle, ElementKind, Modifier, HtmlFormatter, OffsetRange}
+import org.netbeans.modules.csl.api.{ ElementHandle, ElementKind, Modifier, HtmlFormatter, OffsetRange }
 import org.netbeans.modules.csl.api.UiUtils
 import org.netbeans.modules.csl.spi.ParserResult
 import org.openide.filesystems.FileObject
 
 import javax.swing.Icon
-import org.netbeans.api.language.util.ast.{AstElementHandle}
+import org.netbeans.api.language.util.ast.{ AstElementHandle }
 
 import org.netbeans.modules.scala.core.ScalaGlobal
 
@@ -57,8 +57,8 @@ import org.netbeans.modules.scala.core.ScalaGlobal
  *
  * @author Caoyuan Deng
  */
-trait JavaElements {self: ScalaGlobal =>
-  
+trait JavaElements { self: ScalaGlobal ⇒
+
   object JavaElement {
     def apply(element: org.netbeans.api.java.source.ElementHandle[_]) = {
       new JavaElement(element)
@@ -98,9 +98,9 @@ trait JavaElements {self: ScalaGlobal =>
   class JavaElement(element: org.netbeans.api.java.source.ElementHandle[_]) extends AstElementHandle {
 
     def getFileObject: FileObject = null
-    
+
     def getMimeType: String = "text/x-java"
-    
+
     def getName: String = {
       element.getBinaryName
     }
@@ -111,11 +111,11 @@ trait JavaElements {self: ScalaGlobal =>
 
     def getKind: ElementKind = {
       element.getKind match {
-        case javax.lang.model.element.ElementKind.PACKAGE => ElementKind.PACKAGE
-        case javax.lang.model.element.ElementKind.CLASS => ElementKind.CLASS
-        case javax.lang.model.element.ElementKind.INTERFACE => ElementKind.MODULE
-        case javax.lang.model.element.ElementKind.METHOD => ElementKind.METHOD
-        case _ => ElementKind.OTHER
+        case javax.lang.model.element.ElementKind.PACKAGE ⇒ ElementKind.PACKAGE
+        case javax.lang.model.element.ElementKind.CLASS ⇒ ElementKind.CLASS
+        case javax.lang.model.element.ElementKind.INTERFACE ⇒ ElementKind.MODULE
+        case javax.lang.model.element.ElementKind.METHOD ⇒ ElementKind.METHOD
+        case _ ⇒ ElementKind.OTHER
       }
     }
 
@@ -154,8 +154,7 @@ trait JavaElements {self: ScalaGlobal =>
 
     // -----
 
-    override 
-    def toString = {
+    override def toString = {
       getName + "(kind=" + getKind + ", element=" + element + ")"
     }
 
@@ -167,7 +166,7 @@ trait JavaElements {self: ScalaGlobal =>
       formatter.appendText(getName)
     }
 
-    def sigFormat(fm: HtmlFormatter) : Unit = {
+    def sigFormat(fm: HtmlFormatter): Unit = {
     }
   }
 }

@@ -44,13 +44,12 @@ import org.netbeans.modules.csl.api.Rule
 import org.netbeans.modules.csl.api.Error
 
 abstract class ScalaErrorRule extends Rule.ErrorRule {
-    
-    def createHints(context : ScalaRuleContext, error : Error) : List[Hint]
+
+  def createHints(context: ScalaRuleContext, error: Error): List[Hint]
 
 }
 
 object ScalaErrorRule {
-    val SYNTAX_ERROR = "SYNTAX_ERROR"
-
+  val SYNTAX_ERROR = "SYNTAX_ERROR"
 
 }

@@ -28,8 +28,8 @@ class AggProjectsNodeFactory extends NodeFactory {
 
 object AggProjectsNodeFactory {
   private val AGG_PROJECTS = "agg-projects"
-  private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
-    
+  private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png") //NOI18N
+
   private class ProjectsNodeList(project: SBTProject) extends NodeList[String] {
     private val cs = new ChangeSupport(this)
     private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
@@ -45,12 +45,12 @@ object AggProjectsNodeFactory {
      */
     def node(key: String): Node = {
       if (sbtResolver.getAggregateProjects.length == 0) {
-        null 
+        null
       } else {
         try {
           new ProjectNode(project)
         } catch {
-          case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
+          case ex: DataObjectNotFoundException ⇒ Exceptions.printStackTrace(ex); null
         }
       }
     }
@@ -71,54 +71,47 @@ object AggProjectsNodeFactory {
       cs.removeChangeListener(l)
     }
   }
-  
+
   private class ProjectNode(project: SBTProject) extends AbstractNode(Children.create(new ProjectsChildFactory(project), true)) {
     private val DISPLAY_NAME = NbBundle.getMessage(classOf[AggProjectsNodeFactory], "CTL_AggProjectsNode")
 
-    override
-    def getDisplayName: String = DISPLAY_NAME
+    override def getDisplayName: String = DISPLAY_NAME
 
-    override
-    def getName: String = ProjectConstants.NAME_DEP_PROJECTS
+    override def getName: String = ProjectConstants.NAME_DEP_PROJECTS
 
-    override
-    def getIcon(tpe: Int) = getIcon(false, tpe)
+    override def getIcon(tpe: Int) = getIcon(false, tpe)
 
-    override
-    def getOpenedIcon(tpe: Int) = getIcon(true, tpe)
+    override def getOpenedIcon(tpe: Int) = getIcon(true, tpe)
 
     private def getIcon(opened: Boolean, tpe: Int) = ImageUtilities.mergeImages(Icons.getFolderIcon(opened), getBadge, 7, 7)
     private def getBadge: Image = ICON_LIB_BADGE
 
-    override
-    def getActions(context: Boolean): Array[Action] = Array[Action]()
+    override def getActions(context: Boolean): Array[Action] = Array[Action]()
   }
-  
+
   private class ProjectsChildFactory(parentProject: SBTProject) extends ChildFactory.Detachable[SBTProject] {
     private lazy val sbtResolver = parentProject.getLookup.lookup(classOf[SBTResolver])
 
-    override 
-    protected def createKeys(toPopulate: java.util.List[SBTProject]): Boolean = {
+    override protected def createKeys(toPopulate: java.util.List[SBTProject]): Boolean = {
       val toSort = new java.util.TreeMap[String, SBTProject]()
       try {
         val projectFos = sbtResolver.getAggregateProjects map FileUtil.toFileObject
-        for (projectFo <- projectFos) {
+        for (projectFo ← projectFos) {
           ProjectManager.getDefault.findProject(projectFo) match {
-            case x: SBTProject => toSort.put(x.getName, x)
-            case _ =>
+            case x: SBTProject ⇒ toSort.put(x.getName, x)
+            case _ ⇒
           }
         }
       } catch {
-        case ex: IOException => Exceptions.printStackTrace(ex)
-        case ex: IllegalArgumentException => Exceptions.printStackTrace(ex)
+        case ex: IOException ⇒ Exceptions.printStackTrace(ex)
+        case ex: IllegalArgumentException ⇒ Exceptions.printStackTrace(ex)
       }
-      
+
       toPopulate.addAll(toSort.values)
       true
     }
-    
-    override
-    protected def createNodeForKey(key: SBTProject): Node = new SubProjectNode(key)
+
+    override protected def createNodeForKey(key: SBTProject): Node = new SubProjectNode(key)
   }
-  
+
 }

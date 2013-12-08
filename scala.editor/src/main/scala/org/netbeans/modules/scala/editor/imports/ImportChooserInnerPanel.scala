@@ -61,7 +61,6 @@ import javax.swing.ListCellRenderer;
 import javax.swing.UIManager;
 import org.openide.util.NbBundle;
 
-
 /**
  * JTable with custom renderer, so second column looks editable (JComboBox).
  * Second column also has CellEditor (also a JComboBox).
@@ -78,30 +77,30 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
   private var lblHeader: javax.swing.JLabel = _
   private var lblTitle: javax.swing.JLabel = _
   // End of variables declaration//GEN-END:variables
-    
+
   initComponents
 
   def initPanel(multipleCandidates: Map[String, List[ImportCandidate]]) {
     initComponentsMore(multipleCandidates);
     setAccessible
   }
-    
+
   private def initComponentsMore(multipleCandidates: Map[String, List[ImportCandidate]]) {
-    contentPanel.setLayout( new GridBagLayout() );
-    contentPanel.setBackground( UIManager.getColor("Table.background") ); //NOI18N
-    jScrollPane1.setBorder( UIManager.getBorder("ScrollPane.border") ); //NOI18N
-    jScrollPane1.getVerticalScrollBar().setUnitIncrement( new JLabel("X").getPreferredSize().height );
-    jScrollPane1.getVerticalScrollBar().setBlockIncrement( new JLabel("X").getPreferredSize().height*10 );
-        
+    contentPanel.setLayout(new GridBagLayout());
+    contentPanel.setBackground(UIManager.getColor("Table.background")); //NOI18N
+    jScrollPane1.setBorder(UIManager.getBorder("ScrollPane.border")); //NOI18N
+    jScrollPane1.getVerticalScrollBar().setUnitIncrement(new JLabel("X").getPreferredSize().height);
+    jScrollPane1.getVerticalScrollBar().setBlockIncrement(new JLabel("X").getPreferredSize().height * 10);
+
     val candidateSize = multipleCandidates.size
-        
-    if( candidateSize > 0 ) {
-        
+
+    if (candidateSize > 0) {
+
       var row = 0
 
       combos = new Array[JComboBox[_]](candidateSize)
 
-      val monoSpaced = new Font( "Monospaced", Font.PLAIN, new JLabel().getFont.getSize)
+      val monoSpaced = new Font("Monospaced", Font.PLAIN, new JLabel().getFont.getSize)
       val focusListener = new FocusListener {
         def focusGained(e: FocusEvent) {
           val c = e.getComponent
@@ -111,96 +110,95 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
         def focusLost(arg0: FocusEvent) {
         }
       }
-            
+
       var i = 0
 
-      for ((name, importCandidates) <- multipleCandidates) {
+      for ((name, importCandidates) ← multipleCandidates) {
         val size = importCandidates.size
         var iNum = 0;
-                
+
         val choices = new Array[String](size)
         val icons = new Array[Icon](size)
         var defaultSelection: String = null;
         var maxImportantsLevel = 0;
-                
-        for (ImportCandidate(missing, fqn, range, icon, importantsLevel) <- importCandidates) {
+
+        for (ImportCandidate(missing, fqn, range, icon, importantsLevel) ← importCandidates) {
           choices(iNum) = fqn
           icons(iNum) = icon
-                    
+
           val level = importantsLevel
-                    
-          if(level > maxImportantsLevel){
+
+          if (level > maxImportantsLevel) {
             defaultSelection = choices(iNum)
             maxImportantsLevel = level
           }
-                    
+
           iNum += 1
         }
-                
+
         combos(i) = createComboBox(choices, defaultSelection,
-                                   icons, monoSpaced, focusListener)
+          icons, monoSpaced, focusListener)
 
-        val lblSimpleName = new JLabel( name );
-        lblSimpleName.setOpaque( false );
-        lblSimpleName.setFont( monoSpaced );
-        lblSimpleName.setLabelFor( combos(i) );
+        val lblSimpleName = new JLabel(name);
+        lblSimpleName.setOpaque(false);
+        lblSimpleName.setFont(monoSpaced);
+        lblSimpleName.setLabelFor(combos(i));
 
-        contentPanel.add( lblSimpleName, new GridBagConstraints(0,row,1,1,0.0,0.0,GridBagConstraints.WEST,GridBagConstraints.NONE,new Insets(3,5,2,5),0,0) );
+        contentPanel.add(lblSimpleName, new GridBagConstraints(0, row, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(3, 5, 2, 5), 0, 0));
         row += 1
-        contentPanel.add( combos(i), new GridBagConstraints(1,row,1,1,1.0,0.0,GridBagConstraints.WEST,GridBagConstraints.HORIZONTAL,new Insets(3,5,2,5),0,0) );
+        contentPanel.add(combos(i), new GridBagConstraints(1, row, 1, 1, 1.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL, new Insets(3, 5, 2, 5), 0, 0));
         i += 1
       }
 
-      contentPanel.add( new JLabel(), new GridBagConstraints(2,row,2,1,0.0,1.0,GridBagConstraints.CENTER,GridBagConstraints.NONE,new Insets(0,0,0,0),0,0) );
+      contentPanel.add(new JLabel(), new GridBagConstraints(2, row, 2, 1, 0.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
       val d = contentPanel.getPreferredSize();
       d.height = getRowHeight * math.min(combos.length, 6)
-      jScrollPane1.getViewport.setPreferredSize( d )
+      jScrollPane1.getViewport.setPreferredSize(d)
     } else {
-      contentPanel.add( new JLabel(getBundleString("FixDupImportStmts_NothingToFix")), new GridBagConstraints(0,0,1,1,1.0,1.0,GridBagConstraints.CENTER,GridBagConstraints.NONE,new Insets(20,20,20,20),0,0) );
+      contentPanel.add(new JLabel(getBundleString("FixDupImportStmts_NothingToFix")), new GridBagConstraints(0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(20, 20, 20, 20), 0, 0));
     }
-        
+
     // load localized text into widgets:
     lblTitle.setText(getBundleString("FixDupImportStmts_IntroLbl")); //NOI18N
     lblHeader.setText(getBundleString("FixDupImportStmts_Header")); //NOI18N
 
   }
-    
+
   private def createComboBox(choices: Array[String], defaultValue: String, icons: Array[Icon], font: Font, listener: FocusListener): JComboBox[_] = {
     val combo = new JComboBox(choices.asInstanceOf[Array[Object]])
     combo.setSelectedItem(defaultValue);
     combo.getAccessibleContext().setAccessibleDescription(getBundleString("FixDupImportStmts_Combo_ACSD")) //NOI18N
-    combo.getAccessibleContext().setAccessibleName(getBundleString("FixDupImportStmts_Combo_Name_ACSD"))   //NOI18N
+    combo.getAccessibleContext().setAccessibleName(getBundleString("FixDupImportStmts_Combo_Name_ACSD")) //NOI18N
     combo.setOpaque(false);
-    combo.setFont( font );
-    combo.addFocusListener( listener );
-    combo.setEnabled( choices.length > 1 );
-    combo.setRenderer( new DelegatingRenderer(combo.getRenderer, choices, icons))
+    combo.setFont(font);
+    combo.addFocusListener(listener);
+    combo.setEnabled(choices.length > 1);
+    combo.setRenderer(new DelegatingRenderer(combo.getRenderer, choices, icons))
     val inputMap = combo.getInputMap(JComponent.WHEN_FOCUSED)
-    inputMap.put( KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "showPopup") //NOI18N
+    inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "showPopup") //NOI18N
     combo.getActionMap().put("showPopup", new TogglePopupAction) //NOI18N
     combo
   }
-    
+
   private def getRowHeight: Int = {
-    return if (combos.length == 0) 0 else combos(0).getPreferredSize().height+6;
+    return if (combos.length == 0) 0 else combos(0).getPreferredSize().height + 6;
   }
-    
+
   private def getBundleString(s: String): String = {
     NbBundle.getMessage(classOf[ImportChooserInnerPanel], s)
   }
-    
-    
+
   private def setAccessible {
     getAccessibleContext().setAccessibleDescription(getBundleString("FixDupImportStmts_IntroLbl")) // NOI18N
   }
-    
+
   def getSelections: Array[String] = {
-    combos map {x => x.getSelectedItem.toString}
+    combos map { x ⇒ x.getSelectedItem.toString }
   }
-    
-    
-  /** This method is called from within the constructor to
+
+  /**
+   * This method is called from within the constructor to
    * initialize the form.
    * WARNING: Do NOT modify this code. The content of this method is
    * always regenerated by the Form Editor.
@@ -255,19 +253,17 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
     gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST
     gridBagConstraints.insets = new java.awt.Insets(3, 0, 3, 0)
     add(lblHeader, gridBagConstraints);
-  }// </editor-fold>//GEN-END:initComponents
-    
-    
-    
+  } // </editor-fold>//GEN-END:initComponents
+
   private class DelegatingRenderer[T](orig: ListCellRenderer[T], values: Array[String], icons: Array[Icon]) extends ListCellRenderer[T] {
 
     def getListCellRendererComponent(list: JList[_ <: T], value: T, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component = {
       val res = orig.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
-      if (res.isInstanceOf[JLabel] && null != icons ) {
+      if (res.isInstanceOf[JLabel] && null != icons) {
         var i = 0
         var break = false
         while (i < values.length && !break) {
-          if(values(i).equals(value)) {
+          if (values(i).equals(value)) {
             res.asInstanceOf[JLabel].setIcon(icons(i))
             break = true
           }
@@ -277,12 +273,12 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
       res
     }
   }
-    
+
   private class TogglePopupAction extends AbstractAction {
     def actionPerformed(e: ActionEvent) {
       e.getSource match {
-        case combo: JComboBox[_] => combo.setPopupVisible(!combo.isPopupVisible)
-        case _ =>
+        case combo: JComboBox[_] ⇒ combo.setPopupVisible(!combo.isPopupVisible)
+        case _ ⇒
       }
     }
   }

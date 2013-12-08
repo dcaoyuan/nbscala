@@ -66,71 +66,67 @@ import org.openide.util.lookup.Lookups;
 
 import org.netbeans.modules.scala.refactoring.RetoucheUtils
 
-class MoveClassUI(javaObject: DataObject, targetFolder: FileObject, pasteType: PasteType, handles: Seq[TreePathHandle]
-) extends RefactoringUI with RefactoringUIBypass {
-    
+class MoveClassUI(javaObject: DataObject, targetFolder: FileObject, pasteType: PasteType, handles: Seq[TreePathHandle]) extends RefactoringUI with RefactoringUIBypass {
+
   private var panel: MoveClassPanel = _
   private var targetPkgName: String = ""
   private val disable = targetFolder ne null
   private val refactoring = new MoveRefactoring(Lookups.fixed(javaObject.getPrimaryFile, handles.toArray))
   refactoring.getContext.add(RetoucheUtils.getClasspathInfoFor(Array(javaObject.getPrimaryFile)))
-    
+
   final def getString(key: String): String = {
     NbBundle.getMessage(classOf[MoveClassUI], key)
   }
-    
+
   def this(javaObject: DataObject) = {
     this(javaObject, null, null, Nil)
   }
-    
-    
+
   override def getName: String = {
-    getString ("LBL_MoveClass")
+    getString("LBL_MoveClass")
   }
-     
+
   def getDescription: String = {
     new MessageFormat(getString("DSC_MoveClass")).format(
-      Array(javaObject.getName, packageName).asInstanceOf[Array[Object]]
-    )
+      Array(javaObject.getName, packageName).asInstanceOf[Array[Object]])
   }
-    
+
   def isQuery: Boolean = {
     false
   }
-        
+
   def getPanel(parent: ChangeListener): CustomRefactoringPanel = {
     if (panel eq null) {
       val pkgName = if (targetFolder ne null) getPackageName(targetFolder) else getPackageName(javaObject.getPrimaryFile.getParent)
-      panel = new MoveClassPanel (parent, pkgName,
-                                  new MessageFormat(getString("LBL_MoveClassNamed")).format (
+      panel = new MoveClassPanel(parent, pkgName,
+        new MessageFormat(getString("LBL_MoveClassNamed")).format(
           Array(javaObject.getPrimaryFile.getName).asInstanceOf[Array[Object]]),
-                                  if (targetFolder ne null) targetFolder else (if (javaObject ne null) javaObject.getPrimaryFile else null)
-      )
+        if (targetFolder ne null) targetFolder else (if (javaObject ne null) javaObject.getPrimaryFile else null))
       panel.setCombosEnabled(!disable)
     }
     panel
   }
-    
+
   private def getPackageName(file: FileObject): String = {
     val cp = ClassPath.getClassPath(file, ClassPath.SOURCE)
     cp.getResourceName(file, '.', false)
   }
 
   private def packageName: String = {
-    if (targetPkgName.trim.length == 0) getString ("LBL_DefaultPackage") else targetPkgName.trim
+    if (targetPkgName.trim.length == 0) getString("LBL_DefaultPackage") else targetPkgName.trim
   }
-    
+
   private def setParameters(checkOnly: Boolean): Problem = {
-    if (panel==null)
+    if (panel == null)
       return null;
     targetPkgName = panel.getPackageName
 
     val url = URLMapper.findURL(panel.getRootFolder, URLMapper.EXTERNAL)
     try {
-      refactoring.setTarget(Lookups.singleton(new URL(url.toExternalForm + URLEncoder.encode(panel.getPackageName.replace('.','/'), "utf-8")))) // NOI18N
+      refactoring.setTarget(Lookups.singleton(new URL(url.toExternalForm + URLEncoder.encode(panel.getPackageName.replace('.', '/'), "utf-8")))) // NOI18N
     } catch {
-      case ex: UnsupportedEncodingException => Exceptions.printStackTrace(ex)
-      case ex: MalformedURLException => Exceptions.printStackTrace(ex)
+      case ex: UnsupportedEncodingException ⇒ Exceptions.printStackTrace(ex)
+      case ex: MalformedURLException ⇒ Exceptions.printStackTrace(ex)
     }
     if (checkOnly) {
       refactoring.fastCheckParameters
@@ -138,23 +134,23 @@ class MoveClassUI(javaObject: DataObject, targetFolder: FileObject, pasteType: P
       refactoring.checkParameters
     }
   }
-    
+
   def checkParameters: Problem = {
     setParameters(true)
   }
-    
+
   def setParameters: Problem = {
     setParameters(false)
   }
-    
+
   def getRefactoring: AbstractRefactoring = {
     refactoring
   }
-    
+
   def hasParameters: Boolean = {
     return true;
   }
-    
+
   def getHelpCtx: HelpCtx = {
     new HelpCtx(classOf[MoveClassUI])
   }

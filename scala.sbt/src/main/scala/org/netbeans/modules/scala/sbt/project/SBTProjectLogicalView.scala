@@ -24,16 +24,15 @@ import org.openide.util.lookup.Lookups
 import org.openide.util.lookup.ProxyLookup
 
 /**
- * 
+ *
  * @author Caoyuan Deng
  */
 class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
   import SBTProjectLogicalView._
-  
+
   private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
-    
-  override
-  def createLogicalView: Node = {
+
+  override def createLogicalView: Node = {
     try {
       // obtain the project directory's node:
       val projectDirectory = project.getProjectDirectory
@@ -42,7 +41,7 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
       // decorate the project directory's node:
       new ProjectNode(nodeOfProjectFolder, project)
     } catch {
-      case donfe: DataObjectNotFoundException =>
+      case donfe: DataObjectNotFoundException ⇒
         Exceptions.printStackTrace(donfe)
         // fallback-the directory couldn't be created -
         // read-only filesystem or something evil happened
@@ -52,93 +51,84 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
 
   private final class ProjectNode(node: Node, project: SBTProject) extends AbstractNode(
     NodeFactorySupport.createCompositeChildren(project, NODE_FACTORY_FOLDER_PATH),
-    new ProxyLookup(Lookups.singleton(project), node.getLookup)
-  ) with PropertyChangeListener {
+    new ProxyLookup(Lookups.singleton(project), node.getLookup)) with PropertyChangeListener {
 
     sbtResolver.addPropertyChangeListener(this)
-    
-    override
-    def getActions(arg0: Boolean): Array[Action] = Array(
+
+    override def getActions(arg0: Boolean): Array[Action] = Array(
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_CONSOLE, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_OpenSbtAction"), null),
-      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_RELOAD,  NbBundle.getMessage(classOf[SBTActionProvider], "CTL_ReloadSbtAction"), null),
+      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SBT_RELOAD, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_ReloadSbtAction"), null),
       null,
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_SCALA_CONSOLE, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_OpenScalaAction"), null),
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_BUILD, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_BuildAction"), null),
-      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_CLEAN,  NbBundle.getMessage(classOf[SBTActionProvider], "CTL_CleanAction"), null),
+      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_CLEAN, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_CleanAction"), null),
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_REBUILD, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_RebuildAction"), null),
       null,
       CommonProjectActions.newFileAction,
       CommonProjectActions.copyProjectAction,
       CommonProjectActions.deleteProjectAction,
       CommonProjectActions.closeProjectAction,
-      null
-    ) ++ CommonProjectActions.forType(PROJECT_TYPE)
+      null) ++ CommonProjectActions.forType(PROJECT_TYPE)
 
-    override
-    def getIcon(tpe: Int): Image = SBTProject.SBT_ICON
+    override def getIcon(tpe: Int): Image = SBTProject.SBT_ICON
 
-    override
-    def getOpenedIcon(tpe: Int): Image = getIcon(tpe)
+    override def getOpenedIcon(tpe: Int): Image = getIcon(tpe)
 
-    override
-    def getDisplayName = project.getDisplayName
-    
-    override
-    def getShortDescription = project.getProjectDirectory.getPath
-    
-    override 
-    def destroy() {
+    override def getDisplayName = project.getDisplayName
+
+    override def getShortDescription = project.getProjectDirectory.getPath
+
+    override def destroy() {
       sbtResolver.removePropertyChangeListener(this)
       super.destroy
     }
 
     def propertyChange(evt: PropertyChangeEvent) {
       evt.getPropertyName match {
-        case SBTResolver.DESCRIPTOR_CHANGE => 
+        case SBTResolver.DESCRIPTOR_CHANGE ⇒
           // The caller holds ProjectManager.mutex() read lock
           SwingUtilities.invokeLater(new Runnable() {
-              def run() {
-                ProjectNode.this.setChildren(NodeFactorySupport.createCompositeChildren(project, NODE_FACTORY_FOLDER_PATH))
-              }
-            })
-        case _ =>
+            def run() {
+              ProjectNode.this.setChildren(NodeFactorySupport.createCompositeChildren(project, NODE_FACTORY_FOLDER_PATH))
+            }
+          })
+        case _ ⇒
       }
     }
   }
-  
+
   /**
-   * Try to find a given node in the logical view. If some node within the logical 
-   * view tree has the supplied object in its lookup, it ought to be returned if 
-   * that is practical. If there are multiple such nodes, the one most suitable 
+   * Try to find a given node in the logical view. If some node within the logical
+   * view tree has the supplied object in its lookup, it ought to be returned if
+   * that is practical. If there are multiple such nodes, the one most suitable
    * for display to the user should be returned.
-   * This may be used to select nodes corresponding to files, etc. 
+   * This may be used to select nodes corresponding to files, etc.
    */
-  override
-  def findPath(root: Node, target: Object): Node = {
+  override def findPath(root: Node, target: Object): Node = {
     val project = root.getLookup().lookup(classOf[Project])
     if (project == null) {
       return null
     }
-        
+
     target match {
-      case fo: FileObject =>
+      case fo: FileObject ⇒
         val owner = FileOwnerQuery.getOwner(fo)
         if (project != owner) {
           return null // Don't waste time if project does not own the fo
         }
-            
-        for (n <- root.getChildren.getNodes(true)) {
+
+        for (n ← root.getChildren.getNodes(true)) {
           val result = PackageView.findPath(n, target)
           if (result != null) {
             return result
           }
         }
-      case _ => 
+      case _ ⇒
     }
-        
+
     null
   }
-  
+
 }
 
 object SBTProjectLogicalView {

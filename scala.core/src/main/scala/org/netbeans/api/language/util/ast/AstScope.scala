@@ -38,8 +38,8 @@
  */
 package org.netbeans.api.language.util.ast
 
-import org.netbeans.api.lexer.{Token, TokenId, TokenHierarchy}
-import org.netbeans.modules.csl.api.{ElementKind, OffsetRange}
+import org.netbeans.api.lexer.{ Token, TokenId, TokenHierarchy }
+import org.netbeans.modules.csl.api.{ ElementKind, OffsetRange }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -56,16 +56,16 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   var (boundsToken, boundsEndToken) = if (boundsTokens ne null) {
     assert(boundsTokens.length <= 2)
     boundsTokens.length match {
-      case 1 if boundsTokens(0) ne null =>
+      case 1 if boundsTokens(0) ne null ⇒
         (if (boundsTokens(0) ne null) Some(boundsTokens(0)) else None,
-         None)
-      case 2 =>
+          None)
+      case 2 ⇒
         (if (boundsTokens(0) ne null) Some(boundsTokens(0)) else None,
-         if (boundsTokens(1) ne null) Some(boundsTokens(1)) else None)
-      case _ => (None, None)
+          if (boundsTokens(1) ne null) Some(boundsTokens(1)) else None)
+      case _ ⇒ (None, None)
     }
   } else (None, None)
-  
+
   var bindingDfn: Option[AstDfn] = None
   var parent: Option[AstScope] = None
   private val _subScopes = new ArrayBuffer[AstScope]
@@ -87,18 +87,18 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
   def boundsOffset(th: TokenHierarchy[_]): Int = {
     boundsToken match {
-      case Some(x) => x.offset(th)
-      case None => -1
+      case Some(x) ⇒ x.offset(th)
+      case None ⇒ -1
     }
   }
 
   def boundsEndOffset(th: TokenHierarchy[_]): Int = {
     boundsEndToken match {
-      case Some(x) => x.offset(th) + x.length
-      case None => -1
+      case Some(x) ⇒ x.offset(th) + x.length
+      case None ⇒ -1
     }
   }
-  
+
   def subScopes: Seq[AstScope] = _subScopes
 
   def dfns: Seq[AstDfn] = _dfns
@@ -139,7 +139,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
   def findDfnAt[A <: AstDfn](clazz: Class[A], th: TokenHierarchy[_], offset: Int): Option[A] = {
     if (!_isDfnsSorted) {
-      _dfns sortWith {compareDfn(th, _, _)}
+      _dfns sortWith { compareDfn(th, _, _) }
       _isDfnsSorted = true
     }
     var lo = 0
@@ -155,9 +155,9 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
         return if (clazz isInstance middle) Some(middle.asInstanceOf[A]) else None
       }
     }
-    
+
     if (!_isScopesSorted) {
-      _subScopes sortWith {compareScope(th, _, _)}
+      _subScopes sortWith { compareScope(th, _, _) }
       _isScopesSorted = true
     }
     lo = 0
@@ -173,13 +173,13 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
         return middle.findDfnAt(clazz, th, offset)
       }
     }
-    
+
     None
   }
-    
+
   def findRefAt[A <: AstRef](clazz: Class[A], th: TokenHierarchy[_], offset: Int): Option[A] = {
     if (!_isRefsSorted) {
-      _refs sortWith {compareRef(th, _, _)}
+      _refs sortWith { compareRef(th, _, _) }
       _isRefsSorted = true
     }
     var lo = 0
@@ -195,9 +195,9 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
         return if (clazz isInstance middle) Some(middle.asInstanceOf[A]) else None
       }
     }
-        
+
     if (!_isScopesSorted) {
-      _subScopes sortWith {compareScope(th, _, _)}
+      _subScopes sortWith { compareScope(th, _, _) }
       _isScopesSorted = true
     }
     lo = 0
@@ -213,54 +213,53 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
         return middle.findRefAt(clazz, th, offset)
       }
     }
-    
+
     None
   }
 
-  @deprecated(message="use AstRootScope#findOccurrences", since="1.0")
+  @deprecated(message = "use AstRootScope#findOccurrences", since = "1.0")
   def findOccurrences(item: AstItem): Seq[AstItem] = {
     var dfn: Option[AstDfn] = item match {
-      case x: AstDfn => Some(x)
-      case x: AstRef => findDfnOf(x)
+      case x: AstDfn ⇒ Some(x)
+      case x: AstRef ⇒ findDfnOf(x)
     }
 
     dfn match {
-      case Some(x) =>
+      case Some(x) ⇒
         val occurrences = new ArrayBuffer[AstItem]
         occurrences += x
         // @todo ArrayBuffer.++ has strange signature: ++[B >: A](that:  Iterable[B]):  ArrayBuffer[B]
         occurrences ++= findRefsOf(x)
 
         occurrences
-      case None =>
+      case None ⇒
         // * dfn may be a remote one, just try to find all same refs
         findAllRefsSameAs(item.asInstanceOf[AstRef])
     }
   }
 
-  @deprecated("For reference only, use AstRootScope#findDfnOf", since="1.0")
+  @deprecated("For reference only, use AstRootScope#findDfnOf", since = "1.0")
   def findDfnOf_(item: AstItem): Option[AstDfn] = {
     item match {
-      case dfn: AstDfn => Some(dfn)
-      case ref: AstRef => findDfnOf(ref)
+      case dfn: AstDfn ⇒ Some(dfn)
+      case ref: AstRef ⇒ findDfnOf(ref)
     }
   }
-  
 
   private def findDfnOf(ref: AstRef): Option[AstDfn] = {
     ref.enclosingScope.findDfnOfUpward(ref)
   }
 
   private def findDfnOfUpward(ref: AstRef): Option[AstDfn] = {
-    _dfns.find{_ isReferredBy ref} match {
-      case Some(x) => return Some(x)
-      case None =>
+    _dfns.find { _ isReferredBy ref } match {
+      case Some(x) ⇒ return Some(x)
+      case None ⇒
     }
 
     // * search upward
     parent match {
-      case Some(x) => x.findDfnOfUpward(ref)
-      case None => None
+      case Some(x) ⇒ x.findDfnOfUpward(ref)
+      case None ⇒ None
     }
   }
 
@@ -274,20 +273,20 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
   private def findRefsOfDownward(dfn: AstDfn, result: ArrayBuffer[AstRef]): Unit = {
     // find if there is closest override Def, if so, we shoud bypass it now:
-    _dfns.find{x => x != dfn && x.mayEqual(dfn)} match {
-      case Some(x) => return
-      case None =>
+    _dfns.find { x ⇒ x != dfn && x.mayEqual(dfn) } match {
+      case Some(x) ⇒ return
+      case None ⇒
     }
 
-    result ++= _refs.filter{dfn isReferredBy _}
+    result ++= _refs.filter { dfn isReferredBy _ }
 
     // * search downward
-    _subScopes.foreach{_.findRefsOfDownward(dfn, result)}
+    _subScopes.foreach { _.findRefsOfDownward(dfn, result) }
   }
 
   final def root: AstRootScope = parent match {
-    case Some(x) => x.root
-    case None => this.asInstanceOf[AstRootScope]
+    case Some(x) ⇒ x.root
+    case None ⇒ this.asInstanceOf[AstRootScope]
   }
 
   private def findAllRefsSameAs(ref: AstRef): Seq[AstRef] = {
@@ -299,11 +298,11 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
     result
   }
 
-  protected def findAllRefsSameAsDownward(ref: AstRef,  result: ArrayBuffer[AstRef]): Unit = {
-    result ++= _refs.filter{ref isOccurrence _}
+  protected def findAllRefsSameAsDownward(ref: AstRef, result: ArrayBuffer[AstRef]): Unit = {
+    result ++= _refs.filter { ref isOccurrence _ }
 
     // * search downward
-    _subScopes.foreach{_.findAllRefsSameAsDownward(ref, result)}
+    _subScopes.foreach { _.findAllRefsSameAsDownward(ref, result) }
   }
 
   private def contains(th: TokenHierarchy[_], offset: Int): Boolean = {
@@ -312,7 +311,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
   def closestScope(th: TokenHierarchy[_], offset: Int): Option[AstScope] = {
     // * try to find neastItem's scope, which is more precise than by scope range
-    root.findNeastItemsAt(th, offset) foreach {item =>
+    root.findNeastItemsAt(th, offset) foreach { item ⇒
       val scope = item.enclosingScope
       // @todo when this is a scope passed to phase lambdalift, the boundsEndToken isn't correct:
       //            if (scope.contains(th, offset)) {
@@ -321,13 +320,13 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
       return Some(scope)
     }
 
-    val found = _subScopes find {_.contains(th, offset)} match {
-      case Some(child) => child.closestScope(th, offset)
-      case None => None
+    val found = _subScopes find { _.contains(th, offset) } match {
+      case Some(child) ⇒ child.closestScope(th, offset)
+      case None ⇒ None
     }
 
     found match {
-      case None =>
+      case None ⇒
         if (this.contains(th, offset)) {
           Some(this)
         } else {
@@ -336,7 +335,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
            */
           None
         }
-      case _ => found
+      case _ ⇒ found
     }
   }
 
@@ -347,76 +346,76 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   }
 
   private def visibleDfnsUpward(kind: ElementKind, result: ArrayBuffer[AstDfn]): Unit = {
-    result ++= _dfns.filter{_.getKind == kind}
+    result ++= _dfns.filter { _.getKind == kind }
 
     parent match {
-      case Some(x) => x.visibleDfnsUpward(kind, result)
-      case None =>
+      case Some(x) ⇒ x.visibleDfnsUpward(kind, result)
+      case None ⇒
     }
   }
 
   def enclosingDfn(kinds: Set[ElementKind], th: TokenHierarchy[_], offset: Int): Option[AstDfn] = {
     closestScope(th, offset) match {
-      case Some(x) => x.enclosingDfn(kinds)
-      case None => None
+      case Some(x) ⇒ x.enclosingDfn(kinds)
+      case None ⇒ None
     }
   }
 
   def enclosingDfn(kinds: Set[ElementKind]): Option[AstDfn] = {
     bindingDfn match {
-      case Some(x) if kinds.contains(x.getKind) => bindingDfn
-      case _ => parent match {
-          case Some(x) => x.enclosingDfn(kinds)
-          case None => None
-        }
+      case Some(x) if kinds.contains(x.getKind) ⇒ bindingDfn
+      case _ ⇒ parent match {
+        case Some(x) ⇒ x.enclosingDfn(kinds)
+        case None ⇒ None
+      }
     }
   }
 
   def enclosingDfn(kind: ElementKind, th: TokenHierarchy[_], offset: Int): Option[AstDfn] = {
     closestScope(th, offset) match {
-      case Some(x) => x.enclosingDfn(kind)
-      case None => None
+      case Some(x) ⇒ x.enclosingDfn(kind)
+      case None ⇒ None
     }
   }
 
   def enclosingDfn(kind: ElementKind): Option[AstDfn] = {
     bindingDfn match {
-      case Some(x) if x.getKind == kind => bindingDfn
-      case _ => parent match {
-          case Some(x) => x.enclosingDfn(kind)
-          case None => None
-        }
+      case Some(x) if x.getKind == kind ⇒ bindingDfn
+      case _ ⇒ parent match {
+        case Some(x) ⇒ x.enclosingDfn(kind)
+        case None ⇒ None
+      }
     }
   }
 
-  def  visibleDfns[A <: AstDfn](clazz: Class[A]): ArrayBuffer[A] = {
+  def visibleDfns[A <: AstDfn](clazz: Class[A]): ArrayBuffer[A] = {
     val result = new ArrayBuffer[A]
     visibleDfnsUpward(clazz, result)
     result
   }
-    
+
   private final def visibleDfnsUpward[A <: AstDfn](clazz: Class[A], result: ArrayBuffer[A]): Unit = {
-    result ++ _dfns.filter{clazz isInstance _}
-    
+    result ++ _dfns.filter { clazz isInstance _ }
+
     parent match {
-      case Some(x) => x.visibleDfnsUpward(clazz, result)
-      case None =>
+      case Some(x) ⇒ x.visibleDfnsUpward(clazz, result)
+      case None ⇒
     }
   }
-    
-  def enclosingDfn[A <: AstDfn](clazz: Class[A], th: TokenHierarchy[_], offset: Int): Option[A]= {
+
+  def enclosingDfn[A <: AstDfn](clazz: Class[A], th: TokenHierarchy[_], offset: Int): Option[A] = {
     closestScope(th, offset) match {
-      case Some(x) => x.enclosingDfn(clazz)
-      case None => None
+      case Some(x) ⇒ x.enclosingDfn(clazz)
+      case None ⇒ None
     }
   }
-    
+
   def enclosingDfn[A <: AstDfn](clazz: Class[A]): Option[A] = bindingDfn match {
-    case Some(x) if clazz.isInstance(x) => bindingDfn.asInstanceOf[Option[A]]
-    case _ => parent match {
-        case Some(x) => x.enclosingDfn(clazz)
-        case None => None
-      }
+    case Some(x) if clazz.isInstance(x) ⇒ bindingDfn.asInstanceOf[Option[A]]
+    case _ ⇒ parent match {
+      case Some(x) ⇒ x.enclosingDfn(clazz)
+      case None ⇒ None
+    }
   }
 
   def findDfnMatched(symbol: AnyRef): Option[AstDfn] = {
@@ -425,7 +424,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   }
 
   private def findDfnMatchedDownside(name: String, symbol: AnyRef, dfns: Seq[AstDfn]): Option[AstDfn] = {
-    for (dfn <- dfns) {
+    for (dfn ← dfns) {
       val mySymbol = dfn.symbol
       //            if (symbol.isType()) {
       //                // try to avoid cyclic type refenrence or type doesn't exist AsserError from scala's Types
@@ -449,8 +448,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
     None
   }
 
-  override 
-  def toString = {
+  override def toString = {
     "Scope: (Binding=" + bindingDfn + "," + ",dfns=" + dfns + ",refs=" + refs + ")"
   }
 

@@ -39,15 +39,14 @@ import scala.collection.mutable.ArrayBuffer
  */
 
 class FileNameCompletor extends Completor {
-  
+
   private var _pwd: File = _
 
   def pwd_=(pwd: File) {
     _pwd = pwd
   }
 
-  override 
-  def complete(buf: String, cursor: Int, candidates: ArrayBuffer[String]): Int = {
+  override def complete(buf: String, cursor: Int, candidates: ArrayBuffer[String]): Int = {
     val buffer = if (buf eq null) "" else buf
 
     val (translated, dir) = if ((_pwd ne null) && _pwd.exists) {
@@ -70,12 +69,12 @@ class FileNameCompletor extends Completor {
       } else {
         f.getParentFile
       }
-      
+
       (translated, dir)
     }
 
     val entries = if (dir eq null) Array[File]() else dir.listFiles
-    
+
     try {
       return matchFiles(buffer, translated, entries, candidates)
     } finally {
@@ -108,15 +107,14 @@ class FileNameCompletor extends Completor {
     // blue - directory
     // red - compressed
     // cyan - symlink
-    entries foreach {entry => 
-      if (entry.getAbsolutePath.startsWith(translated)) {                
+    entries foreach { entry ⇒
+      if (entry.getAbsolutePath.startsWith(translated)) {
         val name = entry.getName + (if (matches == 1 && entry.isDirectory) File.separator else " ")
         // if (entries [i].isDirectory ()) { name = new ANSIBuffer ().blue (name).toString (); }
         candidates += name
       }
-    }      
+    }
     buffer.lastIndexOf(File.separator) + File.separator.length
   }
 
-  
 }

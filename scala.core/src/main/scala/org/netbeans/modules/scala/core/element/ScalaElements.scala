@@ -44,18 +44,17 @@ import javax.lang.model.element.Element
 import javax.swing.Icon
 import javax.swing.text.BadLocationException
 import org.netbeans.editor.BaseDocument
-import org.netbeans.modules.csl.api.{ElementHandle, ElementKind, Modifier, OffsetRange, HtmlFormatter}
+import org.netbeans.modules.csl.api.{ ElementHandle, ElementKind, Modifier, OffsetRange, HtmlFormatter }
 import org.netbeans.modules.csl.api.UiUtils
-import org.netbeans.modules.csl.spi.{GsfUtilities, ParserResult}
+import org.netbeans.modules.csl.spi.{ GsfUtilities, ParserResult }
 import org.netbeans.modules.scala.core.ScalaSourceFile
-import org.openide.filesystems.{FileObject}
+import org.openide.filesystems.{ FileObject }
 import org.openide.util.Exceptions
 
 import scala.reflect.internal.Flags
 
 import org.netbeans.api.language.util.ast.AstElementHandle
-import org.netbeans.modules.scala.core.{JavaSourceUtil, ScalaGlobal, ScalaSourceUtil, ScalaMimeResolver}
-
+import org.netbeans.modules.scala.core.{ JavaSourceUtil, ScalaGlobal, ScalaSourceUtil, ScalaMimeResolver }
 
 /**
  *
@@ -65,7 +64,7 @@ import org.netbeans.modules.scala.core.{JavaSourceUtil, ScalaGlobal, ScalaSource
  *
  * @author Caoyuan Deng
  */
-trait ScalaElements {self: ScalaGlobal =>
+trait ScalaElements { self: ScalaGlobal ⇒
 
   object ScalaElement {
     def apply(symbol: Symbol, pResult: ParserResult) = {
@@ -73,8 +72,7 @@ trait ScalaElements {self: ScalaGlobal =>
     }
   }
 
-  class ScalaElement(val asymbol: Symbol, val parserResult: ParserResult
-  ) extends ScalaItem with AstElementHandle {
+  class ScalaElement(val asymbol: Symbol, val parserResult: ParserResult) extends ScalaItem with AstElementHandle {
     import ScalaElement._
 
     symbol = asymbol
@@ -101,16 +99,15 @@ trait ScalaElements {self: ScalaGlobal =>
       ""
     }
 
-    override 
-    def getFileObject: FileObject = {
+    override def getFileObject: FileObject = {
       if (!triedGetFo) {
         fo getOrElse {
           fo = ScalaSourceUtil.getFileObject(parserResult, symbol) // try to get
           fo match {
-            case Some(x) => 
+            case Some(x) ⇒
               path = x.getPath
               x
-            case None => 
+            case None ⇒
               triedGetFo = true
               null
           }
@@ -118,56 +115,49 @@ trait ScalaElements {self: ScalaGlobal =>
       } else fo getOrElse null
     }
 
-    override 
-    def getIn: String = {
+    override def getIn: String = {
       try {
         symbol.owner.nameString
       } catch {
-        case _: Throwable => ""
+        case _: Throwable ⇒ ""
       }
     }
 
-    override 
-    def getKind: ElementKind = {
+    override def getKind: ElementKind = {
       ScalaUtil.getKind(symbol)
     }
 
-    override 
-    def getMimeType: String = {
+    override def getMimeType: String = {
       ScalaMimeResolver.MIME_TYPE
     }
 
-    override 
-    def getModifiers: java.util.Set[Modifier] = {
+    override def getModifiers: java.util.Set[Modifier] = {
       if (!_modifiers.isDefined) {
         _modifiers = Some(ScalaUtil.getModifiers(symbol))
       }
       _modifiers.get
     }
 
-    override 
-    def getName: String = symbol.nameString
+    override def getName: String = symbol.nameString
 
-    override 
-    def qualifiedName: String = symbol.fullName
+    override def qualifiedName: String = symbol.fullName
 
-    override 
-    def signatureEquals(handle: ElementHandle): Boolean = {
+    override def signatureEquals(handle: ElementHandle): Boolean = {
       false
     }
 
     def getDocComment: String = {
       if (!isLoaded) load
 
-      getDoc foreach {srcDoc =>
+      getDoc foreach { srcDoc ⇒
         if (isJava) {
-          javaElement foreach {x =>
+          javaElement foreach { x ⇒
             try {
               val docComment: String = JavaSourceUtil.getDocComment(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), x)
               if (docComment.length > 0) {
                 return new StringBuilder(docComment.length + 5).append("/**").append(docComment).append("*/").toString
               }
-            } catch {case ex: IOException => Exceptions.printStackTrace(ex)}
+            } catch { case ex: IOException ⇒ Exceptions.printStackTrace(ex) }
           }
         } else {
           return ScalaSourceUtil.getDocComment(srcDoc, getOffset)
@@ -181,10 +171,10 @@ trait ScalaElements {self: ScalaGlobal =>
       if (!isLoaded) load
 
       if (isJava) {
-        javaElement foreach {x =>
+        javaElement foreach { x ⇒
           try {
             return JavaSourceUtil.getOffset(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), x)
-          } catch {case ex: IOException => Exceptions.printStackTrace(ex)}
+          } catch { case ex: IOException ⇒ Exceptions.printStackTrace(ex) }
         }
       } else {
         val pos = symbol.pos
@@ -196,8 +186,7 @@ trait ScalaElements {self: ScalaGlobal =>
       offset
     }
 
-    override 
-    def getOffsetRange(result: ParserResult): OffsetRange = {
+    override def getOffsetRange(result: ParserResult): OffsetRange = {
       throw new UnsupportedOperationException("Not supported yet.")
     }
 
@@ -205,11 +194,11 @@ trait ScalaElements {self: ScalaGlobal =>
       val srcFo = getFileObject
       if (srcFo ne null) {
         doc match {
-          case None => GsfUtilities.getDocument(srcFo, true) match {
-              case null =>
-              case x => doc = Some(x)
-            }
-          case _ =>
+          case None ⇒ GsfUtilities.getDocument(srcFo, true) match {
+            case null ⇒
+            case x ⇒ doc = Some(x)
+          }
+          case _ ⇒
         }
         doc
       } else None
@@ -231,7 +220,7 @@ trait ScalaElements {self: ScalaGlobal =>
       if (isJava) {
         javaElement = JavaSourceUtil.getJavaElement(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), symbol)
       } else {
-        val fo = getFileObject 
+        val fo = getFileObject
         if (fo ne null) {
           val srcFile = ScalaSourceFile.sourceFileOf(fo)
           try {
@@ -243,15 +232,15 @@ trait ScalaElements {self: ScalaGlobal =>
              * all symbols Position
              */
             val root = askForSemantic(srcFile) match {
-              case Some(root) =>
+              case Some(root) ⇒
                 root.findDfnMatched(symbol) match {
-                  case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
-                  case None =>
+                  case Some(x) ⇒ offset = x.idOffset(srcFile.tokenHierarchy)
+                  case None ⇒
                 }
-              case None =>
+              case None ⇒
             }
-          } catch {case ex: BadLocationException => Exceptions.printStackTrace(ex)}
-        }  
+          } catch { case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex) }
+        }
       }
 
       _isLoaded = true
@@ -265,11 +254,11 @@ trait ScalaElements {self: ScalaGlobal =>
       try {
         symbol.isDeprecated
       } catch {
-        case _: Throwable => false
+        case _: Throwable ⇒ false
       }
     }
     def isDeprecated_=(b: Boolean) {
-      
+
     }
 
     def isInherited = _isInherited
@@ -279,7 +268,7 @@ trait ScalaElements {self: ScalaGlobal =>
 
     def isEmphasize = !isInherited
     def isEmphasize_=(b: Boolean) {
-      
+
     }
 
     def isSmart = _isSmart
@@ -292,11 +281,9 @@ trait ScalaElements {self: ScalaGlobal =>
       _isImplicite = b
     }
 
-    override 
-    def getIcon: Icon = UiUtils.getElementIcon(getKind, getModifiers)
+    override def getIcon: Icon = UiUtils.getElementIcon(getKind, getModifiers)
 
-    override 
-    def toString = {
+    override def toString = {
       symbol.toString
     }
 

@@ -48,23 +48,21 @@ import org.netbeans.editor.Utilities
 import org.netbeans.modules.scala.core.ScalaSourceUtil
 import org.netbeans.modules.scala.core.ScalaParserResult
 
-
-
 class ScalaRuleContext extends RuleContext {
 
   def getFileObject = parserResult.getSnapshot.getSource.getFileObject
   def getTokenHierarchy = parserResult.getSnapshot.getTokenHierarchy
-  def getClasspathInfo  : Option[ClasspathInfo]  = 
-     ScalaSourceUtil.getClasspathInfo(getFileObject)
+  def getClasspathInfo: Option[ClasspathInfo] =
+    ScalaSourceUtil.getClasspathInfo(getFileObject)
 
   def global = parserResult.asInstanceOf[ScalaParserResult].global
 
-  def calcOffsetRange(start : Int, end : Int) : Option[OffsetRange] = {
+  def calcOffsetRange(start: Int, end: Int): Option[OffsetRange] = {
     if (start > end) return None
     try {
       Some(new OffsetRange(Utilities.getRowStart(doc, start), Utilities.getRowEnd(doc, end)))
     } catch {
-      case ex: Throwable => None
+      case ex: Throwable ⇒ None
     }
   }
 

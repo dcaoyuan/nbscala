@@ -62,10 +62,12 @@
 
         <scala.version>2.10.1-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
         <sbt.version>0.13.0</sbt.version>
+        <scalariform.version>0.1.5</scalariform.version>
 
         <!-- module versions -->
         <libs.scala.version>2.10.1.0</libs.scala.version>
         <libs.sbt.version>0.13.0.0</libs.sbt.version>
+        <libs.scalariform.version>0.1.5.0</libs.scalariform.version>
         <libs.xtc.version>1.15.1</libs.xtc.version>
         <languages.execution.version>1.6.1</languages.execution.version>
         <scala.debugger.version>1.6.1</scala.debugger.version>
@@ -141,6 +143,7 @@
                         <keystorepassword>${nbm.sign.keystorepassword}</keystorepassword>
                     </configuration>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
@@ -163,6 +166,15 @@
                         <target>1.6</target>
                     </configuration>
                 </plugin>
+
+                <!-- Adds artifacts to the local maven repository -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+
+
 
                 <!-- Scala plugin for compiling and running Scala -->
                 <plugin>
@@ -206,11 +218,22 @@
                     </configuration>
                 </plugin>
 
-                <!-- Adds artifacts to the local maven repository -->
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>2.4</version>
+                    <groupId>org.scalariform</groupId>
+                    <artifactId>scalariform-maven-plugin</artifactId>
+                    <version>0.1.4</version>
+                    <executions>
+                        <execution>
+                            <phase>process-sources</phase>
+                            <goals>
+                                <goal>format</goal>
+                            </goals>
+                            <configuration>
+                                <alignParameters>true</alignParameters>
+                                <rewriteArrowSymbols>true</rewriteArrowSymbols>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
 
             </plugins>
@@ -289,60 +312,61 @@
                  keytool -genkey -dname "CN=Caoyuan Deng, OU=nbscala, O=AIOTrade Co., L=Richmond, S=BC, C=CA" -alias nbscala -validity 1800
                  keytool -list -v
 
-           To enable it, add all three keystore related parameters in ~/m2/settings.xml as:
-           <profiles>
-               <profile>
-                   <id>sign-nbscala-nbms</id>
-                   <activation>
-                       <activeByDefault>true</activeByDefault>
-                   </activation>
-                   <properties>
-                       <nbm.sign.keystore>${user.home}/.keystore</nbm.sign.keystore>
-                       <nbm.sign.keystorealias>nbscala</nbm.sign.keystorealias>
-                       <nbm.sign.keystorepassword>thepassword</nbm.sign.keystorepassword>
-                   </properties>
-               </profile>
-           </profiles>
-      -->
-    </profile>
+                 To enable it, add all three keystore related parameters in ~/m2/settings.xml as:
+                 <profiles>
+                     <profile>
+                         <id>sign-nbscala-nbms</id>
+                         <activation>
+                             <activeByDefault>true</activeByDefault>
+                         </activation>
+                         <properties>
+                             <nbm.sign.keystore>${user.home}/.keystore</nbm.sign.keystore>
+                             <nbm.sign.keystorealias>nbscala</nbm.sign.keystorealias>
+                             <nbm.sign.keystorepassword>thepassword</nbm.sign.keystorepassword>
+                         </properties>
+                     </profile>
+                 </profiles>
+            -->
+        </profile>
 
-    <profile>
-      <id>run-ide</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <nbm.run.arguments></nbm.run.arguments>
-      </properties>
-    </profile>
-    <profile>
-      <id>debug-ide</id>
-      <properties>
-        <nbm.run.arguments>-J-Xdebug -J-Xnoagent -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000</nbm.run.arguments>
-      </properties>
-    </profile>
-  </profiles>
+        <profile>
+            <id>run-ide</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <nbm.run.arguments></nbm.run.arguments>
+            </properties>
+        </profile>
+        <profile>
+            <id>debug-ide</id>
+            <properties>
+                <nbm.run.arguments>-J-Xdebug -J-Xnoagent -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000</nbm.run.arguments>
+            </properties>
+        </profile>
+    </profiles>
 
-  <modules>
-    <module>libs.local</module>
-    <module>libs.scala.compiler</module>
-    <module>libs.scala.continuations</module>
-    <module>libs.scala.library</module>
-    <module>libs.scala.reflect</module>
-    <module>libs.sbt</module>
-    <module>libs.xtc</module>
-    <module>scala.core</module>
-    <module>scala.editor</module>
-    <module>scala.console</module>
-    <module>scala.debugger.projects</module>
-    <module>scala.debugger</module>
-    <module>scala.maven</module>
-    <module>scala.platform</module>
-    <module>scala.sbt</module>
-    <module>scala.stdplatform</module>
-    <module>scala.project</module>
-    <module>scala.refactoring</module>
-    <module>scala.kit</module>
-  </modules>
+    <modules>
+        <module>libs.local</module>
+        <module>libs.scala.compiler</module>
+        <module>libs.scala.continuations</module>
+        <module>libs.scala.library</module>
+        <module>libs.scala.reflect</module>
+        <module>libs.scalariform</module>
+        <module>libs.sbt</module>
+        <module>libs.xtc</module>
+        <module>scala.core</module>
+        <module>scala.editor</module>
+        <module>scala.console</module>
+        <module>scala.debugger.projects</module>
+        <module>scala.debugger</module>
+        <module>scala.maven</module>
+        <module>scala.platform</module>
+        <module>scala.sbt</module>
+        <module>scala.stdplatform</module>
+        <module>scala.project</module>
+        <module>scala.refactoring</module>
+        <module>scala.kit</module>
+    </modules>
 
 </project>

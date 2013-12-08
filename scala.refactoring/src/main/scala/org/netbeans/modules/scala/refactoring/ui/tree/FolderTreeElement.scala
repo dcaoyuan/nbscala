@@ -76,10 +76,10 @@ object FolderTreeElement {
       return null;
     }
 
-    val allgroups =  new Array[SourceGroup](scGroups.length + xmlGroups.length)
+    val allgroups = new Array[SourceGroup](scGroups.length + xmlGroups.length)
     System.arraycopy(scGroups, 0, allgroups, 0, scGroups.length)
     System.arraycopy(xmlGroups, 0, allgroups, allgroups.length - 1, xmlGroups.length)
-    for(i <- 0 until allgroups.length) {
+    for (i ← 0 until allgroups.length) {
       if (allgroups(i).getRootFolder.equals(file) || FileUtil.isParentOf(allgroups(i).getRootFolder, file))
         return allgroups(i);
     }
@@ -91,21 +91,20 @@ object FolderTreeElement {
     if (prj eq null)
       return null;
     val src = ProjectUtils.getSources(prj);
-//        SourceGroup[] rubygroups = src.getSourceGroups(RubyProject.SOURCES_TYPE_RUBY);
+    //        SourceGroup[] rubygroups = src.getSourceGroups(RubyProject.SOURCES_TYPE_RUBY);
     val scalaGroups = src.getSourceGroups(Sources.TYPE_GENERIC)
 
-    for (i <- 0 until scalaGroups.length) {
+    for (i ← 0 until scalaGroups.length) {
       if (scalaGroups(i).getRootFolder.equals(file) || FileUtil.isParentOf(scalaGroups(i).getRootFolder, file))
         return scalaGroups(i)
     }
     return null;
   }
 
-
 }
 class FolderTreeElement(fo: FileObject) extends TreeElement {
   import FolderTreeElement._
-  
+
   override def getParent(isLogical: Boolean): TreeElement = {
     if (isLogical) {
       val sg = getSourceGroup(fo)
@@ -135,7 +134,7 @@ class FolderTreeElement(fo: FileObject) extends TreeElement {
       fo.getPath
     } else {
       if (getScalaSourceGroup(fo) ne null) {
-        val name = cp.getResourceName(fo).replace('/','.')
+        val name = cp.getResourceName(fo).replace('/', '.')
         if ("".equals(name)) {
           return NbBundle.getMessage(classOf[UiUtils], "LBL_DefaultPackage_PDU");
         }

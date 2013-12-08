@@ -42,8 +42,7 @@ import org.netbeans.api.lexer.Token
 import org.netbeans.api.lexer.TokenId
 import org.netbeans.api.language.util.ast.AstRootScope
 
-class ScalaRootScope(boundsTokens: Array[Token[TokenId]]
-) extends AstRootScope(boundsTokens) {  
+class ScalaRootScope(boundsTokens: Array[Token[TokenId]]) extends AstRootScope(boundsTokens) {
   //  def findDfnOfSym(symbol:AstSymbol[_]): Option[AstDfn] = {
   //    _idTokenToItem.values.find{item =>
   //      // ElementKind.Rule is "-spec", we won't let it as

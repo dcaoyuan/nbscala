@@ -50,10 +50,10 @@ import org.netbeans.modules.parsing.api.Source
 import org.netbeans.modules.parsing.api.UserTask
 import org.netbeans.modules.parsing.impl.indexing.TimeStamps
 import org.netbeans.modules.parsing.spi.ParseException
-import org.openide.filesystems.{FileUtil, FileObject}
+import org.openide.filesystems.{ FileUtil, FileObject }
 import org.openide.util.Exceptions
 
-import org.netbeans.api.language.util.ast.{AstScope}
+import org.netbeans.api.language.util.ast.{ AstScope }
 import org.netbeans.modules.scala.core.ScalaGlobal
 import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ast.ScalaDfns
@@ -61,7 +61,6 @@ import org.netbeans.modules.scala.core.ast.ScalaDfns
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.JavaConversions._
-
 
 /**
  * Virtual java source
@@ -89,7 +88,8 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
   private final val log = Logger.getLogger(this.getClass.getName)
   log.info("Successfully created a " + this.getClass.getSimpleName)
 
-  /** @Todo
+  /**
+   * @Todo
    * The only reason to implement JavaSourceProvider is to get a none-null JavaSource#forFileObject,
    * the JavaSource instance is a must currently when eval expression under debugging. see issue #150903
    */
@@ -109,20 +109,17 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
    }
    } */
 
-  override 
-  def getSupportedExtensions: java.util.Set[String] = {
+  override def getSupportedExtensions: java.util.Set[String] = {
     java.util.Collections.singleton("scala") // NOI18N
   }
 
-  override 
-  def index: Boolean = true
+  override def index: Boolean = true
 
-  override 
-  def translate(files: java.lang.Iterable[File], sourceRoot: File, result: VirtualSourceProvider.Result) {
+  override def translate(files: java.lang.Iterable[File], sourceRoot: File, result: VirtualSourceProvider.Result) {
     val root = FileUtil.toFileObject(sourceRoot)
     val timeStamps = TimeStamps.forRoot(root.toURL, false)
 
-    for (file <- files) {
+    for (file ← files) {
       val fo = FileUtil.toFileObject(file)
       // JavaIndexer tends to reindex all dependent (via VirtualSources calculating) files
       // when dependee source file is modified, it's not neccessary for VirtualSource in my opinion,
@@ -143,105 +140,105 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
       // FIXME can we move this out of task (?)
       // TODO Clean up the anonymous class
       ParserManager.parse(java.util.Collections.singleton(source), new UserTask {
-            
-          @throws(classOf[ParseException])
-          override def run(ri: ResultIterator) {
-            val t0 = System.currentTimeMillis
-            
-            val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
-            val global = pr.global
-            val rootScope = pr.rootScope
-            val tmpls = new ArrayBuffer[ScalaDfns#ScalaDfn]
-            visit(tmpls)(rootScope)
-            process(global, tmpls.toList)
-            
-            log.info("Translated %s in %d milliseconds.".format(fo.getNameExt, System.currentTimeMillis - t0))
+
+        @throws(classOf[ParseException])
+        override def run(ri: ResultIterator) {
+          val t0 = System.currentTimeMillis
+
+          val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
+          val global = pr.global
+          val rootScope = pr.rootScope
+          val tmpls = new ArrayBuffer[ScalaDfns#ScalaDfn]
+          visit(tmpls)(rootScope)
+          process(global, tmpls.toList)
+
+          log.info("Translated %s in %d milliseconds.".format(fo.getNameExt, System.currentTimeMillis - t0))
+        }
+
+        private def visit(tmpls: ArrayBuffer[ScalaDfns#ScalaDfn])(scope: AstScope) {
+          for {
+            dfn ← scope.dfns
+            kind = dfn.getKind if kind == ElementKind.CLASS || kind == ElementKind.MODULE
+          } {
+            tmpls += dfn.asInstanceOf[ScalaDfns#ScalaDfn]
           }
 
-          private def visit(tmpls: ArrayBuffer[ScalaDfns#ScalaDfn])(scope: AstScope) {
-            for {
-              dfn <- scope.dfns
-              kind = dfn.getKind if kind == ElementKind.CLASS || kind== ElementKind.MODULE
-            } {
-              tmpls += dfn.asInstanceOf[ScalaDfns#ScalaDfn]
-            }
+          scope.subScopes foreach visit(tmpls)
+        }
 
-            scope.subScopes foreach visit(tmpls)
-          }
-
-          private def process(globalx: ScalaGlobal, tmpls: List[ScalaDfns#ScalaDfn]) = {
-            tmpls match {
-              case Nil =>
-                // * source is probably broken and there is no AST
-                // * let's generate empty Java stub with simple name equal to file name
-                var pkg = FileUtil.getRelativePath(srcRootFileObj, fo.getParent)
-                if (pkg ne null) {
-                  pkg = pkg.replace('/', '.')
-                  val sb = new StringBuilder
-                  if (!pkg.equals("")) { // NOI18N
-                    sb.append("package " + pkg + ";") // NOI18N
-                  }
-                  val name = fo.getName
-                  sb.append("public class ").append(name).append(" implements scala.ScalaObject {public int $tag() throws java.rmi.RemoteException {return 0;}}"); // NOI18N
-                  //@Todo diable result add till we get everything ok
-                  //result.add(file, pkg, file.getName(), sb.toString());
+        private def process(globalx: ScalaGlobal, tmpls: List[ScalaDfns#ScalaDfn]) = {
+          tmpls match {
+            case Nil ⇒
+              // * source is probably broken and there is no AST
+              // * let's generate empty Java stub with simple name equal to file name
+              var pkg = FileUtil.getRelativePath(srcRootFileObj, fo.getParent)
+              if (pkg ne null) {
+                pkg = pkg.replace('/', '.')
+                val sb = new StringBuilder
+                if (!pkg.equals("")) { // NOI18N
+                  sb.append("package " + pkg + ";") // NOI18N
                 }
-              case _ =>
-                globalx.askForResponse {() =>
-                  val generator = new JavaStubGenerator {val global: globalx.type = globalx}
-                  import globalx._
+                val name = fo.getName
+                sb.append("public class ").append(name).append(" implements scala.ScalaObject {public int $tag() throws java.rmi.RemoteException {return 0;}}"); // NOI18N
+                //@Todo diable result add till we get everything ok
+                //result.add(file, pkg, file.getName(), sb.toString());
+              }
+            case _ ⇒
+              globalx.askForResponse { () ⇒
+                val generator = new JavaStubGenerator { val global: globalx.type = globalx }
+                import globalx._
 
-                  val emptySyms: Array[Symbol] = Array(null, null, null)
-                  val clzNameToSyms = new HashMap[String, Array[Symbol]] // clzName -> (class, object, trait)
+                val emptySyms: Array[Symbol] = Array(null, null, null)
+                val clzNameToSyms = new HashMap[String, Array[Symbol]] // clzName -> (class, object, trait)
 
-                  for {
-                    tmpl <- tmpls
-                    sym = tmpl.symbol.asInstanceOf[Symbol] if sym != NoSymbol // avoid strange file name, for example: <error: class ActorProxy>.java
-                    symSName = sym.nameString if symSName.length > 0 && symSName.charAt(0) != '<' // @todo <any>
-                  } {
-                    val clzName = generator.classSName(sym)
-                    val syms = clzNameToSyms.getOrElse(clzName, emptySyms) match {
-                      case Array(c, o, t) =>
-                        if (sym.isTrait) { // isTrait also isClass, so determine trait before class
-                          Array(c, o, sym)
-                        } else if (sym.isModule) { // object
-                          Array(c, sym, t)
-                        } else { // class
-                          Array(sym, o, t)
-                        }
-                    }
-                  
-                    clzNameToSyms += (clzName -> syms)
-                  }
-                
-                  for ((clzName, syms) <- clzNameToSyms) {
-                    try {
-                      val pkgQName = syms find (_ ne null) match {
-                        case Some(sym) => sym.enclosingPackage match {
-                            case null => ""
-                            case packaging => packaging.fullName match {
-                                case "<empty>" => ""
-                                case x => x
-                              }
-                          }
-                        case _ => ""
+                for {
+                  tmpl ← tmpls
+                  sym = tmpl.symbol.asInstanceOf[Symbol] if sym != NoSymbol // avoid strange file name, for example: <error: class ActorProxy>.java
+                  symSName = sym.nameString if symSName.length > 0 && symSName.charAt(0) != '<' // @todo <any>
+                } {
+                  val clzName = generator.classSName(sym)
+                  val syms = clzNameToSyms.getOrElse(clzName, emptySyms) match {
+                    case Array(c, o, t) ⇒
+                      if (sym.isTrait) { // isTrait also isClass, so determine trait before class
+                        Array(c, o, sym)
+                      } else if (sym.isModule) { // object
+                        Array(c, sym, t)
+                      } else { // class
+                        Array(sym, o, t)
                       }
-                    
-                      val javaStub = generator.genClass(pkgQName, clzName, syms)
-                   
-                      result.add(FileUtil.toFile(fo), pkgQName, clzName, javaStub)
-                    } catch {
-                      case ex: FileNotFoundException => Exceptions.printStackTrace(ex)
-                    }
                   }
-                
-                } get match {
-                  case Left(_) =>
-                  case Right(ex) => log.log(Level.WARNING, ex.getMessage, ex)
+
+                  clzNameToSyms += (clzName -> syms)
                 }
-            }
+
+                for ((clzName, syms) ← clzNameToSyms) {
+                  try {
+                    val pkgQName = syms find (_ ne null) match {
+                      case Some(sym) ⇒ sym.enclosingPackage match {
+                        case null ⇒ ""
+                        case packaging ⇒ packaging.fullName match {
+                          case "<empty>" ⇒ ""
+                          case x ⇒ x
+                        }
+                      }
+                      case _ ⇒ ""
+                    }
+
+                    val javaStub = generator.genClass(pkgQName, clzName, syms)
+
+                    result.add(FileUtil.toFile(fo), pkgQName, clzName, javaStub)
+                  } catch {
+                    case ex: FileNotFoundException ⇒ Exceptions.printStackTrace(ex)
+                  }
+                }
+
+              } get match {
+                case Left(_) ⇒
+                case Right(ex) ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+              }
           }
-        })
-    } catch {case ex: ParseException => Exceptions.printStackTrace(ex)}
+        }
+      })
+    } catch { case ex: ParseException ⇒ Exceptions.printStackTrace(ex) }
   }
 }

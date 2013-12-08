@@ -27,7 +27,7 @@ import org.openide.windows._
  */
 final class ScalaConsoleTopComponent private () extends TopComponent {
   import ScalaConsoleTopComponent._
-  
+
   private var finished: Boolean = true
   private var textPane: JTextPane = _
   private val mimeType = "text/x-console"
@@ -37,16 +37,14 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
   setName(NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "CTL_ScalaConsoleTopComponent"))
   setToolTipText(NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "HINT_ScalaConsoleTopComponent"))
   setIcon(ImageUtilities.loadImage(ICON_PATH, true))
- 
+
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
-  }            
+  }
 
-  override
-  def getPersistenceType = TopComponent.PERSISTENCE_ALWAYS
+  override def getPersistenceType = TopComponent.PERSISTENCE_ALWAYS
 
-  override
-  def componentOpened() {
+  override def componentOpened() {
     if (finished) {
       // Start a new one
       finished = false
@@ -55,13 +53,11 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
     }
   }
 
-  override
-  def componentClosed() {
+  override def componentClosed() {
     // Leave the terminal session running
   }
 
-  override
-  def componentActivated() {
+  override def componentActivated() {
     // Make the caret visible. See comment under componentDeactivated.
     if (textPane != null) {
       val caret = textPane.getCaret
@@ -71,8 +67,7 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
     }
   }
 
-  override
-  def componentDeactivated() {
+  override def componentDeactivated() {
     // I have to turn off the caret when the window loses focus. Text components
     // normally do this by themselves, but the TextAreaReadline component seems
     // to mess around with the editable property of the text pane, and
@@ -88,11 +83,9 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
   /**
    * replaces this in object stream
    */
-  override
-  def writeReplace: AnyRef = new ResolvableHelper()
+  override def writeReplace: AnyRef = new ResolvableHelper()
 
-  override
-  protected def preferredID = PREFERRED_ID
+  override protected def preferredID = PREFERRED_ID
 
   def createTerminal {
     val pipeIn = new PipedInputStream()
@@ -107,26 +100,26 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
 
     // From core/output2/**/AbstractOutputPane
     val size = UIManager.get("customFontSize") match { //NOI18N
-      case null =>
+      case null ⇒
         UIManager.get("controlFont") match { // NOI18N
-          case null => 11
-          case f: Font => f.getSize
+          case null ⇒ 11
+          case f: Font ⇒ f.getSize
         }
-      case i: java.lang.Integer => i.intValue
+      case i: java.lang.Integer ⇒ i.intValue
     }
 
-    val font = new Font("Monospaced", Font.PLAIN, size) match { 
-      case null => new Font("Lucida Sans Typewriter", Font.PLAIN, size)
-      case f => f
-    } 
+    val font = new Font("Monospaced", Font.PLAIN, size) match {
+      case null ⇒ new Font("Lucida Sans Typewriter", Font.PLAIN, size)
+      case f ⇒ f
+    }
     textPane.setFont(font)
 
     setBorder(BorderFactory.createEmptyBorder)
 
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
-      case null => 
-      case c => textPane.setSelectionColor(c)
+      case null ⇒
+      case c ⇒ textPane.setSelectionColor(c)
     }
 
     //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);
@@ -160,7 +153,6 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
     //    unselectedErr = selectedErr;
     //}
 
-
     val pane = new JScrollPane()
     pane.setViewportView(textPane)
     pane.setBorder(BorderFactory.createLineBorder(Color.darkGray))
@@ -177,10 +169,10 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
     val scalaArgs = if (scalaName.equals("scala") || scalaName.equalsIgnoreCase("scala.bat") || scalaName.equalsIgnoreCase("scala.exe")) { // NOI18N
       ScalaExecution.getScalaArgs(scalaHome)
     } else Array[String]()
-    
-    val taReadline = new TextAreaReadline(textPane, 
-                                          " " + NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "ScalaConsoleWelcome") + " " + "scala.home=" + scalaHome + "\n",
-                                          pipeIn) // NOI18N
+
+    val taReadline = new TextAreaReadline(textPane,
+      " " + NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "ScalaConsoleWelcome") + " " + "scala.home=" + scalaHome + "\n",
+      pipeIn) // NOI18N
     val pwd = getMainProjectWorkPath
     val workPath = pwd.getPath
     val in = new InputStreamReader(pipeIn)
@@ -189,7 +181,7 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
 
     var builder: ExternalProcessBuilder = null
     log.info("==== Scala console args ====")
-    for (arg <- scalaArgs) {
+    for (arg ← scalaArgs) {
       log.info(arg)
       if (builder == null) {
         builder = new ExternalProcessBuilder(arg)
@@ -206,24 +198,22 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
     builder = builder.workingDirectory(pwd)
 
     var execDescriptor = new ExecutionDescriptor()
-    .frontWindow(true).inputVisible(true)
-    .inputOutput(new CustomInputOutput(in, out, err))
+      .frontWindow(true).inputVisible(true)
+      .inputOutput(new CustomInputOutput(in, out, err))
 
     execDescriptor = execDescriptor.postExecution(new Runnable() {
-        override
-        def run() {
-          finished = true
-          textPane.setEditable(false)
-          SwingUtilities.invokeLater(new Runnable() {
-              override
-              def run() {
-                ScalaConsoleTopComponent.this.close
-                ScalaConsoleTopComponent.this.removeAll
-                textPane = null
-              }
-            })
-        }
-      })
+      override def run() {
+        finished = true
+        textPane.setEditable(false)
+        SwingUtilities.invokeLater(new Runnable() {
+          override def run() {
+            ScalaConsoleTopComponent.this.close
+            ScalaConsoleTopComponent.this.removeAll
+            textPane = null
+          }
+        })
+      }
+    })
 
     val executionService = ExecutionService.newService(builder, execDescriptor, "Scala Shell")
 
@@ -231,51 +221,48 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
 
     // [Issue 91208]  avoid of putting cursor in IRB console on line where is not a prompt
     textPane.addMouseListener(new MouseAdapter() {
-        override
-        def mouseClicked(ev: MouseEvent) {
-          val mouseX = ev.getX
-          val mouseY = ev.getY
-          // Ensure that this is done after the textpane's own mouse listener
-          SwingUtilities.invokeLater(new Runnable() {
-              def run() {
-                // Attempt to force the mouse click to appear on the last line of the text input
-                var pos = textPane.getDocument.getEndPosition.getOffset - 1
-                if (pos == -1) {
-                  return
-                }
+      override def mouseClicked(ev: MouseEvent) {
+        val mouseX = ev.getX
+        val mouseY = ev.getY
+        // Ensure that this is done after the textpane's own mouse listener
+        SwingUtilities.invokeLater(new Runnable() {
+          def run() {
+            // Attempt to force the mouse click to appear on the last line of the text input
+            var pos = textPane.getDocument.getEndPosition.getOffset - 1
+            if (pos == -1) {
+              return
+            }
 
-                try {
-                  val r = textPane.modelToView(pos)
+            try {
+              val r = textPane.modelToView(pos)
 
-                  if (mouseY >= r.y) {
-                    // The click was on the last line; try to set the X to the position where
-                    // the user clicked since perhaps it was an attempt to edit the existing
-                    // input string. Later I could perhaps cast the text document to a StyledDocument,
-                    // then iterate through the document positions and locate the end of the
-                    // input prompt (by comparing to the promptStyle in TextAreaReadline).
-                    r.x = mouseX
-                    pos = textPane.viewToModel(r.getLocation)
-                  }
-
-                  textPane.getCaret.setDot(pos)
-                } catch {
-                  case ex: BadLocationException => Exceptions.printStackTrace(ex)
-                }
+              if (mouseY >= r.y) {
+                // The click was on the last line; try to set the X to the position where
+                // the user clicked since perhaps it was an attempt to edit the existing
+                // input string. Later I could perhaps cast the text document to a StyledDocument,
+                // then iterate through the document positions and locate the end of the
+                // input prompt (by comparing to the promptStyle in TextAreaReadline).
+                r.x = mouseX
+                pos = textPane.viewToModel(r.getLocation)
               }
-            })
-        }
-      })
+
+              textPane.getCaret.setDot(pos)
+            } catch {
+              case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex)
+            }
+          }
+        })
+      }
+    })
   }
 
-  override
-  def requestFocus() {
+  override def requestFocus() {
     if (textPane != null) {
       textPane.requestFocus
     }
   }
 
-  override
-  def requestFocusInWindow: Boolean = {
+  override def requestFocusInWindow: Boolean = {
     if (textPane != null) {
       textPane.requestFocusInWindow
     } else false
@@ -308,7 +295,7 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
 
 object ScalaConsoleTopComponent {
   private lazy val instance: ScalaConsoleTopComponent = new ScalaConsoleTopComponent()
-  
+
   /**
    * path to the icon used by the component and its open action
    */
@@ -321,8 +308,8 @@ object ScalaConsoleTopComponent {
    * non-deserialized instance. To obtain the singleton instance, use
    * {@link findInstance}.
    */
-  def getDefault = synchronized {instance}
-  
+  def getDefault = synchronized { instance }
+
   /**
    * Obtain the IrbTopComponent instance. Never call {@link #getDefault}
    * directly!
@@ -330,92 +317,75 @@ object ScalaConsoleTopComponent {
   def findInstance() = synchronized {
     val win = WindowManager.getDefault().findTopComponent(PREFERRED_ID)
     win match {
-      case null =>
+      case null ⇒
         ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                    "Cannot find MyWindow component. It will not be located properly in the window system.")
+          "Cannot find MyWindow component. It will not be located properly in the window system.")
         instance
-      case x: ScalaConsoleTopComponent => x
-      case _ =>
+      case x: ScalaConsoleTopComponent ⇒ x
+      case _ ⇒
         ErrorManager.getDefault.log(ErrorManager.WARNING,
-                                    "There seem to be multiple components with the '" + PREFERRED_ID + 
-                                    "' ID. That is a potential source of errors and unexpected behavior.")
+          "There seem to be multiple components with the '" + PREFERRED_ID +
+            "' ID. That is a potential source of errors and unexpected behavior.")
         instance
-    } 
-    
+    }
+
   }
-  
+
   @SerialVersionUID(1L)
   class ResolvableHelper extends Serializable {
     def readResolve: AnyRef = getDefault
   }
 
-  
   private class CustomInputOutput(input: Reader, out: PrintWriter, err: PrintWriter) extends InputOutput {
 
     private var closed: Boolean = false
 
-    override
-    def closeInputOutput() {
+    override def closeInputOutput() {
       closed = true
     }
 
-    override
-    def flushReader: Reader = input
+    override def flushReader: Reader = input
 
-    override
-    def getErr: OutputWriter = new CustomOutputWriter(err)
+    override def getErr: OutputWriter = new CustomOutputWriter(err)
 
-    override
-    def getIn: Reader = return input
+    override def getIn: Reader = return input
 
-    override
-    def getOut: OutputWriter = new CustomOutputWriter(out)
+    override def getOut: OutputWriter = new CustomOutputWriter(out)
 
-    override
-    def isClosed = closed
+    override def isClosed = closed
 
-    override
-    def isErrSeparated = false
+    override def isErrSeparated = false
 
-    override
-    def isFocusTaken = false
+    override def isFocusTaken = false
 
-    override
-    def select() {
+    override def select() {
     }
 
-    override
-    def setErrSeparated(value: Boolean) {
+    override def setErrSeparated(value: Boolean) {
     }
 
-    override
-    def setErrVisible(value: Boolean) {
+    override def setErrVisible(value: Boolean) {
     }
 
-    override
-    def setFocusTaken(value: Boolean) {
+    override def setFocusTaken(value: Boolean) {
     }
 
-    override
-    def setInputVisible(value: Boolean) {
+    override def setInputVisible(value: Boolean) {
     }
 
-    override
-    def setOutputVisible(value: Boolean) {
+    override def setOutputVisible(value: Boolean) {
     }
   }
-  
+
   private class CustomOutputWriter(pw: PrintWriter) extends OutputWriter(pw) {
 
     @throws(classOf[IOException])
-    override
-    def println(s: String, l: OutputListener) {
+    override def println(s: String, l: OutputListener) {
       println(s)
     }
 
     @throws(classOf[IOException])
-    override
-    def reset() {
+    override def reset() {
     }
   }
 

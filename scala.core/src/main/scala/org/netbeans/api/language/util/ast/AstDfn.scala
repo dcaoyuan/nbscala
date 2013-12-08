@@ -38,24 +38,24 @@
  */
 package org.netbeans.api.language.util.ast
 
-import org.netbeans.api.lexer.{Token, TokenId, TokenHierarchy}
-import org.netbeans.editor.{BaseDocument}
-import org.netbeans.modules.csl.api.{ElementKind, Modifier, OffsetRange}
-import org.netbeans.modules.csl.spi.{GsfUtilities, ParserResult}
+import org.netbeans.api.lexer.{ Token, TokenId, TokenHierarchy }
+import org.netbeans.editor.{ BaseDocument }
+import org.netbeans.modules.csl.api.{ ElementKind, Modifier, OffsetRange }
+import org.netbeans.modules.csl.spi.{ GsfUtilities, ParserResult }
 import org.openide.filesystems.FileObject
 
 /**
  * AST Definition
- * 
- * Represents a program element such as a package, class, or method. Each element 
- * represents a static, language-level construct (and not, for example, a runtime 
- * construct of the virtual machine). 
- * 
+ *
+ * Represents a program element such as a package, class, or method. Each element
+ * represents a static, language-level construct (and not, for example, a runtime
+ * construct of the virtual machine).
+ *
  * @author Caoyuan Deng
  */
 trait AstDfn extends AstItem with AstElementHandle {
   private var _bindingScope: AstScope = _
-  
+
   def make(_idToken: Token[TokenId],
            _kind: ElementKind,
            _bindingScope: AstScope,
@@ -68,22 +68,19 @@ trait AstDfn extends AstItem with AstElementHandle {
       this._bindingScope.bindingDfn = Some(this)
     }
   }
-   
+
   protected var _modifiers: Option[java.util.Set[Modifier]] = None
 
-  override 
-  def getFileObject: FileObject = fo.getOrElse(null)
+  override def getFileObject: FileObject = fo.getOrElse(null)
 
-  override 
-  def getModifiers: java.util.Set[Modifier] = {
+  override def getModifiers: java.util.Set[Modifier] = {
     _modifiers.getOrElse(java.util.Collections.emptySet[Modifier])
   }
 
-  override 
-  def getOffsetRange(pResult: ParserResult): OffsetRange = {
+  override def getOffsetRange(pResult: ParserResult): OffsetRange = {
     pResult.getSnapshot.getTokenHierarchy match {
-      case null => OffsetRange.NONE
-      case th =>
+      case null ⇒ OffsetRange.NONE
+      case th ⇒
         val offset = boundsOffset(th)
         val endOffset = boundsEndOffset(th)
         if (offset >= 0 && endOffset >= offset) {
@@ -130,11 +127,11 @@ trait AstDfn extends AstItem with AstElementHandle {
 
   def getDoc: Option[BaseDocument] = {
     fo match {
-      case Some(x) => GsfUtilities.getDocument(x, true) match {
-          case null => None
-          case docx => Some(docx)
-        }
-      case None => None
+      case Some(x) ⇒ GsfUtilities.getDocument(x, true) match {
+        case null ⇒ None
+        case docx ⇒ Some(docx)
+      }
+      case None ⇒ None
     }
   }
 
@@ -146,15 +143,14 @@ trait AstDfn extends AstItem with AstElementHandle {
     null
   }
 
-  var isInherited  = false
+  var isInherited = false
   var isDeprecated = false
-  var isEmphasize  = false
-  var isImplicit   = false
+  var isEmphasize = false
+  var isImplicit = false
 
   def isReferredBy(ref: AstRef): Boolean
 
-  override 
-  def toString = {
+  override def toString = {
     "Dfn: " + "name=" + name + ", idToken=" + idToken + ", kind=" + kind + ", sym=" + symbol + ", mods" + getModifiers
   }
 }

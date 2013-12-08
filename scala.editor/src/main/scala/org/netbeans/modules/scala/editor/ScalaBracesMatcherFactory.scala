@@ -39,8 +39,7 @@
 
 package org.netbeans.modules.scala.editor
 
-
-import org.netbeans.spi.editor.bracesmatching.{BracesMatcher, BracesMatcherFactory, MatcherContext}
+import org.netbeans.spi.editor.bracesmatching.{ BracesMatcher, BracesMatcherFactory, MatcherContext }
 
 /**
  *

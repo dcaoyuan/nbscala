@@ -41,7 +41,6 @@
 
 package org.netbeans.modules.scala.refactoring
 
-
 import com.sun.source.util.TreePath;
 import java.io.IOException;
 import java.util.List;
@@ -60,9 +59,9 @@ import org.openide.util.NbBundle;
  *
  * @author Jan Becicka
  */
-class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor {
+class MoveTransformer(move: MoveRefactoringPlugin) { //extends RefactoringVisitor {
 
-/*     private var originalFolder: FileObject = _
+  /*     private var originalFolder: FileObject = _
     private Set<Element> elementsToImport;
     private Set<ImportTree> importToRemove;
     private var importToAdd: Set[String] = _
@@ -76,13 +75,13 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
     private val classes2Move = new HashSet[ElementHandle](move.classes.values)
 */
 
-    private var problem: Problem = _
-    
-    def getProblem: Problem = {
-        problem
-    }
+  private var problem: Problem = _
 
-/*    @Override
+  def getProblem: Problem = {
+    problem
+  }
+
+  /*    @Override
     public void setWorkingCopy(WorkingCopy copy) throws ToPhaseException {
         super.setWorkingCopy(copy);
         originalFolder = workingCopy.getFileObject().getParent();
@@ -360,5 +359,5 @@ class MoveTransformer(move: MoveRefactoringPlugin) {//extends RefactoringVisitor
         }
         return super.visitImport(node, p);
     } */
-    
+
 }

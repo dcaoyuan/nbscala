@@ -45,5 +45,5 @@ import scala.collection.mutable.ArrayBuffer
 trait Completor {
 
   def complete(buffer: String, cursor: Int, candidates: ArrayBuffer[String]): Int
-  
+
 }

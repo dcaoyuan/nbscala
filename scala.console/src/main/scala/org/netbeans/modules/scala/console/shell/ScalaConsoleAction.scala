@@ -11,34 +11,31 @@ import org.openide.util.Lookup
 import org.openide.util.NbBundle
 
 /**
- * 
+ *
  * @author Caoyuan Deng
  */
 class ScalaConsoleAction extends AbstractAction with ContextAwareAction {
 
-  override 
-  def actionPerformed(e: ActionEvent) {
+  override def actionPerformed(e: ActionEvent) {
     assert(false, "")
   }
-  
-  override
-  def createContextAwareInstance(context: Lookup): Action = new ContextAction(context)
-  
+
+  override def createContextAwareInstance(context: Lookup): Action = new ContextAction(context)
+
   private final class ContextAction(context: Lookup) extends AbstractAction {
     val project = context.lookup(classOf[Project])
-    
+
     setEnabled(true)
-//    if (ProjectResources.getScalaJavaSourceGroups(project).length > 0) {
-//      setEnabled(true) // sbt and maven root project may has empty source group
-//    } else {
-//      setEnabled(false)
-//    }
+    //    if (ProjectResources.getScalaJavaSourceGroups(project).length > 0) {
+    //      setEnabled(true) // sbt and maven root project may has empty source group
+    //    } else {
+    //      setEnabled(false)
+    //    }
 
     putValue(DynamicMenuContent.HIDE_WHEN_DISABLED, true)
     putValue(Action.NAME, NbBundle.getMessage(classOf[ScalaConsoleAction], "CTL_ScalaConsoleAction"))
-        
-    override 
-    def actionPerformed(e: ActionEvent) {
+
+    override def actionPerformed(e: ActionEvent) {
       ScalaConsoleTopComponent.openInstance(project, false, Nil)()
     }
   }

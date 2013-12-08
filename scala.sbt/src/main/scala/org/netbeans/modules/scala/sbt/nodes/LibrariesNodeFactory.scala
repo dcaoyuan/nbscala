@@ -22,9 +22,9 @@ class LibrariesNodeFactory extends NodeFactory {
 object LibrariesNodeFactory {
   private val LIBRARIES = "Libs" //NOI18N
   private val TEST_LIBRARIES = "TestLibs" //NOI18N
-  
-  private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png")    //NOI18N
-    
+
+  private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png") //NOI18N
+
   private class LibrariesNodeList(project: Project) extends NodeList[String] {
     private val cs = new ChangeSupport(this)
 
@@ -40,18 +40,18 @@ object LibrariesNodeFactory {
 
     def node(key: String): Node = {
       key match {
-        case LIBRARIES => new LibrariesNode(project, isTest = false)
-        case TEST_LIBRARIES => new LibrariesNode(project, isTest = true)
-        case _ => assert(false, "No node for key: " + key); null
+        case LIBRARIES ⇒ new LibrariesNode(project, isTest = false)
+        case TEST_LIBRARIES ⇒ new LibrariesNode(project, isTest = true)
+        case _ ⇒ assert(false, "No node for key: " + key); null
       }
     }
 
     def addNotify() {
-      
+
     }
 
     def removeNotify() {
-      
+
     }
 
     def addChangeListener(l: ChangeListener) {
@@ -62,43 +62,36 @@ object LibrariesNodeFactory {
       cs.removeChangeListener(l)
     }
   }
-  
+
   class LibrariesNode(project: Project, isTest: Boolean) extends AbstractNode(new LibrariesChildren(project, isTest)) {
     private val DISPLAY_NAME = NbBundle.getMessage(classOf[LibrariesNodeFactory], "CTL_LibrariesNode" + (if (isTest) "_Test" else ""))
 
-    override
-    def getDisplayName: String = DISPLAY_NAME
+    override def getDisplayName: String = DISPLAY_NAME
 
-    override
-    def getName: String = ProjectConstants.NAME_DEP_LIBRARIES
+    override def getName: String = ProjectConstants.NAME_DEP_LIBRARIES
 
-    override
-    def getIcon(tpe: Int) = getIcon(false, tpe)
+    override def getIcon(tpe: Int) = getIcon(false, tpe)
 
-    override
-    def getOpenedIcon(tpe: Int) = getIcon(true, tpe)
+    override def getOpenedIcon(tpe: Int) = getIcon(true, tpe)
 
     private def getIcon(opened: Boolean, tpe: Int) = ImageUtilities.mergeImages(Icons.getFolderIcon(opened), getBadge, 7, 7)
     private def getBadge: Image = ICON_LIB_BADGE
 
-    override
-    def canCopy = false
+    override def canCopy = false
 
-    override
-    def getActions(context: Boolean): Array[Action] = Array()
+    override def getActions(context: Boolean): Array[Action] = Array()
   }
-  
+
   private class LibrariesChildren(project: Project, isTest: Boolean) extends Children.Keys[String] {
 
     setKeys()
 
-    override
-    protected def createNodes(key: String): Array[Node] = {
+    override protected def createNodes(key: String): Array[Node] = {
       Array(new ScopeNode(project, key, isTest))
     }
 
     private def setKeys() {
-      setKeys(Array(ClassPath.COMPILE/* , ClassPath.EXECUTE */))
+      setKeys(Array(ClassPath.COMPILE /* , ClassPath.EXECUTE */ ))
     }
   }
 

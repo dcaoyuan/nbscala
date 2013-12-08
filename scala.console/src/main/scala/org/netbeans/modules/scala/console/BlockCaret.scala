@@ -10,8 +10,7 @@ object BlockCaret extends DefaultCaret {
 
   setBlinkRate(0)
 
-  override 
-  protected def damage(r: Rectangle): Unit = synchronized {
+  override protected def damage(r: Rectangle): Unit = synchronized {
     if (r == null)
       return
 
@@ -26,13 +25,12 @@ object BlockCaret extends DefaultCaret {
     // will receive a bogus clip area and caret will not get drawn properly.
     if (width <= 0)
       width = getComponent.getWidth
-        
-    repaint()  // Calls getComponent().repaint(x, y, width, height) to erase 
-    repaint()  // previous location of caret. Sometimes one call isn't enough.
+
+    repaint() // Calls getComponent().repaint(x, y, width, height) to erase 
+    repaint() // previous location of caret. Sometimes one call isn't enough.
   }
 
-  override 
-  def paint(g: Graphics) {
+  override def paint(g: Graphics) {
     val comp = getComponent
     if (comp == null)
       return
@@ -46,7 +44,7 @@ object BlockCaret extends DefaultCaret {
         return
       dotChar = comp.getText(dot, 1).charAt(0)
     } catch {
-      case ex: BadLocationException => return
+      case ex: BadLocationException ⇒ return
     }
 
     if ((x != r.x) || (y != r.y)) {

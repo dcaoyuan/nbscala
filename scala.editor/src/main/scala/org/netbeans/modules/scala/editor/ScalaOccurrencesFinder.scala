@@ -40,12 +40,12 @@
 package org.netbeans.modules.scala.editor
 
 import org.netbeans.editor.BaseDocument
-import org.netbeans.modules.csl.api.{ColoringAttributes, OccurrencesFinder, OffsetRange}
-import org.netbeans.modules.parsing.spi.{Scheduler, SchedulerEvent}
+import org.netbeans.modules.csl.api.{ ColoringAttributes, OccurrencesFinder, OffsetRange }
+import org.netbeans.modules.parsing.spi.{ Scheduler, SchedulerEvent }
 import org.openide.filesystems.FileObject
 
 import org.netbeans.modules.scala.core.ScalaParserResult
-import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil}
+import org.netbeans.modules.scala.core.lexer.{ ScalaLexUtil }
 
 /**
  *
@@ -58,17 +58,13 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
   private var _occurrences: java.util.Map[OffsetRange, ColoringAttributes] = _
   private var fo: FileObject = _
 
-  override 
-  def getPriority: Int = 0
+  override def getPriority: Int = 0
 
-  override 
-  def getSchedulerClass: Class[_ <: Scheduler] = Scheduler.CURSOR_SENSITIVE_TASK_SCHEDULER
+  override def getSchedulerClass: Class[_ <: Scheduler] = Scheduler.CURSOR_SENSITIVE_TASK_SCHEDULER
 
-  override 
-  def getOccurrences: java.util.Map[OffsetRange, ColoringAttributes] = _occurrences
+  override def getOccurrences: java.util.Map[OffsetRange, ColoringAttributes] = _occurrences
 
-  override 
-  def setCaretPosition(position: Int) {
+  override def setCaretPosition(position: Int) {
     this.caretPosition = position
   }
 
@@ -84,8 +80,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     cancelled = true
   }
 
-  override 
-  def run(pResult: ScalaParserResult, event: SchedulerEvent) {
+  override def run(pResult: ScalaParserResult, event: SchedulerEvent) {
     resume
 
     if (isCancelled) {
@@ -118,7 +113,6 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
       return
     }
 
-
     // we'll find item by offset of item's idToken, so, use caretPosition directly
     val items = rootScope.findItemsAt(th, caretPosition)
 
@@ -130,10 +124,10 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     // rather than give a parse error on obj, it marks the whole region from
     // . to the end of Scanf as a CallNode, which is a weird highlight.
     // We don't want occurrences highlights that span lines.
-    for (item <- items; idToken = item.idToken if !ScalaLexUtil.isWs(idToken.id)) {
+    for (item ← items; idToken = item.idToken if !ScalaLexUtil.isWs(idToken.id)) {
       val doc = pResult.getSnapshot.getSource.getDocument(true) match {
-        case x: BaseDocument => x
-        case _ => return // null, document was just closed
+        case x: BaseDocument ⇒ x
+        case _ ⇒ return // null, document was just closed
       }
 
       //doc.readLock
@@ -203,11 +197,12 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
       }
     }
 
-    for (item <- items;
-         idTokenItem = item.idToken if !ScalaLexUtil.isWs(idTokenItem.id);
-         occurrence <- rootScope.findOccurrences(item);
-         name = occurrence.getName if name != "this" && name != "super";
-         idToken = occurrence.idToken; if !ScalaLexUtil.isWs(idToken.id)
+    for (
+      item ← items;
+      idTokenItem = item.idToken if !ScalaLexUtil.isWs(idTokenItem.id);
+      occurrence ← rootScope.findOccurrences(item);
+      name = occurrence.getName if name != "this" && name != "super";
+      idToken = occurrence.idToken; if !ScalaLexUtil.isWs(idToken.id)
     ) {
       highlights.put(ScalaLexUtil.getRangeOfToken(th, idToken), ColoringAttributes.MARK_OCCURRENCES)
     }
@@ -222,8 +217,8 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
       while (itr.hasNext) {
         val entry = itr.next
         ScalaLexUtil.getLexerOffsets(pResult, entry.getKey) match {
-          case OffsetRange.NONE =>
-          case range => translated.put(range, entry.getValue)
+          case OffsetRange.NONE ⇒
+          case range ⇒ translated.put(range, entry.getValue)
         }
       }
 

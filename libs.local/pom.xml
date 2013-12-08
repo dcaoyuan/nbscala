@@ -1,107 +1,122 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.netbeans.modules</groupId>
-        <artifactId>nbscala</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
-
+  <parent>
     <groupId>org.netbeans.modules</groupId>
-    <artifactId>org-netbeans-libs-scala-local</artifactId>
-    <packaging>pom</packaging>
-    <version>1.0</version>
-    <name>org-netbeans-libs-scala-local</name>
-    <description>Install local jars ie. scala runtime jars to local repository. 
+    <artifactId>nbscala</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <groupId>org.netbeans.modules</groupId>
+  <artifactId>org-netbeans-libs-scala-local</artifactId>
+  <packaging>pom</packaging>
+  <version>1.0</version>
+  <name>org-netbeans-libs-scala-local</name>
+  <description>Install local jars ie. scala runtime jars to local repository.
     The contain the original libraries with some patch
     TODO: Patch description.</description>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>install-scala-library</id>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
-                        <configuration>
-                            <file>${project.basedir}/lib/scala-library.jar</file>
-                            <groupId>org.scala-lang</groupId>
-                            <artifactId>scala-library</artifactId>
-                            <version>${scala.version}</version>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
-                    
-                    <execution>
-                        <id>install-scala-compiler</id>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
-                        <configuration>
-                            <file>${project.basedir}/lib/scala-compiler.jar</file>
-                            <groupId>org.scala-lang</groupId>
-                            <artifactId>scala-compiler</artifactId>
-                            <version>${scala.version}</version>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
-                    
-                    <execution>
-                        <id>install-scala-reflect</id>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
-                        <configuration>
-                            <file>${project.basedir}/lib/scala-reflect.jar</file>
-                            <groupId>org.scala-lang</groupId>
-                            <artifactId>scala-reflect</artifactId>
-                            <version>${scala.version}</version>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-install-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>install-scala-library</id>
+            <goals>
+              <goal>install-file</goal>
+            </goals>
+            <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+            <configuration>
+              <file>${project.basedir}/lib/scala-library.jar</file>
+              <groupId>org.scala-lang</groupId>
+              <artifactId>scala-library</artifactId>
+              <version>${scala.version}</version>
+              <packaging>jar</packaging>
+            </configuration>
+          </execution>
 
-                    <execution>
-                        <id>install-scala-plugin-continuations</id>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
-                        <configuration>
-                            <file>${project.basedir}/lib/continuations.jar</file>
-                            <groupId>org.scala-lang.plugins</groupId>
-                            <artifactId>continuations</artifactId>
-                            <version>${scala.version}</version>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
+          <execution>
+            <id>install-scala-compiler</id>
+            <goals>
+              <goal>install-file</goal>
+            </goals>
+            <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+            <configuration>
+              <file>${project.basedir}/lib/scala-compiler.jar</file>
+              <groupId>org.scala-lang</groupId>
+              <artifactId>scala-compiler</artifactId>
+              <version>${scala.version}</version>
+              <packaging>jar</packaging>
+            </configuration>
+          </execution>
 
-                    <execution>
-                        <id>install-scala-sbt-launch</id>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
-                        <configuration>
-                            <file>${project.basedir}/lib/sbt/sbt-launch.jar</file>
-                            <groupId>org.scala-sbt</groupId>
-                            <artifactId>sbt-launch</artifactId>
-                            <version>${sbt.version}</version>
-                            <packaging>jar</packaging>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+          <execution>
+            <id>install-scala-reflect</id>
+            <goals>
+              <goal>install-file</goal>
+            </goals>
+            <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+            <configuration>
+              <file>${project.basedir}/lib/scala-reflect.jar</file>
+              <groupId>org.scala-lang</groupId>
+              <artifactId>scala-reflect</artifactId>
+              <version>${scala.version}</version>
+              <packaging>jar</packaging>
+            </configuration>
+          </execution>
 
-        </plugins> 
-    </build>
+          <execution>
+            <id>install-scala-plugin-continuations</id>
+            <goals>
+              <goal>install-file</goal>
+            </goals>
+            <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+            <configuration>
+              <file>${project.basedir}/lib/continuations.jar</file>
+              <groupId>org.scala-lang.plugins</groupId>
+              <artifactId>continuations</artifactId>
+              <version>${scala.version}</version>
+              <packaging>jar</packaging>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>install-scala-sbt-launch</id>
+            <goals>
+              <goal>install-file</goal>
+            </goals>
+            <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+            <configuration>
+              <file>${project.basedir}/lib/sbt/sbt-launch.jar</file>
+              <groupId>org.scala-sbt</groupId>
+              <artifactId>sbt-launch</artifactId>
+              <version>${sbt.version}</version>
+              <packaging>jar</packaging>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>install-scala-scalariform</id>
+            <goals>
+              <goal>install-file</goal>
+            </goals>
+            <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+            <configuration>
+              <file>${project.basedir}/lib/scalariform/scalariform.jar</file>
+              <groupId>org.scalariform</groupId>
+              <artifactId>scalariform</artifactId>
+              <version>${scalariform.version}</version>
+              <packaging>jar</packaging>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
 
 </project>
 

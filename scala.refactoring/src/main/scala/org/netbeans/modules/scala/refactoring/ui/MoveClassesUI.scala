@@ -80,9 +80,8 @@ import org.netbeans.modules.scala.refactoring.RetoucheUtils;
 /**
  * @author Jan Becicka
  */
-class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, pasteType: PasteType
-) extends RefactoringUI with RefactoringUIBypass {
-    
+class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, pasteType: PasteType) extends RefactoringUI with RefactoringUIBypass {
+
   private var panel: MovePanel = _
   private var refactoring: MoveRefactoring = _
   private var targetPkgName = ""
@@ -91,11 +90,10 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
     javaObjects
   } else Set()
 
-    
   final def getString(key: String): String = {
     NbBundle.getMessage(classOf[MoveClassUI], key)
   }
-    
+
   def this(javaObjects: Set[FileObject]) = {
     this(javaObjects, null, null)
   }
@@ -103,15 +101,15 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
   def getName: String = {
     getString("LBL_MoveClasses")
   }
-     
+
   def getDescription: String = {
     getName
   }
-    
+
   def isQuery: Boolean = {
     false
   }
-        
+
   def getPanel(parent: ChangeListener): CustomRefactoringPanel = {
     if (panel eq null) {
       var pkgName: String = null
@@ -120,20 +118,19 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
         if (cp ne null)
           pkgName = cp.getResourceName(targetFolder, '.', false)
       }
-      panel = new MovePanel (parent,
-                             if (pkgName ne null) pkgName else getDOPackageName(javaObjects.iterator.next.asInstanceOf[FileObject].getParent),
-                             getString("LBL_MoveClassesHeadline")
-      );
+      panel = new MovePanel(parent,
+        if (pkgName ne null) pkgName else getDOPackageName(javaObjects.iterator.next.asInstanceOf[FileObject].getParent),
+        getString("LBL_MoveClassesHeadline"));
     }
     panel;
   }
-    
-//    private static String getResPackageName(Resource res) {
-//        String name = res.getName();
-//        if ( name.indexOf('/') == -1 )
-//            return "";
-//        return name.substring(0, name.lastIndexOf('/')).replace('/','.');
-//    }
+
+  //    private static String getResPackageName(Resource res) {
+  //        String name = res.getName();
+  //        if ( name.indexOf('/') == -1 )
+  //            return "";
+  //        return name.substring(0, name.lastIndexOf('/')).replace('/','.');
+  //    }
   private def getDOPackageName(f: FileObject): String = {
     val cp = ClassPath.getClassPath(f, ClassPath.SOURCE);
     if (cp ne null) {
@@ -145,18 +142,18 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
   }
 
   private def packageName: String = {
-    if (targetPkgName.trim.length == 0) getString ("LBL_DefaultPackage") else targetPkgName.trim
+    if (targetPkgName.trim.length == 0) getString("LBL_DefaultPackage") else targetPkgName.trim
   }
-    
+
   private def setParameters(checkOnly: Boolean): Problem = {
-    if (panel==null) return null
-      
+    if (panel == null) return null
+
     val url = URLMapper.findURL(panel.getRootFolder, URLMapper.EXTERNAL)
     try {
-      refactoring.setTarget(Lookups.singleton(new URL(url.toExternalForm + URLEncoder.encode(panel.getPackageName.replace('.','/'), "utf-8")))) // NOI18N
+      refactoring.setTarget(Lookups.singleton(new URL(url.toExternalForm + URLEncoder.encode(panel.getPackageName.replace('.', '/'), "utf-8")))) // NOI18N
     } catch {
-      case ex: UnsupportedEncodingException => Exceptions.printStackTrace(ex)
-      case ex: MalformedURLException => Exceptions.printStackTrace(ex)
+      case ex: UnsupportedEncodingException ⇒ Exceptions.printStackTrace(ex)
+      case ex: MalformedURLException ⇒ Exceptions.printStackTrace(ex)
     }
 
     if (checkOnly) {
@@ -165,22 +162,22 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
       refactoring.checkParameters
     }
   }
-    
+
   def checkParameters: Problem = {
     setParameters(true)
   }
-    
+
   def setParameters: Problem = {
     setParameters(false)
   }
-    
+
   def getRefactoring: AbstractRefactoring = {
     if (refactoring eq null) {
       if (isDisable) {
         refactoring = new MoveRefactoring(Lookups.fixed(javaObjects.toArray.asInstanceOf[Array[java.lang.Object]]: _*))
         refactoring.getContext().add(RetoucheUtils.getClasspathInfoFor(javaObjects.toArray))
       } else {
-        refactoring = new MoveRefactoring (Lookups.fixed(resources.toArray.asInstanceOf[Array[java.lang.Object]]: _*))
+        refactoring = new MoveRefactoring(Lookups.fixed(resources.toArray.asInstanceOf[Array[java.lang.Object]]: _*))
         refactoring.getContext().add(RetoucheUtils.getClasspathInfoFor(resources.toArray))
       }
     }
@@ -196,27 +193,27 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
       if (VisibilityQuery.getDefault.isVisible(f)) {
         try {
           DataObject.find(f) match {
-            case null =>
-            case df: DataFolder =>
-              for (o <- df.getChildren) {
+            case null ⇒
+            case df: DataFolder ⇒
+              for (o ← df.getChildren) {
                 q = o.getPrimaryFile :: q
               }
-            case d => result.add(d.getNodeDelegate)
-            
+            case d ⇒ result.add(d.getNodeDelegate)
+
           }
         } catch {
-          case ex: DataObjectNotFoundException => ex.printStackTrace
+          case ex: DataObjectNotFoundException ⇒ ex.printStackTrace
         }
 
       }
     }
     result
   }
- 
+
   def hasParameters: Boolean = {
     true;
   }
-    
+
   def getHelpCtx: HelpCtx = {
     new HelpCtx(classOf[MoveClassesUI])
   }
@@ -231,14 +228,13 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
   }
 
   // MovePanel ...............................................................
-  class MovePanel(parent: ChangeListener, startPackage: String, headLine: String
-  ) extends MoveClassPanel(parent, startPackage, headLine, if (targetFolder ne null) targetFolder else javaObjects.iterator.next) {
+  class MovePanel(parent: ChangeListener, startPackage: String, headLine: String) extends MoveClassPanel(parent, startPackage, headLine, if (targetFolder ne null) targetFolder else javaObjects.iterator.next) {
     setCombosEnabled(!isDisable)
     val nodelist = new JList(getNodes)
     nodelist.setCellRenderer((new NodeRenderer).asInstanceOf[ListCellRenderer[Node]])
     nodelist.setVisibleRowCount(5)
     val pane = new JScrollPane(nodelist)
-    bottomPanel.setBorder(new EmptyBorder(8,0,0,0))
+    bottomPanel.setBorder(new EmptyBorder(8, 0, 0, 0))
     bottomPanel.setLayout(new BorderLayout());
     bottomPanel.add(pane, BorderLayout.CENTER);
     val listOf = new JLabel

@@ -44,33 +44,32 @@ import org.netbeans.api.language.util.ast.AstItem
 import org.netbeans.modules.scala.core.ScalaGlobal
 import scala.reflect.internal.Flags
 
-trait ScalaItems {self: ScalaGlobal =>
+trait ScalaItems { self: ScalaGlobal ⇒
 
   abstract class ScalaItem extends AstItem {
     type S = Symbol
     type T = Type
 
-    override 
-    def getKind: ElementKind = {
+    override def getKind: ElementKind = {
       if (super.getKind != ElementKind.OTHER) return super.getKind
 
-      if (symbol hasFlag Flags.ACCESSOR)       return ElementKind.FIELD
-      if (symbol hasFlag Flags.METHOD)         return ElementKind.METHOD
-      if (symbol hasFlag Flags.MODULE)         return ElementKind.MODULE
-      if (symbol hasFlag Flags.PACKAGE)        return ElementKind.PACKAGE
-      if (symbol.isClass || symbol.isTrait)    return ElementKind.CLASS
+      if (symbol hasFlag Flags.ACCESSOR) return ElementKind.FIELD
+      if (symbol hasFlag Flags.METHOD) return ElementKind.METHOD
+      if (symbol hasFlag Flags.MODULE) return ElementKind.MODULE
+      if (symbol hasFlag Flags.PACKAGE) return ElementKind.PACKAGE
+      if (symbol.isClass || symbol.isTrait) return ElementKind.CLASS
       if (symbol.isVariable || symbol.isValue) return ElementKind.VARIABLE
 
       ElementKind.OTHER
     }
-    
+
     def members: Scope = {
       try {
         symbol.tpe.members
       } catch {
-        case ex: Throwable => EmptyScope
+        case ex: Throwable ⇒ EmptyScope
       }
     }
-    
+
   }
 }

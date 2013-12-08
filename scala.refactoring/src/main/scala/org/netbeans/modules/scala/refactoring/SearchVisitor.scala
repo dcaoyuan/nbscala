@@ -48,7 +48,7 @@ import org.netbeans.modules.scala.core.ScalaParserResult;
  */
 abstract class SearchVisitor {
   private var _workingCopy: ScalaParserResult = _
-  
+
   protected def workingCopy: ScalaParserResult = _workingCopy
   def workingCopy_=(workingCopy: ScalaParserResult) {
     _workingCopy = workingCopy

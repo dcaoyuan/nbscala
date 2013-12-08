@@ -121,7 +121,8 @@ object WhereUsedElement {
           end = bdoc.getLength
         }
       }
-    } catch {case ex: Exception =>Exceptions.printStackTrace(ex)
+    } catch {
+      case ex: Exception ⇒ Exceptions.printStackTrace(ex)
     } finally {
       bdoc.readUnlock
     }
@@ -140,7 +141,7 @@ object WhereUsedElement {
       en = end
     }
     sb.append(RetoucheUtils.getHtml(content.subSequence(sta, start).toString))
-    sb.append("<b>")  // NOI18N
+    sb.append("<b>") // NOI18N
     sb.append(content.subSequence(start, end))
     sb.append("</b>") // NOI18N
     sb.append(RetoucheUtils.getHtml(content.subSequence(end, en).toString))
@@ -151,10 +152,9 @@ object WhereUsedElement {
     val bounds = new PositionBounds(ref1, ref2)
 
     return new WhereUsedElement(bounds, sb.toString.trim,
-                                pr.getSnapshot.getSource.getFileObject, name,
-                                new OffsetRange(start, end), icon)
+      pr.getSnapshot.getSource.getFileObject, name,
+      new OffsetRange(start, end), icon)
   }
-
 
   def apply(pr: ScalaParserResult, name: String, html: String, range: OffsetRange, icon: Icon): WhereUsedElement = {
     val start = range.getStart
@@ -166,8 +166,8 @@ object WhereUsedElement {
     val bounds = new PositionBounds(ref1, ref2)
 
     return new WhereUsedElement(bounds, html,
-                                pr.getSnapshot.getSource.getFileObject, name,
-                                new OffsetRange(start, end), icon)
+      pr.getSnapshot.getSource.getFileObject, name,
+      new OffsetRange(start, end), icon)
   }
 }
 
@@ -178,8 +178,8 @@ class WhereUsedElement(bounds: PositionBounds, displayText: String, parentFile: 
 
   def getLookup: Lookup = {
     val composite = ElementGripFactory.getDefault.get(parentFile, bounds.getBegin.getOffset) match {
-      case null => parentFile
-      case x => x
+      case null ⇒ parentFile
+      case x ⇒ x
     }
 
     Lookups.singleton(composite)

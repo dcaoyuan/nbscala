@@ -45,8 +45,8 @@ import org.openide.filesystems.MIMEResolver
 
 /**
  * Recognize Scala file types
- * 
- * 
+ *
+ *
  * @author Caoyuan Deng
  */
 @org.openide.util.lookup.ServiceProvider(service = classOf[MIMEResolver])
@@ -66,5 +66,4 @@ object ScalaMimeResolver {
 
   def isScalaExt(ext: String): Boolean = EXTENSIONS exists (_ equalsIgnoreCase ext)
 }
-
 

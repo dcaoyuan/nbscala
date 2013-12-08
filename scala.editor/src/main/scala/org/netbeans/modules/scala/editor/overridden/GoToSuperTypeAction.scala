@@ -75,7 +75,7 @@ class GoToSuperTypeAction extends BaseAction {
 
   def actionPerformed(evt: ActionEvent, target: JTextComponent) {}
 
-/*     public GoToSuperTypeAction() {
+  /*     public GoToSuperTypeAction() {
         super(JavaKit.gotoSuperImplementationAction, SAVE_POSITION | ABBREV_RESET);
         putValue(SHORT_DESCRIPTION, NbBundle.getBundle(JavaKit.class).getString("goto-super-implementation"));
         String name = NbBundle.getBundle(JavaKit.class).getString("goto-super-implementation-trimmed");

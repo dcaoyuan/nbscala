@@ -43,10 +43,10 @@ package org.netbeans.modules.scala.core.lexer
 import java.io.Reader
 import java.util.logging.Level
 import java.util.logging.Logger
-import org.netbeans.api.lexer.{Token, TokenId}
+import org.netbeans.api.lexer.{ Token, TokenId }
 import org.netbeans.modules.scala.core.lexer.ScalaTokenId._
 import org.netbeans.modules.scala.core.rats.LexerScala
-import org.netbeans.spi.lexer.{Lexer, LexerInput, LexerRestartInfo}
+import org.netbeans.spi.lexer.{ Lexer, LexerInput, LexerRestartInfo }
 import xtc.tree.GNode
 import xtc.util.Pair
 
@@ -58,7 +58,7 @@ import xtc.util.Pair
 class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
   import ScalaLexer._
 
-  /** 
+  /**
    * @Note:
    * it seems input at this time is empty, so we can not do scanning here.
    * input will be filled in chars when call nextToken
@@ -67,15 +67,12 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
   private val tokenFactory = info.tokenFactory
   private val lexerInputReader = new LexerInputReader(input)
   private val st = new State(Nil, 0)
-    
-  override 
-  def release = {}
 
-  override 
-  def state: Object = null
+  override def release = {}
 
-  override 
-  def nextToken: Token[TokenId] = st synchronized {
+  override def state: Object = null
+
+  override def nextToken: Token[TokenId] = st synchronized {
     // In case of embedded tokens, there may be tokens that had been scanned
     // but not taken yet, check first
     if (st.tokenStream.isEmpty) {
@@ -95,14 +92,14 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
     }
 
     st.tokenStream match {
-      case tokenInfo@TokenInfo(len, id) :: tail =>
+      case tokenInfo @ TokenInfo(len, id) :: tail ⇒
         // shift tokenStream
         st.tokenStream = tail
-        
+
         if (len == 0) { // EOF
           return null
         }
-        
+
         // read token's chars according to tokenInfo.length
         var i = 0
         while (i < len) {
@@ -130,15 +127,15 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
         assert(readLen > 0, "Token's read length " + readLen + " should > 0: " + tokenInfo)
         createToken(id, readLen)
 
-      case Nil => 
+      case Nil ⇒
         assert(false, "unrecognized input: " + input.read.toChar)
         null
     }
   }
 
   private def createToken(id: ScalaTokenId, tokenLen: Int): Token[TokenId] = id.fixedText match {
-    case null      => tokenFactory.createToken(id, tokenLen)
-    case fixedText => tokenFactory.getFlyweightToken(id, fixedText)
+    case null ⇒ tokenFactory.createToken(id, tokenLen)
+    case fixedText ⇒ tokenFactory.getFlyweightToken(id, fixedText)
   }
 
   private def reScanTokens: List[TokenInfo] = {
@@ -159,9 +156,9 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
         Nil
       }
     } catch {
-      case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex); Nil
+      case ex: Exception ⇒ log.log(Level.SEVERE, ex.getMessage, ex); Nil
     }
-    
+
     tokens.reverse
   }
 
@@ -169,7 +166,7 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
     var tokens = _tokens
     val size = node.size
     if (size == 0) {
-      /** 
+      /**
        * @Note:
        * When node.size == 0, it's a void node. This should be limited to
        * EOF when you define lexical rats.
@@ -189,23 +186,23 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
       var i = 0
       while (i < size) {
         node.get(i) match {
-          case null => // child may be null
-          case child: GNode =>
+          case null ⇒ // child may be null
+          case child: GNode ⇒
             tokens = flattenTokens(child, tokens)
-          case child: Pair[_] =>
+          case child: Pair[_] ⇒
             assert(false, "Pair:" + child + " to be process, do you add 'flatten' option on grammar file?")
-          case child: String =>
+          case child: String ⇒
             val length = child.length
             val id = ScalaTokenId.tokenIdOf(node.getName).getOrElse(ScalaTokenId.IGNORED)
             val tokenInfo = TokenInfo(length, id)
             tokens ::= tokenInfo
-          case child =>
+          case child ⇒
             log.warning("To be process: " + child)
         }
         i += 1
       }
     }
-        
+
     tokens
   }
 
@@ -216,29 +213,26 @@ object ScalaLexer {
 
   private case class TokenInfo(length: Int, id: ScalaTokenId)
   private class State(var tokenStream: List[TokenInfo], var lookahead: Int)
-  
+
   /**
    * Hacking for <code>xtc.parser.ParserBase</code> of Rats! which use <code>java.io.Reader</code>
    * as the chars input, but uses only {@link java.io.Reader#read()} of all methods in
    * {@link xtc.parser.ParserBase#character(int)}
    */
   private class LexerInputReader(input: LexerInput) extends Reader {
-    override 
-    def read: Int = input.read match {
-      case LexerInput.EOF => -1
-      case c => c
+    override def read: Int = input.read match {
+      case LexerInput.EOF ⇒ -1
+      case c ⇒ c
     }
 
-    override 
-    def read(cbuf: Array[Char], off: Int, len: Int): Int = {
+    override def read(cbuf: Array[Char], off: Int, len: Int): Int = {
       throw new UnsupportedOperationException("Not supported yet.")
     }
 
-    override 
-    def close = {}
+    override def close = {}
   }
 
-  /** 
+  /**
    * @Note:
    * ScalaLexer class is not Reentrant safe, it seems when source size is large than 16 * 1024,
    * there will be more than one input are used, which causes the offset states, such as readed

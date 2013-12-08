@@ -36,7 +36,6 @@ import java.awt.Rectangle;
 import java.io.Serializable;
 import sun.swing.DefaultLookup;
 
-
 /**
  * Renders an item in a list.
  * <p>
@@ -71,8 +70,7 @@ import sun.swing.DefaultLookup;
  * @author Hans Muller
  */
 class DefaultListCellRenderer[T <: AnyRef] extends JLabel
-                                              with ListCellRenderer[T] with Serializable
-{
+    with ListCellRenderer[T] with Serializable {
   import DefaultListCellRenderer._
 
   setOpaque(true);
@@ -97,7 +95,7 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
                                    index: Int,
                                    _isSelected: Boolean,
                                    cellHasFocus: Boolean): Component = {
-    
+
     setComponentOrientation(list.getComponentOrientation)
 
     var isSelected = _isSelected
@@ -116,8 +114,7 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
     if (isSelected) {
       setBackground(if (bg eq null) list.getSelectionBackground() else bg);
       setForeground(if (fg eq null) list.getSelectionForeground() else fg);
-    }
-    else {
+    } else {
       setBackground(list.getBackground());
       setForeground(list.getForeground());
     }
@@ -125,8 +122,7 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
     if (value.isInstanceOf[Icon]) {
       setIcon(value.asInstanceOf[Icon]);
       setText("");
-    }
-    else {
+    } else {
       setIcon(null);
       setText(if (value eq null) "" else value.toString());
     }
@@ -160,8 +156,7 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
    *         and differs from the JList's background;
    *         <code>false</code> otherwise
    */
-  override
-  def isOpaque(): Boolean = {
+  override def isOpaque(): Boolean = {
     val back = getBackground();
     var p = getParent();
     if (p ne null) {
@@ -169,8 +164,8 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
     }
     // p should now be the JList.
     val colorMatch = (back ne null) && (p ne null) &&
-    back.equals(p.getBackground()) &&
-    p.isOpaque();
+      back.equals(p.getBackground()) &&
+      p.isOpaque();
     return !colorMatch && super.isOpaque();
   }
 
@@ -179,8 +174,7 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def validate() {}
+  override def validate() {}
 
   /**
    * Overridden for performance reasons.
@@ -189,8 +183,7 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
    *
    * @since 1.5
    */
-  override
-  def invalidate() {}
+  override def invalidate() {}
 
   /**
    * Overridden for performance reasons.
@@ -199,45 +192,40 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
    *
    * @since 1.5
    */
-  override
-  def repaint() {}
+  override def repaint() {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def revalidate() {}
+  override def revalidate() {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def repaint(tm: Long, x: Int, y: Int, width: Int, height: Int) {}
+  override def repaint(tm: Long, x: Int, y: Int, width: Int, height: Int) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def repaint(r: Rectangle) {}
+  override def repaint(r: Rectangle) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  protected def firePropertyChange(propertyName: String, oldValue: Object, newValue: Object) {
+  override protected def firePropertyChange(propertyName: String, oldValue: Object, newValue: Object) {
     // Strings get interned...
-    if (propertyName == "text" || 
-        ((propertyName == "font" || propertyName == "foreground") && 
-         (oldValue != newValue) && 
-         (getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) ne null))) {
+    if (propertyName == "text" ||
+      ((propertyName == "font" || propertyName == "foreground") &&
+        (oldValue != newValue) &&
+        (getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) ne null))) {
 
       super.firePropertyChange(propertyName, oldValue, newValue);
     }
@@ -248,64 +236,56 @@ class DefaultListCellRenderer[T <: AnyRef] extends JLabel
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def firePropertyChange(propertyName: String, oldValue: Byte, newValue: Byte) {}
+  override def firePropertyChange(propertyName: String, oldValue: Byte, newValue: Byte) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def firePropertyChange(propertyName: String, oldValue: Char, newValue: Char) {}
+  override def firePropertyChange(propertyName: String, oldValue: Char, newValue: Char) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def firePropertyChange(propertyName: String, oldValue: Short, newValue: Short) {}
+  override def firePropertyChange(propertyName: String, oldValue: Short, newValue: Short) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def firePropertyChange(propertyName: String, oldValue: Int, newValue: Int) {}
+  override def firePropertyChange(propertyName: String, oldValue: Int, newValue: Int) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def firePropertyChange(propertyName: String, oldValue: Long, newValue: Long) {}
+  override def firePropertyChange(propertyName: String, oldValue: Long, newValue: Long) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def firePropertyChange(propertyName: String, oldValue: Float, newValue: Float) {}
+  override def firePropertyChange(propertyName: String, oldValue: Float, newValue: Float) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def firePropertyChange(propertyName: String, oldValue: Double, newValue: Double) {}
+  override def firePropertyChange(propertyName: String, oldValue: Double, newValue: Double) {}
 
   /**
    * Overridden for performance reasons.
    * See the <a href="#override">Implementation Note</a>
    * for more information.
    */
-  override
-  def firePropertyChange(propertyName: String, oldValue: Boolean, newValue: Boolean) {}
+  override def firePropertyChange(propertyName: String, oldValue: Boolean, newValue: Boolean) {}
 
 }
 
@@ -336,8 +316,7 @@ object DefaultListCellRenderer {
    * Please see {@link java.beans.XMLEncoder}.
    */
   class UIResource extends DefaultListCellRenderer
-                      with javax.swing.plaf.UIResource
-  {
+      with javax.swing.plaf.UIResource {
   }
 
 }

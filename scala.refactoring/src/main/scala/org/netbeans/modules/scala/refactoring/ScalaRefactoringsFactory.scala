@@ -49,7 +49,6 @@ import org.openide.filesystems.FileObject;
 import org.openide.util.Lookup;
 import org.netbeans.modules.scala.core.ast.ScalaItems
 
-
 /**
  *
  * @author Jan Becicka
@@ -61,13 +60,13 @@ class ScalaRefactoringsFactory extends RefactoringPluginFactory {
     val look = refactoring.getRefactoringSource
     val handle = look.lookup(classOf[ScalaItems#ScalaItem])
     val fo = look.lookup(classOf[FileObject])
-    
+
     refactoring match {
-      case where: WhereUsedQuery if handle ne null =>
+      case where: WhereUsedQuery if handle ne null ⇒
         new WhereUsedQueryPlugin(where)
-      case rename: RenameRefactoring if (handle ne null) || ((fo ne null) && RetoucheUtils.isScalaFile(fo)) =>
+      case rename: RenameRefactoring if (handle ne null) || ((fo ne null) && RetoucheUtils.isScalaFile(fo)) ⇒
         new RenameRefactoringPlugin(rename)
-      case _ => null
+      case _ ⇒ null
 
     }
   }

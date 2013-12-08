@@ -193,7 +193,7 @@
             <version>${netbeans.version}</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <!-- maven transitive dependencies: <scope>runtime</scope> -->
         <!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
@@ -234,7 +234,7 @@
             <artifactId>org-netbeans-modules-scala-core</artifactId>
             <version>${scala.core.version}</version>
         </dependency>
-        
+
     </dependencies>
 
     <build>
@@ -243,9 +243,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-            <plugin>                    
+            <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.scalariform</groupId>
+                <artifactId>scalariform-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

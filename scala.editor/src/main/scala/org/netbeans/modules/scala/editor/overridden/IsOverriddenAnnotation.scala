@@ -57,11 +57,11 @@ import org.openide.util.NbBundle
  */
 object IsOverriddenAnnotation {
   import AnnotationType._
-  
+
   def performGoToAction(tpe: AnnotationType, declarations: List[ElementDescription], position: Point, shortDescription: String) {
     if (tpe == IMPLEMENTS || tpe == OVERRIDES) {
       declarations match {
-        case desc :: Nil =>
+        case desc :: Nil ⇒
           val file = desc.getSourceFile
 
           if (file ne null) {
@@ -71,15 +71,15 @@ object IsOverriddenAnnotation {
           }
 
           return
-        case _ =>
+        case _ ⇒
       }
     }
 
     val caption = tpe match {
-      case IMPLEMENTS => NbBundle.getMessage(classOf[IsOverriddenAnnotation], "CAP_Implements")
-      case OVERRIDES  => NbBundle.getMessage(classOf[IsOverriddenAnnotation], "CAP_Overrides")
-      case HAS_IMPLEMENTATION | IS_OVERRIDDEN => shortDescription
-      case _ => throw new IllegalStateException("Currently not implemented: " + tpe) //NOI18N
+      case IMPLEMENTS ⇒ NbBundle.getMessage(classOf[IsOverriddenAnnotation], "CAP_Implements")
+      case OVERRIDES ⇒ NbBundle.getMessage(classOf[IsOverriddenAnnotation], "CAP_Overrides")
+      case HAS_IMPLEMENTATION | IS_OVERRIDDEN ⇒ shortDescription
+      case _ ⇒ throw new IllegalStateException("Currently not implemented: " + tpe) //NOI18N
     }
 
     PopupUtil.showPopup(new IsOverriddenPopup(caption, declarations), caption, position.x, position.y, true, 0)
@@ -90,49 +90,48 @@ class IsOverriddenAnnotation(document: StyledDocument,
                              pos: Position,
                              tpe: AnnotationType,
                              shortDescription: String,
-                             declarations: List[ElementDescription]
-) extends Annotation {
+                             declarations: List[ElementDescription]) extends Annotation {
   import IsOverriddenAnnotation._
   import AnnotationType._
 
   assert(pos ne null)
-        
+
   def getShortDescription: String = shortDescription
 
   def getAnnotationType: String = {
     tpe match {
-      case IS_OVERRIDDEN      => "org-netbeans-modules-editor-annotations-is_overridden" //NOI18N
-      case HAS_IMPLEMENTATION => "org-netbeans-modules-editor-annotations-has_implementations" //NOI18N
-      case IMPLEMENTS         => "org-netbeans-modules-editor-annotations-implements" //NOI18N
-      case OVERRIDES          => "org-netbeans-modules-editor-annotations-overrides" //NOI18N
-      case _ =>  throw new IllegalStateException("Currently not implemented: " + tpe) //NOI18N
+      case IS_OVERRIDDEN ⇒ "org-netbeans-modules-editor-annotations-is_overridden" //NOI18N
+      case HAS_IMPLEMENTATION ⇒ "org-netbeans-modules-editor-annotations-has_implementations" //NOI18N
+      case IMPLEMENTS ⇒ "org-netbeans-modules-editor-annotations-implements" //NOI18N
+      case OVERRIDES ⇒ "org-netbeans-modules-editor-annotations-overrides" //NOI18N
+      case _ ⇒ throw new IllegalStateException("Currently not implemented: " + tpe) //NOI18N
     }
   }
-    
+
   def attach {
     NbDocument.addAnnotation(document, pos, -1, this)
   }
-    
+
   def detachImpl {
     NbDocument.removeAnnotation(document, this)
   }
-    
+
   override def toString = {
     "[IsOverriddenAnnotation: " + shortDescription + "]" //NOI18N
   }
-    
+
   def getPosition: Position = pos
-    
+
   def debugDump: String = {
     val elementNames = declarations map (_.getDisplayName)
     "IsOverriddenAnnotation: type=" + tpe.toString + ", elements:" + elementNames //NOI18N
   }
-    
+
   def mouseClicked(c: JTextComponent, p: Point) {
     val position = new Point(p)
-        
+
     SwingUtilities.convertPointToScreen(position, c)
-        
+
     performGoToAction(tpe, declarations, position, shortDescription)
   }
 

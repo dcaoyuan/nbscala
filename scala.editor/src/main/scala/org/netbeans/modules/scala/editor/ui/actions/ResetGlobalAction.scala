@@ -46,14 +46,13 @@ import javax.swing.text.Document
 import org.netbeans.editor.BaseAction
 import org.openide.util.NbBundle
 import org.openide.util.RequestProcessor
-import org.netbeans.modules.scala.core.{ScalaGlobal}
+import org.netbeans.modules.scala.core.{ ScalaGlobal }
 
 /**
  *
  * @author Caoyuan Deng
  */
-class ResetGlobalAction extends BaseAction(NbBundle.getMessage(classOf[ResetGlobalAction], "reset-scala-global"), 0
-) with Runnable {
+class ResetGlobalAction extends BaseAction(NbBundle.getMessage(classOf[ResetGlobalAction], "reset-scala-global"), 0) with Runnable {
 
   var doc: Option[Document] = None
 
@@ -64,8 +63,8 @@ class ResetGlobalAction extends BaseAction(NbBundle.getMessage(classOf[ResetGlob
   def actionPerformed(evt: ActionEvent, comp: JTextComponent) {
     assert(comp ne null)
     doc = comp.getDocument match {
-      case null => None
-      case x => Some(x)
+      case null ⇒ None
+      case x ⇒ Some(x)
     }
 
     if (doc.isDefined) {

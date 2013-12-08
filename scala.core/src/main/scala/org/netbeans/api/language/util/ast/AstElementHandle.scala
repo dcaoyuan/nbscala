@@ -51,7 +51,7 @@ trait AstElementHandle extends ElementHandle {
   def symbol: Any
 
   def tpe: String
-    
+
   def getDocComment: String
 
   def getIcon: Icon
@@ -72,5 +72,5 @@ trait AstElementHandle extends ElementHandle {
 
   def htmlFormat(fm: HtmlFormatter): Unit
 
-  def sigFormat(fm: HtmlFormatter) : Unit
+  def sigFormat(fm: HtmlFormatter): Unit
 }

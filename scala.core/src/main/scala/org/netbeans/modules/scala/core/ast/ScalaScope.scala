@@ -39,7 +39,7 @@
 
 package org.netbeans.modules.scala.core.ast
 
-import org.netbeans.api.lexer.{Token, TokenId}
+import org.netbeans.api.lexer.{ Token, TokenId }
 import org.netbeans.api.language.util.ast.AstScope
 
 object ScalaScope {

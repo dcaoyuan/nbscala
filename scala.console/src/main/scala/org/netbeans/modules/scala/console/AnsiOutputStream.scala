@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   import Ansi._
   import AnsiOutputStream._
-  
+
   private val options = new ArrayBuffer[Any]()
   private val buffer = Array.ofDim[Byte](MAX_ESCAPE_SEQUENCE_LENGTH)
   private var pos = 0
@@ -16,140 +16,139 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   private var state = LOOKING_FOR_FIRST_ESC_CHAR
 
   // TODO: implement to get perf boost: public void write(byte[] b, Int off, Int len)
-	
+
   @throws(classOf[IOException])
-  override 
-  def write(data: Int) {
+  override def write(data: Int) {
     state match {
-      case LOOKING_FOR_FIRST_ESC_CHAR =>
+      case LOOKING_FOR_FIRST_ESC_CHAR ⇒
         data match {
-          case FIRST_ESC_CHAR =>
+          case FIRST_ESC_CHAR ⇒
             buffer(pos) = data.toByte; pos += 1
             state = LOOKING_FOR_SECOND_ESC_CHAR
-          case _ =>
+          case _ ⇒
             out.write(data)
         }
-			
-      case LOOKING_FOR_SECOND_ESC_CHAR =>
+
+      case LOOKING_FOR_SECOND_ESC_CHAR ⇒
         buffer(pos) = data.toByte; pos += 1
-        
+
         data match {
-          case SECOND_ESC_CHAR =>
+          case SECOND_ESC_CHAR ⇒
             state = LOOKING_FOR_NEXT_ARG
-          case SECOND_OSC_CHAR =>
+          case SECOND_OSC_CHAR ⇒
             state = LOOKING_FOR_OSC_COMMAND
-          case _ =>
+          case _ ⇒
             reset(false)
         }
-			
-      case LOOKING_FOR_NEXT_ARG =>
+
+      case LOOKING_FOR_NEXT_ARG ⇒
         buffer(pos) = data.toByte; pos += 1
-        
+
         data match {
-          case '"' =>
+          case '"' ⇒
             startOfValue = pos - 1
             state = LOOKING_FOR_STR_ARG_END
-          case _ if '0' <= data && data <= '9' =>
+          case _ if '0' <= data && data <= '9' ⇒
             startOfValue = pos - 1
-            state = LOOKING_FOR_INT_ARG_END		
-          case ';' =>
+            state = LOOKING_FOR_INT_ARG_END
+          case ';' ⇒
             options += null
-          case '?' =>
+          case '?' ⇒
             options += '?'
-          case '=' =>
+          case '=' ⇒
             options += '='
-          case _ =>
+          case _ ⇒
             reset(processEscapeCommand(options, data))
         }
 
-      case LOOKING_FOR_INT_ARG_END =>
+      case LOOKING_FOR_INT_ARG_END ⇒
         buffer(pos) = data.toByte; pos += 1
-        
+
         data match {
-          case _ if '0' <= data && data <= '9' =>
-          case _ =>
+          case _ if '0' <= data && data <= '9' ⇒
+          case _ ⇒
             val strValue = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             val value = new Integer(strValue)
             options += value
             data match {
-              case ';' => 
+              case ';' ⇒
                 state = LOOKING_FOR_NEXT_ARG
-              case _ =>
+              case _ ⇒
                 reset(processEscapeCommand(options, data))
             }
         }
-			
-      case LOOKING_FOR_STR_ARG_END =>
+
+      case LOOKING_FOR_STR_ARG_END ⇒
         buffer(pos) = data.toByte; pos += 1
-        
+
         data match {
-          case '"' =>
-          case _ =>
+          case '"' ⇒
+          case _ ⇒
             val value = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             options += value
             data match {
-              case ';' =>
+              case ';' ⇒
                 state = LOOKING_FOR_NEXT_ARG
-              case _ =>
+              case _ ⇒
                 reset(processEscapeCommand(options, data))
             }
         }
-			
-      case LOOKING_FOR_OSC_COMMAND =>
+
+      case LOOKING_FOR_OSC_COMMAND ⇒
         buffer(pos) = data.toByte; pos += 1
-        
+
         data match {
-          case _ if '0' <= data && data <= '9' =>
+          case _ if '0' <= data && data <= '9' ⇒
             startOfValue = pos - 1
-            state = LOOKING_FOR_OSC_COMMAND_END			
-          case _ =>
+            state = LOOKING_FOR_OSC_COMMAND_END
+          case _ ⇒
             reset(false)
         }
-		
-      case LOOKING_FOR_OSC_COMMAND_END =>
+
+      case LOOKING_FOR_OSC_COMMAND_END ⇒
         buffer(pos) = data.toByte; pos += 1
-        
+
         data match {
-          case ';' =>
-            val strValue = new String(buffer, startOfValue, (pos - 1)-startOfValue, "UTF-8")
+          case ';' ⇒
+            val strValue = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             val value = new Integer(strValue)
             options += value
             startOfValue = pos
             state = LOOKING_FOR_OSC_PARAM
-          case _ if '0' <= data && data <= '9' =>
-            // already pushed digit to buffer, just keep looking
-          case _ =>
+          case _ if '0' <= data && data <= '9' ⇒
+          // already pushed digit to buffer, just keep looking
+          case _ ⇒
             // oops, did not expect this
             reset(false)
         }
-			
-      case LOOKING_FOR_OSC_PARAM =>
+
+      case LOOKING_FOR_OSC_PARAM ⇒
         buffer(pos) = data.toByte; pos += 1
-        
+
         data match {
-          case BEL =>
+          case BEL ⇒
             val value = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             options += value
             reset(processOperatingSystemCommand(options))
-          case FIRST_ESC_CHAR =>
+          case FIRST_ESC_CHAR ⇒
             state = LOOKING_FOR_ST
-          case _ =>
-            // just keep looking while adding text
+          case _ ⇒
+          // just keep looking while adding text
         }
-			
-      case LOOKING_FOR_ST =>
+
+      case LOOKING_FOR_ST ⇒
         buffer(pos) = data.toByte; pos += 1
-        
+
         data match {
-          case SECOND_ST_CHAR =>
+          case SECOND_ST_CHAR ⇒
             val value = new String(buffer, startOfValue, (pos - 2) - startOfValue, "UTF-8")
             options += value
             reset(processOperatingSystemCommand(options))
-          case _ =>
+          case _ ⇒
             state = LOOKING_FOR_OSC_PARAM
         }
     }
-		
+
     // Is it just too long?
     if (pos >= buffer.length) {
       reset(false)
@@ -171,9 +170,9 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
     startOfValue = 0
     state = LOOKING_FOR_FIRST_ESC_CHAR
   }
-  
+
   /**
-   * 
+   *
    * @param options
    * @param command
    * @return true if the escape command was processed.
@@ -182,65 +181,65 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   private def processEscapeCommand(options: ArrayBuffer[Any], command: Int): Boolean = {
     try {
       command match {
-        case 'A' =>
+        case 'A' ⇒
           processCursorUp(optionInt(options, 0, 1))
           true
-        case 'B' =>
+        case 'B' ⇒
           processCursorDown(optionInt(options, 0, 1))
           true
-        case 'C' =>
+        case 'C' ⇒
           processCursorRight(optionInt(options, 0, 1))
           true
-        case 'D' =>
+        case 'D' ⇒
           processCursorLeft(optionInt(options, 0, 1))
           true
-        case 'E' =>
+        case 'E' ⇒
           processCursorDownLine(optionInt(options, 0, 1))
           true
-        case 'F' =>
+        case 'F' ⇒
           processCursorUpLine(optionInt(options, 0, 1))
           true
-        case 'G' =>
+        case 'G' ⇒
           processCursorToColumn(optionInt(options, 0))
           true
-        case 'H' | 'f' =>
+        case 'H' | 'f' ⇒
           processCursorTo(optionInt(options, 0, 1), optionInt(options, 1, 1))
           true
-        case 'J' =>
+        case 'J' ⇒
           processEraseScreen(optionInt(options, 0, 0))
           true
-        case 'K' =>
+        case 'K' ⇒
           processEraseLine(optionInt(options, 0, 0))
           true
-        case 'S' =>
+        case 'S' ⇒
           processScrollUp(optionInt(options, 0, 1))
           true
-        case 'T' =>
+        case 'T' ⇒
           processScrollDown(optionInt(options, 0, 1))
           true
-        case 'm' =>				
+        case 'm' ⇒
           // all options should be ints...
           var count = 0
           options foreach {
-            case value: Int =>
+            case value: Int ⇒
               count += 1
               value match {
-                case _ if 30 <= value && value <= 37 =>
+                case _ if 30 <= value && value <= 37 ⇒
                   processSetForegroundColor(value - 30)
-                case _ if 40 <= value && value <= 47 =>
+                case _ if 40 <= value && value <= 47 ⇒
                   processSetBackgroundColor(value - 40)
-                case 39 =>
+                case 39 ⇒
                   processDefaultTextColor
-                case 49 =>
+                case 49 ⇒
                   processDefaultBackgroundColor
-                case 0 =>
+                case 0 ⇒
                   processAttributeRest
-                case _ =>
+                case _ ⇒
                   processSetAttribute(value)
               }
-            case null => 
-              // ginore
-            case _ => 
+            case null ⇒
+            // ginore
+            case _ ⇒
               throw new IllegalArgumentException()
           }
 
@@ -248,16 +247,16 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
             processAttributeRest
           }
           true
-        case 's' =>
+        case 's' ⇒
           processSaveCursorPosition
           true
-        case 'u' =>
+        case 'u' ⇒
           processRestoreCursorPosition
           true
-        case 'n' if optionInt(options, 0, -1) == 6 =>
+        case 'n' if optionInt(options, 0, -1) == 6 ⇒
           processReportCursorPosition
           true
-        case _ =>
+        case _ ⇒
           if ('a' <= command && command <= 'z') {
             processUnknownExtension(options, command)
             true
@@ -269,12 +268,12 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
           }
       }
     } catch {
-      case ex: IllegalArgumentException => false
+      case ex: IllegalArgumentException ⇒ false
     }
   }
 
   /**
-   * 
+   *
    * @param options
    * @return true if the operating system command was processed.
    */
@@ -286,37 +285,37 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
     // it to processUnknownOperatingSystemCommand implementations to handle that
     try {
       command match {
-        case 0 =>
+        case 0 ⇒
           processChangeIconNameAndWindowTitle(label)
           true
-        case 1 =>
+        case 1 ⇒
           processChangeIconName(label)
           true
-        case 2 =>
+        case 2 ⇒
           processChangeWindowTitle(label)
           true
-        case _ =>
+        case _ ⇒
           // not exactly unknown, but not supported through dedicated process methods:
           processUnknownOperatingSystemCommand(command, label)
           true
       }
     } catch {
-      case ex: IllegalArgumentException => false
+      case ex: IllegalArgumentException ⇒ false
     }
   }
-	
+
   @throws(classOf[IOException])
   protected def processReportCursorPosition() {}
 
   @throws(classOf[IOException])
   protected def processRestoreCursorPosition() {}
-  
+
   @throws(classOf[IOException])
   protected def processSaveCursorPosition() {}
-  
+
   @throws(classOf[IOException])
   protected def processScrollDown(optionInt: Int) {}
-  
+
   @throws(classOf[IOException])
   protected def processScrollUp(optionInt: Int) {}
 
@@ -334,10 +333,10 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
 
   @throws(classOf[IOException])
   protected def processSetBackgroundColor(color: Int) {}
-	
+
   @throws(classOf[IOException])
   protected def processDefaultTextColor() {}
-	
+
   @throws(classOf[IOException])
   protected def processDefaultBackgroundColor() {}
 
@@ -379,9 +378,9 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
 
   @throws(classOf[IOException])
   protected def processCursorUp(count: Int) {}
-	
+
   protected def processUnknownExtension(options: ArrayBuffer[Any], command: Int) {}
-	
+
   protected def processChangeIconNameAndWindowTitle(label: String) {
     processChangeIconName(label)
     processChangeWindowTitle(label)
@@ -390,14 +389,14 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   protected def processChangeIconName(label: String) {}
 
   protected def processChangeWindowTitle(label: String) {}
-	
+
   protected def processUnknownOperatingSystemCommand(command: Int, param: String) {}
 
   private def optionInt(options: ArrayBuffer[Any], index: Int): Int = {
     if (options.size > index) {
       options(index) match {
-        case value: Int => value
-        case _ => throw new IllegalArgumentException()
+        case value: Int ⇒ value
+        case _ ⇒ throw new IllegalArgumentException()
       }
     } else {
       throw new IllegalArgumentException()
@@ -407,16 +406,15 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   private def optionInt(options: ArrayBuffer[Any], index: Int, defaultValue: Int): Int = {
     if (options.size > index) {
       options(index) match {
-        case value: Int => value
-        case _ => defaultValue
+        case value: Int ⇒ value
+        case _ ⇒ defaultValue
       }
     } else {
       defaultValue
     }
   }
-	
-  override
-  def close() {
+
+  override def close() {
     write(REST_CODE)
     flush
     super.close
@@ -425,7 +423,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
 
 object AnsiOutputStream {
   import Ansi._
-  
+
   private val REST_CODE = Array[Byte](FIRST_ESC_CHAR, SECOND_ESC_CHAR, 'm')
   private val MAX_ESCAPE_SEQUENCE_LENGTH = 100
   private val LOOKING_FOR_FIRST_ESC_CHAR = 0
@@ -440,12 +438,12 @@ object AnsiOutputStream {
 }
 
 object Ansi {
-  
-  val FIRST_ESC_CHAR:  Byte = 27
+
+  val FIRST_ESC_CHAR: Byte = 27
   val SECOND_ESC_CHAR: Byte = '['
   val SECOND_OSC_CHAR: Byte = ']'
-  val SECOND_ST_CHAR:  Byte = '\\'
-  
+  val SECOND_ST_CHAR: Byte = '\\'
+
   val BEL = 7
   val ERASE_SCREEN_TO_END = 0
   val ERASE_SCREEN_TO_BEGINING = 1
@@ -453,30 +451,30 @@ object Ansi {
   val ERASE_LINE_TO_END = 0
   val ERASE_LINE_TO_BEGINING = 1
   val ERASE_LINE = 2
-  
-  val ATTRIBUTE_INTENSITY_BOLD   = 1  // Intensity: Bold 	
-  val ATTRIBUTE_INTENSITY_FAINT  = 2  // Intensity; Faint 	not widely supported
-  val ATTRIBUTE_ITALIC           = 3  // Italic; on 	not widely supported. Sometimes treated as inverse.
-  val ATTRIBUTE_UNDERLINE        = 4  // Underline; Single 	
-  val ATTRIBUTE_BLINK_SLOW       = 5  // Blink; Slow 	less than 150 per minute
-  val ATTRIBUTE_BLINK_FAST       = 6  // Blink; Rapid 	MS-DOS ANSI.SYS; 150 per minute or more
-  val ATTRIBUTE_NEGATIVE_ON      = 7  // Image; Negative 	inverse or reverse; swap foreground and background
-  val ATTRIBUTE_CONCEAL_ON       = 8  // Conceal on
+
+  val ATTRIBUTE_INTENSITY_BOLD = 1 // Intensity: Bold 	
+  val ATTRIBUTE_INTENSITY_FAINT = 2 // Intensity; Faint 	not widely supported
+  val ATTRIBUTE_ITALIC = 3 // Italic; on 	not widely supported. Sometimes treated as inverse.
+  val ATTRIBUTE_UNDERLINE = 4 // Underline; Single 	
+  val ATTRIBUTE_BLINK_SLOW = 5 // Blink; Slow 	less than 150 per minute
+  val ATTRIBUTE_BLINK_FAST = 6 // Blink; Rapid 	MS-DOS ANSI.SYS; 150 per minute or more
+  val ATTRIBUTE_NEGATIVE_ON = 7 // Image; Negative 	inverse or reverse; swap foreground and background
+  val ATTRIBUTE_CONCEAL_ON = 8 // Conceal on
   val ATTRIBUTE_UNDERLINE_DOUBLE = 21 // Underline; Double 	not widely supported
   val ATTRIBUTE_INTENSITY_NORMAL = 22 // Intensity; Normal 	not bold and not faint
-  val ATTRIBUTE_UNDERLINE_OFF    = 24 // Underline; None 	
-  val ATTRIBUTE_BLINK_OFF        = 25 // Blink; off 	
-  val ATTRIBUTE_NEGATIVE_Off     = 27 // Image; Positive 	
-  val ATTRIBUTE_CONCEAL_OFF      = 28 // Reveal 	conceal off
+  val ATTRIBUTE_UNDERLINE_OFF = 24 // Underline; None 	
+  val ATTRIBUTE_BLINK_OFF = 25 // Blink; off 	
+  val ATTRIBUTE_NEGATIVE_Off = 27 // Image; Positive 	
+  val ATTRIBUTE_CONCEAL_OFF = 28 // Reveal 	conceal off
 
-  val BLACK 	= 0
-  val RED 	= 1
-  val GREEN 	= 2
-  val YELLOW 	= 3
-  val BLUE 	= 4
-  val MAGENTA 	= 5
-  val CYAN 	= 6
-  val WHITE 	= 7
+  val BLACK = 0
+  val RED = 1
+  val GREEN = 2
+  val YELLOW = 3
+  val BLUE = 4
+  val MAGENTA = 5
+  val CYAN = 6
+  val WHITE = 7
 
   trait Attr
 
@@ -486,69 +484,65 @@ object Ansi {
     def fgBright = value + 90
     def bgBright = value + 100
 
-    override 
-    def toString = name
+    override def toString = name
   }
-  
+
   object Color {
-    case object BLACK   extends Color(0, "BLACK")
-    case object RED     extends Color(1, "RED")
-    case object GREEN   extends Color(2, "GREEN")
-    case object YELLOW  extends Color(3, "YELLOW")
-    case object BLUE    extends Color(4, "BLUE")
+    case object BLACK extends Color(0, "BLACK")
+    case object RED extends Color(1, "RED")
+    case object GREEN extends Color(2, "GREEN")
+    case object YELLOW extends Color(3, "YELLOW")
+    case object BLUE extends Color(4, "BLUE")
     case object MAGENTA extends Color(5, "MAGENTA")
-    case object CYAN    extends Color(6, "CYAN")
-    case object WHITE   extends Color(7,"WHITE")
-    case object DEFAULT extends Color(9,"DEFAULT")
+    case object CYAN extends Color(6, "CYAN")
+    case object WHITE extends Color(7, "WHITE")
+    case object DEFAULT extends Color(9, "DEFAULT")
   }
-  
+
   abstract class Attribute(val value: Int, name: String) extends Attr {
-    override
-    def toString= name
+    override def toString = name
   }
-  
+
   object Attribute {
-    case object RESET		   extends Attribute( 0, "RESET")
-    case object INTENSITY_BOLD	   extends Attribute( 1, "INTENSITY_BOLD")
-    case object INTENSITY_FAINT	   extends Attribute( 2, "INTENSITY_FAINT")
-    case object ITALIC		   extends Attribute( 3, "ITALIC_ON")
-    case object UNDERLINE	   extends Attribute( 4, "UNDERLINE_ON")
-    case object BLINK_SLOW	   extends Attribute( 5, "BLINK_SLOW")
-    case object BLINK_FAST	   extends Attribute( 6, "BLINK_FAST")
-    case object NEGATIVE_ON	   extends Attribute( 7, "NEGATIVE_ON")
-    case object CONCEAL_ON	   extends Attribute( 8, "CONCEAL_ON")
-    case object STRIKETHROUGH_ON   extends Attribute( 9, "STRIKETHROUGH_ON")
-    case object UNDERLINE_DOUBLE   extends Attribute(21, "UNDERLINE_DOUBLE")
+    case object RESET extends Attribute(0, "RESET")
+    case object INTENSITY_BOLD extends Attribute(1, "INTENSITY_BOLD")
+    case object INTENSITY_FAINT extends Attribute(2, "INTENSITY_FAINT")
+    case object ITALIC extends Attribute(3, "ITALIC_ON")
+    case object UNDERLINE extends Attribute(4, "UNDERLINE_ON")
+    case object BLINK_SLOW extends Attribute(5, "BLINK_SLOW")
+    case object BLINK_FAST extends Attribute(6, "BLINK_FAST")
+    case object NEGATIVE_ON extends Attribute(7, "NEGATIVE_ON")
+    case object CONCEAL_ON extends Attribute(8, "CONCEAL_ON")
+    case object STRIKETHROUGH_ON extends Attribute(9, "STRIKETHROUGH_ON")
+    case object UNDERLINE_DOUBLE extends Attribute(21, "UNDERLINE_DOUBLE")
     case object INTENSITY_BOLD_OFF extends Attribute(22, "INTENSITY_BOLD_OFF")
-    case object ITALIC_OFF	   extends Attribute(23, "ITALIC_OFF")
-    case object UNDERLINE_OFF	   extends Attribute(24, "UNDERLINE_OFF")
-    case object BLINK_OFF	   extends Attribute(25, "BLINK_OFF")
-    case object NEGATIVE_OFF	   extends Attribute(27, "NEGATIVE_OFF")
-    case object CONCEAL_OFF	   extends Attribute(28, "CONCEAL_OFF")
-    case object STRIKETHROUGH_OFF  extends Attribute(29, "STRIKETHROUGH_OFF")
+    case object ITALIC_OFF extends Attribute(23, "ITALIC_OFF")
+    case object UNDERLINE_OFF extends Attribute(24, "UNDERLINE_OFF")
+    case object BLINK_OFF extends Attribute(25, "BLINK_OFF")
+    case object NEGATIVE_OFF extends Attribute(27, "NEGATIVE_OFF")
+    case object CONCEAL_OFF extends Attribute(28, "CONCEAL_OFF")
+    case object STRIKETHROUGH_OFF extends Attribute(29, "STRIKETHROUGH_OFF")
   }
 
   abstract class Erase(val value: Int, name: String) extends Attr {
-    override
-    def toString = name
+    override def toString = name
   }
-  
+
   object Erase {
-    case object FORWARD  extends Erase(0, "FORWARD")
+    case object FORWARD extends Erase(0, "FORWARD")
     case object BACKWARD extends Erase(1, "BACKWARD")
-    case object ALL      extends Erase(2, "ALL")
+    case object ALL extends Erase(2, "ALL")
   }
-  
-  
+
   abstract class Code(a: Attr, name: String, background: Boolean) {
     def this(n: Attr, name: String) = this(n, name, false)
-    
+
     Code.nameToValue += name -> this
-    
+
     //
     // TODO: Find a better way to keep Code in sync with Color/Attribute/Erase
     //
-    
+
     def isColor = a.isInstanceOf[Ansi.Color]
     def getColor = a.asInstanceOf[Ansi.Color]
 
@@ -556,12 +550,12 @@ object Ansi {
     def getAttribute = a.asInstanceOf[Attribute]
 
     def isBackground = background
-    
+
   }
-  
+
   object Code {
     private var nameToValue = Map[String, Code]()
-    
+
     def valueOf(name: String): Code = {
       nameToValue.getOrElse(name, null)
     }

@@ -61,11 +61,11 @@ object BoyerMoore {
   def indexOf(text: Array[Char], pattern: String, index: Int): Int = {
     BoyerMoore(text).indexOf(pattern, index)
   }
-  
+
   def apply(text: String) = {
     new BoyerMoore(text, null, text.length)
   }
-  
+
   def apply(text: Array[Char]) = {
     new BoyerMoore(null, text, text.length)
   }
@@ -86,7 +86,7 @@ class BoyerMoore(text: String, textArray: Array[Char], lenText: Int) {
     this.lenPat = pattern.length
 
     compilePattern
-    
+
     prevPattern = pattern
   }
 
@@ -169,15 +169,15 @@ class BoyerMoore(text: String, textArray: Array[Char], lenText: Int) {
             breakInner = true
           }
         }
-        
+
         if (!breakInner) {
           return tforward - lenPat + 1
         }
       }
-      
+
       tforward += skip(c & 0xff)
     }
-    
+
     -1
   }
 }

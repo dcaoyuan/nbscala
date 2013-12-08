@@ -113,10 +113,10 @@ object ScalaExecution {
     args += "-da"
 
     System.getenv("SCALA_EXTRA_VM_ARGS") match {
-      case null =>
+      case null ⇒
         args += "-Xmx512m"
         args += "-Xss1024k"
-      case extraArgs =>
+      case extraArgs ⇒
         if (!extraArgs.contains("-Xmx")) {
           args += "-Xmx512m"
         }
@@ -128,12 +128,12 @@ object ScalaExecution {
 
     val scalaHomeDir = try {
       new File(scalaHome).getCanonicalFile
-    } catch  {
-      case ex: IOException => Exceptions.printStackTrace(ex); null
+    } catch {
+      case ex: IOException ⇒ Exceptions.printStackTrace(ex); null
     }
 
     val scalaLib = new File(scalaHomeDir, "lib")
-    args += "-Xbootclasspath/a:" + mkClassPathString(scalaLib)  // @Note jline is a must for for interactive scala console
+    args += "-Xbootclasspath/a:" + mkClassPathString(scalaLib) // @Note jline is a must for for interactive scala console
 
     if (project != null) {
       val (projectBootCpStr, projectExecCpStr) = ProjectResources.getExecuteClassPathString(project)
@@ -145,7 +145,7 @@ object ScalaExecution {
     }
 
     args += "-Dscala.home=" + scalaHomeDir // is this a must for interactive scala console
-    args += "-Dscala.usejavacp=true"  // this is a must for -classpath can be imported under interative shell
+    args += "-Dscala.usejavacp=true" // this is a must for -classpath can be imported under interative shell
 
     /**
      * @Note:
@@ -167,16 +167,16 @@ object ScalaExecution {
     // here's what we do:
     // @see jline.UnitTerminal#init and TerminalLineSettings
     System.getProperty("os.name").toLowerCase match {
-      case os if os.indexOf("windows") != -1 =>
+      case os if os.indexOf("windows") != -1 ⇒
         args += "-Djline.terminal=unix"
         args += "-Djline.sh=cmd"
         // add switch "/c" here to "Carries out the command specified by string and then terminates",
         // so, the process will terminate and not hang on "process.waitFor()" @see cmd /?
         args += "-Djline.stty=/c\\ echo"
-      case _ =>
+      case _ ⇒
         args += "-Djline.terminal=unix"
         args += "-Djline.sh=sh"
-        args += "-Djline.stty=echo"  // avoid to send stty command, it's not necessary for pseudo termnial
+        args += "-Djline.stty=echo" // avoid to send stty command, it's not necessary for pseudo termnial
     }
 
     // main class
@@ -187,35 +187,34 @@ object ScalaExecution {
   }
 
   def isWindows: Boolean = System.getProperty("os.name").toLowerCase match {
-    case os if os.indexOf("windows") != -1 => true
-    case _ => false
+    case os if os.indexOf("windows") != -1 ⇒ true
+    case _ ⇒ false
   }
 
   def getJavaHome: String = {
     System.getProperty("scala.java.home") match {
-      case null => System.getProperty("java.home")
-      case x => x
+      case null ⇒ System.getProperty("java.home")
+      case x ⇒ x
     }
   }
 
   def getScalaHome: String = {
     System.getenv("SCALA_HOME") match {
-      case null =>
+      case null ⇒
         val d = new NotifyDescriptor.Message(
           "SCALA_HOME environment variable may not be set, or is invalid.\n" +
-          "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE
-        )
+            "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
         DialogDisplayer.getDefault().notify(d)
         null
-      case scalaHome => System.setProperty("scala.home", scalaHome); scalaHome
+      case scalaHome ⇒ System.setProperty("scala.home", scalaHome); scalaHome
     }
   }
 
   def getSbtHome: String = {
     //System.getProperty("user.home", "~") + File.separator + "myapps" + File.separator + "sbt"
     System.getProperty("netbeans.sbt.home") match {
-      case null => null
-      case x => x
+      case null ⇒ null
+      case x ⇒ x
     }
   }
 
@@ -227,17 +226,17 @@ object ScalaExecution {
       if (scalaHomeDir.exists && scalaHomeDir.isDirectory) {
         try {
           val scalaHomeFo = FileUtil.createData(scalaHomeDir)
-          val bin = scalaHomeFo.getFileObject("bin")             //NOI18N
+          val bin = scalaHomeFo.getFileObject("bin") //NOI18N
           if (Utilities.isWindows) {
             scalaFo = bin.getFileObject("scala", "exe")
             if (scalaFo eq null) {
               scalaFo = bin.getFileObject("scala", "bat")
             }
           } else {
-            scalaFo = bin.getFileObject("scala", null)    //NOI18N
+            scalaFo = bin.getFileObject("scala", null) //NOI18N
           }
-        } catch  {
-          case ex : IOException => Exceptions.printStackTrace(ex)
+        } catch {
+          case ex: IOException ⇒ Exceptions.printStackTrace(ex)
         }
       }
     }
@@ -246,8 +245,7 @@ object ScalaExecution {
     } else {
       val d = new NotifyDescriptor.Message(
         "Can not found ${SCALA_HOME}/bin/scala, the environment variable SCALA_HOME may be invalid.\n" +
-        "Please set proper SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE
-      )
+          "Please set proper SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
       DialogDisplayer.getDefault().notify(d)
       null
     }
@@ -255,28 +253,28 @@ object ScalaExecution {
 
   def getSbtLaunchJar(sbtHome: String): Option[File] = {
     sbtHome match {
-      case null | "" =>
+      case null | "" ⇒
         getEmbeddedSbtLaunchJar
-      case _ =>
+      case _ ⇒
         val jar = new File(sbtHome) match {
-          case homeDir if (homeDir.exists && homeDir.isDirectory) =>
+          case homeDir if (homeDir.exists && homeDir.isDirectory) ⇒
             try {
               val homeFo = FileUtil.createData(homeDir)
               val binDir = homeFo.getFileObject("bin")
               Option(binDir.getFileObject("sbt-launch", "jar"))
-            } catch  {
-              case ex: Exception =>
+            } catch {
+              case ex: Exception ⇒
                 log.log(Level.SEVERE, ex.getMessage, ex.getCause);
                 None
             }
-          case _ => None
+          case _ ⇒ None
         }
         jar match {
-          case Some(x) =>
+          case Some(x) ⇒
             Option(FileUtil.toFile(x))
-          case None =>
+          case None ⇒
             val msg = "Can not found" + sbtHome + "/bin/sbt-launch.jar\n" +
-            "Please set proper sbt home first!"
+              "Please set proper sbt home first!"
             log.severe(msg)
             DialogDisplayer.getDefault.notify(new NotifyDescriptor.Message(msg, NotifyDescriptor.INFORMATION_MESSAGE))
             None
@@ -285,23 +283,23 @@ object ScalaExecution {
   }
 
   private def getEmbeddedSbtLaunchJar: Option[File] = {
-    val sbtDir = InstalledFileLocator.getDefault.locate("modules/ext/org.netbeans.libs.sbt",  "org.netbeans.libs.sbt", false)
+    val sbtDir = InstalledFileLocator.getDefault.locate("modules/ext/org.netbeans.libs.sbt", "org.netbeans.libs.sbt", false)
     if (sbtDir != null && sbtDir.exists && sbtDir.isDirectory) {
-      findFileRecursively(sbtDir){file =>
+      findFileRecursively(sbtDir) { file ⇒
         val name = file.getName
         name == "sbt-launch.jar" || name.startsWith("sbt-launch-") && name.endsWith(".jar")
       }
     } else None
   }
 
-  private def findFileRecursively(file: File)(condition: File => Boolean): Option[File] = {
+  private def findFileRecursively(file: File)(condition: File ⇒ Boolean): Option[File] = {
     if (file.isDirectory) {
       val children = file.listFiles
       var i = 0
       while (i < children.length) {
         findFileRecursively(children(i))(condition) match {
-          case None => i += 1
-          case some => return some
+          case None ⇒ i += 1
+          case some ⇒ return some
         }
       }
       None
@@ -312,12 +310,12 @@ object ScalaExecution {
 
   private def mkClassPathString(dir: File, jarNames: Array[String]): String = {
     val dirPath = dir.getAbsolutePath
-    jarNames map (dirPath + File.separator + _) filter {fileName =>
+    jarNames map (dirPath + File.separator + _) filter { fileName ⇒
       try {
         val file = new File(fileName)
         file.exists && file.canRead
       } catch {
-        case ex: Throwable => false
+        case ex: Throwable ⇒ false
       }
     } mkString File.pathSeparator
   }
@@ -331,7 +329,7 @@ object ScalaExecution {
     val sb = new StringBuilder()
     val libs = scalaLib.listFiles
 
-    libs filter (_.getName.endsWith("jar")) foreach {lib =>
+    libs filter (_.getName.endsWith("jar")) foreach { lib ⇒
       if (sb.length > 0) sb.append(File.pathSeparatorChar)
       sb.append(lib.getAbsolutePath)
     }
@@ -344,7 +342,7 @@ object ScalaExecution {
       // (:) and filesystem separators, e.g. I might have C:\foo:D:\bar but
       // obviously only the path separator after "foo" should be changed to ;
       var pathOffset = 0
-      extraCp foreach {c =>
+      extraCp foreach { c ⇒
         if (c == ':' && pathOffset != 1) {
           p += File.pathSeparatorChar
           pathOffset = 0
@@ -370,7 +368,7 @@ object ScalaExecution {
       //}
       sb.append(p)
     }
-    if (Utilities.isWindows)  "\"" + sb.toString + "\""  else sb.toString // NOI18N
+    if (Utilities.isWindows) "\"" + sb.toString + "\"" else sb.toString // NOI18N
   }
 
   def getMainProjectWorkPath: File = {

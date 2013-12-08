@@ -49,7 +49,7 @@ import org.netbeans.modules.csl.api.HintFix
 import org.netbeans.modules.csl.api.HintSeverity
 import org.netbeans.modules.csl.api.RuleContext
 import org.netbeans.modules.scala.editor.util.NbBundler
-import java.{util=>ju}
+import java.{ util ⇒ ju }
 import java.util.prefs.Preferences
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -62,25 +62,27 @@ import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.api.language.util.ast._
 import scala.tools.nsc.symtab._
 
-
-
 class RemoveImportRule() extends ScalaAstRule with NbBundler {
   val DEFAULT_PRIORITY = 293
 
-  /** Gets unique ID of the rule
+  /**
+   * Gets unique ID of the rule
    */
-  def getId() : String = "RemoveImportRule"
+  def getId(): String = "RemoveImportRule"
 
-  /** Gets longer description of the rule
+  /**
+   * Gets longer description of the rule
    */
-  def getDescription() : String = "Desc"
+  def getDescription(): String = "Desc"
 
-  /** Finds out whether the rule is currently enabled.
+  /**
+   * Finds out whether the rule is currently enabled.
    * @return true if enabled false otherwise.
    */
-  def getDefaultEnabled() : Boolean = true
+  def getDefaultEnabled(): Boolean = true
 
-  /** Gets the UI description for this rule. It is fine to return null
+  /**
+   * Gets the UI description for this rule. It is fine to return null
    * to get the default behavior. Notice that the Preferences node is a copy
    * of the node returned from {link:getPreferences()}. This is in oder to permit
    * canceling changes done in the options dialog.<BR>
@@ -89,31 +91,32 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
    * @param node Preferences node the customizer should work on.
    * @return Component which will be shown in the options dialog.
    */
-  def getCustomizer(node : Preferences) : JComponent = new JPanel()
+  def getCustomizer(node: Preferences): JComponent = new JPanel()
 
   /**
    * Return true iff this hint applies to the given file
    */
-  def appliesTo(context : RuleContext) : Boolean = true
+  def appliesTo(context: RuleContext): Boolean = true
 
-  /** Get's UI usable name of the rule
+  /**
+   * Get's UI usable name of the rule
    */
-  def getDisplayName : String = "Remove import"
+  def getDisplayName: String = "Remove import"
 
   /**
    * Whether this task should be shown in the tasklist
    */
-  def showInTasklist : Boolean = false
+  def showInTasklist: Boolean = false
 
-  /** Gets current severiry of the hint.
+  /**
+   * Gets current severiry of the hint.
    * @return Hints severity in current profile.
    */
-  def getDefaultSeverity : HintSeverity = HintSeverity.WARNING
+  def getDefaultSeverity: HintSeverity = HintSeverity.WARNING
 
+  def getKinds(): java.util.Set[_] = java.util.Collections.singleton(ScalaAstRule.ROOT)
 
-  def getKinds() : java.util.Set[_] = java.util.Collections.singleton(ScalaAstRule.ROOT)
-
-  def createHints(context : ScalaRuleContext, scope : ScalaRootScope) : List[Hint] = {
+  def createHints(context: ScalaRuleContext, scope: ScalaRootScope): List[Hint] = {
     val pr = context.parserResult.asInstanceOf[ScalaParserResult]
     val global = pr.global
 
@@ -124,12 +127,12 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
     val importings = scope.importingItems.asInstanceOf[Set[global.ScalaItem]]
 
     def qualName(qName: String) = qName.lastIndexOf(".") match {
-      case -1 => ""
-      case i => qName.substring(0, i)
+      case -1 ⇒ ""
+      case i ⇒ qName.substring(0, i)
     }
 
     val added = new mutable.HashSet[String]
-    importings filter {imp =>
+    importings filter { imp ⇒
       //println("import: " + imp)
       val impSym = imp.symbol
       if (impSym.hasFlag(Flags.PACKAGE)) {
@@ -147,32 +150,32 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
           added.add(qName) && !(usages contains qName)
         }
       }
-    } map {item =>
+    } map { item ⇒
       var offset = item.idOffset(th)
       var endOffset = item.idEndOffset(th)
       var text = item.idToken.text
 
       ScalaLexUtil.findImportAt(doc, th, offset) match {
-        case me@ScalaLexUtil.ImportTokens(start, end, qual, hd :: Nil) => // has only one selector
+        case me @ ScalaLexUtil.ImportTokens(start, end, qual, hd :: Nil) ⇒ // has only one selector
           offset = start.offset(th)
           endOffset = end.offset(th) + end.length
           text = content.subSequence(offset, endOffset + 1)
-        case _ =>
+        case _ ⇒
       }
 
       val rangeOpt = context.calcOffsetRange(offset, endOffset)
-      new Hint(this, "Remove Unused " +  text, context.getFileObject, rangeOpt.get,
-               new ju.ArrayList() /**new RemoveImportFix(context, offset, endOffset, text)) */, DEFAULT_PRIORITY)
+      new Hint(this, "Remove Unused " + text, context.getFileObject, rangeOpt.get,
+        new ju.ArrayList() /**new RemoveImportFix(context, offset, endOffset, text)) */ , DEFAULT_PRIORITY)
     } toList
   }
 
   private def findTypeUsages(scope: AstRootScope): Set[String] = {
     val imported = scope.importingItems
     (for {
-        (idToken, items) <- scope.idTokenToItems
-        item <- items if !imported.contains(item)
-        sym = item.asInstanceOf[ScalaItems#ScalaItem].symbol if sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule
-      } yield sym.fullName) toSet
+      (idToken, items) ← scope.idTokenToItems
+      item ← items if !imported.contains(item)
+      sym = item.asInstanceOf[ScalaItems#ScalaItem].symbol if sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule
+    } yield sym.fullName) toSet
   }
 
   /* def createHints(context : ScalaRuleContext, scope : ScalaRootScope) : List[Hint] = {
@@ -294,10 +297,10 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
     }
    */
 
-   //debug method
-   private def printSymbolDetails(prefix : String, s : scala.reflect.internal.Symbols#Symbol) : Unit = {
-      println(prefix + "=" + s)
-      println("    fullname=" + s.fullName)
-    }
+  //debug method
+  private def printSymbolDetails(prefix: String, s: scala.reflect.internal.Symbols#Symbol): Unit = {
+    println(prefix + "=" + s)
+    println("    fullname=" + s.fullName)
+  }
 
-   }
+}

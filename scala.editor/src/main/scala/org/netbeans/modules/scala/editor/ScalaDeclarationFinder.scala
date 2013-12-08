@@ -40,24 +40,23 @@
 package org.netbeans.modules.scala.editor
 
 import javax.swing.text.Document
-import org.netbeans.api.lexer.{TokenHierarchy, TokenSequence}
-import org.netbeans.modules.csl.api.{DeclarationFinder, OffsetRange}
+import org.netbeans.api.lexer.{ TokenHierarchy, TokenSequence }
+import org.netbeans.modules.csl.api.{ DeclarationFinder, OffsetRange }
 import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.csl.api.DeclarationFinder.DeclarationLocation
 import org.netbeans.modules.csl.spi.ParserResult
 //import org.netbeans.modules.parsing.spi.indexing.support.QuerySupport
 
 import org.netbeans.modules.scala.core.ScalaParserResult
-import org.netbeans.modules.scala.core.lexer.{ScalaLexUtil, ScalaTokenId}
+import org.netbeans.modules.scala.core.lexer.{ ScalaLexUtil, ScalaTokenId }
 
 /**
  *
  * @author Caoyuan Deng
  */
 class ScalaDeclarationFinder extends DeclarationFinder {
-  
-  override 
-  def getReferenceSpan(document: Document, lexOffset: Int): OffsetRange = {
+
+  override def getReferenceSpan(document: Document, lexOffset: Int): OffsetRange = {
     val th = TokenHierarchy.get(document)
 
     val ts = ScalaLexUtil.getTokenSequence(document.asInstanceOf[BaseDocument], th, lexOffset).getOrElse(return OffsetRange.NONE)
@@ -67,28 +66,27 @@ class ScalaDeclarationFinder extends DeclarationFinder {
     }
 
     getReferenceSpan(ts, th, lexOffset) match {
-      case OffsetRange.NONE if lexOffset == ts.offset =>
+      case OffsetRange.NONE if lexOffset == ts.offset ⇒
         // The caret is between two tokens, and the token on the right
         // wasn't linkable. Try on the left instead.
         if (ts.movePrevious) {
           getReferenceSpan(ts, th, lexOffset)
         } else OffsetRange.NONE
-      case x => x
+      case x ⇒ x
     }
   }
 
   private def getReferenceSpan(ts: TokenSequence[_], th: TokenHierarchy[_], lexOffset: Int): OffsetRange = {
     val token = ts.token
     token.id match {
-      case ScalaTokenId.Identifier if token.length == 1 && token.text.toString == "," => OffsetRange.NONE
-      case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super | ScalaTokenId.LArrow | ScalaTokenId.RArrow | ScalaTokenId.Wild =>
+      case ScalaTokenId.Identifier if token.length == 1 && token.text.toString == "," ⇒ OffsetRange.NONE
+      case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super | ScalaTokenId.LArrow | ScalaTokenId.RArrow | ScalaTokenId.Wild ⇒
         new OffsetRange(ts.offset, ts.offset + token.length)
-      case _ => OffsetRange.NONE
+      case _ ⇒ OffsetRange.NONE
     }
   }
 
-  override 
-  def findDeclaration(info: ParserResult, lexOffset: Int): DeclarationLocation = {
+  override def findDeclaration(info: ParserResult, lexOffset: Int): DeclarationLocation = {
     val pr = info.asInstanceOf[ScalaParserResult]
     val doc = pr.getSnapshot.getSource.getDocument(false).asInstanceOf[BaseDocument]
     val global = pr.global
@@ -101,28 +99,28 @@ class ScalaDeclarationFinder extends DeclarationFinder {
     val th = pr.getSnapshot.getTokenHierarchy
 
     val closest = root.findItemsAt(th, astOffset) match {
-      case Nil => return DeclarationLocation.NONE
-      case xs => global.ScalaUtil.importantItem(xs)
+      case Nil ⇒ return DeclarationLocation.NONE
+      case xs ⇒ global.ScalaUtil.importantItem(xs)
     }
-        
+
     root.findDfnOf(closest) match {
-      case Some(dfn) =>
+      case Some(dfn) ⇒
         // is local
         val offset = dfn.idOffset(th)
         new DeclarationLocation(info.getSnapshot.getSource.getFileObject, offset, dfn)
-      case None =>
+      case None ⇒
         doc.readLock
         try {
           val ts = ScalaLexUtil.getTokenSequence(doc, th, lexOffset).getOrElse(return DeclarationLocation.NONE)
           ts.move(lexOffset)
           if (!ts.moveNext && !ts.movePrevious) return DeclarationLocation.NONE
-        
+
           val token = ts.token
           token.id match {
-            case ScalaTokenId.Identifier | ScalaTokenId.SymbolLiteral =>
+            case ScalaTokenId.Identifier | ScalaTokenId.SymbolLiteral ⇒
               root.findItemsAt(th, token.offset(th)) match {
-                case Nil => DeclarationLocation.NONE
-                case xs =>
+                case Nil ⇒ DeclarationLocation.NONE
+                case xs ⇒
                   val item = global.ScalaUtil.importantItem(xs).asInstanceOf[global.ScalaItem]
                   val remoteDfn = global.ScalaElement(item.symbol, info)
                   val location = new DeclarationLocation(remoteDfn.getFileObject, remoteDfn.getOffset, remoteDfn)
@@ -132,13 +130,12 @@ class ScalaDeclarationFinder extends DeclarationFinder {
                   }
                   location
               }
-            case _ => DeclarationLocation.NONE
+            case _ ⇒ DeclarationLocation.NONE
           }
         } finally {
           doc.readUnlock
         }
 
-        
     }
   }
 }

@@ -51,7 +51,7 @@ import org.netbeans.modules.refactoring.spi.ui.TreeElementFactory
  * @author Jan Becicka
  */
 class ElementGripTreeElement(element: ElementGrip) extends TreeElement {
-    
+
   override def getParent(isLogical: Boolean): TreeElement = {
     val enclosing = element.getParent
     if (isLogical) {

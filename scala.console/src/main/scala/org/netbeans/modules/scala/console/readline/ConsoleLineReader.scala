@@ -46,9 +46,9 @@ import scala.collection.mutable.ArrayBuffer
 object ConsoleLineReader {
 
   var _currentCompletor: Completor = null
-  var _history:History = null
-  var created:Boolean = false
-    
+  var _history: History = null
+  var created: Boolean = false
+
   def createConsoleLineReader() {
     if (!created) {
       _history = new History()
@@ -56,29 +56,27 @@ object ConsoleLineReader {
       initReadline
     }
   }
-    
+
   protected def initReadline() {
     if (_currentCompletor eq null)
       _currentCompletor = new DefaultFileNameCompletor()
   }
-    
+
   def history = _history
-    
+
   def completor = _currentCompletor
   def completor_=(completor: Completor) {
     _currentCompletor = completor
   }
-    
-    
+
   // Fix FileNameCompletor to work mid-line
   class DefaultFileNameCompletor extends FileNameCompletor {
-    override 
-    def complete(inBuffer: String, cursor: Int, candidates: ArrayBuffer[String]): Int = {
+    override def complete(inBuffer: String, cursor: Int, candidates: ArrayBuffer[String]): Int = {
       var buffer = inBuffer.substring(0, cursor);
       val index = buffer.lastIndexOf(" ");
       if (index != -1) buffer = buffer.substring(index + 1);
       index + 1 + super.complete(buffer, cursor, candidates);
     }
   }
-    
+
 }
