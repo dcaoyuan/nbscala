@@ -1,6 +1,8 @@
 package org.netbeans.modules.scala.editor
 
+import java.io.StringReader
 import javax.swing.text.BadLocationException
+import javax.swing.text.StyledDocument
 import org.netbeans.modules.editor.indent.spi.Context
 import org.netbeans.modules.editor.indent.spi.ExtraLock
 import org.netbeans.modules.editor.indent.spi.ReformatTask
@@ -14,15 +16,23 @@ import scalariform.formatter.preferences.IndentSpaces
 import scalariform.parser.ScalaParserException
 
 class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
-  private val doc = context.document
+  private val doc = context.document.asInstanceOf[StyledDocument]
+
+  val diffOptions = HuntDiff.Options(
+    ignoreCase = false,
+    ignoreInnerWhitespace = false,
+    ignoreLeadingAndtrailingWhitespace = false)
 
   @throws(classOf[BadLocationException])
   def reformat() {
     val cs = CodeStyle.get(doc)
+    val preferences = FormattingPreferences.setPreference(IndentSpaces, cs.indentSize)
+      .setPreference(AlignParameters, true)
+      .setPreference(scalariform.formatter.preferences.RewriteArrowSymbols, true)
     val indentRegions = context.indentRegions
     java.util.Collections.reverse(indentRegions)
     val regions = indentRegions.iterator
-    val preferences = FormattingPreferences.setPreference(IndentSpaces, cs.indentSize).setPreference(AlignParameters, true)
+
     while (regions.hasNext) {
       val region = regions.next
       val start = region.getStartOffset
@@ -35,26 +45,45 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
         } catch {
           case ex: ScalaParserException ⇒ null
         }
+
         if (formattedText != null && formattedText.length > 0) {
-          doc.remove(start, length)
-          doc.insertString(start, formattedText, null)
+          val root = doc.getDefaultRootElement
+
+          val diffs = HuntDiff.diff(new StringReader(text), new StringReader(formattedText), diffOptions)
+          // reverse the order so we can modify text forward from the end
+          java.util.Arrays.sort(diffs, new java.util.Comparator[Diff]() {
+            def compare(o1: Diff, o2: Diff) = -o1.firstStart.compareTo(o2.firstStart)
+          })
+          for (diff ← diffs) {
+            val startLineNo = diff.firstStart
+            val endLineNo = diff.firstEnd
+            val startOffset = root.getElement(startLineNo - 1).getStartOffset
+            val endOffset = root.getElement(endLineNo - 1).getEndOffset
+            doc.remove(startOffset, endOffset - startOffset)
+            val t = diff.secondText
+            if (t != null && t.length > 0) {
+              doc.insertString(startOffset, t, null)
+            }
+          }
         }
       }
     }
   }
 
   def reformatLock: ExtraLock = {
-    if (ScalaMimeResolver.MIME_TYPE == source.getMimeType) null else new ExtraLock() {
-      def lock() {
-        Utilities.acquireParserLock
-      }
+    source.getMimeType match {
+      case ScalaMimeResolver.MIME_TYPE ⇒ new ExtraLock() {
+        def lock() {
+          Utilities.acquireParserLock
+        }
 
-      def unlock() {
-        Utilities.releaseParserLock
+        def unlock() {
+          Utilities.releaseParserLock
+        }
       }
+      case _ ⇒ null
     }
   }
-
 }
 
 object ScalaReformatter {
