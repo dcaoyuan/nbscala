@@ -11,8 +11,10 @@ import org.netbeans.modules.parsing.impl.Utilities
 import org.netbeans.modules.scala.core.ScalaMimeResolver
 import org.netbeans.modules.scala.editor.options.CodeStyle
 import scalariform.formatter.preferences.AlignParameters
+import scalariform.formatter.preferences.AlignSingleLineCaseStatements
 import scalariform.formatter.preferences.FormattingPreferences
 import scalariform.formatter.preferences.IndentSpaces
+import scalariform.formatter.preferences.RewriteArrowSymbols
 import scalariform.parser.ScalaParserException
 
 class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
@@ -26,9 +28,12 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
   @throws(classOf[BadLocationException])
   def reformat() {
     val cs = CodeStyle.get(doc)
-    val preferences = FormattingPreferences.setPreference(IndentSpaces, cs.indentSize)
+    val preferences = FormattingPreferences()
+      .setPreference(IndentSpaces, cs.indentSize)
+      .setPreference(RewriteArrowSymbols, true)
       .setPreference(AlignParameters, true)
-      .setPreference(scalariform.formatter.preferences.RewriteArrowSymbols, true)
+      .setPreference(AlignSingleLineCaseStatements, true)
+
     val indentRegions = context.indentRegions
     java.util.Collections.reverse(indentRegions)
     val regions = indentRegions.iterator
