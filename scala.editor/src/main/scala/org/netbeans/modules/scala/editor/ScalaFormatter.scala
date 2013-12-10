@@ -61,22 +61,8 @@ import scala.collection.mutable.{ ArrayBuffer, Stack }
  *
  * @author Caoyuan Deng
  */
-object ScalaFormatter {
-  val BRACE_MATCH_MAP: Map[TokenId, Set[TokenId]] =
-    Map(ScalaTokenId.LParen -> Set(ScalaTokenId.RParen),
-      ScalaTokenId.LBrace -> Set(ScalaTokenId.RBrace),
-      ScalaTokenId.LBracket -> Set(ScalaTokenId.RBracket),
-      ScalaTokenId.Case -> Set(ScalaTokenId.Case,
-        ScalaTokenId.RBrace),
-      ScalaTokenId.DocCommentStart -> Set(ScalaTokenId.DocCommentEnd),
-      ScalaTokenId.BlockCommentStart -> Set(ScalaTokenId.BlockCommentEnd),
-      ScalaTokenId.XmlLt -> Set(ScalaTokenId.XmlSlashGt,
-        ScalaTokenId.XmlLtSlash))
-
-}
-
-import ScalaFormatter._
 class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends Formatter {
+  import ScalaFormatter._
 
   def this() = this(null, -1)
 
@@ -99,16 +85,16 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
   }
 
   override def reformat(context: Context, info: ParserResult) {
-    val document = context.document
+    val doc = context.document
     val startOffset = context.startOffset
     val endOffset = context.endOffset
 
     if (codeStyle ne null) {
       // Make sure we're not reindenting HTML content
-      reindent(context, document, startOffset, endOffset, info, true)
+      reindent(context, doc, startOffset, endOffset, info, true)
     } else {
-      val f = new ScalaFormatter(CodeStyle.get(document), -1)
-      f.reindent(context, document, startOffset, endOffset, info, true)
+      val f = new ScalaFormatter(CodeStyle.get(doc), -1)
+      f.reindent(context, doc, startOffset, endOffset, info, true)
     }
   }
 
@@ -772,3 +758,18 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
     Array(indent, nextIndent, continueIndent)
   }
 }
+
+object ScalaFormatter {
+  val BRACE_MATCH_MAP: Map[TokenId, Set[TokenId]] =
+    Map(ScalaTokenId.LParen -> Set(ScalaTokenId.RParen),
+      ScalaTokenId.LBrace -> Set(ScalaTokenId.RBrace),
+      ScalaTokenId.LBracket -> Set(ScalaTokenId.RBracket),
+      ScalaTokenId.Case -> Set(ScalaTokenId.Case,
+        ScalaTokenId.RBrace),
+      ScalaTokenId.DocCommentStart -> Set(ScalaTokenId.DocCommentEnd),
+      ScalaTokenId.BlockCommentStart -> Set(ScalaTokenId.BlockCommentEnd),
+      ScalaTokenId.XmlLt -> Set(ScalaTokenId.XmlSlashGt,
+        ScalaTokenId.XmlLtSlash))
+
+}
+

@@ -65,6 +65,9 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
               doc.insertString(startOffset, t, null)
             }
           }
+        } else {
+          // Cannot be parsed by scalariform, fall back to ScalaFormatter
+          new ScalaFormatter(cs, -1).reindent(context)
         }
       }
     }
