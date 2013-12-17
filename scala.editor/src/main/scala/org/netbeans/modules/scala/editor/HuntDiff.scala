@@ -288,7 +288,7 @@ object HuntDiff {
             deletedText.append(line).append('\n')
             end1 += 1
           }
-          differences += new Diff(Diff.DELETE, start1, end1 - 1, start2 - 1, 0, deletedText.toString, null)
+          differences += Diff(Diff.DELETE, start1, end1 - 1, start2 - 1, 0, deletedText.toString, null)
           start1 = end1
         } else { // There's something extra in the second file
           val end2 = J(start1)
@@ -299,7 +299,7 @@ object HuntDiff {
             addedText.append(line).append('\n')
             i += 1
           }
-          differences += new Diff(Diff.ADD, start1 - 1, 0, start2, end2 - 1, null, addedText.toString)
+          differences += Diff(Diff.ADD, start1 - 1, 0, start2, end2 - 1, null, addedText.toString)
           start2 = end2
         }
       }
@@ -314,7 +314,7 @@ object HuntDiff {
         addedText.append(line).append('\n')
         end2 += 1
       }
-      differences += new Diff(Diff.ADD, n, 0, start2, m, null, addedText.toString)
+      differences += Diff(Diff.ADD, n, 0, start2, m, null, addedText.toString)
     }
 
     differences
@@ -336,7 +336,7 @@ object HuntDiff {
           val d1f1l1 = add.firstStart - (del.firstEnd - del.firstStart)
           val d2f1l1 = del.firstStart
           if (d1f1l1 == d2f1l1) {
-            val newDiff = new Diff(Diff.CHANGE,
+            val newDiff = Diff(Diff.CHANGE,
               d1f1l1, del.firstEnd, add.secondStart, add.secondEnd,
               del.firstText, add.secondText)
             diffs(i - 1) = newDiff
