@@ -62,12 +62,16 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
           for (diff ← diffs) {
             val startLineNo = diff.firstStart
             val endLineNo = diff.firstEnd
-            val startOffset = root.getElement(startLineNo - 1).getStartOffset
-            val endOffset = root.getElement(endLineNo - 1).getEndOffset
-            doc.remove(startOffset, endOffset - startOffset)
-            val t = diff.secondText
-            if (t != null && t.length > 0) {
-              doc.insertString(startOffset, t, null)
+            if (startLineNo > 0 && endLineNo > 0) {
+              val startOffset = root.getElement(startLineNo - 1).getStartOffset
+              val endOffset = root.getElement(endLineNo - 1).getEndOffset
+              doc.remove(startOffset, endOffset - startOffset)
+              val t = diff.secondText
+              if (t != null && t.length > 0) {
+                doc.insertString(startOffset, t, null)
+              }
+            } else {
+              // @TODO
             }
           }
         } else {
