@@ -69,7 +69,6 @@
         <libs.sbt.version>0.13.0.0</libs.sbt.version>
         <libs.scalariform.version>0.1.5.0</libs.scalariform.version>
         <libs.xtc.version>1.15.1</libs.xtc.version>
-        <languages.execution.version>1.6.1</languages.execution.version>
         <scala.debugger.version>1.6.1</scala.debugger.version>
         <scala.debugger.projects.version>1.6.1</scala.debugger.projects.version>
         <scala.core.version>1.6.1.1</scala.core.version>

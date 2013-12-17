@@ -64,7 +64,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-modules-scala-console</artifactId>
-            <version>${languages.execution.version}</version>
+            <version>${scala.console.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
