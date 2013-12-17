@@ -180,25 +180,35 @@
             </exclusions>
         </dependency>
 
-        <!-- nbjunit and jelltools are needed for ui tests -->
+        <!-- modules that is required for Integrity verification passed.
+        Here, nbjunit and jelltools are needed for ui tests -->
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-nbjunit</artifactId>
             <version>${netbeans.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-modules-jellytools-platform</artifactId>
-            <version>${netbeans.version}</version>
-            <scope>test</scope>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-jellytools-ide</artifactId>
             <version>${netbeans.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-websvc-saas-codegen-java</artifactId>
+            <version>${netbeans.version}</version>
+            <type>pom</type>
+        </dependency>
+
+        <!-- need for /src/test/org.netbeans.modules.scala.app.ApplicationTest.java -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-jellytools-java</artifactId>
+            <version>${netbeans.version}</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -216,7 +226,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.10</version>
+                <version>2.16</version>
                 <configuration>
                     <!-- Under MS Windows the application freezes without theese -->
                     <argLine>-Xms128M -Xmx1G -XX:MaxPermSize=512M</argLine>

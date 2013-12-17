@@ -28,9 +28,9 @@ public class ApplicationTest extends NbTestCase {
                 gui(true).
                 clusters(".*").
                 failOnMessage(Level.SEVERE).
-// TODO: Can be enables if the java.lang.ClassCastException: org.netbeans.api.project.ProjectUtils$AnnotateIconProxyProjectInformation 
-// cannot be cast to org.netbeans.modules.scala.project.J2SEProject$Info is solved
-//                failOnException(Level.INFO).
+                // TODO: Can be enables if the java.lang.ClassCastException: org.netbeans.api.project.ProjectUtils$AnnotateIconProxyProjectInformation
+                // cannot be cast to org.netbeans.modules.scala.project.J2SEProject$Info is solved
+                //                failOnException(Level.INFO).
                 suite();
     }
 
@@ -42,44 +42,45 @@ public class ApplicationTest extends NbTestCase {
         new ActionNoBlock("Help|About", null).performMenu();
         new NbDialogOperator("About").closeByButton();
     }
-    
+
     /**
      * Test if the ScalaShell is enabled and opens.
      */
     public void testInteractiveScalaShell() {
         String scalaHome = System.getenv("SCALA_HOME");
-        if (scalaHome == null || scalaHome.trim().equals("")) return; // No Scala Home is set, Shell will not work.
+        if (scalaHome == null || scalaHome.trim().equals("")) {
+            return; // No Scala Home is set, Shell will not work.
+        }
         File scalaHomeDir = new File(scalaHome);
-        assertTrue("Environment Variable SCALA_HOME=" + scalaHome + " doesn't point to an existing directory",scalaHomeDir.exists());
-        assertTrue("Environment Variable SCALA_HOME=" + scalaHome + " doesn't point to a directory",scalaHomeDir.isDirectory());
+        assertTrue("Environment Variable SCALA_HOME=" + scalaHome + " doesn't point to an existing directory", scalaHomeDir.exists());
+        assertTrue("Environment Variable SCALA_HOME=" + scalaHome + " doesn't point to a directory", scalaHomeDir.isDirectory());
         ActionNoBlock openScalaShell = new ActionNoBlock("Window|Other|Interactive Scala Shell", null);
         // TODO: If the Action Interactive Sacla Shell is missing the test will block here. Some check before this point, if it exist, would be nice.
         openScalaShell.performMenu();
         TopComponentOperator scalaConsole = new TopComponentOperator("Scala Console");
-        assertTrue("Scala Console not showing",scalaConsole.isShowing());
+        assertTrue("Scala Console not showing", scalaConsole.isShowing());
         // TODO: Same as before, a test for existence would be nice.
         JTextPaneOperator theConsole = new JTextPaneOperator(scalaConsole);
         assertTrue("Scala Console is not Enabled", theConsole.isEnabled());
         theConsole.enterText(":quit");
         theConsole.waitComponentShowing(false);
-        assertFalse("Scala Console still visible, should be closed",theConsole.isShowing());
+        assertFalse("Scala Console still visible, should be closed", theConsole.isShowing());
     }
-    
+
     public void testNewScalaProject() {
         NewProjectWizardOperator newProjectWizard = NewProjectWizardOperator.invoke();
         newProjectWizard.selectCategory("Scala");
         newProjectWizard.selectProject("Scala Application");
         newProjectWizard.next();
         newProjectWizard.finish();
-        
+
         // TODO: Cause of the missing JUnit dependencies, a resolve references Dialog is opening.
         // IDEA: Change the default Project to have no dependency to JUnit
         new NbDialogOperator("Open Project").btClose();
-        
+
         // TODO: Some asserts or an actuall compile to make sure the project is active and alive.
     }
-    
-    
+
     /**
      * A Test to see if a scala maven project is discovert and the scala sources
      * are displayed in the source node.
@@ -108,8 +109,8 @@ public class ApplicationTest extends NbTestCase {
     }
 
     /**
-     * A Test to see if a combinded scala java maven project is discovert and contains no errors.
-     * At the moment this is the case.
+     * A Test to see if a combinded scala java maven project is discovert and
+     * contains no errors. At the moment this is the case.
      */
     // TODO: Can only be enabled if http://netbeans.org/bugzilla/show_bug.cgi?id=216738 is solved.
     public void ignoreTestScalaJavaMavenProject() {
@@ -135,5 +136,5 @@ public class ApplicationTest extends NbTestCase {
         // At the moment this is not the case. A mixed scala-java project works, but displays erros in the ui.
         // assertTrue("No Error Runner.java in the Action Itmes found, but should be", row == -1);
     }
-    
+
 }
