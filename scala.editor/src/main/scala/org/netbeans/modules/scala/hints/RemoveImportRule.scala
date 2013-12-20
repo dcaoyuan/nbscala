@@ -49,7 +49,7 @@ import org.netbeans.modules.csl.api.HintFix
 import org.netbeans.modules.csl.api.HintSeverity
 import org.netbeans.modules.csl.api.RuleContext
 import org.netbeans.modules.scala.editor.util.NbBundler
-import java.{ util ⇒ ju }
+import java.{ util => ju }
 import java.util.prefs.Preferences
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -127,12 +127,12 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
     val importings = scope.importingItems.asInstanceOf[Set[global.ScalaItem]]
 
     def qualName(qName: String) = qName.lastIndexOf(".") match {
-      case -1 ⇒ ""
-      case i ⇒ qName.substring(0, i)
+      case -1 => ""
+      case i => qName.substring(0, i)
     }
 
     val added = new mutable.HashSet[String]
-    importings filter { imp ⇒
+    importings filter { imp =>
       //println("import: " + imp)
       val impSym = imp.symbol
       if (impSym.hasFlag(Flags.PACKAGE)) {
@@ -150,17 +150,17 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
           added.add(qName) && !(usages contains qName)
         }
       }
-    } map { item ⇒
+    } map { item =>
       var offset = item.idOffset(th)
       var endOffset = item.idEndOffset(th)
       var text = item.idToken.text
 
       ScalaLexUtil.findImportAt(doc, th, offset) match {
-        case me @ ScalaLexUtil.ImportTokens(start, end, qual, hd :: Nil) ⇒ // has only one selector
+        case me @ ScalaLexUtil.ImportTokens(start, end, qual, hd :: Nil) => // has only one selector
           offset = start.offset(th)
           endOffset = end.offset(th) + end.length
           text = content.subSequence(offset, endOffset + 1)
-        case _ ⇒
+        case _ =>
       }
 
       val rangeOpt = context.calcOffsetRange(offset, endOffset)
@@ -172,8 +172,8 @@ class RemoveImportRule() extends ScalaAstRule with NbBundler {
   private def findTypeUsages(scope: AstRootScope): Set[String] = {
     val imported = scope.importingItems
     (for {
-      (idToken, items) ← scope.idTokenToItems
-      item ← items if !imported.contains(item)
+      (idToken, items) <- scope.idTokenToItems
+      item <- items if !imported.contains(item)
       sym = item.asInstanceOf[ScalaItems#ScalaItem].symbol if sym.isClass || sym.isTrait || sym.isModuleClass || sym.isModule
     } yield sym.fullName) toSet
   }

@@ -83,12 +83,12 @@ import org.netbeans.modules.scala.core.ast.ScalaItems
 class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefactoringPlugin {
 
   val isRenameRefactoring = refactoring match {
-    case _: MoveRefactoring ⇒
+    case _: MoveRefactoring =>
       val files = refactoring.getRefactoringSource.lookupAll(classOf[FileObject])
       setup(files.toArray.asInstanceOf[Array[FileObject]], "", true)
 
       false
-    case _: RenameRefactoring ⇒
+    case _: RenameRefactoring =>
       val fo = refactoring.getRefactoringSource.lookup(classOf[FileObject])
       if (fo ne null) {
         setup(List(fo), "", true)
@@ -122,16 +122,16 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
         //CVS folders are ignored
         val addDot = postfix != ""
         val col = new ArrayBuffer[FileObject]
-        for (fo2 ← fo.getChildren) {
+        for (fo2 <- fo.getChildren) {
           if (!fo2.isFolder || (fo2.isFolder && recursively))
             col += fo2
         }
         val curRootList = sameRootList match {
-          case null ⇒
+          case null =>
             val x = new ArrayBuffer[FileObject]
             foldersToMove += x
             x
-          case x ⇒ x
+          case x => x
         }
 
         curRootList += fo
@@ -145,7 +145,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
 
   override def preCheck: Problem = {
     var preCheckProblem: Problem = null
-    for (file ← filesToMove) {
+    for (file <- filesToMove) {
       if (!RetoucheUtils.isElementInOpenProject(file)) {
         preCheckProblem = createProblem(preCheckProblem, true, NbBundle.getMessage(
           classOf[MoveRefactoringPlugin],
@@ -182,7 +182,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
     }
     if (!isRenameRefactoring) {
       try {
-        for (f ← filesToMove) {
+        for (f <- filesToMove) {
           if (RetoucheUtils.isScalaFile(f)) {
             val targetPackageName = this.getTargetPackageName(f)
             if (!RetoucheUtils.isValidPackageName(targetPackageName)) {
@@ -218,7 +218,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
             //                FileObject movedFile = JavaMetamodel.getManager().getDataObject(r).getPrimaryFile();
             val fileName = f.getName
             if (targetF ne null) {
-              for (child ← targetF.getChildren) {
+              for (child <- targetF.getChildren) {
                 if (child.getName().equals(fileName) && "java".equals(child.getExt()) && !child.equals(f) && !child.isVirtual) { //NOI18N
                   return new Problem(true, new MessageFormat(
                     NbBundle.getMessage(classOf[MoveRefactoringPlugin], "ERR_ClassToMoveClashes")).format(Array(fileName).asInstanceOf[Array[Object]] // NOI18N
@@ -238,7 +238,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
             //                }
           }
         }
-      } catch { case ioe: IOException ⇒ }
+      } catch { case ioe: IOException => }
     }
     return null //super.fastCheckParameters
   }
@@ -246,7 +246,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
   private def checkProjectDeps(a: Set[FileObject]): Problem = {
     if (!isRenameRefactoring) {
       val sourceRoots = new HashSet[FileObject]
-      for (file ← filesToMove) {
+      for (file <- filesToMove) {
         val cp = ClassPath.getClassPath(file, ClassPath.SOURCE)
         if (cp ne null) {
           val root = cp.findOwnerRoot(file)
@@ -261,11 +261,11 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
         val r = RetoucheUtils.getClassPathRoot(target);
         val targetUrl = URLMapper.findURL(r, URLMapper.EXTERNAL)
         val deps = ScalaSourceUtil.getDependentRoots(targetUrl)
-        for (sourceRoot ← sourceRoots) {
+        for (sourceRoot <- sourceRoots) {
           val sourceUrl = URLMapper.findURL(sourceRoot, URLMapper.INTERNAL)
           if (!deps.contains(sourceUrl)) {
             val sourceProject = FileOwnerQuery.getOwner(sourceRoot)
-            for (affected ← a) {
+            for (affected <- a) {
               if (FileOwnerQuery.getOwner(affected).equals(sourceProject) && !filesToMove.contains(affected)) {
                 val targetProject = FileOwnerQuery.getOwner(r)
                 assert(sourceProject ne null)
@@ -277,7 +277,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
             }
           }
         }
-      } catch { case ex: IOException ⇒ Exceptions.printStackTrace(ex) }
+      } catch { case ex: IOException => Exceptions.printStackTrace(ex) }
     }
     null;
   }
@@ -286,7 +286,7 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
     val cpInfo = getClasspathInfo(refactoring);
     val idx = cpInfo.getClassIndex();
     val set = new HashSet[FileObject]
-    for ((fo, item) ← classes) {
+    for ((fo, item) <- classes) {
       //set.add(SourceUtils.getFile(el, cpInfo));
       val files = Set[FileObject]()
       //val files = idx.getResources(item, EnumSet.of(ClassIndex.SearchKind.TYPE_REFERENCES, ClassIndex.SearchKind.IMPLEMENTORS),EnumSet.of(ClassIndex.SearchScope.SOURCE));
@@ -331,9 +331,9 @@ class MoveRefactoringPlugin(refactoring: AbstractRefactoring) extends ScalaRefac
 
   private def initPackages {
     packages.clear
-    for (folders ← foldersToMove) {
+    for (folders <- foldersToMove) {
       val cp = ClassPath.getClassPath(folders(0), ClassPath.SOURCE)
-      for (folder ← folders) {
+      for (folder <- folders) {
         val pkgName = cp.getResourceName(folder, '.', false)
         packages.add(pkgName)
       }

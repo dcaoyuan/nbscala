@@ -92,7 +92,7 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
   def calculateLineIndices(cs: Array[Char]) = {
     val buf = new ArrayBuffer[Int]
     buf += 0
-    for (i ← 0 until cs.length) if (isLineBreak(i)) buf += i + 1
+    for (i <- 0 until cs.length) if (isLineBreak(i)) buf += i + 1
     buf += cs.length // sentinel, so that findLine below works smoother
     buf.toArray
   }
@@ -122,9 +122,9 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
   override def hashCode = file.file.hashCode
 
   override def equals(that: Any) = that match {
-    case that: BatchSourceFile ⇒ file.path == that.file.path && start == that.start
-    case that: ScalaSourceFile ⇒ file.file == that.file.file // compare underlying java io file.
-    case _ ⇒ false
+    case that: BatchSourceFile => file.path == that.file.path && start == that.start
+    case that: ScalaSourceFile => file.file == that.file.file // compare underlying java io file.
+    case _ => false
   }
 
 }

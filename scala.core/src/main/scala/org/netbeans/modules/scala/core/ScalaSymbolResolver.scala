@@ -54,7 +54,7 @@ abstract class ScalaSymbolResolver {
     // @todo
     val srcFile = ScalaSourceFile.sourceFileOf(null)
     global.askForSemantic(srcFile) match {
-      case Some(root) ⇒
+      case Some(root) =>
         val sb = new StringBuilder
         if (srcPkg.length > 0) {
           sb.append("package ").append(srcPkg)
@@ -68,7 +68,7 @@ abstract class ScalaSymbolResolver {
         val lastPart = if (lastDot == -1) fqn else fqn.substring(lastDot + 1, fqn.length)
 
         root.findFirstItemWithName(lastPart)
-      case None ⇒ None
+      case None => None
     }
 
   }

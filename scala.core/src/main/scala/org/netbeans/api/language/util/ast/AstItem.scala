@@ -99,7 +99,7 @@ trait AstItem extends ForElementHandle {
     try {
       _name = idToken.text.toString
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
         val l = idToken.length
         val sb = new StringBuilder(l)
         var i = 0
@@ -171,7 +171,7 @@ trait AstItem extends ForElementHandle {
 /**
  * Wrap functions that implemented some ElementHandle's methods
  */
-trait ForElementHandle { self: AstItem ⇒
+trait ForElementHandle { self: AstItem =>
 
   def getMimeType: String
 

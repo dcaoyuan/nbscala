@@ -30,7 +30,7 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
     val cs = CodeStyle.get(doc)
     val preferences = FormattingPreferences()
       .setPreference(IndentSpaces, cs.indentSize)
-      .setPreference(RewriteArrowSymbols, true)
+      .setPreference(RewriteArrowSymbols, false)
       .setPreference(AlignParameters, true)
       .setPreference(AlignSingleLineCaseStatements, true)
 
@@ -48,7 +48,7 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
         val formattedText = try {
           scalariform.formatter.ScalaFormatter.format(text, preferences)
         } catch {
-          case ex: ScalaParserException ⇒ null
+          case ex: ScalaParserException => null
         }
 
         if (formattedText != null && formattedText.length > 0) {
@@ -60,22 +60,22 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
             def compare(o1: Diff, o2: Diff) = -o1.firstStart.compareTo(o2.firstStart)
           })
 
-          for (diff ← diffs) {
+          for (diff <- diffs) {
             diff.tpe match {
-              case Diff.ADD ⇒
+              case Diff.ADD =>
                 val startLineNo = diff.secondStart
                 val startOffset = root.getElement(startLineNo - 1).getStartOffset
                 val t = diff.secondText
                 doc.insertString(startOffset, t, null)
 
-              case Diff.DELETE ⇒
+              case Diff.DELETE =>
                 val startLineNo = diff.firstStart
                 val endLineNo = diff.firstEnd
                 val startOffset = root.getElement(startLineNo - 1).getStartOffset
                 val endOffset = root.getElement(endLineNo - 1).getEndOffset
                 doc.remove(startOffset, endOffset - startOffset)
 
-              case Diff.CHANGE ⇒
+              case Diff.CHANGE =>
                 val startLineNo = diff.firstStart
                 val endLineNo = diff.firstEnd
                 val startOffset = root.getElement(startLineNo - 1).getStartOffset
@@ -95,7 +95,7 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
 
   def reformatLock: ExtraLock = {
     source.getMimeType match {
-      case ScalaMimeResolver.MIME_TYPE ⇒ new ExtraLock() {
+      case ScalaMimeResolver.MIME_TYPE => new ExtraLock() {
         def lock() {
           Utilities.acquireParserLock
         }
@@ -104,7 +104,7 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
           Utilities.releaseParserLock
         }
       }
-      case _ ⇒ null
+      case _ => null
     }
   }
 }

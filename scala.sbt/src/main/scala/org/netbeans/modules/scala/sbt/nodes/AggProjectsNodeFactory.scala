@@ -50,7 +50,7 @@ object AggProjectsNodeFactory {
         try {
           new ProjectNode(project)
         } catch {
-          case ex: DataObjectNotFoundException ⇒ Exceptions.printStackTrace(ex); null
+          case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
         }
       }
     }
@@ -96,15 +96,15 @@ object AggProjectsNodeFactory {
       val toSort = new java.util.TreeMap[String, SBTProject]()
       try {
         val projectFos = sbtResolver.getAggregateProjects map FileUtil.toFileObject
-        for (projectFo ← projectFos) {
+        for (projectFo <- projectFos) {
           ProjectManager.getDefault.findProject(projectFo) match {
-            case x: SBTProject ⇒ toSort.put(x.getName, x)
-            case _ ⇒
+            case x: SBTProject => toSort.put(x.getName, x)
+            case _ =>
           }
         }
       } catch {
-        case ex: IOException ⇒ Exceptions.printStackTrace(ex)
-        case ex: IllegalArgumentException ⇒ Exceptions.printStackTrace(ex)
+        case ex: IOException => Exceptions.printStackTrace(ex)
+        case ex: IllegalArgumentException => Exceptions.printStackTrace(ex)
       }
 
       toPopulate.addAll(toSort.values)

@@ -27,14 +27,14 @@ object Icons {
    */
   def getTreeFolderIcon(opened: Boolean): Image = {
     UIManager.getIcon(if (opened) OPENED_ICON_KEY_UIMANAGER else ICON_KEY_UIMANAGER) match { // #70263
-      case null ⇒
+      case null =>
         UIManager.get(if (opened) OPENED_ICON_KEY_UIMANAGER_NB else ICON_KEY_UIMANAGER_NB) match { // #70263
-          case null ⇒ // fallback to our owns                
+          case null => // fallback to our owns                
             val n = DataFolder.findFolder(FileUtil.getConfigRoot).getNodeDelegate
             if (opened) n.getOpenedIcon(BeanInfo.ICON_COLOR_16x16) else n.getIcon(BeanInfo.ICON_COLOR_16x16)
-          case img: Image ⇒ img
+          case img: Image => img
         }
-      case baseIcon ⇒ ImageUtilities.icon2Image(baseIcon)
+      case baseIcon => ImageUtilities.icon2Image(baseIcon)
     }
   }
 

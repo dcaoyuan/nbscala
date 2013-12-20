@@ -47,24 +47,24 @@ object DepProjectsNodeFactory {
      */
     def node(key: String): Node = {
       key match {
-        case DEP_PROJECTS ⇒
+        case DEP_PROJECTS =>
           if (sbtResolver.getDependenciesProjects(isTest = false).length == 0) {
             null
           } else {
             try {
               new ProjectNode(project, isTest = false)
             } catch {
-              case ex: DataObjectNotFoundException ⇒ Exceptions.printStackTrace(ex); null
+              case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
             }
           }
-        case TEST_DEP_PROJECTS ⇒
+        case TEST_DEP_PROJECTS =>
           if (sbtResolver.getDependenciesProjects(isTest = true).length == 0) {
             null
           } else {
             try {
               new ProjectNode(project, isTest = true)
             } catch {
-              case ex: DataObjectNotFoundException ⇒ Exceptions.printStackTrace(ex); null
+              case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
             }
           }
       }
@@ -111,15 +111,15 @@ object DepProjectsNodeFactory {
       val toSort = new java.util.TreeMap[String, SBTProject]()
       try {
         val projectFos = sbtResolver.getDependenciesProjects(isTest) map FileUtil.toFileObject
-        for (projectFo ← projectFos) {
+        for (projectFo <- projectFos) {
           ProjectManager.getDefault.findProject(projectFo) match {
-            case x: SBTProject ⇒ toSort.put(x.getName, x)
-            case _ ⇒
+            case x: SBTProject => toSort.put(x.getName, x)
+            case _ =>
           }
         }
       } catch {
-        case ex: IOException ⇒ Exceptions.printStackTrace(ex)
-        case ex: IllegalArgumentException ⇒ Exceptions.printStackTrace(ex)
+        case ex: IOException => Exceptions.printStackTrace(ex)
+        case ex: IllegalArgumentException => Exceptions.printStackTrace(ex)
       }
 
       toPopulate.addAll(toSort.values)

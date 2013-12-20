@@ -63,8 +63,8 @@ class ResetGlobalAction extends BaseAction(NbBundle.getMessage(classOf[ResetGlob
   def actionPerformed(evt: ActionEvent, comp: JTextComponent) {
     assert(comp ne null)
     doc = comp.getDocument match {
-      case null ⇒ None
-      case x ⇒ Some(x)
+      case null => None
+      case x => Some(x)
     }
 
     if (doc.isDefined) {

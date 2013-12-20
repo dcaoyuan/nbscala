@@ -76,7 +76,7 @@ class ElementGripFactory {
     val start = map.get(fileObject).getOrElse(return null)
     try {
       return start.get(position).item
-    } catch { case ex: RuntimeException ⇒ return start.item }
+    } catch { case ex: RuntimeException => return start.item }
   }
 
   def getParent(el: ElementGrip): ElementGrip = {
@@ -147,7 +147,7 @@ class ElementGripFactory {
 
     def get(position: Long): Interval = {
       if (from <= position && to >= position) {
-        for (o ← subintervals) {
+        for (o <- subintervals) {
           val ob = o.get(position)
           if (ob ne null)
             return ob
@@ -159,7 +159,7 @@ class ElementGripFactory {
     }
 
     def getParent(eh: ElementGrip): ElementGrip = {
-      for (i ← subintervals) {
+      for (i <- subintervals) {
         if (i.item.equals(eh)) {
           return this.item;
         } else {

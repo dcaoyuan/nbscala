@@ -143,9 +143,9 @@ trait LexUtil {
     if (pResult ne null) {
       val rangeStart = lexicalRange.getStart
       pResult.getSnapshot.getEmbeddedOffset(rangeStart) match {
-        case `rangeStart` ⇒ lexicalRange
-        case -1 ⇒ OffsetRange.NONE
-        case start ⇒
+        case `rangeStart` => lexicalRange
+        case -1 => OffsetRange.NONE
+        case start =>
           // Assumes the translated range maintains size
           new OffsetRange(start, start + lexicalRange.getLength)
       }
@@ -155,8 +155,8 @@ trait LexUtil {
   /** Find the token hierarchy (in case it's embedded in something else at the top level */
   final def getTokenHierarchy(doc: BaseDocument, offset: Int): Option[TokenHierarchy[_]] = {
     TokenHierarchy.get(doc) match {
-      case null ⇒ None
-      case x ⇒ Some(x)
+      case null => None
+      case x => Some(x)
     }
   }
 
@@ -214,14 +214,14 @@ trait LexUtil {
 
   def getPositionedSequence(doc: BaseDocument, offset: Int, lookBack: Boolean): Option[TokenSequence[TokenId]] = {
     getTokenSequence(doc, offset) match {
-      case Some(ts) ⇒
+      case Some(ts) =>
         try {
           ts.move(offset)
         } catch {
-          case ex: AssertionError ⇒
+          case ex: AssertionError =>
             doc.getProperty(Document.StreamDescriptionProperty) match {
-              case dobj: DataObject ⇒ Exceptions.attachMessage(ex, FileUtil.getFileDisplayName(dobj.getPrimaryFile))
-              case _ ⇒
+              case dobj: DataObject => Exceptions.attachMessage(ex, FileUtil.getFileDisplayName(dobj.getPrimaryFile))
+              case _ =>
             }
             throw ex
         }
@@ -229,17 +229,17 @@ trait LexUtil {
         if (!lookBack && !ts.moveNext || lookBack && !ts.moveNext && !ts.movePrevious) {
           None
         } else Some(ts)
-      case None ⇒ None
+      case None => None
     }
   }
 
   def getToken(doc: BaseDocument, offset: Int): Option[Token[TokenId]] = {
     getPositionedSequence(doc, offset) match {
-      case Some(x) ⇒ x.token match {
-        case null ⇒ None
-        case token ⇒ Some(token)
+      case Some(x) => x.token match {
+        case null => None
+        case token => Some(token)
       }
-      case None ⇒ None
+      case None => None
     }
   }
 
@@ -249,12 +249,12 @@ trait LexUtil {
 
   def getTokenChar(doc: BaseDocument, offset: Int): Char = {
     getToken(doc, offset) match {
-      case Some(x) ⇒
+      case Some(x) =>
         val text = x.text.toString
         if (text.length > 0) { // Usually true, but I could have gotten EOF right?
           text.charAt(0)
         } else 0
-      case None ⇒ 0
+      case None => 0
     }
   }
 
@@ -631,15 +631,15 @@ trait LexUtil {
       val first = Utilities.getRowFirstNonWhite(doc, offset)
       if (first != -1) {
         getToken(doc, first) match {
-          case Some(x) ⇒
+          case Some(x) =>
             val text = x.text.toString
             if (text.equals("while") || text.equals("for")) {
               return false
             }
-          case None ⇒ return true
+          case None => return true
         }
       }
-    } catch { case ble: BadLocationException ⇒ Exceptions.printStackTrace(ble) }
+    } catch { case ble: BadLocationException => Exceptions.printStackTrace(ble) }
 
     true
   }
@@ -676,7 +676,7 @@ trait LexUtil {
 
       balance
     } catch {
-      case ble: BadLocationException ⇒ Exceptions.printStackTrace(ble); 0
+      case ble: BadLocationException => Exceptions.printStackTrace(ble); 0
     }
   }
 
@@ -711,7 +711,7 @@ trait LexUtil {
 
       balanceStack
     } catch {
-      case ble: BadLocationException ⇒ Exceptions.printStackTrace(ble); balanceStack
+      case ble: BadLocationException => Exceptions.printStackTrace(ble); balanceStack
     }
   }
 
@@ -788,8 +788,8 @@ trait LexUtil {
     }
 
     getTokenId(doc, begin) match {
-      case Some(x) if isLineComment(x) ⇒ true
-      case _ ⇒ false
+      case Some(x) if isLineComment(x) => true
+      case _ => false
     }
   }
 
@@ -1135,7 +1135,7 @@ trait LexUtil {
         }
       }
     } catch {
-      case ble: BadLocationException ⇒ Exceptions.printStackTrace(ble)
+      case ble: BadLocationException => Exceptions.printStackTrace(ble)
     }
 
     OffsetRange.NONE
@@ -1206,7 +1206,7 @@ trait LexUtil {
         lineStart = 0
       }
     } catch {
-      case ble: BadLocationException ⇒
+      case ble: BadLocationException =>
         Exceptions.printStackTrace(ble)
         return lexOffset
     }
@@ -1301,7 +1301,7 @@ trait LexUtil {
         }
       }
     } catch {
-      case ble: BadLocationException ⇒ Exceptions.printStackTrace(ble)
+      case ble: BadLocationException => Exceptions.printStackTrace(ble)
     }
 
     comments.toList
@@ -1375,8 +1375,8 @@ trait LexUtil {
         return (if (openIfNecessary) Some(ec.openDocument) else Some(ec.getDocument)).asInstanceOf[Option[BaseDocument]]
       }
     } catch {
-      case ex: DataObjectNotFoundException ⇒ Exceptions.printStackTrace(ex)
-      case ex: IOException ⇒ Exceptions.printStackTrace(ex)
+      case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex)
+      case ex: IOException => Exceptions.printStackTrace(ex)
     }
 
     None

@@ -41,7 +41,7 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
       // decorate the project directory's node:
       new ProjectNode(nodeOfProjectFolder, project)
     } catch {
-      case donfe: DataObjectNotFoundException ⇒
+      case donfe: DataObjectNotFoundException =>
         Exceptions.printStackTrace(donfe)
         // fallback-the directory couldn't be created -
         // read-only filesystem or something evil happened
@@ -85,14 +85,14 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
 
     def propertyChange(evt: PropertyChangeEvent) {
       evt.getPropertyName match {
-        case SBTResolver.DESCRIPTOR_CHANGE ⇒
+        case SBTResolver.DESCRIPTOR_CHANGE =>
           // The caller holds ProjectManager.mutex() read lock
           SwingUtilities.invokeLater(new Runnable() {
             def run() {
               ProjectNode.this.setChildren(NodeFactorySupport.createCompositeChildren(project, NODE_FACTORY_FOLDER_PATH))
             }
           })
-        case _ ⇒
+        case _ =>
       }
     }
   }
@@ -111,19 +111,19 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
     }
 
     target match {
-      case fo: FileObject ⇒
+      case fo: FileObject =>
         val owner = FileOwnerQuery.getOwner(fo)
         if (project != owner) {
           return null // Don't waste time if project does not own the fo
         }
 
-        for (n ← root.getChildren.getNodes(true)) {
+        for (n <- root.getChildren.getNodes(true)) {
           val result = PackageView.findPath(n, target)
           if (result != null) {
             return result
           }
         }
-      case _ ⇒
+      case _ =>
     }
 
     null

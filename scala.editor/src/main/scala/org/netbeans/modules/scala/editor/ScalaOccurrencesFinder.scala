@@ -124,10 +124,10 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     // rather than give a parse error on obj, it marks the whole region from
     // . to the end of Scanf as a CallNode, which is a weird highlight.
     // We don't want occurrences highlights that span lines.
-    for (item ← items; idToken = item.idToken if !ScalaLexUtil.isWs(idToken.id)) {
+    for (item <- items; idToken = item.idToken if !ScalaLexUtil.isWs(idToken.id)) {
       val doc = pResult.getSnapshot.getSource.getDocument(true) match {
-        case x: BaseDocument ⇒ x
-        case _ ⇒ return // null, document was just closed
+        case x: BaseDocument => x
+        case _ => return // null, document was just closed
       }
 
       //doc.readLock
@@ -198,9 +198,9 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     }
 
     for (
-      item ← items;
+      item <- items;
       idTokenItem = item.idToken if !ScalaLexUtil.isWs(idTokenItem.id);
-      occurrence ← rootScope.findOccurrences(item);
+      occurrence <- rootScope.findOccurrences(item);
       name = occurrence.getName if name != "this" && name != "super";
       idToken = occurrence.idToken; if !ScalaLexUtil.isWs(idToken.id)
     ) {
@@ -217,8 +217,8 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
       while (itr.hasNext) {
         val entry = itr.next
         ScalaLexUtil.getLexerOffsets(pResult, entry.getKey) match {
-          case OffsetRange.NONE ⇒
-          case range ⇒ translated.put(range, entry.getValue)
+          case OffsetRange.NONE =>
+          case range => translated.put(range, entry.getValue)
         }
       }
 

@@ -66,8 +66,8 @@ class TreeElementFactoryImpl extends TreeElementFactoryImplementation {
 
   override def getTreeElement(o: Object): TreeElement = {
     val result = o match {
-      case x: SourceGroup ⇒ map.get(x.getRootFolder)
-      case _ ⇒ map.get(o)
+      case x: SourceGroup => map.get(x.getRootFolder)
+      case _ => map.get(o)
     }
 
     if (result.isDefined) {
@@ -75,7 +75,7 @@ class TreeElementFactoryImpl extends TreeElementFactoryImplementation {
     }
 
     val r = o match {
-      case fo: FileObject ⇒
+      case fo: FileObject =>
         if (fo.isFolder) {
           // No package/directory related refactoring for Ruby
           //                SourceGroup sg = FolderTreeElement.getSourceGroup(fo);
@@ -87,23 +87,23 @@ class TreeElementFactoryImpl extends TreeElementFactoryImplementation {
         } else {
           new FileTreeElement(fo)
         }
-      case x: SourceGroup ⇒
+      case x: SourceGroup =>
         new SourceGroupTreeElement(x)
-      case x: ElementGrip ⇒
+      case x: ElementGrip =>
         new ElementGripTreeElement(x)
-      case x: Project ⇒
+      case x: Project =>
         new ProjectTreeElement(x)
-      case x: RefactoringElement ⇒
+      case x: RefactoringElement =>
         x.getLookup.lookup(classOf[ElementGrip]) match {
-          case null ⇒ null
-          case grip ⇒ new RefactoringTreeElement(x)
+          case null => null
+          case grip => new RefactoringTreeElement(x)
         }
     }
 
     if (r ne null) {
       o match {
-        case x: SourceGroup ⇒ map.put(x.getRootFolder, r)
-        case _ ⇒ map.put(o, r)
+        case x: SourceGroup => map.put(x.getRootFolder, r)
+        case _ => map.put(o, r)
       }
     }
 

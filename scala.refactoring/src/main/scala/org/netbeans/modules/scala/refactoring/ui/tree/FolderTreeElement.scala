@@ -79,7 +79,7 @@ object FolderTreeElement {
     val allgroups = new Array[SourceGroup](scGroups.length + xmlGroups.length)
     System.arraycopy(scGroups, 0, allgroups, 0, scGroups.length)
     System.arraycopy(xmlGroups, 0, allgroups, allgroups.length - 1, xmlGroups.length)
-    for (i ← 0 until allgroups.length) {
+    for (i <- 0 until allgroups.length) {
       if (allgroups(i).getRootFolder.equals(file) || FileUtil.isParentOf(allgroups(i).getRootFolder, file))
         return allgroups(i);
     }
@@ -94,7 +94,7 @@ object FolderTreeElement {
     //        SourceGroup[] rubygroups = src.getSourceGroups(RubyProject.SOURCES_TYPE_RUBY);
     val scalaGroups = src.getSourceGroups(Sources.TYPE_GENERIC)
 
-    for (i ← 0 until scalaGroups.length) {
+    for (i <- 0 until scalaGroups.length) {
       if (scalaGroups(i).getRootFolder.equals(file) || FileUtil.isParentOf(scalaGroups(i).getRootFolder, file))
         return scalaGroups(i)
     }

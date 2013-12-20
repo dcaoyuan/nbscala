@@ -106,8 +106,8 @@ object ScalaCodeCompletionHandler {
 
     val id = ts.token.id
     id.primaryCategory match {
-      case "comment" | "string" | "regexp" ⇒ false
-      case _ ⇒ true
+      case "comment" | "string" | "regexp" => false
+      case _ => true
     }
   }
 
@@ -119,8 +119,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   override def complete(context: CodeCompletionContext): CodeCompletionResult = {
     // skip processing other queryType: DOCUMENTATION_QUERY_TYPE, TOOLTIP_QUERY_TYPE etc
     context.getQueryType match {
-      case QueryType.ALL_COMPLETION | QueryType.COMPLETION ⇒ // go on
-      case _ ⇒ return CodeCompletionResult.NONE
+      case QueryType.ALL_COMPLETION | QueryType.COMPLETION => // go on
+      case _ => return CodeCompletionResult.NONE
     }
 
     val pr = context.getParserResult.asInstanceOf[ScalaParserResult]
@@ -131,18 +131,18 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
 
     val lexOffset = context.getCaretOffset
     val prefix = context.getPrefix match {
-      case null ⇒ ""
-      case x ⇒ x
+      case null => ""
+      case x => x
     }
 
     val doc = pr.getSnapshot.getSource.getDocument(true) match {
-      case null ⇒ return CodeCompletionResult.NONE
-      case x ⇒ x.asInstanceOf[BaseDocument]
+      case null => return CodeCompletionResult.NONE
+      case x => x.asInstanceOf[BaseDocument]
     }
 
     val astOffset = ScalaLexUtil.getAstOffset(pr, lexOffset) match {
-      case -1 ⇒ return CodeCompletionResult.NONE
-      case x ⇒ x
+      case -1 => return CodeCompletionResult.NONE
+      case x => x
     }
 
     val proposals = new java.util.ArrayList[CompletionProposal]
@@ -163,22 +163,22 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       //completer.index = ScalaIndex.get(info.getSnapshot().getSource().getFileObject());
 
       ScalaLexUtil.getTokenId(doc, lexOffset - 1) match {
-        case None ⇒ return completionResult
-        case ScalaTokenId.LineComment ⇒
+        case None => return completionResult
+        case ScalaTokenId.LineComment =>
           // TODO - Complete symbols in comments?
           return completionResult
-        case ScalaTokenId.BlockCommentData ⇒
+        case ScalaTokenId.BlockCommentData =>
           try {
             completer.completeComments(proposals)
-          } catch { case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex) }
+          } catch { case ex: BadLocationException => Exceptions.printStackTrace(ex) }
           return completionResult
-        case ScalaTokenId.StringLiteral ⇒
+        case ScalaTokenId.StringLiteral =>
           //completeStrings(proposals, request)
           return completionResult
-        case ScalaTokenId.REGEXP_LITERAL | ScalaTokenId.REGEXP_END ⇒
+        case ScalaTokenId.REGEXP_LITERAL | ScalaTokenId.REGEXP_END =>
           completeRegexps(proposals, completer)
           return completionResult
-        case _ ⇒
+        case _ =>
       }
 
       val th = pr.getSnapshot.getTokenHierarchy
@@ -209,24 +209,24 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       // ----- try to complete import first
 
       (ScalaLexUtil.findImportPrefix(doc, th, lexOffset) match {
-        case Nil ⇒ None
-        case List(selector, dot, qual, _*) if dot.id == ScalaTokenId.Dot ⇒ Some((qual, selector.text.toString))
-        case List(dot, qual, _*) if dot.id == ScalaTokenId.Dot ⇒ Some(qual, "")
-        case _ ⇒ None
+        case Nil => None
+        case List(selector, dot, qual, _*) if dot.id == ScalaTokenId.Dot => Some((qual, selector.text.toString))
+        case List(dot, qual, _*) if dot.id == ScalaTokenId.Dot => Some(qual, "")
+        case _ => None
       }) match {
-        case Some((qual, selector)) ⇒
+        case Some((qual, selector)) =>
           completer.prefix = selector
           needSemantice()
           completer.completeSymbolMembers(qual, proposals)
           return completionResult
-        case None ⇒
+        case None =>
       }
 
       // ----- try to complete call
 
       completer.findCall(ts, th) match {
-        case completer.Call(null, _, _) ⇒
-        case completer.Call(base, dot, select) ⇒
+        case completer.Call(null, _, _) =>
+        case completer.Call(base, dot, select) =>
           val go = (dot ne null) || !isAtNewLine
 
           if (go) {
@@ -614,12 +614,12 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       if (token ne null) {
         token.id match {
           case ScalaTokenId.STRING_BEGIN | ScalaTokenId.STRING_END | ScalaTokenId.StringLiteral |
-            ScalaTokenId.REGEXP_LITERAL | ScalaTokenId.REGEXP_BEGIN | ScalaTokenId.REGEXP_END if lexOffset > 0 ⇒
+            ScalaTokenId.REGEXP_LITERAL | ScalaTokenId.REGEXP_BEGIN | ScalaTokenId.REGEXP_END if lexOffset > 0 =>
             doc.getText(lexOffset - 1, 1).charAt(0) match {
-              case '\\' ⇒ return "\\"
-              case _ ⇒ return ""
+              case '\\' => return "\\"
+              case _ => return ""
             }
-          case _ ⇒
+          case _ =>
         }
         //
         //                // We're within a String that has embedded Js. Drop into the
@@ -759,7 +759,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
         var start = lineOffset
         if (lineOffset > 0) {
           for (
-            i ← lineOffset - 1 to 0;
+            i <- lineOffset - 1 to 0;
             c = line.charAt(i) if ScalaSourceUtil.isIdentifierChar(c)
           ) {
             start = i
@@ -776,7 +776,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
             val n = line.length
             var end = lineOffset
             for (
-              j ← lineOffset until n;
+              j <- lineOffset until n;
               d = line.charAt(j) if ScalaSourceUtil.isStrictIdentifierChar(d)
             ) {
               // Try to accept Foo::Bar as well
@@ -814,7 +814,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
           } else {
             var break = false
             for (
-              i ← prefix.length - 2 to 0; // -2: the last position (-1) can legally be =, ! or ?
+              i <- prefix.length - 2 to 0; // -2: the last position (-1) can legally be =, ! or ?
               c = prefix.charAt(i) if !break
             ) {
               if (i == 0 && c == ':') {
@@ -830,7 +830,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
         }
       }
       // Else: normal identifier: just return null and let the machinery do the rest
-    } catch { case ble: BadLocationException ⇒ Exceptions.printStackTrace(ble) }
+    } catch { case ble: BadLocationException => Exceptions.printStackTrace(ble) }
 
     // Default behavior
     null
@@ -1096,15 +1096,15 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
   override def getAutoQuery(component: JTextComponent, typedText: String): QueryType = {
     typedText.charAt(0) match {
       // TODO - auto query on ' and " when you're in $() or $F()
-      case '\n' | '(' | '[' | '{' | ';' ⇒ return QueryType.STOP
-      case c if c != '.' ⇒ return QueryType.NONE
-      case _ ⇒
+      case '\n' | '(' | '[' | '{' | ';' => return QueryType.STOP
+      case c if c != '.' => return QueryType.NONE
+      case _ =>
     }
 
     val offset = component.getCaretPosition
     val doc = component.getDocument.asInstanceOf[BaseDocument]
     typedText match {
-      case "." ⇒ // NOI18N
+      case "." => // NOI18N
         // See if we're in Js context
 
         val ts = ScalaLexUtil.getTokenSequence(doc, offset).getOrElse(return QueryType.NONE)
@@ -1125,8 +1125,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
 
         // TODO - handle embedded JavaScript
         id.primaryCategory match {
-          case "comment" | "string" | "regexp" ⇒ return QueryType.NONE
-          case _ ⇒ return QueryType.COMPLETION
+          case "comment" | "string" | "regexp" => return QueryType.NONE
+          case _ => return QueryType.COMPLETION
         }
     }
 
@@ -1150,23 +1150,23 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     val sigFm = new SignatureHtmlFormatter
 
     val comment = element match {
-      case x: AstElementHandle ⇒
+      case x: AstElementHandle =>
         x.sigFormat(sigFm)
         x.getDocComment
-      case _ ⇒ ""
+      case _ => ""
     }
 
     val html = new StringBuilder
     element.getFileObject match {
-      case null ⇒
-      case fo ⇒ html.append("<b>").append(fo.getPath).append("</b><br>")
+      case null =>
+      case fo => html.append("<b>").append(fo.getPath).append("</b><br>")
     }
 
     if (comment.length > 0) {
       val commentFm = new ScalaCommentFormatter(comment)
       element.getName match {
-        case null ⇒
-        case name ⇒ commentFm.setSeqName(name)
+        case null =>
+        case name => commentFm.setSeqName(name)
       }
 
       html.append(sigFm).append("\n<hr>\n").append(commentFm.toHtml)

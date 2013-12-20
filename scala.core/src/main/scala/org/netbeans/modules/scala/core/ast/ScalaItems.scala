@@ -44,7 +44,7 @@ import org.netbeans.api.language.util.ast.AstItem
 import org.netbeans.modules.scala.core.ScalaGlobal
 import scala.reflect.internal.Flags
 
-trait ScalaItems { self: ScalaGlobal ⇒
+trait ScalaItems { self: ScalaGlobal =>
 
   abstract class ScalaItem extends AstItem {
     type S = Symbol
@@ -67,7 +67,7 @@ trait ScalaItems { self: ScalaGlobal ⇒
       try {
         symbol.tpe.members
       } catch {
-        case ex: Throwable ⇒ EmptyScope
+        case ex: Throwable => EmptyScope
       }
     }
 

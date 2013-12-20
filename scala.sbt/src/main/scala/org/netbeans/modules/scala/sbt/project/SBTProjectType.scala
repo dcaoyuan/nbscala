@@ -51,10 +51,10 @@ object SBTProjectType {
   def hasSbtProjectDefinition(projectDir: FileObject): Boolean = {
     val sbtProjectFolder = projectDir.getFileObject("project")
 
-    val containsSbtFile = projectDir.getChildren find (f ⇒ f.isData && f.getExt == "sbt") isDefined
+    val containsSbtFile = projectDir.getChildren find (f => f.isData && f.getExt == "sbt") isDefined
 
     val containsSbtProjectFolder = if (sbtProjectFolder != null && sbtProjectFolder.isFolder) {
-      sbtProjectFolder.getChildren find (f ⇒ f.isData && (f.getExt == "sbt" || f.getExt == "scala")) isDefined
+      sbtProjectFolder.getChildren find (f => f.isData && (f.getExt == "sbt" || f.getExt == "scala")) isDefined
     } else {
       false
     }

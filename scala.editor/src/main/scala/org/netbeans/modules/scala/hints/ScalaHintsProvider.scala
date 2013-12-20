@@ -43,7 +43,7 @@ import org.netbeans.modules.scala.core.ast.ScalaRootScope
 import scala.collection.JavaConversions
 import scala.collection.JavaConversions._
 
-import java.{ lang ⇒ jl, util ⇒ ju }
+import java.{ lang => jl, util => ju }
 import org.netbeans.modules.csl.api.HintsProvider.HintsManager;
 import org.netbeans.modules.csl.api._;
 import org.netbeans.modules.csl.spi.ParserResult;
@@ -125,7 +125,7 @@ class ScalaHintsProvider() extends HintsProvider {
 
           try {
             //context.doc.readLock();
-            unhandled.addAll(errors.filter(x ⇒ !applyRules(x, manager, context.asInstanceOf[ScalaRuleContext], errHints, hints)))
+            unhandled.addAll(errors.filter(x => !applyRules(x, manager, context.asInstanceOf[ScalaRuleContext], errHints, hints)))
           } finally {
             //context.doc.readUnlock();
           }
@@ -141,10 +141,10 @@ class ScalaHintsProvider() extends HintsProvider {
     if (rules ne null) {
       var added = List[Hint]()
       val applicableRules = for {
-        rule ← JavaConversions.asScalaBuffer(rules.asInstanceOf[ju.List[ScalaErrorRule]])
+        rule <- JavaConversions.asScalaBuffer(rules.asInstanceOf[ju.List[ScalaErrorRule]])
         if rule.appliesTo(context)
       } yield rule
-      for (rule ← applicableRules) {
+      for (rule <- applicableRules) {
         added ++= rule.createHints(context, error)
       }
       result.addAll(added)
@@ -157,10 +157,10 @@ class ScalaHintsProvider() extends HintsProvider {
   def applySelectionRules(manager: HintsManager, context: ScalaRuleContext, selRules: ju.List[ScalaSelectionRule], start: Int, end: Int): List[Hint] = {
     val added = ListBuffer[Hint]()
     val applicableRules = for {
-      rule ← selRules
+      rule <- selRules
       if rule.appliesTo(context)
     } yield rule
-    for (rule ← applicableRules) {
+    for (rule <- applicableRules) {
       added ++= rule.createHints(context, start, end)
     }
     added.toList
@@ -169,10 +169,10 @@ class ScalaHintsProvider() extends HintsProvider {
   def applyHintRules(manager: HintsManager, context: ScalaRuleContext, selRules: ju.List[ScalaAstRule], scope: ScalaRootScope): List[Hint] = {
     val added = ListBuffer[Hint]()
     val applicableRules = for {
-      rule ← selRules
+      rule <- selRules
       if rule.appliesTo(context)
     } yield rule
-    for (rule ← applicableRules) {
+    for (rule <- applicableRules) {
       added ++= rule.createHints(context, scope)
     }
     added.toList

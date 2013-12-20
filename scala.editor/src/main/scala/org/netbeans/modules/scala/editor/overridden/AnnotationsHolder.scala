@@ -63,8 +63,8 @@ object AnnotationsHolder {
     try {
       val od = DataObject.find(file)
       fileToAnnotations.get(od) match {
-        case Some(x) ⇒ return x
-        case _ ⇒
+        case Some(x) => return x
+        case _ =>
       }
 
       val ec = od.getLookup.lookup(classOf[EditorCookie.Observable])
@@ -76,7 +76,7 @@ object AnnotationsHolder {
       fileToAnnotations.put(od, a)
 
       a
-    } catch { case ex: IOException ⇒ IsOverriddenAnnotationHandler.Log.log(Level.INFO, null, ex); null }
+    } catch { case ex: IOException => IsOverriddenAnnotationHandler.Log.log(Level.INFO, null, ex); null }
   }
 }
 

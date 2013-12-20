@@ -28,9 +28,9 @@ class SBTSources(project: Project) extends Sources {
     x.addPropertyChangeListener(new PropertyChangeListener() {
       def propertyChange(evt: PropertyChangeEvent) {
         evt.getPropertyName match {
-          case SBTResolver.DESCRIPTOR_CHANGE ⇒
+          case SBTResolver.DESCRIPTOR_CHANGE =>
             cs.fireChange
-          case _ ⇒
+          case _ =>
         }
       }
     })
@@ -42,13 +42,13 @@ class SBTSources(project: Project) extends Sources {
 
   override def getSourceGroups(tpe: String): Array[SourceGroup] = {
     tpe match {
-      case Sources.TYPE_GENERIC ⇒
+      case Sources.TYPE_GENERIC =>
         // It's necessary for project's PhysicalView (in Files window), 
         // @see org.netbeans.modules.project.ui.PhysicalView#createNodesForProject(Project)
         val projectDir = project.getProjectDirectory
         Array(GenericSources.group(project, projectDir, projectDir.getNameExt, projectDir.getNameExt, null, null))
 
-      case ProjectResources.SOURCES_TYPE_JAVA | ProjectResources.SOURCES_TYPE_SCALA | ProjectResources.SOURCES_TYPE_MANAGED ⇒
+      case ProjectResources.SOURCES_TYPE_JAVA | ProjectResources.SOURCES_TYPE_SCALA | ProjectResources.SOURCES_TYPE_MANAGED =>
         val mainSrcs = maybeAddGroup(tpe, false)
         val testSrcs = maybeAddGroup(tpe, true)
         // We should keep the order Array(main, test), @see org.netbeans.modules.scala.core.ProjectResourcs#findMainAndTestSrcs
@@ -60,47 +60,47 @@ class SBTSources(project: Project) extends Sources {
           Array()
         }
 
-      case _ ⇒
+      case _ =>
         Array()
     }
   }
 
   private def maybeAddGroup(tpe: String, isTest: Boolean): Array[SourceGroup] = {
     val roots = if (sbtResolver != null) {
-      sbtResolver.getSources(tpe, isTest) map (x ⇒ FileUtil.toFileObject(x._1))
+      sbtResolver.getSources(tpe, isTest) map (x => FileUtil.toFileObject(x._1))
     } else {
       // best try
       tpe match {
-        case ProjectResources.SOURCES_TYPE_JAVA ⇒
+        case ProjectResources.SOURCES_TYPE_JAVA =>
           Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/java"))
-        case ProjectResources.SOURCES_TYPE_SCALA ⇒
+        case ProjectResources.SOURCES_TYPE_SCALA =>
           Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/scala"))
-        case _ ⇒
+        case _ =>
           Array[FileObject]()
       }
     }
 
     val name = tpe match {
-      case ProjectResources.SOURCES_TYPE_JAVA ⇒
+      case ProjectResources.SOURCES_TYPE_JAVA =>
         if (isTest) NAME_JAVATESTSOURCE else NAME_JAVASOURCE
-      case ProjectResources.SOURCES_TYPE_SCALA ⇒
+      case ProjectResources.SOURCES_TYPE_SCALA =>
         if (isTest) NAME_SCALATESTSOURCE else NAME_SCALASOURCE
-      case ProjectResources.SOURCES_TYPE_MANAGED ⇒
+      case ProjectResources.SOURCES_TYPE_MANAGED =>
         if (isTest) NAME_MANAGEDTESTSOURCE else NAME_MANAGEDSOURCE
-      case _ ⇒ NAME_OTHERSOURCE
+      case _ => NAME_OTHERSOURCE
     }
 
     val displayName = tpe match {
-      case ProjectResources.SOURCES_TYPE_JAVA ⇒
+      case ProjectResources.SOURCES_TYPE_JAVA =>
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_JavaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_JavaSources")
-      case ProjectResources.SOURCES_TYPE_SCALA ⇒
+      case ProjectResources.SOURCES_TYPE_SCALA =>
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ScalaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ScalaSources")
-      case ProjectResources.SOURCES_TYPE_MANAGED ⇒
+      case ProjectResources.SOURCES_TYPE_MANAGED =>
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ManagedSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ManagedSources")
-      case _ ⇒ NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
+      case _ => NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
     }
 
-    for (root ← roots if root != null) yield GenericSources.group(project, root, name, displayName, null, null)
+    for (root <- roots if root != null) yield GenericSources.group(project, root, name, displayName, null, null)
   }
 
   override def addChangeListener(l: ChangeListener) {

@@ -179,8 +179,8 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
       if (isFromEditor(ec)) {
         val textC = ec.getOpenedPanes()(0)
         val d = textC.getDocument match {
-          case x: BaseDocument ⇒ x
-          case _ ⇒ return true
+          case x: BaseDocument => x
+          case _ => return true
         }
         d.readLock
         try {
@@ -295,8 +295,8 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
          weight(x1.asInstanceOf[ScalaItem].symbol) < weight(x2.asInstanceOf[ScalaItem].symbol)
          } */
         val inPlaceItem = root.findItemsAt(th, caret) match {
-          case Nil ⇒ return
-          case xs ⇒ xs find { _.idToken ne null } getOrElse { return }
+          case Nil => return
+          case xs => xs find { _.idToken ne null } getOrElse { return }
         }
 
         val handle = root.findDfnOf(inPlaceItem) getOrElse inPlaceItem
@@ -316,7 +316,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
       try {
         val source = Source.create(textC.getDocument)
         ParserManager.parse(java.util.Collections.singleton(source), this)
-      } catch { case ex: ParseException ⇒ logger.log(Level.WARNING, null, ex); return }
+      } catch { case ex: ParseException => logger.log(Level.WARNING, null, ex); return }
 
       val activetc = TopComponent.getRegistry.getActivated
 
@@ -371,7 +371,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
         val o = node.getCookie(classOf[DataObject])
         val source = Source.create(o.getPrimaryFile)
         ParserManager.parse(java.util.Collections.singleton(source), this)
-      } catch { case ex: ParseException ⇒ logger.log(Level.WARNING, null, ex); return }
+      } catch { case ex: ParseException => logger.log(Level.WARNING, null, ex); return }
 
       if (ui ne null) {
         UI.openRefactoringUI(ui)
@@ -424,7 +424,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
           val source = Source.create(fobs(i))
           try {
             ParserManager.parse(java.util.Collections.singleton(source), this)
-          } catch { case ex: ParseException ⇒ logger.log(Level.WARNING, null, ex) }
+          } catch { case ex: ParseException => logger.log(Level.WARNING, null, ex) }
           pkg(i) = node.getLookup.lookup(classOf[NonRecursiveFolder])
           i += 1
         }

@@ -68,7 +68,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
   @throws(classOf[FileNotFoundException])
   def genClass(pkgName: String, clzName: String, syms: Array[Symbol]): CharSequence = {
-    global.askForResponse { () ⇒
+    global.askForResponse { () =>
       val javaCode = new StringBuilder(1024)
 
       if (!pkgName.isEmpty) {
@@ -77,22 +77,22 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
       val sym = syms match {
         //syms takes the form of (class, object, trait)
-        case Array(null, null, traitSym) ⇒ // trait
+        case Array(null, null, traitSym) => // trait
           isTrait = true
           javaCode ++= modifiers(traitSym) ++= "interface "
           traitSym
-        case Array(null, objSym, null) ⇒ // single object
+        case Array(null, objSym, null) => // single object
           isObject = true
           javaCode ++= modifiers(objSym) ++= "final class "
           objSym
-        case Array(classSym, null, null) ⇒ // single class
+        case Array(classSym, null, null) => // single class
           javaCode ++= modifiers(classSym) ++= "class "
           classSym
-        case Array(classSym, objSym, null) ⇒ // companion object + class
+        case Array(classSym, objSym, null) => // companion object + class
           isCompanion = true
           javaCode ++= modifiers(classSym) ++= "class "
           classSym
-        case Array(_, obj, traitSym) ⇒ // companion object + trait ?
+        case Array(_, obj, traitSym) => // companion object + trait ?
           isTrait = true
           javaCode ++= modifiers(traitSym) ++= "interface "
           traitSym
@@ -104,16 +104,16 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
       val tpe = tryTpe(sym)
       javaSig(sym, tpe) match {
-        case Some(sig) ⇒ javaCode ++= getGenericPart(sig)
-        case None ⇒
+        case Some(sig) => javaCode ++= getGenericPart(sig)
+        case None =>
       }
 
       val qName = sym.fullName
 
       val superClass = sym.superClass
       val superQName = superClass match {
-        case null ⇒ ""
-        case x ⇒ x.fullName
+        case null => ""
+        case x => x.fullName
       }
 
       var extended = false
@@ -122,8 +122,8 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
         extended = true
 
         javaSig(superClass, superClass.tpe) match {
-          case Some(sig) ⇒ javaCode ++= sig
-          case None ⇒ javaCode ++= encodeQName(superQName)
+          case Some(sig) => javaCode ++= sig
+          case None => javaCode ++= encodeQName(superQName)
         }
       }
 
@@ -133,11 +133,11 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
         while (itr.hasNext) {
           val base = itr.next
           base.fullName match {
-            case `superQName` ⇒
-            case `qName` ⇒
-            case "java.lang.Object" ⇒
-            case "scala.Any" ⇒ // javaSig of "scala.Any" will be "java.lang.Object"
-            case baseQName ⇒
+            case `superQName` =>
+            case `qName` =>
+            case "java.lang.Object" =>
+            case "scala.Any" => // javaSig of "scala.Any" will be "java.lang.Object"
+            case baseQName =>
               if (base.isTrait) {
                 if (isTrait) {
                   if (!extended) {
@@ -168,8 +168,8 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
                   }
 
                   javaSig(base, base.tpe) match {
-                    case Some(sig) ⇒ javaCode ++= sig
-                    case None ⇒ javaCode ++= encodeQName(baseQName)
+                    case Some(sig) => javaCode ++= sig
+                    case None => javaCode ++= encodeQName(baseQName)
                   }
                 }
               }
@@ -210,8 +210,8 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
       javaCode.toString
     } get match {
-      case Left(x) ⇒ x
-      case Right(ex) ⇒ ""
+      case Left(x) => x
+      case Right(ex) => ""
     }
   }
 
@@ -219,7 +219,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     try {
       sym.tpe
     } catch {
-      case _: Throwable ⇒ null
+      case _: Throwable => null
     }
   }
 
@@ -231,7 +231,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       (try {
         tpe.members
       } catch {
-        case ex: Throwable ⇒ EmptyScope
+        case ex: Throwable => EmptyScope
       }) exists (_ hasFlag Flags.DEFERRED))
   }
 
@@ -250,14 +250,14 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val members = try {
         tpe.members
       } catch {
-        case ex: Throwable ⇒ EmptyScope
+        case ex: Throwable => EmptyScope
       }
 
-      for (member ← members if !member.hasFlag(Flags.PRIVATE)) {
+      for (member <- members if !member.hasFlag(Flags.PRIVATE)) {
         val memberType = try {
           member.tpe
         } catch {
-          case ex: Throwable ⇒ ScalaGlobal.resetLate(global, ex); null
+          case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
         }
         javaCode ++= genJavaMember(sym, member, memberType)
       }
@@ -270,17 +270,17 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       }
 
       member match {
-        case _ if member.isTrait || member.isClass || member.isModule ⇒
+        case _ if member.isTrait || member.isClass || member.isModule =>
           "" // @todo
-        case _ if member.isConstructor ⇒
+        case _ if member.isConstructor =>
           genJavaConstructor(sym, member, memberType)
-        case _ if member.isMethod ⇒
+        case _ if member.isMethod =>
           genJavaMethod(member, memberType)
-        case _ if member.isVariable ⇒
+        case _ if member.isVariable =>
           "" // do nothing
-        case _ if member.isValue ⇒
+        case _ if member.isValue =>
           genJavaValue(member, memberType)
-        case _ ⇒
+        case _ =>
           ""
       }
     }
@@ -299,8 +299,8 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val mResTpe = memberType.resultType
       val mResSym = mResTpe.typeSymbol
       val mResQName = javaSig(mResSym, mResTpe) match {
-        case Some(sig) ⇒ sig
-        case None ⇒ encodeType(mResSym.fullName)
+        case Some(sig) => sig
+        case None => encodeType(mResSym.fullName)
       }
       modifiers(member) + " " + mResQName + " " + member.nameString + ";\n"
     }
@@ -312,7 +312,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val mResTpe = try {
         memberType.resultType
       } catch {
-        case ex: Throwable ⇒ ScalaGlobal.resetLate(global, ex); null
+        case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
       }
 
       if ((mResTpe ne null) && mSName != "$init$" && mSName != "synchronized") {
@@ -322,14 +322,14 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
         if (isObject && !isTrait) javaCode ++= "static final "
 
         val mResQName = javaSig(mResSym, mResTpe) match {
-          case Some(sig) ⇒ sig
-          case None ⇒ encodeType(mResSym.fullName)
+          case Some(sig) => sig
+          case None => encodeType(mResSym.fullName)
         }
 
         javaSig(member, memberType) match {
-          case Some(sig) ⇒
+          case Some(sig) =>
             javaCode ++= sig
-          case None ⇒
+          case None =>
             // method return type
             javaCode ++= mResQName ++= " "
             // method name
@@ -395,7 +395,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val tpeName = try {
         encodeQName(param.tpe.typeSymbol.fullName)
       } catch {
-        case ex: Throwable ⇒ ScalaGlobal.resetLate(global, ex); "Object"
+        case ex: Throwable => ScalaGlobal.resetLate(global, ex); "Object"
       }
       sb.append(tpeName)
       sb.append(" ")
@@ -419,16 +419,16 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
   private def getGenericPart(classJavaSig: String): String = {
     classJavaSig.indexOf('<') match {
-      case -1 ⇒ ""
-      case i ⇒ classJavaSig.substring(i, classJavaSig.length)
+      case -1 => ""
+      case i => classJavaSig.substring(i, classJavaSig.length)
     }
   }
 
   // ----- @see scala.tools.nsc.transform.Erasure
 
   private def hiBounds(bounds: TypeBounds): List[Type] = bounds.hi.normalize match {
-    case RefinedType(parents, _) ⇒ parents map (_.normalize)
-    case tp ⇒ tp :: Nil
+    case RefinedType(parents, _) => parents map (_.normalize)
+    case tp => tp :: Nil
   }
 
   /**
@@ -442,7 +442,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val ps = (
         if (isTraitSignature) {
           // java is unthrilled about seeing interfaces inherit from classes
-          val ok = parents filter (p ⇒ p.typeSymbol.isTrait || p.typeSymbol.isInterface)
+          val ok = parents filter (p => p.typeSymbol.isTrait || p.typeSymbol.isInterface)
           // traits should always list Object.
           if (ok.isEmpty || ok.head.typeSymbol != ObjectClass) ObjectClass.tpe :: ok
           else ok
@@ -453,8 +453,8 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     def boundsSig(bounds: List[Type]) = {
       val (isTrait, isClass) = bounds partition (_.typeSymbol.isTrait)
       val classPart = isClass match {
-        case Nil ⇒ ":" // + boxedSig(ObjectClass.tpe)
-        case x :: _ ⇒ ":" + boxedSig(x)
+        case Nil => ":" // + boxedSig(ObjectClass.tpe)
+        case x :: _ => ":" + boxedSig(x)
       }
       classPart :: (isTrait map boxedSig) mkString ":"
     }
@@ -472,11 +472,11 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     def jsig(tp0: Type, existentiallyBound: List[Symbol] = Nil, toplevel: Boolean = false, primitiveOK: Boolean = true): String = {
       val tp = tp0.dealias
       tp match {
-        case st: SubType ⇒
+        case st: SubType =>
           jsig(st.supertype, existentiallyBound, toplevel, primitiveOK)
-        case ExistentialType(tparams, tpe) ⇒
+        case ExistentialType(tparams, tpe) =>
           jsig(tpe, tparams, toplevel, primitiveOK)
-        case TypeRef(pre, sym, args) ⇒
+        case TypeRef(pre, sym, args) =>
           def argSig(tp: Type) =
             if (existentiallyBound contains tp.typeSymbol) {
               val bounds = tp.typeSymbol.info.bounds
@@ -535,30 +535,30 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
             classSig
           else
             jsig(erasure(sym0)(tp), existentiallyBound, toplevel, primitiveOK)
-        case PolyType(tparams, restpe) ⇒
+        case PolyType(tparams, restpe) =>
           assert(tparams.nonEmpty)
           val poly = if (toplevel) polyParamSig(tparams) else ""
           poly + jsig(restpe)
 
-        case MethodType(params, restpe) ⇒
+        case MethodType(params, restpe) =>
           val buf = new StringBuffer()
-          buf append (params map (p ⇒ jsig(p.tpe)) mkString ("(", ",", ")"))
+          buf append (params map (p => jsig(p.tpe)) mkString ("(", ",", ")"))
           //val buf = new StringBuffer("(")
           //params foreach (p => buf append jsig(p.tpe))
           //buf append ")"
           buf append (if (restpe.typeSymbol == UnitClass || sym0.isConstructor) VOID_TAG.toString else jsig(restpe))
           buf.toString
 
-        case RefinedType(parent :: _, decls) ⇒
+        case RefinedType(parent :: _, decls) =>
           boxedSig(parent)
-        case ClassInfoType(parents, _, _) ⇒
+        case ClassInfoType(parents, _, _) =>
           superSig(parents)
-        case AnnotatedType(_, atp, _) ⇒
+        case AnnotatedType(_, atp, _) =>
           jsig(atp, existentiallyBound, toplevel, primitiveOK)
-        case BoundedWildcardType(bounds) ⇒
+        case BoundedWildcardType(bounds) =>
           println("something's wrong: " + sym0 + ":" + sym0.tpe + " has a bounded wildcard type")
           jsig(bounds.hi, existentiallyBound, toplevel, primitiveOK)
-        case _ ⇒
+        case _ =>
           val etp = erasure(sym0)(tp)
           if (etp eq tp) throw new UnknownSig
           else jsig(etp)
@@ -566,7 +566,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     }
     if (needsJavaSig(info)) {
       try Some(jsig(info, toplevel = true))
-      catch { case ex: UnknownSig ⇒ None }
+      catch { case ex: UnknownSig => None }
     } else None
   }
 
@@ -587,21 +587,21 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     def traverse(tp: Type) {
       if (!result) {
         tp match {
-          case st: SubType ⇒
+          case st: SubType =>
             traverse(st.supertype)
-          case TypeRef(pre, sym, args) ⇒
+          case TypeRef(pre, sym, args) =>
             if (sym == ArrayClass) args foreach traverse
             else if (sym.isTypeParameterOrSkolem || sym.isExistentiallyBound || !args.isEmpty) result = true
             else if (!sym.owner.isPackageClass) traverse(pre)
-          case PolyType(_, _) | ExistentialType(_, _) ⇒
+          case PolyType(_, _) | ExistentialType(_, _) =>
             result = true
-          case RefinedType(parents, decls) ⇒
+          case RefinedType(parents, decls) =>
             if (!parents.isEmpty) traverse(parents.head)
-          case ClassInfoType(parents, _, _) ⇒
+          case ClassInfoType(parents, _, _) =>
             parents foreach traverse
-          case AnnotatedType(_, atp, _) ⇒
+          case AnnotatedType(_, atp, _) =>
             traverse(atp)
-          case _ ⇒ mapOver(tp)
+          case _ => mapOver(tp)
         }
       }
     }
@@ -628,9 +628,9 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
   private def dotCleanup(sig: String): String = {
     var last: Char = '\0'
     sig map {
-      case '.' if last != '>' ⇒
+      case '.' if last != '>' =>
         last = '.'; '$'
-      case ch ⇒ last = ch; ch
+      case ch => last = ch; ch
     }
   }
 
@@ -648,16 +648,16 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
    */
   private def encodeType(scalaTypeQName: String): String = {
     scalaTypeQName match {
-      case "scala.runtime.BoxedUnit" ⇒ "void"
-      case "scala.Unit" ⇒ "void"
-      case _ ⇒ encodeQName(scalaTypeQName)
+      case "scala.runtime.BoxedUnit" => "void"
+      case "scala.Unit" => "void"
+      case _ => encodeQName(scalaTypeQName)
     }
   }
 
   private def encodeQName(qName: String): String = {
     qName.lastIndexOf('.') match {
-      case -1 ⇒ encodeName(qName)
-      case i ⇒
+      case -1 => encodeName(qName)
+      case i =>
         val pkgName = qName.substring(0, i + 1) // with last '.'
         val sName = qName.substring(i + 1, qName.length)
         pkgName + encodeName(sName)
@@ -665,7 +665,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
   }
 
   @inline
-  private def logResult[T](msg: ⇒ String)(result: T): T = {
+  private def logResult[T](msg: => String)(result: T): T = {
     log.warning(msg + ": " + result)
     result
   }
@@ -673,17 +673,17 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
 object JavaStubGenerator {
   private def returnStrOfType(tpe: String) = tpe match {
-    case "scala.runtime.BoxedUnit" ⇒ "return;"
-    case "scala.Unit" ⇒ "return;"
-    case "void" ⇒ "return;"
-    case "double" ⇒ "return 0.0;"
-    case "float" ⇒ "return 0.0f;"
-    case "long" ⇒ "return 0L;"
-    case "int" ⇒ "return 0;"
-    case "short" ⇒ "return 0;"
-    case "byte" ⇒ "return 0;"
-    case "boolean" ⇒ "return false;"
-    case "char" ⇒ "return 0;"
-    case _ ⇒ "return null;"
+    case "scala.runtime.BoxedUnit" => "return;"
+    case "scala.Unit" => "return;"
+    case "void" => "return;"
+    case "double" => "return 0.0;"
+    case "float" => "return 0.0f;"
+    case "long" => "return 0L;"
+    case "int" => "return 0;"
+    case "short" => "return 0;"
+    case "byte" => "return 0;"
+    case "boolean" => "return false;"
+    case "char" => "return 0;"
+    case _ => "return null;"
   }
 }

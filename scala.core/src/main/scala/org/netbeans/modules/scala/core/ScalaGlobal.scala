@@ -83,10 +83,10 @@ case class ErrorReporter(var errors: List[ScalaError] = Nil) extends Reporter {
   }
 
   private def toCslSeverity(severity: Severity) = severity match {
-    case INFO ⇒ org.netbeans.modules.csl.api.Severity.INFO
-    case WARNING ⇒ org.netbeans.modules.csl.api.Severity.WARNING
-    case ERROR ⇒ org.netbeans.modules.csl.api.Severity.ERROR
-    case _ ⇒ null
+    case INFO => org.netbeans.modules.csl.api.Severity.INFO
+    case WARNING => org.netbeans.modules.csl.api.Severity.WARNING
+    case ERROR => org.netbeans.modules.csl.api.Severity.ERROR
+    case _ => null
   }
 }
 
@@ -108,8 +108,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
   protected def isCancelled(srcFile: SourceFile) = {
     sourceToResponse.get(srcFile) match {
-      case null ⇒ false
-      case resp ⇒ resp.isCancelled
+      case null => false
+      case resp => resp.isCancelled
     }
   }
 
@@ -121,8 +121,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
 
   private def resetReporter {
     reporter match {
-      case x: ErrorReporter ⇒ x.reset
-      case _ ⇒
+      case x: ErrorReporter => x.reset
+      case _ =>
     }
   }
 
@@ -133,8 +133,8 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     askReload(srcFiles, resp)
 
     resp.get match {
-      case Left(_) ⇒
-      case Right(ex) ⇒ processGlobalException(ex)
+      case Left(_) =>
+      case Right(ex) => processGlobalException(ex)
     }
   }
 
@@ -154,24 +154,24 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
       askReload(List(srcFile), loadResp)
       if (isCancelled(srcFile)) return None
       loadResp.get match {
-        case Left(_) ⇒
+        case Left(_) =>
           val typeResp = newResponse[Tree](srcFile)
           askLoadedTyped(srcFile, typeResp)
           if (isCancelled(srcFile)) return None
           typeResp.get match {
-            case Left(rootTree) ⇒
+            case Left(rootTree) =>
               val rootResp = newResponse[Option[ScalaRootScope]](srcFile)
               askSemanticRoot(srcFile, rootTree, rootResp)
               if (isCancelled(srcFile)) return None
               rootResp get match {
-                case Left(x) ⇒ x
-                case Right(ex) ⇒ processGlobalException(ex, Some(ScalaRootScope.EMPTY))
+                case Left(x) => x
+                case Right(ex) => processGlobalException(ex, Some(ScalaRootScope.EMPTY))
               }
 
-            case Right(ex) ⇒ processGlobalException(ex, Some(ScalaRootScope.EMPTY))
+            case Right(ex) => processGlobalException(ex, Some(ScalaRootScope.EMPTY))
           }
 
-        case Right(ex) ⇒ processGlobalException(ex, Some(ScalaRootScope.EMPTY))
+        case Right(ex) => processGlobalException(ex, Some(ScalaRootScope.EMPTY))
       }
 
     } finally {
@@ -182,16 +182,16 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   protected def processGlobalException[T](ex: Throwable, toReturn: T = ()): T = {
     log1.log(Level.WARNING, ex.getMessage, ex)
     ex match {
-      case _: AssertionError ⇒
+      case _: AssertionError =>
         /**
          * @Note: avoid scala nsc's assert error. Since global's
          * symbol table may have been broken, we have to reset ScalaGlobal
          * to clean this global
          */
         ScalaGlobal.resetLate(this, ex)
-      case _: java.lang.Error ⇒ // avoid scala nsc's Error error
+      case _: java.lang.Error => // avoid scala nsc's Error error
         log1.log(Level.WARNING, ex.getMessage, ex)
-      case _: Throwable ⇒ // just ignore all ex
+      case _: Throwable => // just ignore all ex
         log1.log(Level.WARNING, ex.getMessage, ex)
     }
 
@@ -199,7 +199,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   }
 
   private def askSemanticRoot(source: ScalaSourceFile, rootTree: Tree, resp: Response[Option[ScalaRootScope]]) {
-    askForResponse(resp) { () ⇒
+    askForResponse(resp) { () =>
       val start = System.currentTimeMillis
       val rootScope = astVisit(source, rootTree)
       log1.info("Visited " + source.file.file.getName + " in " + (System.currentTimeMillis - start) + "ms")
@@ -212,16 +212,16 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
    *  a response with the result or an exception
    *  Also @see scala.tools.nsc.interactive.CompilerControl#askForResponse
    */
-  protected def askForResponse[A](r: Response[A])(op: () ⇒ A) = {
+  protected def askForResponse[A](r: Response[A])(op: () => A) = {
     if (onCompilerThread) {
       try { r set op() }
-      catch { case exc: Throwable ⇒ r raise exc }
+      catch { case exc: Throwable => r raise exc }
       r
     } else {
       val ir = scheduler askDoQuickly op
       ir onComplete {
-        case Left(result) ⇒ r set result
-        case Right(exc) ⇒ r raise exc
+        case Left(result) => r set result
+        case Right(exc) => r raise exc
       }
       r
     }
@@ -259,13 +259,13 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     try {
       run.compileSources(srcFiles)
     } catch {
-      case ex: Throwable ⇒ processGlobalException(ex)
+      case ex: Throwable => processGlobalException(ex)
     }
 
     //println("selectTypeErrors:" + selectTypeErrors)
 
     run.units find { _.source eq source } match {
-      case Some(unit) ⇒
+      case Some(unit) =>
         if (ScalaGlobal.debug) {
           RequestProcessor.getDefault.post(new Runnable {
             def run {
@@ -275,7 +275,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
         }
 
         astVisit(source, unit.body)
-      case None ⇒ ScalaRootScope.EMPTY
+      case None => ScalaRootScope.EMPTY
     }
   }
 
@@ -303,15 +303,15 @@ object ScalaGlobal {
 
   def resetLate(global: ScalaGlobal, reason: Throwable) = synchronized {
     reason match {
-      case NormalReason(msg) ⇒ log.info("Will reset global late due to: " + msg)
-      case _ ⇒ log.log(Level.WARNING, "Will reset global late due to:", reason)
+      case NormalReason(msg) => log.info("Will reset global late due to: " + msg)
+      case _ => log.log(Level.WARNING, "Will reset global late due to:", reason)
     }
 
     if (globalForStdLib.isDefined && global == globalForStdLib.get) {
       globalForStdLib = None
     } else {
       projectToGlobals foreach {
-        case (project, globals) ⇒
+        case (project, globals) =>
           var found = false
           var i = 0
           val len = globals.length
@@ -319,7 +319,7 @@ object ScalaGlobal {
             if (globals(i) == global) {
               globals(i) = null
               toResetGlobals += (global -> project)
-              for (xs ← globalToListeners.get(global); x ← xs) project.getProjectDirectory.getFileSystem.removeFileChangeListener(x)
+              for (xs <- globalToListeners.get(global); x <- xs) project.getProjectDirectory.getFileSystem.removeFileChangeListener(x)
               globalToListeners -= global
               found = true
             }
@@ -335,7 +335,7 @@ object ScalaGlobal {
    * it seems reset operation cannot got a clean global?
    */
   def resetBadGlobals = synchronized {
-    for ((global, project) ← toResetGlobals) {
+    for ((global, project) <- toResetGlobals) {
       log.info("Reset global: " + global)
 
       // this will cause global create a new TypeRun so as to release all unitbuf and filebuf.
@@ -389,8 +389,8 @@ object ScalaGlobal {
     }
 
     globals(idx) match {
-      case null ⇒
-      case g ⇒ return g
+      case null =>
+      case g => return g
     }
 
     // ----- need to create a new global:
@@ -443,7 +443,7 @@ object ScalaGlobal {
     // @Note: settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?\
     // since Scala 2.10.0, this seems working. if not, we should global askForReload srcFiles later
     srcOutDirsPath foreach {
-      case (src, out) ⇒
+      case (src, out) =>
         settings.outputDirs.add(src, out)
         log.info("settings.outputDirs.add" + (src -> out))
     }
@@ -507,12 +507,12 @@ object ScalaGlobal {
     val srcRoots = srcCp.getRoots
 
     private def isUnderSrcDir(fo: FileObject) = {
-      srcRoots exists { x ⇒ FileUtil.isParentOf(x, fo) }
+      srcRoots exists { x => FileUtil.isParentOf(x, fo) }
     }
 
     private def isInterestedMime(mimeType: String) = mimeType match {
-      case JavaMimeType | ScalaMimeType ⇒ true
-      case _ ⇒ false
+      case JavaMimeType | ScalaMimeType => true
+      case _ => false
     }
 
     override def fileDataCreated(fe: FileEvent) {
@@ -542,8 +542,8 @@ object ScalaGlobal {
         val resp = new global.Response[Unit]
         global askFilesDeleted (List(toSourceFile(fo)), resp)
         resp.get match {
-          case Left(_) ⇒
-          case Right(ex) ⇒ global.processGlobalException(ex)
+          case Left(_) =>
+          case Right(ex) => global.processGlobalException(ex)
         }
       }
     }
@@ -554,7 +554,7 @@ object ScalaGlobal {
 
     private def isUnderCompCp(fo: FileObject) = {
       // * when there are series of folder/file created, only top created folder can be listener
-      val found = compRoots find { x ⇒ FileUtil.isParentOf(fo, x) || x == fo }
+      val found = compRoots find { x => FileUtil.isParentOf(fo, x) || x == fo }
       if (found.isDefined) log.finest("under compCp: fo=" + fo + ", found=" + found)
       found isDefined
     }

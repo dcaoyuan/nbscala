@@ -48,7 +48,7 @@ import org.netbeans.modules.scala.core.{ ScalaGlobal, ScalaMimeResolver, ScalaSo
 /**
  * Scala AstDfn special functions, which will be enabled in ScalaGlobal
  */
-trait ScalaDfns { self: ScalaGlobal ⇒
+trait ScalaDfns { self: ScalaGlobal =>
 
   object ScalaDfn {
     def apply(symbol: Symbol,
@@ -87,8 +87,8 @@ trait ScalaDfns { self: ScalaGlobal ⇒
         //            }
         if (ref.symbol == symbol) true else {
           symbol match {
-            case me: TermSymbol ⇒ me.referenced == ref.symbol
-            case _ ⇒ false
+            case me: TermSymbol => me.referenced == ref.symbol
+            case _ => false
           }
         }
       } else false
@@ -97,8 +97,8 @@ trait ScalaDfns { self: ScalaGlobal ⇒
     def getDocComment: String = {
       val srcDoc = getDoc.getOrElse(return "")
       TokenHierarchy.get(srcDoc) match {
-        case null ⇒ return ""
-        case th ⇒ ScalaSourceUtil.getDocComment(srcDoc, idOffset(th))
+        case null => return ""
+        case th => ScalaSourceUtil.getDocComment(srcDoc, idOffset(th))
       }
     }
 

@@ -233,14 +233,14 @@ object ScalaTokenId {
     override protected def createTokenCategories: java.util.Map[String, java.util.Collection[TokenId]] = {
       val cats = new java.util.HashMap[String, java.util.Collection[TokenId]]
 
-      for ((name, value) ← values) {
+      for ((name, value) <- values) {
         val category = value.primaryCategory
         val tokenIds = cats.get(category) match {
-          case null ⇒
+          case null =>
             val x = new java.util.ArrayList[TokenId]()
             cats.put(category, x)
             x
-          case x ⇒ x
+          case x => x
         }
         tokenIds.add(value)
       }

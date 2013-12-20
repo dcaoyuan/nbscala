@@ -191,22 +191,22 @@ object PopupUtil {
 
     def eventDispatched(aWTEvent: java.awt.AWTEvent) {
       aWTEvent match {
-        case mv: MouseEvent ⇒
+        case mv: MouseEvent =>
           if (mv.getID == MouseEvent.MOUSE_CLICKED && mv.getClickCount > 0) {
             aWTEvent.getSource match {
-              case comp: Component ⇒
+              case comp: Component =>
                 val par = SwingUtilities.getAncestorNamed(POPUP_NAME, comp) //NOI18N
                 // Container barpar = SwingUtilities.getAncestorOfClass(PopupUtil.class, comp);
                 // if (par eq null && barpar eq null) {
                 if (par eq null) {
                   hidePopup
                 }
-              case _ ⇒
+              case _ =>
                 hidePopup
                 return
             }
           }
-        case _ ⇒
+        case _ =>
       }
     }
 

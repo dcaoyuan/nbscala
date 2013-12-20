@@ -96,8 +96,8 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
 
   override def preCheck: Problem = {
     searchHandle.fo match {
-      case Some(x) if x.isValid ⇒ null
-      case _ ⇒ return new Problem(true, NbBundle.getMessage(classOf[WhereUsedQueryPlugin], "DSC_ElNotAvail")) // NOI18N
+      case Some(x) if x.isValid => null
+      case _ => return new Problem(true, NbBundle.getMessage(classOf[WhereUsedQueryPlugin], "DSC_ElNotAvail")) // NOI18N
     }
   }
 
@@ -105,11 +105,11 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
     val cpInfo = getClasspathInfo(refactoring)
     val set = new HashSet[FileObject]
 
-    handle.fo foreach { fo ⇒
+    handle.fo foreach { fo =>
       set.add(fo)
 
       // * is there any symbol in this place not private?
-      val notLocal = samePlaceSyms exists { x ⇒ !x.hasFlag(Flags.PRIVATE) }
+      val notLocal = samePlaceSyms exists { x => !x.hasFlag(Flags.PRIVATE) }
 
       if (notLocal) {
         val srcCp = cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE)
@@ -192,10 +192,10 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
      } */
 
     if (isFindUsages || isFindDirectSubclassesOnly || isFindOverridingMethods) {
-      (set filter { x ⇒
+      (set filter { x =>
         try {
           BoyerMoore.indexOf(x.asText, targetName) != -1
-        } catch { case _: IOException ⇒ true }
+        } catch { case _: IOException => true }
       }).toSet
     } else set.toSet
   }
@@ -336,11 +336,11 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
        } else*/
 
       if (samePlaceSymToDSimpleSig.isEmpty) {
-        samePlaceSymToDSimpleSig = samePlaceSyms map { case x: global.Symbol ⇒ (x, global.ScalaUtil.symSimpleSig(x)) }
+        samePlaceSymToDSimpleSig = samePlaceSyms map { case x: global.Symbol => (x, global.ScalaUtil.symSimpleSig(x)) }
       }
 
       if (isFindUsages) {
-        global.askForResponse { () ⇒
+        global.askForResponse { () =>
           import global._
 
           def isRef(sym: Symbol) = try {
@@ -348,20 +348,20 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
             val mySig = ScalaUtil.symSimpleSig(sym)
             val myQName = sym.fullName
             samePlaceSymToDSimpleSig exists {
-              case (symx, sigx) if mySig == sigx ⇒
+              case (symx, sigx) if mySig == sigx =>
                 val qNamex = symx.fullName
                 if (myQName == qNamex) true
                 else overriddens exists { _.fullName == qNamex }
-              case _ ⇒ false
+              case _ => false
             }
           } catch {
-            case _: Throwable ⇒ false
+            case _: Throwable => false
           }
 
           val tokens = new HashSet[Token[_]]
           for {
-            (token, items) ← root.idTokenToItems
-            item ← items
+            (token, items) <- root.idTokenToItems
+            item <- items
             sym = item.asInstanceOf[ScalaItem].symbol
             // * tokens.add(token) should be the last condition
             if token.text.toString == targetName && isRef(sym) && tokens.add(token)
@@ -387,14 +387,14 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
           val id = token.id
 
           id.primaryCategory match {
-            case "comment" | "block-comment" ⇒ // NOI18N
+            case "comment" | "block-comment" => // NOI18N
               // search this comment
               assert(targetName ne null)
               val tokenText = token.text
               if ((tokenText ne null) && (targetName ne null)) {
                 TokenUtilities.indexOf(tokenText, targetName) match {
-                  case -1 ⇒
-                  case idx ⇒
+                  case -1 =>
+                  case idx =>
                     val text = tokenText.toString
                     // TODO make sure it's its own word. Technically I could
                     // look at identifier chars like "_" here but since they are
@@ -415,10 +415,10 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
                     }
                 }
               }
-            case _ ⇒
+            case _ =>
               ts.embedded.asInstanceOf[TokenSequence[TokenId]] match {
-                case null ⇒
-                case embedded ⇒ searchTokenSequence(pr, embedded)
+                case null =>
+                case embedded => searchTokenSequence(pr, embedded)
               }
           }
         } while (ts.moveNext)

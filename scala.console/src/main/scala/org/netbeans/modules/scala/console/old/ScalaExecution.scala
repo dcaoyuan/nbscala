@@ -169,7 +169,7 @@ object ScalaExecution {
     val scalaHomeDir = try {
       new File(scalaHome).getCanonicalFile
     } catch {
-      case ex: IOException ⇒ Exceptions.printStackTrace(ex); null
+      case ex: IOException => Exceptions.printStackTrace(ex); null
     }
 
     val scalaLib = new File(scalaHomeDir, "lib") // NOI18N
@@ -221,20 +221,20 @@ object ScalaExecution {
 
   def getJavaHome: String = {
     System.getProperty("scala.java.home") match { // NOI18N
-      case null ⇒ System.getProperty("java.home") // NOI18N
-      case x ⇒ x
+      case null => System.getProperty("java.home") // NOI18N
+      case x => x
     }
   }
 
   def getScalaHome: String = {
     System.getenv("SCALA_HOME") match { // NOI18N
-      case null ⇒
+      case null =>
         val d = new NotifyDescriptor.Message(
           "SCALA_HOME environment variable may not be set, or is invalid.\n" +
             "Please set SCALA_HOME first!", NotifyDescriptor.INFORMATION_MESSAGE)
         DialogDisplayer.getDefault().notify(d)
         null
-      case scalaHome ⇒ System.setProperty("scala.home", scalaHome); scalaHome
+      case scalaHome => System.setProperty("scala.home", scalaHome); scalaHome
     }
   }
 
@@ -256,7 +256,7 @@ object ScalaExecution {
             scalaFo = bin.getFileObject("scala", null) //NOI18N
           }
         } catch {
-          case ex: IOException ⇒ Exceptions.printStackTrace(ex)
+          case ex: IOException => Exceptions.printStackTrace(ex)
         }
       }
     }
@@ -283,12 +283,12 @@ object ScalaExecution {
 
   private def mkClassPath(jarNames: Array[String], dir: File) = {
     val dirPath = dir.getAbsolutePath
-    jarNames map (dirPath + File.separator + _) filter { fileName ⇒
+    jarNames map (dirPath + File.separator + _) filter { fileName =>
       try {
         val file = new File(fileName)
         (file ne null) && file.exists && file.canRead
       } catch {
-        case ex: Throwable ⇒ false
+        case ex: Throwable => false
       }
     } mkString File.pathSeparator
   }
@@ -298,7 +298,7 @@ object ScalaExecution {
     val sb = new StringBuilder()
     val libs = scalaLib.listFiles
 
-    libs filter (_.getName.endsWith("jar")) foreach { lib ⇒
+    libs filter (_.getName.endsWith("jar")) foreach { lib =>
       if (sb.length > 0) sb.append(File.pathSeparatorChar)
       sb.append(lib.getAbsolutePath)
     }
@@ -311,7 +311,7 @@ object ScalaExecution {
       // (:) and filesystem separators, e.g. I might have C:\foo:D:\bar but
       // obviously only the path separator after "foo" should be changed to ;
       var pathOffset = 0
-      extraCp foreach { c ⇒
+      extraCp foreach { c =>
         if (c == ':' && pathOffset != 1) {
           p += File.pathSeparatorChar
           pathOffset = 0

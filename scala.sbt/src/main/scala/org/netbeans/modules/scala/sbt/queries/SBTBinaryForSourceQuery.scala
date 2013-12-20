@@ -25,12 +25,12 @@ class SBTBinaryForSourceQuery(project: Project) extends BinaryForSourceQueryImpl
     x.addPropertyChangeListener(new PropertyChangeListener {
       override def propertyChange(evt: PropertyChangeEvent) {
         evt.getPropertyName match {
-          case SBTResolver.DESCRIPTOR_CHANGE ⇒
+          case SBTResolver.DESCRIPTOR_CHANGE =>
             cache synchronized {
               cache.values foreach (_.fireChange)
               cache.clear
             }
-          case _ ⇒
+          case _ =>
         }
       }
     })

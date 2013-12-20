@@ -119,13 +119,13 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
     }
 
     kind match {
-      case ElementKind.METHOD ⇒
+      case ElementKind.METHOD =>
         setForMethod
         query.checkParameters
-      case ElementKind.MODULE | ElementKind.CLASS ⇒
+      case ElementKind.MODULE | ElementKind.CLASS =>
         setForClass
         query.checkParameters
-      case _ ⇒ null
+      case _ => null
     }
   }
 
@@ -147,13 +147,13 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
 
   def checkParameters: Problem = {
     kind match {
-      case ElementKind.METHOD ⇒
+      case ElementKind.METHOD =>
         setForMethod
         query.fastCheckParameters
-      case ElementKind.CLASS | ElementKind.MODULE ⇒
+      case ElementKind.CLASS | ElementKind.MODULE =>
         setForClass
         query.fastCheckParameters
-      case _ ⇒ null
+      case _ => null
     }
   }
 
@@ -164,14 +164,14 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
   def getDescription: String = {
     if (panel ne null) {
       kind match {
-        case ElementKind.MODULE | ElementKind.CLASS ⇒
+        case ElementKind.MODULE | ElementKind.CLASS =>
           if (!panel.isClassFindUsages)
             if (!panel.isClassSubTypesDirectOnly) {
               return getString("DSC_WhereUsedFindAllSubTypes", name)
             } else {
               return getString("DSC_WhereUsedFindDirectSubTypes", name)
             }
-        case ElementKind.METHOD ⇒
+        case ElementKind.METHOD =>
           var description: String = null
           if (panel.isMethodFindUsages) {
             description = getString("DSC_FindUsages")
@@ -188,7 +188,7 @@ class WhereUsedRefactoringUI(query: WhereUsedQuery, name: String, kind: ElementK
 
           description += " " + getString("DSC_WhereUsedOf", panel.getMethodDeclaringClass + '.' + name) //NOI18N
           return description
-        case _ ⇒
+        case _ =>
       }
     }
 

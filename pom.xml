@@ -229,7 +229,7 @@
                             </goals>
                             <configuration>
                                 <alignParameters>true</alignParameters>
-                                <rewriteArrowSymbols>true</rewriteArrowSymbols>
+                                <rewriteArrowSymbols>false</rewriteArrowSymbols>
                             </configuration>
                         </execution>
                     </executions>

@@ -154,7 +154,7 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
   private def createListModel: ListModel[ElementDescription] = {
     val dlm = new DefaultListModel[ElementDescription]
 
-    for (el ← declarations) {
+    for (el <- declarations) {
       dlm.addElement(el)
     }
 
@@ -170,10 +170,10 @@ class IsOverriddenPopup(caption: String, declarations: List[ElementDescription])
       val c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
 
       value match {
-        case desc: ElementDescription ⇒
+        case desc: ElementDescription =>
           setIcon(desc.getIcon)
           setText(desc.getDisplayName)
-        case _ ⇒
+        case _ =>
       }
 
       c

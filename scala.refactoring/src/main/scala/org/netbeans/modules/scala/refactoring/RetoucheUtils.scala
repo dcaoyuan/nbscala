@@ -148,15 +148,15 @@ object RetoucheUtils {
     try {
       val dob = DataObject.find(pr.getSnapshot.getSource.getFileObject)
       findCloneableEditorSupport(dob)
-    } catch { case ex: DataObjectNotFoundException ⇒ Exceptions.printStackTrace(ex); null }
+    } catch { case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null }
   }
 
   def findCloneableEditorSupport(dob: DataObject): CloneableEditorSupport = {
     dob.getCookie(classOf[org.openide.cookies.OpenCookie]) match {
-      case x: CloneableEditorSupport ⇒ x
-      case _ ⇒ dob.getCookie(classOf[org.openide.cookies.EditorCookie]) match {
-        case x: CloneableEditorSupport ⇒ x
-        case _ ⇒ null
+      case x: CloneableEditorSupport => x
+      case _ => dob.getCookie(classOf[org.openide.cookies.EditorCookie]) match {
+        case x: CloneableEditorSupport => x
+        case _ => null
       }
     }
   }
@@ -164,7 +164,7 @@ object RetoucheUtils {
   def htmlize(input: String): String = {
     try {
       XMLUtil.toElementContent(input)
-    } catch { case cce: CharConversionException ⇒ Exceptions.printStackTrace(cce); input }
+    } catch { case cce: CharConversionException => Exceptions.printStackTrace(cce); input }
   }
 
   //    /** Return the most distant method in the hierarchy that is overriding the given method, or null */
@@ -186,13 +186,13 @@ object RetoucheUtils {
       val token = ts.token
       var category = token.id.name
       var set = settings.getTokenFontColors(category) match {
-        case null ⇒
+        case null =>
           category = token.id.primaryCategory match {
-            case null ⇒ "whitespace" //NOI18N
-            case x ⇒ x
+            case null => "whitespace" //NOI18N
+            case x => x
           }
           settings.getTokenFontColors(category)
-        case x ⇒ x
+        case x => x
       }
       val tokenText = htmlize(token.text.toString)
       sb.append(color(tokenText, set))
@@ -272,10 +272,10 @@ object RetoucheUtils {
       return false
     }
     val opened = OpenProjects.getDefault.getOpenProjects
-    for (i ← 0 until opened.length) {
+    for (i <- 0 until opened.length) {
       if (p.equals(opened(i)) || opened(i).equals(p)) {
         val sgs = ProjectUtils.getSources(p).getSourceGroups(Sources.TYPE_GENERIC)
-        for (j ← 0 until sgs.length) {
+        for (j <- 0 until sgs.length) {
           if (fo == sgs(j).getRootFolder) {
             return true
           }
@@ -317,7 +317,7 @@ object RetoucheUtils {
     var f = try {
       val path = URLDecoder.decode(url.getPath, "utf-8") // NOI18N
       FileUtil.normalizeFile(new File(path))
-    } catch { case ex: UnsupportedEncodingException ⇒ throw new IllegalArgumentException("Cannot create package name for url " + url) } // NOI18N
+    } catch { case ex: UnsupportedEncodingException => throw new IllegalArgumentException("Cannot create package name for url " + url) } // NOI18N
 
     var suffix = ""
     do {
@@ -333,7 +333,7 @@ object RetoucheUtils {
       }
       try {
         suffix = URLDecoder.decode(f.getPath().substring(f.getPath().lastIndexOf(File.separatorChar) + 1), "utf-8") + suffix; // NOI18N
-      } catch { case ex: UnsupportedEncodingException ⇒ throw new IllegalArgumentException("Cannot create package name for url " + url) } // NOI18N
+      } catch { case ex: UnsupportedEncodingException => throw new IllegalArgumentException("Cannot create package name for url " + url) } // NOI18N
 
       f = f.getParentFile
     } while (f != null)
@@ -359,7 +359,7 @@ object RetoucheUtils {
     if (p ne null) {
       val s = ProjectUtils.getSources(p)
       for {
-        g ← s.getSourceGroups(Sources.TYPE_GENERIC)
+        g <- s.getSourceGroups(Sources.TYPE_GENERIC)
         relativePath = FileUtil.getRelativePath(g.getRootFolder, folder)
         if relativePath ne null
       } {
@@ -384,7 +384,7 @@ object RetoucheUtils {
   def getClasspathInfoFor(handles: Array[ScalaItems#ScalaItem]): ClasspathInfo = {
     var result = new Array[FileObject](handles.length)
     var i = 0
-    for (handle ← handles) {
+    for (handle <- handles) {
       val fo = handle.fo
       if (i == 0 && fo == None) {
         result = new Array[FileObject](handles.length + 1)
@@ -401,7 +401,7 @@ object RetoucheUtils {
   def getClasspathInfoFor(files: Array[FileObject], dependencies: Boolean = true, backSource: Boolean = false): ClasspathInfo = {
     assert(files.length > 0)
     val dependentRoots = new HashSet[URL]
-    for (fo ← files) {
+    for (fo <- files) {
       var p: Project = null
       var ownerRoot: FileObject = null
       if (fo ne null) {
@@ -420,7 +420,7 @@ object RetoucheUtils {
         }
 
         val sgs = ProjectResources.getScalaJavaSourceGroups(p)
-        dependentRoots ++= sgs.map(root ⇒ URLMapper.findURL(root.getRootFolder, URLMapper.INTERNAL))
+        dependentRoots ++= sgs.map(root => URLMapper.findURL(root.getRootFolder, URLMapper.INTERNAL))
       } else {
         val srcCps = GlobalPathRegistry.getDefault.getPaths(ClassPath.SOURCE).iterator
         while (srcCps.hasNext) {
@@ -430,7 +430,7 @@ object RetoucheUtils {
     }
 
     if (backSource) {
-      for (fo ← files if fo ne null) {
+      for (fo <- files if fo ne null) {
         val compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
         val entries = compCp.entries.iterator
         while (entries.hasNext) {
@@ -468,9 +468,9 @@ object RetoucheUtils {
         // skip read only source roots
       } else {
         val name = root.getName match {
-          case "vendor" | "script" ⇒ // NOI18N
+          case "vendor" | "script" => // NOI18N
           // skip non-refactorable parts in renaming
-          case _ ⇒ addScalaFiles(files, root)
+          case _ => addScalaFiles(files, root)
         }
       }
     }
@@ -491,9 +491,9 @@ object RetoucheUtils {
         // skip read only source roots
       } else {
         val name = root.getName match {
-          case "vendor" | "script" ⇒ // NOI18N
+          case "vendor" | "script" => // NOI18N
           // skip non-refactorable parts in renaming
-          case _ ⇒ addScalaFiles(files, root)
+          case _ => addScalaFiles(files, root)
         }
       }
     }
@@ -510,15 +510,15 @@ object RetoucheUtils {
   }
 
   def getTopTemplates(scopes: Seq[AstScope], result: ArrayBuffer[AstDfn]) {
-    for (scope ← scopes) {
+    for (scope <- scopes) {
       result ++= (scope.dfns filter {
         _.kind match {
-          case ElementKind.CLASS | ElementKind.MODULE ⇒ true
-          case _ ⇒ false
+          case ElementKind.CLASS | ElementKind.MODULE => true
+          case _ => false
         }
       })
 
-      for (x ← scope.bindingDfn if x.kind == ElementKind.PACKAGE) {
+      for (x <- scope.bindingDfn if x.kind == ElementKind.PACKAGE) {
         getTopTemplates(scope.subScopes, result)
       }
     }

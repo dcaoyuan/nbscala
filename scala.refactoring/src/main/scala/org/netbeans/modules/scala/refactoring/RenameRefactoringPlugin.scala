@@ -146,7 +146,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
             }
           }
         })
-      } catch { case ex: ParseException ⇒ Logger.getLogger(classOf[RenameRefactoringPlugin].getName).log(Level.WARNING, null, ex) }
+      } catch { case ex: ParseException => Logger.getLogger(classOf[RenameRefactoringPlugin].getName).log(Level.WARNING, null, ex) }
     }
   }
 
@@ -315,8 +315,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       return null
     }
     searchHandle.fo match {
-      case Some(x) if x.isValid ⇒ return null
-      case _ ⇒ return new Problem(true, NbBundle.getMessage(classOf[RenameRefactoringPlugin], "DSC_ElNotAvail")) // NOI18N
+      case Some(x) if x.isValid => return null
+      case _ => return new Problem(true, NbBundle.getMessage(classOf[RenameRefactoringPlugin], "DSC_ElNotAvail")) // NOI18N
     }
   }
 
@@ -324,11 +324,11 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
     val cpInfo = getClasspathInfo(refactoring)
     val set = new HashSet[FileObject]
 
-    searchHandle.fo foreach { fo ⇒
+    searchHandle.fo foreach { fo =>
       set.add(fo)
 
       // is there any symbol in this place not private?
-      val notLocal = samePlaceSyms exists { x ⇒ !x.hasFlag(Flags.PRIVATE) }
+      val notLocal = samePlaceSyms exists { x => !x.hasFlag(Flags.PRIVATE) }
       if (notLocal) {
         val srcCp = cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE)
         if (srcCp ne null) {
@@ -337,10 +337,10 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       }
     }
 
-    (set filter { x ⇒
+    (set filter { x =>
       try {
         BoyerMoore.indexOf(x.asText, targetName) != -1
-      } catch { case _: IOException ⇒ true }
+      } catch { case _: IOException => true }
     }).toSet
 
     /*
@@ -435,7 +435,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 
       val results = processFiles(files, transform)
       elements.registerTransaction(new ScalaTransaction(results))
-      for (result ← results) {
+      for (result <- results) {
         val fItr = result.getModifiedFileObjects.iterator
         while (fItr.hasNext) {
           val fo = fItr.next
@@ -489,13 +489,13 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
 
       if (root != ScalaRootScope.EMPTY) {
         val doc = GsfUtilities.getDocument(workingCopyFo, true)
-        global.askForResponse { () ⇒
+        global.askForResponse { () =>
           import global._
           try {
             if (doc ne null) doc.readLock
 
             if (samePlaceSymToDSimpleSig.isEmpty) {
-              samePlaceSymToDSimpleSig = samePlaceSyms map { case x: Symbol ⇒ (x, ScalaUtil.symSimpleSig(x)) }
+              samePlaceSymToDSimpleSig = samePlaceSyms map { case x: Symbol => (x, ScalaUtil.symSimpleSig(x)) }
             }
 
             def isRef(sym: Symbol) = try {
@@ -503,20 +503,20 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
               val mySig = ScalaUtil.symSimpleSig(sym)
               val myQName = sym.fullName
               samePlaceSymToDSimpleSig exists {
-                case (symx, sigx) if mySig == sigx ⇒
+                case (symx, sigx) if mySig == sigx =>
                   val qNamex = symx.fullName
                   if (myQName == qNamex) true
                   else overriddens exists { _.fullName == qNamex }
-                case _ ⇒ false
+                case _ => false
               }
             } catch {
-              case _: Throwable ⇒ false
+              case _: Throwable => false
             }
 
             val tokens = new HashSet[Token[_]]
             for {
-              (token, items) ← root.idTokenToItems
-              item ← items
+              (token, items) <- root.idTokenToItems
+              item <- items
               sym = item.asInstanceOf[ScalaItem].symbol
               // * tokens.add(token) should be last condition
               if token.text.toString == sym.nameString && isRef(sym) && tokens.add(token)
@@ -529,8 +529,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
             if (doc ne null) doc.readUnlock
           }
         } get match {
-          case Left(_) ⇒
-          case Right(_) ⇒
+          case Left(_) =>
+          case Right(_) =>
         }
       } else {
         //System.out.println("Skipping file " + workingCopy.getFileObject());
@@ -601,13 +601,13 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
           val id = token.id
 
           id.primaryCategory match {
-            case "comment" | "block-comment" ⇒ // NOI18N
+            case "comment" | "block-comment" => // NOI18N
               // search this comment
               val tokenText = token.text
               if ((tokenText ne null) && (oldName ne null)) {
                 val index = TokenUtilities.indexOf(tokenText, oldName) match {
-                  case -1 ⇒
-                  case idx ⇒
+                  case -1 =>
+                  case idx =>
                     val text = tokenText.toString
                     // TODO make sure it's its own word. Technically I could
                     // look at identifier chars like "_" here but since they are
@@ -629,10 +629,10 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
                     }
                 }
               }
-            case _ ⇒
+            case _ =>
               ts.embedded.asInstanceOf[TokenSequence[TokenId]] match {
-                case null ⇒
-                case embedded ⇒ searchTokenSequence(embedded)
+                case null =>
+                case embedded => searchTokenSequence(embedded)
               }
           }
         } while (ts.moveNext)
@@ -732,8 +732,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
           }
         }
       } catch {
-        case ex: IOException ⇒ Exceptions.printStackTrace(ex)
-        case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex)
+        case ex: IOException => Exceptions.printStackTrace(ex)
+        case ex: BadLocationException => Exceptions.printStackTrace(ex)
       } finally {
         if (doc ne null) {
           doc.readUnlock

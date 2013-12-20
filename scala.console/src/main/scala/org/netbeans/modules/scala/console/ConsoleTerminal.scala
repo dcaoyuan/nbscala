@@ -60,7 +60,7 @@ class ConsoleCapturer {
     this
   }
 
-  def capture(endAction: EndAction ⇒ Unit) {
+  def capture(endAction: EndAction => Unit) {
     _isCapturing = true
     _endAction = new EndAction {
       // should keep a self copy of of _isHidingOutput as soon as possible to avoid being changed by outside
@@ -116,8 +116,8 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       } else {
         input.lastIndexOf(' ')
       }) match {
-        case -1 ⇒ input.lastIndexOf('\t')
-        case idx ⇒ idx
+        case -1 => input.lastIndexOf('\t')
+        case idx => idx
       }
 
       if (start == -1) {
@@ -305,7 +305,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
    * @return  the last non-teminated line. if it's waiting for user input, this
    *          line.length should > 0 (with at least one char)
    */
-  protected[console] def doFlushWith(isCarryOut: Boolean)(postAction: ⇒ Unit) {
+  protected[console] def doFlushWith(isCarryOut: Boolean)(postAction: => Unit) {
     val text = buf.toString
     buf.delete(0, buf.length)
     val (lines, nonLineTeminatedText) = readLines(text)
@@ -334,7 +334,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
               }
             }
           } catch {
-            case ex: Throwable ⇒ log.log(Level.SEVERE, ex.getMessage, ex)
+            case ex: Throwable => log.log(Level.SEVERE, ex.getMessage, ex)
           }
         }
       })
@@ -352,7 +352,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
               captureEndAction()
             }
           } catch {
-            case ex: Throwable ⇒ log.log(Level.SEVERE, ex.getMessage, ex)
+            case ex: Throwable => log.log(Level.SEVERE, ex.getMessage, ex)
           }
         }
       })
@@ -418,9 +418,9 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     var i = 0
     while (i < len) {
       text.charAt(i) match {
-        case '\b' ⇒
+        case '\b' =>
           backCursor(1)
-        case c ⇒
+        case c =>
           overwrite("" + c, currentStyle)
       }
       i += 1
@@ -456,7 +456,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       doc.remove(start, end - start)
       doc.insertString(start, replacement, currentStyle)
     } catch {
-      case ex: Throwable ⇒ // Ifnore
+      case ex: Throwable => // Ifnore
     }
   }
 
@@ -479,7 +479,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     try {
       doc.getText(line.getStartOffset, line.getEndOffset - line.getStartOffset)
     } catch {
-      case ex: Exception ⇒ ""
+      case ex: Exception => ""
     }
   }
 
@@ -504,7 +504,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     try {
       doc.getText(offset, doc.getLength - offset)
     } catch {
-      case ex: Exception ⇒ ""
+      case ex: Exception => ""
     }
   }
 
@@ -563,7 +563,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
 
   protected def completeSelectedAction(evt: KeyEvent) {
     completer.combo.getSelectedItem match {
-      case selectedText: String ⇒
+      case selectedText: String =>
         val pos = area.getCaretPosition
         if (pos >= 0) {
           val input = getInputingLine
@@ -575,7 +575,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
             }
           }
         }
-      case _ ⇒
+      case _ =>
     }
   }
 
@@ -623,20 +623,20 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       // --- complete visiblilty
       if (completer.popup.isVisible) {
         keyCode match {
-          case VK_TAB ⇒
+          case VK_TAB =>
           // ignore it
-          case VK_UP ⇒
+          case VK_UP =>
             completeUpSelectAction(evt)
-          case VK_DOWN ⇒
+          case VK_DOWN =>
             completeDownSelectAction(evt)
-          case VK_ENTER ⇒
+          case VK_ENTER =>
           // terminalInput process VK_ENTER in keyTyped, so keep completePopup visible here
-          case VK_ESCAPE ⇒
+          case VK_ESCAPE =>
           // terminalInput process VK_ESCAPE in keyTyped, so keep completePopup visible here
-          case _ if isPrintableChar(evt.getKeyChar) ⇒
+          case _ if isPrintableChar(evt.getKeyChar) =>
             // may be under incremental complete
             keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
-          case _ ⇒
+          case _ =>
             if (!(evt.isControlDown || evt.isAltDown || evt.isMetaDown || evt.isShiftDown)) {
               completer.popup.setVisible(false)
             }
@@ -648,13 +648,13 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
 
       // --- evt consumes 
       keyCode match {
-        case VK_C if evt.isMetaDown | evt.isControlDown ⇒ // copy action (@Note Ctrl+A is used to move to line begin)
-        case VK_V if evt.isMetaDown | evt.isControlDown ⇒ // paste action
+        case VK_C if evt.isMetaDown | evt.isControlDown => // copy action (@Note Ctrl+A is used to move to line begin)
+        case VK_V if evt.isMetaDown | evt.isControlDown => // paste action
           // for console, only paste at the end is meaningful. Anyway, just write them to terminalInput dicarding the caret position
           val data = Toolkit.getDefaultToolkit.getSystemClipboard.getData(DataFlavor.stringFlavor).asInstanceOf[String]
           terminalInput.write(data.getBytes("utf-8"))
           evt.consume
-        case _ ⇒
+        case _ =>
           evt.consume
       }
     }
@@ -665,35 +665,35 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
 
       if (completer.popup.isVisible) {
         keyChar match {
-          case VK_TAB ⇒
+          case VK_TAB =>
           // ignore it
 
-          case VK_ENTER ⇒
+          case VK_ENTER =>
             completeSelectedAction(evt)
             completer.popup.setVisible(false)
 
-          case VK_ESCAPE ⇒
+          case VK_ESCAPE =>
             completer.popup.setVisible(false)
 
-          case _ if isPrintableChar(keyChar) ⇒
+          case _ if isPrintableChar(keyChar) =>
             outputCapturer capture completeIncrementalAction
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
 
-          case _ ⇒
+          case _ =>
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
       } else {
         keyChar match {
-          case VK_TAB ⇒
+          case VK_TAB =>
             if (!outputCapturer.isCapturing) {
               outputCapturer.hideOutput capture completePopupAction // do completion
               keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
             }
 
-          case VK_ESCAPE ⇒
+          case VK_ESCAPE =>
           // ignore it. Under sbt console, <escape> followed by <backspace> behaves strange
 
-          case _ ⇒
+          case _ =>
             keyTyped(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
         }
 
@@ -750,20 +750,20 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
     import Ansi._
 
     attribute match {
-      case ATTRIBUTE_CONCEAL_ON ⇒
+      case ATTRIBUTE_CONCEAL_ON =>
       //write("\u001B[8m")
       //concealOn = true
-      case ATTRIBUTE_INTENSITY_BOLD ⇒
+      case ATTRIBUTE_INTENSITY_BOLD =>
         StyleConstants.setBold(term.sequenceStyle, true)
-      case ATTRIBUTE_INTENSITY_NORMAL ⇒
+      case ATTRIBUTE_INTENSITY_NORMAL =>
         StyleConstants.setBold(term.sequenceStyle, false)
-      case ATTRIBUTE_UNDERLINE ⇒
+      case ATTRIBUTE_UNDERLINE =>
         StyleConstants.setUnderline(term.sequenceStyle, true)
-      case ATTRIBUTE_UNDERLINE_OFF ⇒
+      case ATTRIBUTE_UNDERLINE_OFF =>
         StyleConstants.setUnderline(term.sequenceStyle, false)
-      case ATTRIBUTE_NEGATIVE_ON ⇒
-      case ATTRIBUTE_NEGATIVE_Off ⇒
-      case _ ⇒
+      case ATTRIBUTE_NEGATIVE_ON =>
+      case ATTRIBUTE_NEGATIVE_Off =>
+      case _ =>
     }
 
     term.currentStyle = term.sequenceStyle
@@ -790,7 +790,7 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
           } // else no idea now, do nothing
         }
       } catch {
-        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
   }
@@ -805,7 +805,7 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
           area.setCaretPosition(0)
         }
       } catch {
-        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
   }
@@ -826,7 +826,7 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
           area.setCaretPosition(doc.getLength - 1)
         }
       } catch {
-        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
   }
@@ -844,7 +844,7 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
         val toPos = math.min(toLine.getStartOffset + col, toLine.getEndOffset - 1)
         area.setCaretPosition(toPos)
       } catch {
-        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
   }
@@ -862,7 +862,7 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
         val toPos = math.min(toLine.getStartOffset + col, toLine.getEndOffset - 1)
         area.setCaretPosition(toPos)
       } catch {
-        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
   }
@@ -874,31 +874,31 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
    */
   override protected def processEraseScreen(eraseOption: Int) {
     eraseOption match {
-      case 0 ⇒
+      case 0 =>
         term.doFlushWith(false) {
           try {
             val pos = area.getCaretPosition
             doc.remove(pos, doc.getLength - pos)
           } catch {
-            case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+            case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
           }
         }
-      case _ ⇒
+      case _ =>
     }
   }
 
   override protected def processEraseLine(eraseOption: Int) {
     eraseOption match {
-      case 0 ⇒
+      case 0 =>
         term.doFlushWith(false) {
           try {
             val pos = area.getCaretPosition
             doc.remove(pos, doc.getLength - pos)
           } catch {
-            case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+            case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
           }
         }
-      case _ ⇒
+      case _ =>
     }
   }
 
@@ -915,7 +915,7 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
         val report = "\u001b[" + screenRow + ";" + screenCol + "R"
         term.terminalInput.write(report.getBytes("utf-8"))
       } catch {
-        case ex: Throwable ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+        case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
       }
     }
   }
@@ -943,7 +943,7 @@ object AnsiConsoleOutputStream {
         val li = doc.getDefaultRootElement.getElement(line)
         doc.insertString(li.getStartOffset, " ", li.getAttributes)
       } catch {
-        case ex: Exception ⇒ log.warning(ex.getMessage)
+        case ex: Exception => log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -965,7 +965,7 @@ object AnsiConsoleOutputStream {
           doc.remove(li.getStartOffset, 1)
         }
       } catch {
-        case ex: Exception ⇒ log.warning(ex.getMessage)
+        case ex: Exception => log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -986,7 +986,7 @@ object AnsiConsoleOutputStream {
         val li = doc.getDefaultRootElement.getElement(line);
         doc.insertString(li.getStartOffset, "//", li.getAttributes)
       } catch {
-        case ex: Exception ⇒ log.warning(ex.getMessage)
+        case ex: Exception => log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -1010,7 +1010,7 @@ object AnsiConsoleOutputStream {
           }
         }
       } catch {
-        case ex: Exception ⇒ log.warning(ex.getMessage)
+        case ex: Exception => log.warning(ex.getMessage)
       }
       line += 1
     }
@@ -1054,9 +1054,9 @@ object AnsiConsoleOutputStream {
   def getLineOffsetOfPos(doc: Document, pos: Int): (Int, Int) = {
     // a document is modelled as a list of lines (Element)=> index = line number
     val line = doc match {
-      case sDoc: StyledDocument ⇒
+      case sDoc: StyledDocument =>
         sDoc.getParagraphElement(pos)
-      case _ ⇒
+      case _ =>
         val root = doc.getDefaultRootElement
         val lineIdx = root.getElementIndex(pos)
         root.getElement(lineIdx)
@@ -1084,7 +1084,7 @@ object AnsiConsoleOutputStream {
     try {
       doc.getText(line.getStartOffset, line.getEndOffset - line.getStartOffset)
     } catch {
-      case ex: Exception ⇒ null
+      case ex: Exception => null
     }
   }
 
@@ -1097,7 +1097,7 @@ object AnsiConsoleOutputStream {
     try {
       doc.getText(line.getStartOffset, pos - line.getStartOffset)
     } catch {
-      case ex: Exception ⇒ null
+      case ex: Exception => null
     }
   }
 
@@ -1111,7 +1111,7 @@ object AnsiConsoleOutputStream {
     try {
       doc.getText(lineElt.getStartOffset, lineElt.getEndOffset - lineElt.getStartOffset)
     } catch {
-      case ex: Exception ⇒ null
+      case ex: Exception => null
     }
   }
 
@@ -1144,7 +1144,7 @@ object AnsiConsoleOutputStream {
       //textPane.requestFocus(); // to make the selection visible
 
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
     }
   }
 
@@ -1156,17 +1156,17 @@ object AnsiConsoleOutputStream {
     // look if a parent exists, this is only the case IF the text pane has been added in a scrollpane
     if (tp.getParent == null) return
     tp.getParent match {
-      case null ⇒ return
-      case vp: JViewport ⇒
+      case null => return
+      case vp: JViewport =>
         try {
           val pt = tp.modelToView(pos)
           var h = (pt.getY - vp.getHeight / 4).toInt
           if (h < 0) h = 0
           vp.setViewPosition(new Point(0, h))
         } catch {
-          case ex: Exception ⇒ log.warning(ex.getMessage)
+          case ex: Exception => log.warning(ex.getMessage)
         }
-      case _ ⇒
+      case _ =>
         new Throwable("parent of textpane is not a viewport !").printStackTrace
     }
   }
@@ -1181,7 +1181,7 @@ object AnsiConsoleOutputStream {
       val pt2 = new Point((pt1.getX + dim.getWidth).toInt, (pt1.getY + dim.getHeight).toInt)
       pos(1) = textPane.viewToModel(pt2)
     } catch {
-      case ex: Exception ⇒ log.warning(ex.getMessage)
+      case ex: Exception => log.warning(ex.getMessage)
     }
     pos
   }
@@ -1200,7 +1200,7 @@ object AnsiConsoleOutputStream {
       if (pos > doc.getLength) return doc.getLength
       pos
     } catch {
-      case ex: Exception ⇒ throw new RuntimeException(ex)
+      case ex: Exception => throw new RuntimeException(ex)
     }
   }
 }

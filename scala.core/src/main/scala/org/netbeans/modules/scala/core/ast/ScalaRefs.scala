@@ -53,7 +53,7 @@ import org.openide.filesystems.FileObject
  *
  * @author Caoyuan Deng
  */
-trait ScalaRefs { self: ScalaGlobal ⇒
+trait ScalaRefs { self: ScalaGlobal =>
 
   object ScalaRef {
     def apply(symbol: Symbol, idToken: Token[TokenId], kind: ElementKind, fo: Option[FileObject]) = {

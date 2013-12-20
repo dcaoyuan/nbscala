@@ -119,7 +119,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
     val root = FileUtil.toFileObject(sourceRoot)
     val timeStamps = TimeStamps.forRoot(root.toURL, false)
 
-    for (file ← files) {
+    for (file <- files) {
       val fo = FileUtil.toFileObject(file)
       // JavaIndexer tends to reindex all dependent (via VirtualSources calculating) files
       // when dependee source file is modified, it's not neccessary for VirtualSource in my opinion,
@@ -157,7 +157,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
 
         private def visit(tmpls: ArrayBuffer[ScalaDfns#ScalaDfn])(scope: AstScope) {
           for {
-            dfn ← scope.dfns
+            dfn <- scope.dfns
             kind = dfn.getKind if kind == ElementKind.CLASS || kind == ElementKind.MODULE
           } {
             tmpls += dfn.asInstanceOf[ScalaDfns#ScalaDfn]
@@ -168,7 +168,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
 
         private def process(globalx: ScalaGlobal, tmpls: List[ScalaDfns#ScalaDfn]) = {
           tmpls match {
-            case Nil ⇒
+            case Nil =>
               // * source is probably broken and there is no AST
               // * let's generate empty Java stub with simple name equal to file name
               var pkg = FileUtil.getRelativePath(srcRootFileObj, fo.getParent)
@@ -183,8 +183,8 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                 //@Todo diable result add till we get everything ok
                 //result.add(file, pkg, file.getName(), sb.toString());
               }
-            case _ ⇒
-              globalx.askForResponse { () ⇒
+            case _ =>
+              globalx.askForResponse { () =>
                 val generator = new JavaStubGenerator { val global: globalx.type = globalx }
                 import globalx._
 
@@ -192,13 +192,13 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                 val clzNameToSyms = new HashMap[String, Array[Symbol]] // clzName -> (class, object, trait)
 
                 for {
-                  tmpl ← tmpls
+                  tmpl <- tmpls
                   sym = tmpl.symbol.asInstanceOf[Symbol] if sym != NoSymbol // avoid strange file name, for example: <error: class ActorProxy>.java
                   symSName = sym.nameString if symSName.length > 0 && symSName.charAt(0) != '<' // @todo <any>
                 } {
                   val clzName = generator.classSName(sym)
                   val syms = clzNameToSyms.getOrElse(clzName, emptySyms) match {
-                    case Array(c, o, t) ⇒
+                    case Array(c, o, t) =>
                       if (sym.isTrait) { // isTrait also isClass, so determine trait before class
                         Array(c, o, sym)
                       } else if (sym.isModule) { // object
@@ -211,34 +211,34 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                   clzNameToSyms += (clzName -> syms)
                 }
 
-                for ((clzName, syms) ← clzNameToSyms) {
+                for ((clzName, syms) <- clzNameToSyms) {
                   try {
                     val pkgQName = syms find (_ ne null) match {
-                      case Some(sym) ⇒ sym.enclosingPackage match {
-                        case null ⇒ ""
-                        case packaging ⇒ packaging.fullName match {
-                          case "<empty>" ⇒ ""
-                          case x ⇒ x
+                      case Some(sym) => sym.enclosingPackage match {
+                        case null => ""
+                        case packaging => packaging.fullName match {
+                          case "<empty>" => ""
+                          case x => x
                         }
                       }
-                      case _ ⇒ ""
+                      case _ => ""
                     }
 
                     val javaStub = generator.genClass(pkgQName, clzName, syms)
 
                     result.add(FileUtil.toFile(fo), pkgQName, clzName, javaStub)
                   } catch {
-                    case ex: FileNotFoundException ⇒ Exceptions.printStackTrace(ex)
+                    case ex: FileNotFoundException => Exceptions.printStackTrace(ex)
                   }
                 }
 
               } get match {
-                case Left(_) ⇒
-                case Right(ex) ⇒ log.log(Level.WARNING, ex.getMessage, ex)
+                case Left(_) =>
+                case Right(ex) => log.log(Level.WARNING, ex.getMessage, ex)
               }
           }
         }
       })
-    } catch { case ex: ParseException ⇒ Exceptions.printStackTrace(ex) }
+    } catch { case ex: ParseException => Exceptions.printStackTrace(ex) }
   }
 }

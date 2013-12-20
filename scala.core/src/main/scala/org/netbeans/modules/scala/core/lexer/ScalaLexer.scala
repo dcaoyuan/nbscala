@@ -92,7 +92,7 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
     }
 
     st.tokenStream match {
-      case tokenInfo @ TokenInfo(len, id) :: tail ⇒
+      case tokenInfo @ TokenInfo(len, id) :: tail =>
         // shift tokenStream
         st.tokenStream = tail
 
@@ -127,15 +127,15 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
         assert(readLen > 0, "Token's read length " + readLen + " should > 0: " + tokenInfo)
         createToken(id, readLen)
 
-      case Nil ⇒
+      case Nil =>
         assert(false, "unrecognized input: " + input.read.toChar)
         null
     }
   }
 
   private def createToken(id: ScalaTokenId, tokenLen: Int): Token[TokenId] = id.fixedText match {
-    case null ⇒ tokenFactory.createToken(id, tokenLen)
-    case fixedText ⇒ tokenFactory.getFlyweightToken(id, fixedText)
+    case null => tokenFactory.createToken(id, tokenLen)
+    case fixedText => tokenFactory.getFlyweightToken(id, fixedText)
   }
 
   private def reScanTokens: List[TokenInfo] = {
@@ -156,7 +156,7 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
         Nil
       }
     } catch {
-      case ex: Exception ⇒ log.log(Level.SEVERE, ex.getMessage, ex); Nil
+      case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex); Nil
     }
 
     tokens.reverse
@@ -186,17 +186,17 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
       var i = 0
       while (i < size) {
         node.get(i) match {
-          case null ⇒ // child may be null
-          case child: GNode ⇒
+          case null => // child may be null
+          case child: GNode =>
             tokens = flattenTokens(child, tokens)
-          case child: Pair[_] ⇒
+          case child: Pair[_] =>
             assert(false, "Pair:" + child + " to be process, do you add 'flatten' option on grammar file?")
-          case child: String ⇒
+          case child: String =>
             val length = child.length
             val id = ScalaTokenId.tokenIdOf(node.getName).getOrElse(ScalaTokenId.IGNORED)
             val tokenInfo = TokenInfo(length, id)
             tokens ::= tokenInfo
-          case child ⇒
+          case child =>
             log.warning("To be process: " + child)
         }
         i += 1
@@ -221,8 +221,8 @@ object ScalaLexer {
    */
   private class LexerInputReader(input: LexerInput) extends Reader {
     override def read: Int = input.read match {
-      case LexerInput.EOF ⇒ -1
-      case c ⇒ c
+      case LexerInput.EOF => -1
+      case c => c
     }
 
     override def read(cbuf: Array[Char], off: Int, len: Int): Int = {

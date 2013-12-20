@@ -57,7 +57,7 @@ import org.netbeans.modules.scala.core.ScalaGlobal
  *
  * @author Caoyuan Deng
  */
-trait JavaElements { self: ScalaGlobal ⇒
+trait JavaElements { self: ScalaGlobal =>
 
   object JavaElement {
     def apply(element: org.netbeans.api.java.source.ElementHandle[_]) = {
@@ -111,11 +111,11 @@ trait JavaElements { self: ScalaGlobal ⇒
 
     def getKind: ElementKind = {
       element.getKind match {
-        case javax.lang.model.element.ElementKind.PACKAGE ⇒ ElementKind.PACKAGE
-        case javax.lang.model.element.ElementKind.CLASS ⇒ ElementKind.CLASS
-        case javax.lang.model.element.ElementKind.INTERFACE ⇒ ElementKind.MODULE
-        case javax.lang.model.element.ElementKind.METHOD ⇒ ElementKind.METHOD
-        case _ ⇒ ElementKind.OTHER
+        case javax.lang.model.element.ElementKind.PACKAGE => ElementKind.PACKAGE
+        case javax.lang.model.element.ElementKind.CLASS => ElementKind.CLASS
+        case javax.lang.model.element.ElementKind.INTERFACE => ElementKind.MODULE
+        case javax.lang.model.element.ElementKind.METHOD => ElementKind.METHOD
+        case _ => ElementKind.OTHER
       }
     }
 

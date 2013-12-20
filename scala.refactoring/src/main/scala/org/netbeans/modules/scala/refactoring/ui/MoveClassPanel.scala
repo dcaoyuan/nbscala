@@ -122,7 +122,7 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
 
   def initValues(preselectedFolder: String) {
 
-    val openProjects = OpenProjects.getDefault.getOpenProjects sortWith { (p1, p2) ⇒
+    val openProjects = OpenProjects.getDefault.getOpenProjects sortWith { (p1, p2) =>
       Collator.getInstance.compare(ProjectUtils.getInformation(p1).getDisplayName,
         ProjectUtils.getInformation(p2).getDisplayName) > 0
     }
@@ -331,14 +331,14 @@ class MoveClassPanel(parent: ChangeListener, startPackage: String, headLine: Str
     }
 
     var preselectedItem = 0
-    for (i ← 0 until groups.length) {
+    for (i <- 0 until groups.length) {
       if (fo ne null) {
         try {
           if (groups(i).contains(fo)) {
             preselectedItem = i
           }
         } catch {
-          case e: IllegalArgumentException ⇒
+          case e: IllegalArgumentException =>
           // XXX this is a poor abuse of exception handling
         }
       }

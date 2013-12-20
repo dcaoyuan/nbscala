@@ -128,7 +128,7 @@ object JavaSourceUtil {
   }
 
   private def findNextUpper(text: String, offset: Int): Int = {
-    for (i ← offset until text.length) {
+    for (i <- offset until text.length) {
       if (Character.isUpperCase(text.charAt(i))) {
         return i
       }
@@ -171,8 +171,8 @@ object JavaSourceUtil {
 
   def getCompilationInfoForScalaFile(fo: FileObject): CompilationInfo = {
     var info = scalaFileToJavaCompilationInfo.get(fo) match {
-      case null ⇒ null
-      case ref ⇒ ref.get
+      case null => null
+      case ref => ref.get
     }
 
     if (info eq null) {
@@ -187,7 +187,7 @@ object JavaSourceUtil {
             javaControllers(0) = controller
           }
         }, true)
-      } catch { case ex: IOException ⇒ Exceptions.printStackTrace(ex) }
+      } catch { case ex: IOException => Exceptions.printStackTrace(ex) }
 
       info = javaControllers(0)
       //scalaFileToJavaCompilationInfo.put(fo, new WeakReference<CompilationInfo>(info));
@@ -223,8 +223,8 @@ object JavaSourceUtil {
   def getDocComment(info: CompilationInfo, e: Element): String = {
     // to resolve javadoc, only needs Phase.ELEMENT_RESOLVED, and we have reached when create info
     info.getElementUtilities.javaDocFor(e) match {
-      case null ⇒ ""
-      case javaDoc ⇒ javaDoc.getRawCommentText
+      case null => ""
+      case javaDoc => javaDoc.getRawCommentText
     }
   }
 
@@ -234,8 +234,8 @@ object JavaSourceUtil {
   def getOriginFileObject(info: CompilationInfo, e: Element): Option[FileObject] = {
     val handle = ElementHandle.create(e)
     SourceUtils.getFile(handle, info.getClasspathInfo) match {
-      case null ⇒ None
-      case x ⇒ Some(x)
+      case null => None
+      case x => Some(x)
     }
   }
 
@@ -276,7 +276,7 @@ object JavaSourceUtil {
           }
         }
       }, true)
-    } catch { case ex: IOException ⇒ Exceptions.printStackTrace(ex) }
+    } catch { case ex: IOException => Exceptions.printStackTrace(ex) }
 
     offset(0)
   }
@@ -286,8 +286,8 @@ object JavaSourceUtil {
     val sName = sym.nameString
     val typeQName = sym.enclClass.fullName
     val te: TypeElement = theElements.getTypeElement(typeQName) match {
-      case null ⇒ null
-      case namedTe ⇒
+      case null => null
+      case namedTe =>
         if (sym.isClass || sym.isTrait || sym.isModule) {
           return Some(namedTe)
         }
@@ -303,27 +303,27 @@ object JavaSourceUtil {
       val element = itr.next
       if (element.getSimpleName.toString.equals(sName)) {
         element.getKind match {
-          case ElementKind.METHOD ⇒ element match {
-            case ee: ExecutableElement ⇒
+          case ElementKind.METHOD => element match {
+            case ee: ExecutableElement =>
               val params1 = ee.getParameters
               val params2 = try {
                 sym.tpe.paramTypes
               } catch {
-                case _: Throwable ⇒ /**@todo reset global */ Nil
+                case _: Throwable => /**@todo reset global */ Nil
               }
               if (params1.size == params2.size) {
                 var i = 0
-                for (param2 ← params2) {
+                for (param2 <- params2) {
                   val param1 = params1.get(i).asType
                   i += 1
                   // @todo compare param's type, should convert primary type between Java and Scala
                 }
                 return Some(element)
               }
-            case _ ⇒
+            case _ =>
           }
-          case ElementKind.FIELD ⇒ return Some(element)
-          case _ ⇒
+          case ElementKind.FIELD => return Some(element)
+          case _ =>
         }
       }
     }

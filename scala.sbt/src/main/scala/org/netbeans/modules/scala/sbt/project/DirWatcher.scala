@@ -29,17 +29,17 @@ class DirWatcher(fileName: String) extends TimerTask {
 
     try {
       for {
-        folder ← folders
+        folder <- folders
         file = folder.getFileObject(fileName) if file != null
       } {
         file.lastModified.getTime match {
-          case NOT_SURE ⇒
-          case time ⇒ fileToTime(file) = time
+          case NOT_SURE =>
+          case time => fileToTime(file) = time
         }
       }
 
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
     }
 
     fileToTime
@@ -53,17 +53,17 @@ class DirWatcher(fileName: String) extends TimerTask {
     val newFileToTime = scanFiles
 
     val checkedFiles = mutable.Set[FileObject]()
-    for (file ← newFileToTime.keys) {
+    for (file <- newFileToTime.keys) {
       checkedFiles += file
 
       fileToLastModified.get(file) match {
-        case None ⇒ // new file
-          for (newTime ← newFileToTime.get(file)) {
+        case None => // new file
+          for (newTime <- newFileToTime.get(file)) {
             fileToLastModified(file) = newTime
             fireChange(FileAdded(file, newTime))
           }
-        case Some(oldTime) ⇒ // modified file
-          for (newTime ← newFileToTime.get(file)) {
+        case Some(oldTime) => // modified file
+          for (newTime <- newFileToTime.get(file)) {
             if (oldTime < newTime) {
               fileToLastModified(file) = newTime
               fireChange(FileModified(file, newTime))
@@ -76,7 +76,7 @@ class DirWatcher(fileName: String) extends TimerTask {
 
     // deleted files
     val deletedFiles = fileToLastModified -- checkedFiles
-    for ((file, time) ← deletedFiles) {
+    for ((file, time) <- deletedFiles) {
       fileToLastModified -= file
       fireChange(FileDeleted(file, time))
     }

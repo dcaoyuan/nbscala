@@ -115,8 +115,8 @@ object FmtOptions {
   def getKitClass: Class[_ <: EditorKit] = {
     if (kitClass eq null) {
       kitClass = MimeLookup.getLookup(MimePath.get(mimePath)).lookup(classOf[EditorKit]) match {
-        case null ⇒ classOf[EditorKit]
-        case kit ⇒ kit.getClass.asInstanceOf[Class[EditorKit]]
+        case null => classOf[EditorKit]
+        case kit => kit.getClass.asInstanceOf[Class[EditorKit]]
       }
     }
     kitClass
@@ -128,8 +128,8 @@ object FmtOptions {
    */
   def getEditorKit(mimePath: String): EditorKit = {
     val kit = MimeLookup.getLookup(MimePath.parse(mimePath)).lookup(classOf[EditorKit]) match {
-      case null ⇒ MimeLookup.getLookup(MimePath.parse("text/plain")).lookup(classOf[EditorKit])
-      case x ⇒ x
+      case null => MimeLookup.getLookup(MimePath.parse("text/plain")).lookup(classOf[EditorKit])
+      case x => x
     }
 
     // * Don't use the prototype instance straightaway
@@ -139,7 +139,7 @@ object FmtOptions {
   def flush {
     try {
       getPreferences.flush
-    } catch { case e: BackingStoreException ⇒ Exceptions.printStackTrace(e) }
+    } catch { case e: BackingStoreException => Exceptions.printStackTrace(e) }
   }
 
   def getCurrentProfileId: String = {
@@ -157,7 +157,7 @@ object FmtOptions {
     try {
       value.toInt
       true
-    } catch { case e: NumberFormatException ⇒ false }
+    } catch { case e: NumberFormatException => false }
   }
 
   def getLastValue(optionID: String): String = {
@@ -207,7 +207,7 @@ object FmtOptions {
 
     // * Initialize the preview preferences
     val forcedPrefs = new PreviewPreferences
-    forcedOptions foreach { option ⇒ forcedPrefs.put(option(0), option(1)) }
+    forcedOptions foreach { option => forcedPrefs.put(option(0), option(1)) }
     val previewPrefs = new ProxyPreferences(preferences, forcedPrefs)
 
     // * Load and hook up all the components
@@ -248,7 +248,7 @@ object FmtOptions {
       try {
         val rm = previewPrefs.getInt(SimpleValueNames.TEXT_LIMIT_WIDTH, getDefaultAsInt(SimpleValueNames.TEXT_LIMIT_WIDTH))
         jep.putClientProperty("TextLimitLine", rm) //NOI18N
-      } catch { case e: NumberFormatException ⇒ }
+      } catch { case e: NumberFormatException => }
 
       var rm = 30
       try {
@@ -270,7 +270,7 @@ object FmtOptions {
         }
 
         //pane.putClientProperty("TextLimitLine", rm); // NOI18N
-      } catch { case e: NumberFormatException ⇒ }
+      } catch { case e: NumberFormatException => }
 
       jep.setIgnoreRepaint(true)
       jep.setText(previewText)
@@ -314,25 +314,25 @@ object FmtOptions {
 
     private def performOperation(operation: Int, jc: JComponent, optionID: String, p: Preferences) {
       operation match {
-        case LOAD ⇒ loadData(jc, optionID, p)
-        case STORE ⇒ storeData(jc, optionID, p)
-        case ADD_LISTENERS ⇒ addListener(jc)
-        case _ ⇒
+        case LOAD => loadData(jc, optionID, p)
+        case STORE => storeData(jc, optionID, p)
+        case ADD_LISTENERS => addListener(jc)
+        case _ =>
       }
     }
 
     private def scan(what: Int, p: Preferences) {
-      for (jc ← components) {
+      for (jc <- components) {
         jc.getClientProperty(OPTION_ID) match {
-          case x: String ⇒ performOperation(what, jc, x, p)
-          case xs: Array[String] ⇒ xs foreach { performOperation(what, jc, _, p) }
-          case _ ⇒
+          case x: String => performOperation(what, jc, x, p)
+          case xs: Array[String] => xs foreach { performOperation(what, jc, _, p) }
+          case _ =>
         }
       }
     }
 
     private def scan(container: Container, components: ArrayBuffer[JComponent]) {
-      container.getComponents foreach { c ⇒
+      container.getComponents foreach { c =>
         if (c.isInstanceOf[JComponent]) {
           val jc = c.asInstanceOf[JComponent]
           val o = jc.getClientProperty(OPTION_ID)
@@ -351,34 +351,34 @@ object FmtOptions {
      */
     private def loadData(jc: JComponent, optionID: String, node: Preferences) {
       jc match {
-        case field: JTextField ⇒
+        case field: JTextField =>
           field.setText(node.get(optionID, getDefaultAsString(optionID)))
 
-        case checkBox: JCheckBox ⇒
+        case checkBox: JCheckBox =>
           val df = getDefaultAsBoolean(optionID)
           checkBox.setSelected(node.getBoolean(optionID, df))
 
-        case cb: JComboBox[_] ⇒
+        case cb: JComboBox[_] =>
           val value = node.get(optionID, getDefaultAsString(optionID))
           val model = createModel(value)
           cb.asInstanceOf[JComboBox[ComboItem]].setModel(model)
           val item = whichItem(value, model)
           cb.setSelectedItem(item)
 
-        case _ ⇒
+        case _ =>
       }
     }
 
     private def storeData(jc: JComponent, optionID: String, node: Preferences) {
       jc match {
-        case field: JTextField ⇒
+        case field: JTextField =>
           val text = field.getText
 
           // * test for numbers
           if (isInteger(optionID)) {
             try {
               text.toInt
-            } catch { case e: NumberFormatException ⇒ return }
+            } catch { case e: NumberFormatException => return }
           }
 
           // * watch out, tabSize, spacesPerTab, indentSize and expandTabToSpaces
@@ -394,36 +394,36 @@ object FmtOptions {
             node.put(optionID, text)
           }
 
-        case checkBox: JCheckBox ⇒
+        case checkBox: JCheckBox =>
           if (!optionID.equals(expandTabToSpaces) && getDefaultAsBoolean(optionID) == checkBox.isSelected)
             node.remove(optionID)
           else
             node.putBoolean(optionID, checkBox.isSelected)
 
-        case comboBox: JComboBox[_] ⇒
+        case comboBox: JComboBox[_] =>
           val value = comboBox.getSelectedItem.asInstanceOf[ComboItem].value
           if (getDefaultAsString(optionID).equals(value))
             node.remove(optionID)
           else
             node.put(optionID, value)
 
-        case _ ⇒
+        case _ =>
       }
     }
 
     private def addListener(jc: JComponent) {
       jc match {
-        case field: JTextField ⇒
+        case field: JTextField =>
           field.addActionListener(this)
           field.getDocument.addDocumentListener(this)
 
-        case checkBox: JCheckBox ⇒
+        case checkBox: JCheckBox =>
           checkBox.addActionListener(this)
 
-        case cb: JComboBox[_] ⇒
+        case cb: JComboBox[_] =>
           cb.addActionListener(this)
 
-        case _ ⇒
+        case _ =>
       }
     }
 
@@ -454,7 +454,7 @@ object FmtOptions {
     }
 
     private def whichItem(value: String, model: ComboBoxModel[ComboItem]): ComboItem = {
-      for (i ← 0 until model.getSize) {
+      for (i <- 0 until model.getSize) {
         val item = model.getElementAt(i).asInstanceOf[ComboItem]
         if (value.equals(item.value)) {
           return item
@@ -489,7 +489,7 @@ object FmtOptions {
     def create(preferences: Preferences): PreferencesCustomizer = {
       try {
         new Customizer(preferences, id, panelClass.newInstance, previewText, forcedOptions: _*)
-      } catch { case e: Exception ⇒ null }
+      } catch { case e: Exception => null }
     }
   } // End of CategorySupport.Factory class
 
@@ -566,7 +566,7 @@ object FmtOptions {
     @throws(classOf[BackingStoreException])
     protected def keysSpi: Array[String] = {
       var keys = Set[String]()
-      for (p ← delegates) {
+      for (p <- delegates) {
         keys ++= p.keys
       }
       keys.toArray

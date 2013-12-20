@@ -98,8 +98,8 @@ class IsOverriddenAnnotationAction extends AbstractAction {
   private def getFile(component: JTextComponent): FileObject = {
     val doc = component.getDocument
     doc.getProperty(Document.StreamDescriptionProperty) match {
-      case null ⇒ null
-      case od: DataObject ⇒ od.getPrimaryFile
+      case null => null
+      case od: DataObject => od.getPrimaryFile
     }
   }
 
@@ -118,15 +118,15 @@ class IsOverriddenAnnotationAction extends AbstractAction {
       return null
     }
 
-    ah.getAnnotations find (x ⇒ x.getPosition.getOffset == offset && x.getShortDescription == desc.getShortDescription) match {
-      case Some(x) ⇒ x
-      case _ ⇒ null
+    ah.getAnnotations find (x => x.getPosition.getOffset == offset && x.getShortDescription == desc.getShortDescription) match {
+      case Some(x) => x
+      case _ => null
     }
   }
 
   def invokeDefaultAction(comp: JTextComponent): Boolean = {
     comp.getDocument match {
-      case doc: BaseDocument ⇒
+      case doc: BaseDocument =>
         val currentPosition = comp.getCaretPosition
         val annotations = doc.getAnnotations
         val annotation = new Array[IsOverriddenAnnotation](1)
@@ -140,7 +140,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
               val desc = annotations.getActiveAnnotation(line)
               p(0) = comp.modelToView(startOffset).getLocation
               annotation(0) = findAnnotation(comp, desc, startOffset)
-            } catch { case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex) }
+            } catch { case ex: BadLocationException => Exceptions.printStackTrace(ex) }
           }
         })
 
@@ -151,7 +151,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
         annotation(0).mouseClicked(comp, p(0))
 
         true
-      case _ ⇒ false
+      case _ => false
     }
   }
 

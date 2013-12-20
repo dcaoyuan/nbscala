@@ -152,8 +152,8 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
     try {
       refactoring.setTarget(Lookups.singleton(new URL(url.toExternalForm + URLEncoder.encode(panel.getPackageName.replace('.', '/'), "utf-8")))) // NOI18N
     } catch {
-      case ex: UnsupportedEncodingException ⇒ Exceptions.printStackTrace(ex)
-      case ex: MalformedURLException ⇒ Exceptions.printStackTrace(ex)
+      case ex: UnsupportedEncodingException => Exceptions.printStackTrace(ex)
+      case ex: MalformedURLException => Exceptions.printStackTrace(ex)
     }
 
     if (checkOnly) {
@@ -193,16 +193,16 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
       if (VisibilityQuery.getDefault.isVisible(f)) {
         try {
           DataObject.find(f) match {
-            case null ⇒
-            case df: DataFolder ⇒
-              for (o ← df.getChildren) {
+            case null =>
+            case df: DataFolder =>
+              for (o <- df.getChildren) {
                 q = o.getPrimaryFile :: q
               }
-            case d ⇒ result.add(d.getNodeDelegate)
+            case d => result.add(d.getNodeDelegate)
 
           }
         } catch {
-          case ex: DataObjectNotFoundException ⇒ ex.printStackTrace
+          case ex: DataObjectNotFoundException => ex.printStackTrace
         }
 
       }

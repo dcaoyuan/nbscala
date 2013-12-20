@@ -100,7 +100,7 @@ abstract class ScalaRefactoringPlugin extends ProgressProviderAdapter with Refac
 
   protected def getClasspathInfo(refactoring: AbstractRefactoring): ClasspathInfo = {
     refactoring.getContext.lookup(classOf[ClasspathInfo]) match {
-      case null ⇒
+      case null =>
         val handles = refactoring.getRefactoringSource.lookupAll(classOf[ScalaItems#ScalaItem])
         val cpInfo = if (!handles.isEmpty) {
           RetoucheUtils.getClasspathInfoFor(handles.toArray(new Array[ScalaItems#ScalaItem](handles.size)))
@@ -110,19 +110,19 @@ abstract class ScalaRefactoringPlugin extends ProgressProviderAdapter with Refac
         refactoring.getContext.add(cpInfo)
 
         cpInfo
-      case x ⇒ x
+      case x => x
     }
   }
 
   protected def processFiles(fos: Set[FileObject], task: TransformTask): Seq[ModificationResult] = {
     val sources = new java.util.HashSet[Source](2 * fos.size)
 
-    for (fo ← fos if RetoucheUtils.isScalaFile(fo)) sources.add(Source.create(fo))
+    for (fo <- fos if RetoucheUtils.isScalaFile(fo)) sources.add(Source.create(fo))
 
     try {
       ParserManager.parse(sources, task)
       return task.results
-    } catch { case ex: ParseException ⇒ throw new RuntimeException(ex) }
+    } catch { case ex: ParseException => throw new RuntimeException(ex) }
   }
 
   protected abstract class TransformTask extends UserTask {

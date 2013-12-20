@@ -33,8 +33,8 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
     val offset = textPane.viewToModel(e.getPoint)
     val element = textPane.getStyledDocument.getCharacterElement(offset)
     element.getAttributes.getAttribute("file") match {
-      case x: String ⇒ textPane.setCursor(handCursor)
-      case _ ⇒ textPane.setCursor(defaultCursor)
+      case x: String => textPane.setCursor(handCursor)
+      case _ => textPane.setCursor(defaultCursor)
     }
   }
 
@@ -42,7 +42,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
     val offset = textPane.viewToModel(evt.getPoint)
     val element = textPane.getStyledDocument.getCharacterElement(offset)
     element.getAttributes.getAttribute("file") match {
-      case filePath: String ⇒
+      case filePath: String =>
         val file = new File(filePath.trim)
         if (file == null || !file.exists) {
           Toolkit.getDefaultToolkit.beep
@@ -50,15 +50,15 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
         }
         val lineNo = try {
           element.getAttributes.getAttribute("line") match {
-            case line: String ⇒ line.toInt
-            case _ ⇒ -1
+            case line: String => line.toInt
+            case _ => -1
           }
         } catch {
-          case _: Exception ⇒ -1
+          case _: Exception => -1
         }
 
         openFile(file, lineNo)
-      case _ ⇒
+      case _ =>
     }
 
     if (evt.getClickCount != 2) { // double click may be a text selection action
@@ -88,7 +88,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
 
             textPane.getCaret.setDot(pos)
           } catch {
-            case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex)
+            case ex: BadLocationException => Exceptions.printStackTrace(ex)
           }
         }
       })
@@ -111,7 +111,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
               try {
                 ed.openDocument // XXX getLineSet does not do it for you!
               } catch {
-                case exc: UserQuestionException ⇒
+                case exc: UserQuestionException =>
                   if (!askUserAndDoOpen(exc, ed)) {
                     return
                   }
@@ -128,15 +128,15 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
                   })
                 }
               } catch {
-                case ex: IndexOutOfBoundsException ⇒ ed.open // Probably harmless. Bogus line number.
+                case ex: IndexOutOfBoundsException => ed.open // Probably harmless. Bogus line number.
               }
             }
           } else {
             Toolkit.getDefaultToolkit.beep
           }
         } catch {
-          case ex: DataObjectNotFoundException ⇒ ErrorManager.getDefault.notify(ErrorManager.WARNING, ex)
-          case ex: IOException ⇒
+          case ex: DataObjectNotFoundException => ErrorManager.getDefault.notify(ErrorManager.WARNING, ex)
+          case ex: IOException =>
             // XXX see above, should not be necessary to call openDocument at all
             ErrorManager.getDefault.notify(ErrorManager.WARNING, ex)
         }
@@ -157,7 +157,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
         try {
           e.confirmed
         } catch {
-          case ex: IOException ⇒ Exceptions.printStackTrace(ex); return true
+          case ex: IOException => Exceptions.printStackTrace(ex); return true
         }
       } else {
         return false
@@ -168,9 +168,9 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
       try {
         cookie.openDocument
       } catch {
-        case ex: UserQuestionException ⇒ e = ex
-        case ex: IOException ⇒
-        case ex: Exception ⇒
+        case ex: UserQuestionException => e = ex
+        case ex: IOException =>
+        case ex: Exception =>
       }
     }
 

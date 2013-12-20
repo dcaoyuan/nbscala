@@ -56,27 +56,27 @@ class ScalaTransaction(results: Seq[ModificationResult]) extends Transaction {
   def commit {
     try {
       if (commited) {
-        for (id ← ids) {
+        for (id <- ids) {
           try {
             id.restore
-          } catch { case ex: IOException ⇒ throw new RuntimeException().initCause(ex) }
+          } catch { case ex: IOException => throw new RuntimeException().initCause(ex) }
         }
       } else {
         commited = true
-        for (result ← results) {
+        for (result <- results) {
           ids += BackupFacility.getDefault.backup(result.getModifiedFileObjects)
           result.commit
         }
       }
 
-    } catch { case ex: IOException ⇒ throw new RuntimeException().initCause(ex) }
+    } catch { case ex: IOException => throw new RuntimeException().initCause(ex) }
   }
 
   def rollback {
-    for (id ← ids) {
+    for (id <- ids) {
       try {
         id.restore
-      } catch { case ex: IOException ⇒ throw new RuntimeException().initCause(ex) }
+      } catch { case ex: IOException => throw new RuntimeException().initCause(ex) }
     }
   }
 }

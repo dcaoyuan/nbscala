@@ -58,7 +58,7 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
 
     //doc.readLock
     try {
-      ScalaLexUtil.getTokenSequence(doc, offset) foreach { ts ⇒
+      ScalaLexUtil.getTokenSequence(doc, offset) foreach { ts =>
         ts.move(offset)
         if (!ts.moveNext) {
           return null
@@ -85,28 +85,28 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
         }
 
         id match {
-          case ScalaTokenId.STRING_BEGIN ⇒
+          case ScalaTokenId.STRING_BEGIN =>
             return Array(ts.offset, ts.offset + token.length)
-          case ScalaTokenId.STRING_END ⇒
+          case ScalaTokenId.STRING_END =>
             return Array(ts.offset, ts.offset + token.length)
-          case ScalaTokenId.REGEXP_BEGIN ⇒
+          case ScalaTokenId.REGEXP_BEGIN =>
             return Array(ts.offset, ts.offset + token.length)
-          case ScalaTokenId.REGEXP_END ⇒
+          case ScalaTokenId.REGEXP_END =>
             return Array(ts.offset, ts.offset + token.length)
-          case ScalaTokenId.LParen ⇒
+          case ScalaTokenId.LParen =>
             return Array(ts.offset, ts.offset + token.length)
-          case ScalaTokenId.RParen ⇒
+          case ScalaTokenId.RParen =>
             return Array(ts.offset, ts.offset + token.length)
-          case ScalaTokenId.LBrace ⇒
+          case ScalaTokenId.LBrace =>
             return Array(ts.offset, ts.offset + token.length)
-          case ScalaTokenId.RBrace ⇒
+          case ScalaTokenId.RBrace =>
             return Array(ts.offset, ts.offset + token.length)
-          case ScalaTokenId.LBracket ⇒
+          case ScalaTokenId.LBracket =>
             return Array(ts.offset, ts.offset + token.length)
           //            } else if (id == ScalaTokenId.DO && !ScalaLexUtil.isEndmatchingDo(doc, ts.offset())) {
           //                // No matching dot for "do" used in conditionals etc.
           //                return OffsetRange.NONE;
-          case ScalaTokenId.RBracket ⇒
+          case ScalaTokenId.RBracket =>
             return Array(ts.offset, ts.offset + token.length)
           //            } else if (id.primaryCategory().equals("keyword")) {
           //                if (ScalaLexUtil.isBeginToken(id, doc, ts)) {
@@ -115,7 +115,7 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
           //
           //                    return ScalaLexUtil.findBegin(doc, ts);
           //                }
-          case _ ⇒
+          case _ =>
         }
       }
 
@@ -133,7 +133,7 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
 
     //doc.readLock
     try {
-      ScalaLexUtil.getTokenSequence(doc, offset) foreach { ts ⇒
+      ScalaLexUtil.getTokenSequence(doc, offset) foreach { ts =>
         ts.move(offset)
         if (!ts.moveNext) {
           return null
@@ -160,37 +160,37 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
         }
 
         id match {
-          case ScalaTokenId.STRING_BEGIN ⇒
+          case ScalaTokenId.STRING_BEGIN =>
             val range = ScalaLexUtil.findFwd(ts, ScalaTokenId.STRING_BEGIN, ScalaTokenId.STRING_END)
             return Array(range.getStart, range.getEnd)
-          case ScalaTokenId.STRING_END ⇒
+          case ScalaTokenId.STRING_END =>
             val range = ScalaLexUtil.findBwd(ts, ScalaTokenId.STRING_BEGIN, ScalaTokenId.STRING_END);
             return Array(range.getStart, range.getEnd)
-          case ScalaTokenId.REGEXP_BEGIN ⇒
+          case ScalaTokenId.REGEXP_BEGIN =>
             val range = ScalaLexUtil.findFwd(ts, ScalaTokenId.REGEXP_BEGIN, ScalaTokenId.REGEXP_END);
             return Array(range.getStart, range.getEnd)
-          case ScalaTokenId.REGEXP_END ⇒
+          case ScalaTokenId.REGEXP_END =>
             val range = ScalaLexUtil.findBwd(ts, ScalaTokenId.REGEXP_BEGIN, ScalaTokenId.REGEXP_END);
             return Array(range.getStart, range.getEnd)
-          case ScalaTokenId.LParen ⇒
+          case ScalaTokenId.LParen =>
             val range = ScalaLexUtil.findFwd(ts, ScalaTokenId.LParen, ScalaTokenId.RParen);
             return Array(range.getStart, range.getEnd)
-          case ScalaTokenId.RParen ⇒
+          case ScalaTokenId.RParen =>
             val range = ScalaLexUtil.findBwd(ts, ScalaTokenId.LParen, ScalaTokenId.RParen);
             return Array(range.getStart, range.getEnd)
-          case ScalaTokenId.LBrace ⇒
+          case ScalaTokenId.LBrace =>
             val range = ScalaLexUtil.findFwd(ts, ScalaTokenId.LBrace, ScalaTokenId.RBrace);
             return Array(range.getStart, range.getEnd)
-          case ScalaTokenId.RBrace ⇒
+          case ScalaTokenId.RBrace =>
             val range = ScalaLexUtil.findBwd(ts, ScalaTokenId.LBrace, ScalaTokenId.RBrace);
             return Array(range.getStart, range.getEnd)
-          case ScalaTokenId.LBracket ⇒
+          case ScalaTokenId.LBracket =>
             val range = ScalaLexUtil.findFwd(ts, ScalaTokenId.LBracket, ScalaTokenId.RBracket);
             return Array(range.getStart, range.getEnd)
           //            } else if (id == ScalaTokenId.DO && !ScalaLexUtil.isEndmatchingDo(doc, ts.offset())) {
           //                // No matching dot for "do" used in conditionals etc.
           //                return OffsetRange.NONE;
-          case ScalaTokenId.RBracket ⇒
+          case ScalaTokenId.RBracket =>
             val range = ScalaLexUtil.findBwd(ts, ScalaTokenId.LBracket, ScalaTokenId.RBracket);
             return Array(range.getStart, range.getEnd)
           //            } else if (id.primaryCategory().equals("keyword")) {
@@ -200,7 +200,7 @@ class ScalaBracesMatcher(context: MatcherContext) extends BracesMatcher {
           //
           //                    return ScalaLexUtil.findBegin(doc, ts);
           //                }
-          case _ ⇒
+          case _ =>
         }
       }
 

@@ -51,7 +51,7 @@ import org.netbeans.modules.csl.api.HintSeverity
 import org.netbeans.modules.csl.api.OffsetRange
 import org.netbeans.modules.csl.api.RuleContext
 import org.netbeans.modules.scala.editor.util.NbBundler
-import java.{ util ⇒ ju }
+import java.{ util => ju }
 import java.util.prefs.Preferences;
 import javax.swing.JComponent;
 import java.util.regex.{ Pattern, Matcher }
@@ -97,8 +97,8 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
     if (rangeOpt == None || (desc eq null)) return List[Hint]()
     val hintfixes = mutable.ListBuffer[HintFix]()
     FixImportsHelper.checkMissingImport(desc) match {
-      case Some(missing) ⇒ hintfixes.addAll(createImportHints(missing, context, error, rangeOpt.get))
-      case None ⇒
+      case Some(missing) => hintfixes.addAll(createImportHints(missing, context, error, rangeOpt.get))
+      case None =>
     }
 
     new Hint(this, error.getDescription, context.getFileObject, rangeOpt.get,
@@ -108,14 +108,14 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
 
   private def createImportHints(missing: String, context: ScalaRuleContext, error: Error, range: OffsetRange): mutable.ListBuffer[HintFix] = {
     val pathInfo = context.getClasspathInfo match {
-      case Some(x) ⇒ x
-      case None ⇒ return mutable.ListBuffer[HintFix]()
+      case Some(x) => x
+      case None => return mutable.ListBuffer[HintFix]()
     }
     val typeNames: mutable.Set[ElementHandle[TypeElement]] = pathInfo.getClassIndex.getDeclaredTypes(missing, ClassIndex.NameKind.SIMPLE_NAME,
       java.util.EnumSet.allOf(classOf[ClassIndex.SearchScope]))
     val toRet = mutable.ListBuffer[HintFix]()
     for (
-      typeName ← typeNames;
+      typeName <- typeNames;
       ek = typeName.getKind;
       if ek == ElementKind.CLASS || ek == ElementKind.INTERFACE
     ) {
@@ -167,18 +167,18 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
       while (ts.isValid && ts.moveNext && !done) {
         val token: Token[_] = ts.token
         done = token.id match {
-          case ScalaTokenId.LParen ⇒ {
+          case ScalaTokenId.LParen => {
             collecting = true
             false
           }
-          case ScalaTokenId.RParen ⇒ true
-          case ScalaTokenId.ANY_KEYWORD ⇒ true
-          case ScalaTokenId.Identifier ⇒ {
+          case ScalaTokenId.RParen => true
+          case ScalaTokenId.ANY_KEYWORD => true
+          case ScalaTokenId.Identifier => {
             //TODO
             false
           }
-          case wsComment if ScalaLexUtil.WS_COMMENTS.contains(wsComment) ⇒ false
-          case _ ⇒ false
+          case wsComment if ScalaLexUtil.WS_COMMENTS.contains(wsComment) => false
+          case _ => false
         }
       }
 
@@ -209,8 +209,8 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
         if (ts.isValid && ts.moveNext && ts.token.text.toString == name) {
           val astOffset = ScalaLexUtil.getAstOffset(result, start)
           val current = root.findItemsAt(th, astOffset) match {
-            case Nil ⇒ return
-            case xs ⇒ {
+            case Nil => return
+            case xs => {
               val x = xs.reverse.head
               if (x.name == name) x else return
             }

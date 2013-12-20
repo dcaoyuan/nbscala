@@ -44,7 +44,7 @@ object BlockCaret extends DefaultCaret {
         return
       dotChar = comp.getText(dot, 1).charAt(0)
     } catch {
-      case ex: BadLocationException ⇒ return
+      case ex: BadLocationException => return
     }
 
     if ((x != r.x) || (y != r.y)) {

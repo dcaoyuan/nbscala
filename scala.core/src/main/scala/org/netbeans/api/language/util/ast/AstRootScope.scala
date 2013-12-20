@@ -129,8 +129,8 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
         lo = mid + 1
       } else {
         _idTokenToItems.get(middle) match {
-          case Some(x) if !x.isEmpty ⇒ return x
-          case _ ⇒
+          case Some(x) if !x.isEmpty => return x
+          case _ =>
         }
       }
     }
@@ -153,8 +153,8 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
   def findAllDfnsOf[A <: AnyRef](clazz: Class[A]): List[AstDfn] = {
     var result: List[AstDfn] = Nil
     for (
-      items ← _idTokenToItems.valuesIterator;
-      item ← items if item.isInstanceOf[AstDfn] && clazz.isInstance(item.symbol)
+      items <- _idTokenToItems.valuesIterator;
+      item <- items if item.isInstanceOf[AstDfn] && clazz.isInstance(item.symbol)
     ) {
       result = item.asInstanceOf[AstDfn] :: result
     }
@@ -163,17 +163,17 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
 
   def findDfnOf(item: AstItem): Option[AstDfn] = {
     item match {
-      case dfn: AstDfn ⇒ Some(dfn)
-      case ref: AstRef ⇒
+      case dfn: AstDfn => Some(dfn)
+      case ref: AstRef =>
         samePlaceItems(ref) foreach {
-          case refx: AstRef ⇒
-            _idTokenToItems.valuesIterator foreach { xs ⇒
+          case refx: AstRef =>
+            _idTokenToItems.valuesIterator foreach { xs =>
               xs foreach {
-                case x: AstDfn if x.isReferredBy(refx) ⇒ return Some(x)
-                case _ ⇒
+                case x: AstDfn if x.isReferredBy(refx) => return Some(x)
+                case _ =>
               }
             }
-          case _ ⇒
+          case _ =>
         }
         None
     }
@@ -183,30 +183,30 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
     val occurrences = new ArrayBuffer[AstItem]
 
     findDfnOf(item) match {
-      case Some(dfn) ⇒
+      case Some(dfn) =>
         samePlaceItems(dfn) foreach {
-          case dfnx: AstDfn ⇒
+          case dfnx: AstDfn =>
             occurrences += dfnx
-            _idTokenToItems.valuesIterator foreach { xs ⇒
+            _idTokenToItems.valuesIterator foreach { xs =>
               occurrences ++= xs filter {
-                case x: AstRef ⇒ dfnx.isReferredBy(x)
-                case _ ⇒ false
+                case x: AstRef => dfnx.isReferredBy(x)
+                case _ => false
               }
             }
-          case _ ⇒
+          case _ =>
         }
-      case None ⇒
+      case None =>
         val ref = item.asInstanceOf[AstRef] // it must be an AstRef
         samePlaceItems(ref) foreach {
-          case refx: AstRef ⇒
+          case refx: AstRef =>
             occurrences += refx
-            _idTokenToItems.valuesIterator foreach { xs ⇒
+            _idTokenToItems.valuesIterator foreach { xs =>
               occurrences ++= xs filter {
-                case x: AstDfn ⇒ x.isReferredBy(refx)
-                case x: AstRef ⇒ x.isOccurrence(refx)
+                case x: AstDfn => x.isReferredBy(refx)
+                case x: AstRef => x.isOccurrence(refx)
               }
             }
-          case _ ⇒
+          case _ =>
         }
     }
 
@@ -218,9 +218,9 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
   }
 
   def findFirstItemWithName(name: String): Option[AstItem] = {
-    _idTokenToItems.find { case (token, items) ⇒ token.text.toString == name } match {
-      case Some((token, x)) if !x.isEmpty ⇒ Some(x.head)
-      case _ ⇒ None
+    _idTokenToItems.find { case (token, items) => token.text.toString == name } match {
+      case Some((token, x)) if !x.isEmpty => Some(x.head)
+      case _ => None
     }
   }
 
@@ -229,9 +229,9 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
   }
 
   def debugPrintTokens(th: TokenHierarchy[_]): Unit = {
-    sortedTokens(th) foreach { token ⇒
+    sortedTokens(th) foreach { token =>
       println("<" + token + "> ->")
-      _idTokenToItems.get(token) foreach { items ⇒ items foreach { println _ } }
+      _idTokenToItems.get(token) foreach { items => items foreach { println _ } }
       println
     }
     println

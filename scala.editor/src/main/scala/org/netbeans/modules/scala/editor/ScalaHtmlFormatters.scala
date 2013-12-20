@@ -74,19 +74,19 @@ trait ScalaHtmlFormatters {
           break = true
         } else {
           text.charAt(i) match {
-            case '<' ⇒
+            case '<' =>
               sb.append("&lt;") // NOI18N
-            case '>' ⇒ // Only ]]> is dangerous
+            case '>' => // Only ]]> is dangerous
               if (i > 1 && text.charAt(i - 2) == ']' && text.charAt(i - 1) == ']') {
                 sb.append("&gt;") // NOI18N
               } else {
                 sb.append('>')
               }
 
-            case '&' ⇒
+            case '&' =>
               sb.append("&amp;") // NOI18N
 
-            case c ⇒
+            case c =>
               sb.append(c)
           }
           textLength += 1
@@ -242,7 +242,7 @@ trait ScalaHtmlFormatters {
         sb.append(NbBundle.getMessage(classOf[ScalaCommentFormatter], "Parameters"))
         sb.append("</b><blockquote>") //NOI18N
         var i = 0
-        for (param ← params) {
+        for (param <- params) {
           if (i > 0) {
             sb.append("<br><br>") // NOI18N
           }
@@ -275,7 +275,7 @@ trait ScalaHtmlFormatters {
         sb.append("<b>")
         sb.append(NbBundle.getMessage(classOf[ScalaCommentFormatter], "Throws"))
         sb.append("</b><blockquote>") //NOI18N
-        for (tag ← exceptions) {
+        for (tag <- exceptions) {
           sb.append(tag)
           sb.append("<br>") // NOI18N
         }

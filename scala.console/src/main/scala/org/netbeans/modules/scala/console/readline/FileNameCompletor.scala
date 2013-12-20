@@ -107,7 +107,7 @@ class FileNameCompletor extends Completor {
     // blue - directory
     // red - compressed
     // cyan - symlink
-    entries foreach { entry ⇒
+    entries foreach { entry =>
       if (entry.getAbsolutePath.startsWith(translated)) {
         val name = entry.getName + (if (matches == 1 && entry.isDirectory) File.separator else " ")
         // if (entries [i].isDirectory ()) { name = new ANSIBuffer ().blue (name).toString (); }

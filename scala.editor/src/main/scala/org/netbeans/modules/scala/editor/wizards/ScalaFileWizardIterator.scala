@@ -43,7 +43,7 @@ package org.netbeans.modules.scala.editor.wizards
 
 import java.awt.Component
 import java.io.IOException
-import java.{ util ⇒ ju }
+import java.{ util => ju }
 import javax.swing.JComponent
 import javax.swing.event.ChangeListener
 import org.netbeans.api.java.project.JavaProjectConstants
@@ -86,7 +86,7 @@ class ScalaFileWizardIterator extends WizardDescriptor.InstantiatingIterator[Wiz
       if ("...".equals(before(before.length - 1))) 1 else 0 //NOI18N
     } else 0
 
-    val ret = for (i ← 0 until ((before.length - diff) + panels.length)) yield if (i < (before.length - diff)) {
+    val ret = for (i <- 0 until ((before.length - diff) + panels.length)) yield if (i < (before.length - diff)) {
       before(i)
     } else {
       panels(i - before.length + diff).getComponent().getName()
@@ -105,8 +105,8 @@ class ScalaFileWizardIterator extends WizardDescriptor.InstantiatingIterator[Wiz
     val dTemplate = DataObject.find(template)
     val pkgName = getPackageName(dir)
     val dobj = pkgName match {
-      case null ⇒ dTemplate.createFromTemplate(df, targetName)
-      case _ ⇒ dTemplate.createFromTemplate(df, targetName, ju.Collections.singletonMap("package", pkgName)) // NOI18N
+      case null => dTemplate.createFromTemplate(df, targetName)
+      case _ => dTemplate.createFromTemplate(df, targetName, ju.Collections.singletonMap("package", pkgName)) // NOI18N
     }
     ju.Collections.singleton(dobj.getPrimaryFile())
   }
@@ -117,18 +117,18 @@ class ScalaFileWizardIterator extends WizardDescriptor.InstantiatingIterator[Wiz
     panels = createPanels(wiz);
     // Make sure list of steps is accurate.
     val beforeSteps = wiz.getProperty(WizardDescriptor.PROP_CONTENT_DATA) match {
-      case s: Array[String] ⇒ s
-      case _ ⇒ Array[String]()
+      case s: Array[String] => s
+      case _ => Array[String]()
     }
     val steps = createSteps(beforeSteps, panels)
     var i = 0
-    for (p ← panels) {
+    for (p <- panels) {
       p.getComponent() match {
-        case c: JComponent ⇒ {
+        case c: JComponent => {
           c.putClientProperty(WizardDescriptor.PROP_CONTENT_SELECTED_INDEX, Integer.valueOf(i)); // NOI18N
           c.putClientProperty(WizardDescriptor.PROP_CONTENT_DATA, steps) // NOI18N
         }
-        case _ ⇒
+        case _ =>
       }
     }
   }
@@ -168,7 +168,7 @@ object ScalaFileUtil {
     val sources = ProjectUtils.getSources(project)
     val groups = getScalaSourceGroups(sources)
     var packageName: String = null
-    if (groups exists { gr ⇒
+    if (groups exists { gr =>
       packageName = FileUtil.getRelativePath(gr.getRootFolder, targetFolder)
       packageName ne null
     }) {

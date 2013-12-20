@@ -37,19 +37,19 @@ object ProjectFolderNodeFactory {
      */
     def node(key: String): Node = {
       project.getProjectDirectory.getFileObject(ProjectConstants.PROJECT_FOLDER_NAME) match {
-        case projectFolder: FileObject if projectFolder.isFolder ⇒
+        case projectFolder: FileObject if projectFolder.isFolder =>
           try {
             DataObject.find(projectFolder) match {
-              case null ⇒ null
-              case dobj ⇒
+              case null => null
+              case dobj =>
                 new FilterNode(dobj.getNodeDelegate) {
                   override def getDisplayName = DISPLAY_NAME
                 }
             }
           } catch {
-            case ex: DataObjectNotFoundException ⇒ Exceptions.printStackTrace(ex); null
+            case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex); null
           }
-        case _ ⇒ null
+        case _ => null
       }
     }
 

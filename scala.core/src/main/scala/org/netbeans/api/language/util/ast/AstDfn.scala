@@ -79,8 +79,8 @@ trait AstDfn extends AstItem with AstElementHandle {
 
   override def getOffsetRange(pResult: ParserResult): OffsetRange = {
     pResult.getSnapshot.getTokenHierarchy match {
-      case null ⇒ OffsetRange.NONE
-      case th ⇒
+      case null => OffsetRange.NONE
+      case th =>
         val offset = boundsOffset(th)
         val endOffset = boundsEndOffset(th)
         if (offset >= 0 && endOffset >= offset) {
@@ -127,11 +127,11 @@ trait AstDfn extends AstItem with AstElementHandle {
 
   def getDoc: Option[BaseDocument] = {
     fo match {
-      case Some(x) ⇒ GsfUtilities.getDocument(x, true) match {
-        case null ⇒ None
-        case docx ⇒ Some(docx)
+      case Some(x) => GsfUtilities.getDocument(x, true) match {
+        case null => None
+        case docx => Some(docx)
       }
-      case None ⇒ None
+      case None => None
     }
   }
 

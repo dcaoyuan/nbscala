@@ -17,7 +17,7 @@ object TopComponentId {
     x.setAccessible(true)
     x
   } catch {
-    case ex: Exception ⇒ null
+    case ex: Exception => null
   }
 
   private val idUnescape = try {
@@ -25,7 +25,7 @@ object TopComponentId {
     x.setAccessible(true)
     x
   } catch {
-    case ex: Exception ⇒ null
+    case ex: Exception => null
   }
 
   /**
@@ -40,7 +40,7 @@ object TopComponentId {
       try {
         idEscape.invoke(null, name).asInstanceOf[String]
       } catch {
-        case ex: Exception ⇒ log.log(Level.INFO, "Escape support failed", ex); name
+        case ex: Exception => log.log(Level.INFO, "Escape support failed", ex); name
       }
     } else name
   }
@@ -56,7 +56,7 @@ object TopComponentId {
       try {
         idUnescape.invoke(null, name).asInstanceOf[String]
       } catch {
-        case ex: Exception ⇒ log.log(Level.INFO, "Escape support failed", ex); name
+        case ex: Exception => log.log(Level.INFO, "Escape support failed", ex); name
       }
     } else name
   }

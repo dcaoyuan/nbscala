@@ -113,7 +113,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
 
       var i = 0
 
-      for ((name, importCandidates) ← multipleCandidates) {
+      for ((name, importCandidates) <- multipleCandidates) {
         val size = importCandidates.size
         var iNum = 0;
 
@@ -122,7 +122,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
         var defaultSelection: String = null;
         var maxImportantsLevel = 0;
 
-        for (ImportCandidate(missing, fqn, range, icon, importantsLevel) ← importCandidates) {
+        for (ImportCandidate(missing, fqn, range, icon, importantsLevel) <- importCandidates) {
           choices(iNum) = fqn
           icons(iNum) = icon
 
@@ -194,7 +194,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
   }
 
   def getSelections: Array[String] = {
-    combos map { x ⇒ x.getSelectedItem.toString }
+    combos map { x => x.getSelectedItem.toString }
   }
 
   /**
@@ -277,8 +277,8 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
   private class TogglePopupAction extends AbstractAction {
     def actionPerformed(e: ActionEvent) {
       e.getSource match {
-        case combo: JComboBox[_] ⇒ combo.setPopupVisible(!combo.isPopupVisible)
-        case _ ⇒
+        case combo: JComboBox[_] => combo.setPopupVisible(!combo.isPopupVisible)
+        case _ =>
       }
     }
   }

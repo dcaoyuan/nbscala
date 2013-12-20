@@ -35,12 +35,12 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
     x.addPropertyChangeListener(new PropertyChangeListener {
       override def propertyChange(evt: PropertyChangeEvent) {
         evt.getPropertyName match {
-          case SBTResolver.DESCRIPTOR_CHANGE ⇒
+          case SBTResolver.DESCRIPTOR_CHANGE =>
             cache synchronized {
               cache.values foreach (_.fireChange)
               cache.clear
             }
-          case _ ⇒
+          case _ =>
         }
       }
     })
@@ -75,21 +75,21 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
   private def getSrcRoot(url: URL): Array[FileObject] = {
     import ProjectResources._
     val toReturn = url.getProtocol match {
-      case "file" ⇒
+      case "file" =>
         // true for directories.
         val uri = url.toURI.normalize
         val mainSrcs = sbtResolver.getSources(SOURCES_TYPE_JAVA, false) ++ sbtResolver.getSources(SOURCES_TYPE_SCALA, false)
         val testSrcs = sbtResolver.getSources(SOURCES_TYPE_JAVA, true) ++ sbtResolver.getSources(SOURCES_TYPE_SCALA, true)
 
-        val mains = (mainSrcs filter { case (s, o) ⇒ uri == FileUtil.urlForArchiveOrDir(o).toURI.normalize } map (_._1))
-        val tests = (testSrcs filter { case (s, o) ⇒ uri == FileUtil.urlForArchiveOrDir(o).toURI.normalize } map (_._1))
+        val mains = (mainSrcs filter { case (s, o) => uri == FileUtil.urlForArchiveOrDir(o).toURI.normalize } map (_._1))
+        val tests = (testSrcs filter { case (s, o) => uri == FileUtil.urlForArchiveOrDir(o).toURI.normalize } map (_._1))
         (mains ++ tests).distinct
 
-      case "jar" ⇒
+      case "jar" =>
         // XXX todo
-        val artifacts = sbtResolver.getResolvedClassPath(ClassPath.COMPILE, isTest = false) map FileUtil.toFileObject filter { fo ⇒
+        val artifacts = sbtResolver.getResolvedClassPath(ClassPath.COMPILE, isTest = false) map FileUtil.toFileObject filter { fo =>
           fo != null && FileUtil.isArchiveFile(fo)
-        } map { fo ⇒
+        } map { fo =>
           ArtifactInfo(fo.getNameExt, "", "", FileUtil.toFile(fo), null, null)
         }
 
@@ -99,13 +99,13 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
           val jarFile = FileUtil.toFile(jarFo)
           if (jarFile != null) {
             artifacts find (_.jarFile == jarFile) match {
-              case Some(x) if x.sourceFile != null ⇒ Array(x.sourceFile)
-              case _ ⇒ Array[File]()
+              case Some(x) if x.sourceFile != null => Array(x.sourceFile)
+              case _ => Array[File]()
             }
           } else Array[File]()
         } else Array[File]()
 
-      case _ ⇒ Array[File]()
+      case _ => Array[File]()
     }
 
     toReturn map FileUtil.toFileObject

@@ -109,55 +109,55 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     while (ts.movePrevious && !break) {
       val token = ts.token
       token.id match {
-        case ScalaTokenId.Dot ⇒
+        case ScalaTokenId.Dot =>
           val dot = ts.offsetToken
           collector match {
-            case x :: xs if ScalaLexUtil.isWsComment(x.id) ⇒
+            case x :: xs if ScalaLexUtil.isWsComment(x.id) =>
               // * replace previous sep token with this Dot
               collector = dot :: xs
-            case _ ⇒ collector = dot :: collector
+            case _ => collector = dot :: collector
           }
 
-        case ScalaTokenId.Nl ⇒
-        case id if ScalaLexUtil.isWsComment(id) ⇒
+        case ScalaTokenId.Nl =>
+        case id if ScalaLexUtil.isWsComment(id) =>
           collector match {
-            case x :: xs if ScalaLexUtil.isWsComment(x.id) | x.id == ScalaTokenId.Dot ⇒
+            case x :: xs if ScalaLexUtil.isWsComment(x.id) | x.id == ScalaTokenId.Dot =>
             // * do not add more, combined all ws comment tokens
-            case _ ⇒ collector = token :: collector
+            case _ => collector = token :: collector
           }
 
-        case id if isCallId(id) ⇒ collector = token :: collector
+        case id if isCallId(id) => collector = token :: collector
 
-        case ScalaTokenId.RParen ⇒
+        case ScalaTokenId.RParen =>
           ScalaLexUtil.findPairBwd(ts, ScalaTokenId.LParen, ScalaTokenId.RParen)
-        case ScalaTokenId.RBrace ⇒
+        case ScalaTokenId.RBrace =>
           ScalaLexUtil.findPairBwd(ts, ScalaTokenId.LBrace, ScalaTokenId.RBrace)
-        case ScalaTokenId.RBracket ⇒
+        case ScalaTokenId.RBracket =>
           ScalaLexUtil.findPairBwd(ts, ScalaTokenId.LBracket, ScalaTokenId.RBracket)
 
-        case _ ⇒ break = true
+        case _ => break = true
       }
 
       collector map { _.id } match {
-        case List(a, b) if ScalaLexUtil.isWsComment(b) | b == ScalaTokenId.Dot ⇒ break = true
-        case List(a, b, c) ⇒ break = true // collect no more than 3 tokens
-        case _ ⇒
+        case List(a, b) if ScalaLexUtil.isWsComment(b) | b == ScalaTokenId.Dot => break = true
+        case List(a, b, c) => break = true // collect no more than 3 tokens
+        case _ =>
       }
     }
 
     val (base, dot, select) =
       collector match {
-        case List(basex, sep, selectx) ⇒
+        case List(basex, sep, selectx) =>
           if (isCallId(basex.id) && isCallId(selectx.id)) {
             (basex, if (sep.id == ScalaTokenId.Dot) sep else null, selectx)
           } else (null, null, null)
 
-        case List(basex, sep) ⇒
+        case List(basex, sep) =>
           if (isCallId(basex.id)) {
             (basex, if (sep.id == ScalaTokenId.Dot) sep else null, null)
           } else (null, null, null)
 
-        case _ ⇒ (null, null, null)
+        case _ => (null, null, null)
       }
 
     Call(base, dot, select)
@@ -211,7 +211,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     anchor = rowStart + i
 
     // Regular expression matching.  {
-    for (j ← 0 to scalaDocWords.length) {
+    for (j <- 0 to scalaDocWords.length) {
       val word = scalaDocWords(j)
       if (startsWith(word, prefix)) {
         val item = KeywordProposal(word, null, this)
@@ -296,8 +296,8 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
             val tpElement = itr.next
             val qname = tpElement.getQualifiedName
             val sname = qname.lastIndexOf(".") match {
-              case -1 ⇒ qname
-              case i ⇒ qname.substring(i + 1, qname.length)
+              case -1 => qname
+              case i => qname.substring(i + 1, qname.length)
             }
             if (sname.startsWith(prefix)) {
               val jElement = global.JavaElement(tpElement)
@@ -380,15 +380,15 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
       }
 
       var closestOpt = root.findItemsAt(th, astOffset1) match {
-        case Nil ⇒ None
-        case xs ⇒ Some(xs.reverse.head)
+        case Nil => None
+        case xs => Some(xs.reverse.head)
       }
       var closestOffset = astOffset1 - 1
       while (closestOpt == None && closestOffset > 0) {
         closestOffset -= 1
         closestOpt = root.findItemsAt(th, closestOffset) match {
-          case Nil ⇒ None
-          case xs ⇒ Some(xs.reverse.head)
+          case Nil => None
+          case xs => Some(xs.reverse.head)
         }
       }
 
@@ -463,7 +463,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
       }
       anchorOffsetHolder(0) = anchorOffset
     } catch {
-      case ble: BadLocationException ⇒ Exceptions.printStackTrace(ble); return false
+      case ble: BadLocationException => Exceptions.printStackTrace(ble); return false
     }
 
     true
@@ -476,15 +476,15 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     val resp = new global.Response[List[global.Member]]
     global.askScopeCompletion(pos, resp)
     resp.get match {
-      case Left(members) ⇒
+      case Left(members) =>
         for (
-          global.ScopeMember(sym, tpe, accessible, viaImport) ← members if startsWith(sym.nameString, prefix) && !sym.isConstructor
+          global.ScopeMember(sym, tpe, accessible, viaImport) <- members if startsWith(sym.nameString, prefix) && !sym.isConstructor
         ) {
           if (accessible) {
             createSymbolProposal(sym) foreach { proposals add _ }
           }
         }
-      case Right(ex) ⇒ ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
+      case Right(ex) => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
     }
 
   }
@@ -498,19 +498,19 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     val resp = new global.Response[List[global.Member]]
     global.askTypeCompletion(pos, resp)
     resp.get match {
-      case Left(members) ⇒
+      case Left(members) =>
         for (
-          global.TypeMember(sym, tpe, accessible, inherited, viaView) ← members if startsWith(sym.nameString, prefix) && !sym.isConstructor
+          global.TypeMember(sym, tpe, accessible, inherited, viaView) <- members if startsWith(sym.nameString, prefix) && !sym.isConstructor
         ) {
           if (accessible) {
-            createSymbolProposal(sym) foreach { proposal ⇒
+            createSymbolProposal(sym) foreach { proposal =>
               proposal.getElement.asInstanceOf[global.ScalaElement].isInherited = inherited
               proposal.getElement.asInstanceOf[global.ScalaElement].isImplicit = (viaView != global.NoSymbol)
               proposals.add(proposal)
             }
           }
         }
-      case Right(ex) ⇒ ScalaGlobal.resetLate(global, ex)
+      case Right(ex) => ScalaGlobal.resetLate(global, ex)
     }
 
     // always return true ?
@@ -538,17 +538,17 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
   }
 
   private def getResultType(sym: global.Symbol): Option[global.Type] = {
-    global.askForResponse { () ⇒
+    global.askForResponse { () =>
       sym.tpe match {
-        case null | global.ErrorType | global.NoType ⇒ None
-        case tpe ⇒ tpe.resultType match {
-          case null ⇒ None
-          case x ⇒ Some(x)
+        case null | global.ErrorType | global.NoType => None
+        case tpe => tpe.resultType match {
+          case null => None
+          case x => Some(x)
         }
       }
     } get match {
-      case Left(x) ⇒ x
-      case Right(ex) ⇒ ScalaGlobal.resetLate(global, ex); None
+      case Left(x) => x
+      case Right(ex) => ScalaGlobal.resetLate(global, ex); None
     }
   }
 

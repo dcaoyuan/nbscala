@@ -99,8 +99,8 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
     val global = pr.global
 
     semanticHighlights = visitItems(global, th, root) match {
-      case null ⇒ null
-      case highlights if !highlights.isEmpty ⇒
+      case null => null
+      case highlights if !highlights.isEmpty =>
         //            if (result.getTranslatedSource() ne null) {
         //                Map<OffsetRange, ColoringAttributes> translated = new HashMap<OffsetRange, ColoringAttributes>(2 * highlights.size());
         //                for (Map.Entry<OffsetRange, ColoringAttributes> entry:  highlights.entrySet()) {
@@ -114,7 +114,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
         //            }
 
         highlights
-      case _ ⇒ null
+      case _ => null
     }
   }
 
@@ -125,12 +125,12 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
     def isSingletonType(sym: global.Symbol) = try {
       sym.tpe.resultType.isInstanceOf[global.SingletonType]
     } catch {
-      case _: Throwable ⇒ false
+      case _: Throwable => false
     }
 
-    global.askForResponse { () ⇒
+    global.askForResponse { () =>
       for {
-        (idToken, items) ← root.idTokenToItems
+        (idToken, items) <- root.idTokenToItems
         item = global.ScalaUtil.importantItem(items)
         name = item.getName if name != "this" && name != "super"
       } {
@@ -139,14 +139,14 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
         // * token may be xml tokens, @see AstVisit#getTokenId
         idToken.id match {
-          case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super ⇒
+          case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super =>
             val hiRange = ScalaLexUtil.getRangeOfToken(th, idToken)
             val coloringSet = new java.util.HashSet[ColoringAttributes]
             val sym = item.symbol
 
             item match {
 
-              case dfn: global.ScalaDfn ⇒
+              case dfn: global.ScalaDfn =>
 
                 if (sym.isModule) {
 
@@ -202,7 +202,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
                 }
 
-              case ref: global.ScalaRef ⇒
+              case ref: global.ScalaRef =>
 
                 if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter || sym.isConstructor) {
 
@@ -231,9 +231,9 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
                   val name = sym.nameString
                   val isVariable = try {
                     val owntpe = sym.owner.tpe
-                    owntpe.members exists { x ⇒ x.isVariable && x.nameString == name }
+                    owntpe.members exists { x => x.isVariable && x.nameString == name }
                   } catch {
-                    case _: Throwable ⇒ false
+                    case _: Throwable => false
                   }
 
                   if (isVariable) {
@@ -276,13 +276,13 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
             if (!coloringSet.isEmpty) highlights.put(hiRange, coloringSet)
 
-          case _ ⇒
+          case _ =>
         }
       }
 
     } get match {
-      case Left(x) ⇒
-      case Right(ex) ⇒ ScalaSemanticAnalyzer.this.log.log(Level.WARNING, ex.getMessage, ex)
+      case Left(x) =>
+      case Right(ex) => ScalaSemanticAnalyzer.this.log.log(Level.WARNING, ex.getMessage, ex)
     }
 
     highlights

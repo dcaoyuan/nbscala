@@ -61,7 +61,7 @@ object IsOverriddenAnnotation {
   def performGoToAction(tpe: AnnotationType, declarations: List[ElementDescription], position: Point, shortDescription: String) {
     if (tpe == IMPLEMENTS || tpe == OVERRIDES) {
       declarations match {
-        case desc :: Nil ⇒
+        case desc :: Nil =>
           val file = desc.getSourceFile
 
           if (file ne null) {
@@ -71,15 +71,15 @@ object IsOverriddenAnnotation {
           }
 
           return
-        case _ ⇒
+        case _ =>
       }
     }
 
     val caption = tpe match {
-      case IMPLEMENTS ⇒ NbBundle.getMessage(classOf[IsOverriddenAnnotation], "CAP_Implements")
-      case OVERRIDES ⇒ NbBundle.getMessage(classOf[IsOverriddenAnnotation], "CAP_Overrides")
-      case HAS_IMPLEMENTATION | IS_OVERRIDDEN ⇒ shortDescription
-      case _ ⇒ throw new IllegalStateException("Currently not implemented: " + tpe) //NOI18N
+      case IMPLEMENTS => NbBundle.getMessage(classOf[IsOverriddenAnnotation], "CAP_Implements")
+      case OVERRIDES => NbBundle.getMessage(classOf[IsOverriddenAnnotation], "CAP_Overrides")
+      case HAS_IMPLEMENTATION | IS_OVERRIDDEN => shortDescription
+      case _ => throw new IllegalStateException("Currently not implemented: " + tpe) //NOI18N
     }
 
     PopupUtil.showPopup(new IsOverriddenPopup(caption, declarations), caption, position.x, position.y, true, 0)
@@ -100,11 +100,11 @@ class IsOverriddenAnnotation(document: StyledDocument,
 
   def getAnnotationType: String = {
     tpe match {
-      case IS_OVERRIDDEN ⇒ "org-netbeans-modules-editor-annotations-is_overridden" //NOI18N
-      case HAS_IMPLEMENTATION ⇒ "org-netbeans-modules-editor-annotations-has_implementations" //NOI18N
-      case IMPLEMENTS ⇒ "org-netbeans-modules-editor-annotations-implements" //NOI18N
-      case OVERRIDES ⇒ "org-netbeans-modules-editor-annotations-overrides" //NOI18N
-      case _ ⇒ throw new IllegalStateException("Currently not implemented: " + tpe) //NOI18N
+      case IS_OVERRIDDEN => "org-netbeans-modules-editor-annotations-is_overridden" //NOI18N
+      case HAS_IMPLEMENTATION => "org-netbeans-modules-editor-annotations-has_implementations" //NOI18N
+      case IMPLEMENTS => "org-netbeans-modules-editor-annotations-implements" //NOI18N
+      case OVERRIDES => "org-netbeans-modules-editor-annotations-overrides" //NOI18N
+      case _ => throw new IllegalStateException("Currently not implemented: " + tpe) //NOI18N
     }
   }
 

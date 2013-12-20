@@ -145,14 +145,14 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
           var labelText: String = null
           var modif = java.util.Collections.emptySet[Modifier]
 
-          global.askForResponse { () ⇒
+          global.askForResponse { () =>
             import global._
 
             val sName = element.symbol.nameString
             val clzName = element.symbol.enclClass.nameString
 
             element.kind match {
-              case ElementKind.METHOD | ElementKind.CALL ⇒
+              case ElementKind.METHOD | ElementKind.CALL =>
                 modif = element.getModifiers
                 methodDeclaringClass = clzName
                 labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_MethodUsages", element.symbol.nameString, methodDeclaringClass) // NOI18N
@@ -164,13 +164,13 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
                     Array(methodDeclaringSuperClass).asInstanceOf[Array[Object]])
                   newElement = ScalaElement(overriden.asInstanceOf[Symbol], pr)
                 }
-              case ElementKind.CLASS | ElementKind.MODULE ⇒
+              case ElementKind.CLASS | ElementKind.MODULE =>
                 labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ClassUsages", sName) // NOI18N
-              case ElementKind.CONSTRUCTOR ⇒
+              case ElementKind.CONSTRUCTOR =>
                 labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_ConstructorUsages", sName, clzName) // NOI18N
-              case ElementKind.FIELD ⇒
+              case ElementKind.FIELD =>
                 labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_FieldUsages", sName, clzName) // NOI18N
-              case _ ⇒
+              case _ =>
                 labelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_VariableUsages", sName) // NOI18N
             }
 
@@ -188,11 +188,11 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
               val combinedLabelText = NbBundle.getMessage(classOf[WhereUsedPanel], "DSC_WhereUsedWarningInDevelopment", labelText)
               label.setText(combinedLabelText)
 
-              global.askForResponse { () ⇒
+              global.askForResponse { () =>
                 //import global._
 
                 element.kind match {
-                  case ElementKind.METHOD ⇒
+                  case ElementKind.METHOD =>
                     add(methodsPanel, BorderLayout.CENTER)
                     methodsPanel.setVisible(true)
                     m_usages.setVisible(!modifiers.contains(Modifier.STATIC))
@@ -209,10 +209,10 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
                       m_isBaseClass.setVisible(false)
                       m_isBaseClass.setSelected(false)
                     }
-                  case ElementKind.CLASS | ElementKind.MODULE ⇒
+                  case ElementKind.CLASS | ElementKind.MODULE =>
                     add(classesPanel, BorderLayout.CENTER)
                     classesPanel.setVisible(true)
-                  case _ ⇒
+                  case _ =>
                     remove(classesPanel)
                     remove(methodsPanel)
                     c_subclasses.setVisible(false)
@@ -235,7 +235,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
           })
         }
       })
-    } catch { case ex: ParseException ⇒ throw (new RuntimeException).initCause(ex) }
+    } catch { case ex: ParseException => throw (new RuntimeException).initCause(ex) }
 
     initialized = true
   }
@@ -270,8 +270,8 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
     // #89393: GTK needs name to render cell renderer "natively"
     override def getName: String = {
       super.getName match {
-        case null ⇒ "ComboBox.renderer" // NOI18N
-        case x ⇒ x
+        case null => "ComboBox.renderer" // NOI18N
+        case x => x
       }
     }
   }

@@ -20,131 +20,131 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   @throws(classOf[IOException])
   override def write(data: Int) {
     state match {
-      case LOOKING_FOR_FIRST_ESC_CHAR ⇒
+      case LOOKING_FOR_FIRST_ESC_CHAR =>
         data match {
-          case FIRST_ESC_CHAR ⇒
+          case FIRST_ESC_CHAR =>
             buffer(pos) = data.toByte; pos += 1
             state = LOOKING_FOR_SECOND_ESC_CHAR
-          case _ ⇒
+          case _ =>
             out.write(data)
         }
 
-      case LOOKING_FOR_SECOND_ESC_CHAR ⇒
+      case LOOKING_FOR_SECOND_ESC_CHAR =>
         buffer(pos) = data.toByte; pos += 1
 
         data match {
-          case SECOND_ESC_CHAR ⇒
+          case SECOND_ESC_CHAR =>
             state = LOOKING_FOR_NEXT_ARG
-          case SECOND_OSC_CHAR ⇒
+          case SECOND_OSC_CHAR =>
             state = LOOKING_FOR_OSC_COMMAND
-          case _ ⇒
+          case _ =>
             reset(false)
         }
 
-      case LOOKING_FOR_NEXT_ARG ⇒
+      case LOOKING_FOR_NEXT_ARG =>
         buffer(pos) = data.toByte; pos += 1
 
         data match {
-          case '"' ⇒
+          case '"' =>
             startOfValue = pos - 1
             state = LOOKING_FOR_STR_ARG_END
-          case _ if '0' <= data && data <= '9' ⇒
+          case _ if '0' <= data && data <= '9' =>
             startOfValue = pos - 1
             state = LOOKING_FOR_INT_ARG_END
-          case ';' ⇒
+          case ';' =>
             options += null
-          case '?' ⇒
+          case '?' =>
             options += '?'
-          case '=' ⇒
+          case '=' =>
             options += '='
-          case _ ⇒
+          case _ =>
             reset(processEscapeCommand(options, data))
         }
 
-      case LOOKING_FOR_INT_ARG_END ⇒
+      case LOOKING_FOR_INT_ARG_END =>
         buffer(pos) = data.toByte; pos += 1
 
         data match {
-          case _ if '0' <= data && data <= '9' ⇒
-          case _ ⇒
+          case _ if '0' <= data && data <= '9' =>
+          case _ =>
             val strValue = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             val value = new Integer(strValue)
             options += value
             data match {
-              case ';' ⇒
+              case ';' =>
                 state = LOOKING_FOR_NEXT_ARG
-              case _ ⇒
+              case _ =>
                 reset(processEscapeCommand(options, data))
             }
         }
 
-      case LOOKING_FOR_STR_ARG_END ⇒
+      case LOOKING_FOR_STR_ARG_END =>
         buffer(pos) = data.toByte; pos += 1
 
         data match {
-          case '"' ⇒
-          case _ ⇒
+          case '"' =>
+          case _ =>
             val value = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             options += value
             data match {
-              case ';' ⇒
+              case ';' =>
                 state = LOOKING_FOR_NEXT_ARG
-              case _ ⇒
+              case _ =>
                 reset(processEscapeCommand(options, data))
             }
         }
 
-      case LOOKING_FOR_OSC_COMMAND ⇒
+      case LOOKING_FOR_OSC_COMMAND =>
         buffer(pos) = data.toByte; pos += 1
 
         data match {
-          case _ if '0' <= data && data <= '9' ⇒
+          case _ if '0' <= data && data <= '9' =>
             startOfValue = pos - 1
             state = LOOKING_FOR_OSC_COMMAND_END
-          case _ ⇒
+          case _ =>
             reset(false)
         }
 
-      case LOOKING_FOR_OSC_COMMAND_END ⇒
+      case LOOKING_FOR_OSC_COMMAND_END =>
         buffer(pos) = data.toByte; pos += 1
 
         data match {
-          case ';' ⇒
+          case ';' =>
             val strValue = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             val value = new Integer(strValue)
             options += value
             startOfValue = pos
             state = LOOKING_FOR_OSC_PARAM
-          case _ if '0' <= data && data <= '9' ⇒
+          case _ if '0' <= data && data <= '9' =>
           // already pushed digit to buffer, just keep looking
-          case _ ⇒
+          case _ =>
             // oops, did not expect this
             reset(false)
         }
 
-      case LOOKING_FOR_OSC_PARAM ⇒
+      case LOOKING_FOR_OSC_PARAM =>
         buffer(pos) = data.toByte; pos += 1
 
         data match {
-          case BEL ⇒
+          case BEL =>
             val value = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             options += value
             reset(processOperatingSystemCommand(options))
-          case FIRST_ESC_CHAR ⇒
+          case FIRST_ESC_CHAR =>
             state = LOOKING_FOR_ST
-          case _ ⇒
+          case _ =>
           // just keep looking while adding text
         }
 
-      case LOOKING_FOR_ST ⇒
+      case LOOKING_FOR_ST =>
         buffer(pos) = data.toByte; pos += 1
 
         data match {
-          case SECOND_ST_CHAR ⇒
+          case SECOND_ST_CHAR =>
             val value = new String(buffer, startOfValue, (pos - 2) - startOfValue, "UTF-8")
             options += value
             reset(processOperatingSystemCommand(options))
-          case _ ⇒
+          case _ =>
             state = LOOKING_FOR_OSC_PARAM
         }
     }
@@ -181,65 +181,65 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   private def processEscapeCommand(options: ArrayBuffer[Any], command: Int): Boolean = {
     try {
       command match {
-        case 'A' ⇒
+        case 'A' =>
           processCursorUp(optionInt(options, 0, 1))
           true
-        case 'B' ⇒
+        case 'B' =>
           processCursorDown(optionInt(options, 0, 1))
           true
-        case 'C' ⇒
+        case 'C' =>
           processCursorRight(optionInt(options, 0, 1))
           true
-        case 'D' ⇒
+        case 'D' =>
           processCursorLeft(optionInt(options, 0, 1))
           true
-        case 'E' ⇒
+        case 'E' =>
           processCursorDownLine(optionInt(options, 0, 1))
           true
-        case 'F' ⇒
+        case 'F' =>
           processCursorUpLine(optionInt(options, 0, 1))
           true
-        case 'G' ⇒
+        case 'G' =>
           processCursorToColumn(optionInt(options, 0))
           true
-        case 'H' | 'f' ⇒
+        case 'H' | 'f' =>
           processCursorTo(optionInt(options, 0, 1), optionInt(options, 1, 1))
           true
-        case 'J' ⇒
+        case 'J' =>
           processEraseScreen(optionInt(options, 0, 0))
           true
-        case 'K' ⇒
+        case 'K' =>
           processEraseLine(optionInt(options, 0, 0))
           true
-        case 'S' ⇒
+        case 'S' =>
           processScrollUp(optionInt(options, 0, 1))
           true
-        case 'T' ⇒
+        case 'T' =>
           processScrollDown(optionInt(options, 0, 1))
           true
-        case 'm' ⇒
+        case 'm' =>
           // all options should be ints...
           var count = 0
           options foreach {
-            case value: Int ⇒
+            case value: Int =>
               count += 1
               value match {
-                case _ if 30 <= value && value <= 37 ⇒
+                case _ if 30 <= value && value <= 37 =>
                   processSetForegroundColor(value - 30)
-                case _ if 40 <= value && value <= 47 ⇒
+                case _ if 40 <= value && value <= 47 =>
                   processSetBackgroundColor(value - 40)
-                case 39 ⇒
+                case 39 =>
                   processDefaultTextColor
-                case 49 ⇒
+                case 49 =>
                   processDefaultBackgroundColor
-                case 0 ⇒
+                case 0 =>
                   processAttributeRest
-                case _ ⇒
+                case _ =>
                   processSetAttribute(value)
               }
-            case null ⇒
+            case null =>
             // ginore
-            case _ ⇒
+            case _ =>
               throw new IllegalArgumentException()
           }
 
@@ -247,16 +247,16 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
             processAttributeRest
           }
           true
-        case 's' ⇒
+        case 's' =>
           processSaveCursorPosition
           true
-        case 'u' ⇒
+        case 'u' =>
           processRestoreCursorPosition
           true
-        case 'n' if optionInt(options, 0, -1) == 6 ⇒
+        case 'n' if optionInt(options, 0, -1) == 6 =>
           processReportCursorPosition
           true
-        case _ ⇒
+        case _ =>
           if ('a' <= command && command <= 'z') {
             processUnknownExtension(options, command)
             true
@@ -268,7 +268,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
           }
       }
     } catch {
-      case ex: IllegalArgumentException ⇒ false
+      case ex: IllegalArgumentException => false
     }
   }
 
@@ -285,22 +285,22 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
     // it to processUnknownOperatingSystemCommand implementations to handle that
     try {
       command match {
-        case 0 ⇒
+        case 0 =>
           processChangeIconNameAndWindowTitle(label)
           true
-        case 1 ⇒
+        case 1 =>
           processChangeIconName(label)
           true
-        case 2 ⇒
+        case 2 =>
           processChangeWindowTitle(label)
           true
-        case _ ⇒
+        case _ =>
           // not exactly unknown, but not supported through dedicated process methods:
           processUnknownOperatingSystemCommand(command, label)
           true
       }
     } catch {
-      case ex: IllegalArgumentException ⇒ false
+      case ex: IllegalArgumentException => false
     }
   }
 
@@ -395,8 +395,8 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   private def optionInt(options: ArrayBuffer[Any], index: Int): Int = {
     if (options.size > index) {
       options(index) match {
-        case value: Int ⇒ value
-        case _ ⇒ throw new IllegalArgumentException()
+        case value: Int => value
+        case _ => throw new IllegalArgumentException()
       }
     } else {
       throw new IllegalArgumentException()
@@ -406,8 +406,8 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   private def optionInt(options: ArrayBuffer[Any], index: Int, defaultValue: Int): Int = {
     if (options.size > index) {
       options(index) match {
-        case value: Int ⇒ value
-        case _ ⇒ defaultValue
+        case value: Int => value
+        case _ => defaultValue
       }
     } else {
       defaultValue

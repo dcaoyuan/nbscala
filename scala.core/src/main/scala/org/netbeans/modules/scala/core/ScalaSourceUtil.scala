@@ -71,18 +71,18 @@ object ScalaSourceUtil {
   /** Includes things you'd want selected as a unit when double clicking in the editor */
   def isIdentifierChar(c: Char): Boolean = {
     c match {
-      case '$' | '@' | '&' | ':' | '!' | '?' | '=' ⇒ true // Function name suffixes
-      case _ if Character.isJavaIdentifierPart(c) ⇒ true // Globals, fields and parameter prefixes (for blocks and symbols)
-      case _ ⇒ false
+      case '$' | '@' | '&' | ':' | '!' | '?' | '=' => true // Function name suffixes
+      case _ if Character.isJavaIdentifierPart(c) => true // Globals, fields and parameter prefixes (for blocks and symbols)
+      case _ => false
     }
   }
 
   /** Includes things you'd want selected as a unit when double clicking in the editor */
   def isStrictIdentifierChar(c: Char): Boolean = {
     c match {
-      case '!' | '?' | '=' ⇒ true
-      case _ if Character.isJavaIdentifierPart(c) ⇒ true
-      case _ ⇒ false
+      case '!' | '?' | '=' => true
+      case _ if Character.isJavaIdentifierPart(c) => true
+      case _ => false
     }
   }
 
@@ -91,27 +91,27 @@ object ScalaSourceUtil {
     try {
       // Search forwards
       var break = false
-      for (i ← offset until text.length if !break) {
+      for (i <- offset until text.length if !break) {
         text.charAt(i) match {
-          case '\n' ⇒ break = true
-          case c if !Character.isWhitespace(c) ⇒ return false
-          case _ ⇒
+          case '\n' => break = true
+          case c if !Character.isWhitespace(c) => return false
+          case _ =>
         }
       }
 
       // Search backwards
       break = false
-      for (i ← offset - 1 to 0 if !break) {
+      for (i <- offset - 1 to 0 if !break) {
         text.charAt(i) match {
-          case '\n' ⇒ break = true
-          case c if !Character.isWhitespace(c) ⇒ return false
-          case _ ⇒
+          case '\n' => break = true
+          case c if !Character.isWhitespace(c) => return false
+          case _ =>
         }
       }
 
       true
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
         val ble = new BadLocationException(offset + " out of " + text.length, offset)
         ble.initCause(ex)
         throw ble
@@ -123,9 +123,9 @@ object ScalaSourceUtil {
     try {
       if (offset < text.length) {
         text.charAt(offset) match {
-          case '\n' ⇒
-          case '\r' if offset == text.length - 1 || text.charAt(offset + 1) == '\n' ⇒
-          case _ ⇒ return false
+          case '\n' =>
+          case '\r' if offset == text.length - 1 || text.charAt(offset + 1) == '\n' =>
+          case _ => return false
         }
       }
 
@@ -136,7 +136,7 @@ object ScalaSourceUtil {
 
       true
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
         val ble = new BadLocationException(offset + " out of " + text.length, offset)
         ble.initCause(ex)
         throw ble
@@ -151,24 +151,24 @@ object ScalaSourceUtil {
       var break = false
       while (i < text.length && !break) {
         text.charAt(i) match {
-          case '\n' ⇒ break = true
-          case '\r' if i == text.length() - 1 || text.charAt(i + 1) == '\n' ⇒ break = true
-          case _ ⇒ i += 1
+          case '\n' => break = true
+          case '\r' if i == text.length() - 1 || text.charAt(i + 1) == '\n' => break = true
+          case _ => i += 1
         }
       }
       // Search backwards to find last nonspace char from offset
       i -= 1
       while (i >= 0) {
         text.charAt(i) match {
-          case '\n' ⇒ return -1
-          case c if !Character.isWhitespace(c) ⇒ return i
-          case _ ⇒ i -= 1
+          case '\n' => return -1
+          case c if !Character.isWhitespace(c) => return i
+          case _ => i -= 1
         }
       }
 
       -1
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
         val ble = new BadLocationException(offset + " out of " + text.length, offset)
         ble.initCause(ex)
         throw ble
@@ -190,15 +190,15 @@ object ScalaSourceUtil {
       // Search forwards to find first nonspace char from offset
       while (i < text.length) {
         text.charAt(i) match {
-          case '\n' ⇒ return -1
-          case c if !Character.isWhitespace(c) ⇒ return i
-          case _ ⇒ i += 1
+          case '\n' => return -1
+          case c if !Character.isWhitespace(c) => return i
+          case _ => i += 1
         }
       }
 
       -1
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
         val ble = new BadLocationException(offset + " out of " + text.length, offset)
         ble.initCause(ex)
         throw ble
@@ -209,16 +209,16 @@ object ScalaSourceUtil {
   def getRowStart(text: String, offset: Int): Int = {
     try {
       // Search backwards
-      for (i ← offset - 1 to 0) {
+      for (i <- offset - 1 to 0) {
         text.charAt(i) match {
-          case '\n' ⇒ return i + 1
-          case _ ⇒
+          case '\n' => return i + 1
+          case _ =>
         }
       }
 
       0
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
         val ble = new BadLocationException(offset + " out of " + text.length, offset)
         ble.initCause(ex)
         throw ble
@@ -263,7 +263,7 @@ object ScalaSourceUtil {
     linesOffset += 0
 
     var line = 0
-    for (i ← 0 until length) {
+    for (i <- 0 until length) {
       if (source.charAt(i) == '\n') {
         // \r comes first so are not a problem...
         linesOffset += i
@@ -281,8 +281,8 @@ object ScalaSourceUtil {
     }
 
     val doc = pr.getSnapshot.getSource.getDocument(true) match {
-      case null ⇒ return null
-      case x: BaseDocument ⇒ x
+      case null => return null
+      case x: BaseDocument => x
     }
 
     val th = pr.getSnapshot.getTokenHierarchy
@@ -293,7 +293,7 @@ object ScalaSourceUtil {
     if (range.getEnd < doc.getLength) {
       try {
         return doc.getText(range.getStart, range.getLength)
-      } catch { case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex) }
+      } catch { case ex: BadLocationException => Exceptions.printStackTrace(ex) }
     }
 
     null
@@ -301,8 +301,8 @@ object ScalaSourceUtil {
 
   def getDocComment(doc: BaseDocument, symbolOffset: Int): String = {
     val th = TokenHierarchy.get(doc) match {
-      case null ⇒ return ""
-      case x ⇒ x
+      case null => return ""
+      case x => x
     }
 
     val range = ScalaLexUtil.getDocCommentRangeBefore(doc, th, symbolOffset)
@@ -310,7 +310,7 @@ object ScalaSourceUtil {
     if (range != OffsetRange.NONE && range.getEnd < doc.getLength) {
       try {
         return doc.getText(range.getStart, range.getLength)
-      } catch { case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex) }
+      } catch { case ex: BadLocationException => Exceptions.printStackTrace(ex) }
     }
 
     ""
@@ -353,7 +353,7 @@ object ScalaSourceUtil {
     val qName: String = try {
       sym.enclClass.fullName('/')
     } catch {
-      case ex: java.lang.Error ⇒ null
+      case ex: java.lang.Error => null
       // java.lang.Error: no-symbol does not have owner
       //        at scala.tools.nsc.symtab.Symbols$NoSymbol$.owner(Symbols.scala:1565)
       //        at scala.tools.nsc.symtab.Symbols$Symbol.fullName(Symbols.scala:1156)
@@ -367,8 +367,8 @@ object ScalaSourceUtil {
     //* @Note Always use '/' instead File.SeparatorChar when try to findResource
 
     val pkgName = qName.lastIndexOf('/') match {
-      case -1 ⇒ null
-      case i ⇒ qName.substring(0, i)
+      case -1 => null
+      case i => qName.substring(0, i)
     }
 
     val clzName = qName + ".class"
@@ -395,8 +395,8 @@ object ScalaSourceUtil {
 
     if ((srcPath ne null) && srcPath != "") {
       findSourceFileObject(srcCpMine, srcCpTarget, srcPath) match {
-        case None ⇒
-        case some ⇒ return some
+        case None =>
+        case some => return some
       }
     }
 
@@ -404,8 +404,8 @@ object ScalaSourceUtil {
 
     // * see if we can find this class's source file straightforward
     findSourceFileObject(srcCpMine, srcCpTarget, qName + ext) match {
-      case None ⇒
-      case some ⇒ return some
+      case None =>
+      case some => return some
     }
 
     try {
@@ -413,8 +413,8 @@ object ScalaSourceUtil {
         val in = clzFo.getInputStream
         try {
           new ClassFile(in, false) match {
-            case null ⇒ null
-            case clzFile ⇒ clzFile.getSourceFileName
+            case null => null
+            case clzFile => clzFile.getSourceFileName
           }
         } finally { if (in ne null) in.close }
       } else null
@@ -423,18 +423,18 @@ object ScalaSourceUtil {
         val srcPath1 = if (pkgName ne null) pkgName + "/" + srcPath else srcPath
         findSourceFileObject(srcCpMine, srcCpTarget, srcPath1)
       } else None
-    } catch { case ex: Exception ⇒ ex.printStackTrace; None }
+    } catch { case ex: Exception => ex.printStackTrace; None }
   }
 
   def findSourceFileObject(srcCpMine: ClassPath, srcCpTarget: ClassPath, srcPath: String): Option[FileObject] = {
     // find in own project's srcCp first
     srcCpMine.findResource(srcPath) match {
-      case null if srcCpTarget eq null ⇒ None
-      case null ⇒ srcCpTarget.findResource(srcPath) match {
-        case null ⇒ None
-        case x ⇒ Some(x)
+      case null if srcCpTarget eq null => None
+      case null => srcCpTarget.findResource(srcPath) match {
+        case null => None
+        case x => Some(x)
       }
-      case x ⇒ return Some(x)
+      case x => return Some(x)
     }
 
   }
@@ -470,11 +470,11 @@ object ScalaSourceUtil {
     var todo = List(root)
     while (!todo.isEmpty) {
       todo match {
-        case Nil ⇒
-        case url :: xs ⇒
+        case Nil =>
+        case url :: xs =>
           todo = xs
           if (result.add(url)) {
-            inverseDeps.get(url) foreach { x ⇒ todo = x.toList ::: todo }
+            inverseDeps.get(url) foreach { x => todo = x.toList ::: todo }
           }
       }
     }
@@ -508,9 +508,9 @@ object ScalaSourceUtil {
 
     val global = pr.global
     import global._
-    askForResponse { () ⇒
+    askForResponse { () =>
       root.enclosingDfn(TMPL_KINDS, th, offset) foreach {
-        case enclDfn: ScalaDfn ⇒
+        case enclDfn: ScalaDfn =>
           val sym = enclDfn.symbol
           // "scalarun.Dog.$talk$1"
           val fqn = new StringBuilder(sym.fullName('.'))
@@ -520,7 +520,7 @@ object ScalaSourceUtil {
           val topClzName = topSym.fullName('.')
 
           // "scalarun.Dog$$talk$1"
-          for (i ← topClzName.length until fqn.length if fqn.charAt(i) == '.') {
+          for (i <- topClzName.length until fqn.length if fqn.charAt(i) == '.') {
             fqn.setCharAt(i, '$')
           }
 
@@ -533,8 +533,8 @@ object ScalaSourceUtil {
       }
 
     } get match {
-      case Left(_) ⇒
-      case Right(_) ⇒
+      case Left(_) =>
+      case Right(_) =>
     }
 
     if (clazzName.length == 0) return null
@@ -543,10 +543,10 @@ object ScalaSourceUtil {
 
     def findAllClassFilesWith(prefix: String, dirFo: FileObject, result: ArrayBuffer[FileObject]): Unit = {
       dirFo.getChildren foreach {
-        case null ⇒ // will this happen?
-        case x if x.isFolder ⇒ findAllClassFilesWith(prefix, x, result)
-        case x if x.getExt == "class" && FileUtil.getRelativePath(out, x).startsWith(prefix) ⇒ result += x
-        case _ ⇒
+        case null => // will this happen?
+        case x if x.isFolder => findAllClassFilesWith(prefix, x, result)
+        case x if x.getExt == "class" && FileUtil.getRelativePath(out, x).startsWith(prefix) => result += x
+        case _ =>
       }
     }
 
@@ -555,7 +555,7 @@ object ScalaSourceUtil {
     logger.info("Class prefix: " + pathPrefix + ", out dir: " + out)
     val potentialClasses = new ArrayBuffer[FileObject]
     findAllClassFilesWith(pathPrefix, out, potentialClasses)
-    for (clazzFo ← potentialClasses) {
+    for (clazzFo <- potentialClasses) {
       val in = clazzFo.getInputStream
       try {
         val clazzBin = new ClassFile(in, true)
@@ -569,8 +569,8 @@ object ScalaSourceUtil {
               if (code.getLineNumberTable exists { _ == lineNumber }) {
                 clazzName = FileUtil.getRelativePath(out, clazzFo).replace('/', '.')
                 clazzName = clazzName.lastIndexOf(".class") match {
-                  case -1 ⇒ clazzName
-                  case i ⇒ clazzName.substring(0, i)
+                  case -1 => clazzName
+                  case i => clazzName.substring(0, i)
                 }
                 logger.info("Found binary class name: " + clazzName)
                 return clazzName
@@ -590,7 +590,7 @@ object ScalaSourceUtil {
     val th = pr.getSnapshot.getTokenHierarchy
 
     var clzName = ""
-    root.enclosingDfn(TMPL_KINDS, th, offset) foreach { enclDfn ⇒
+    root.enclosingDfn(TMPL_KINDS, th, offset) foreach { enclDfn =>
       val sym = enclDfn.asInstanceOf[ScalaDfns#ScalaDfn].symbol
       if (sym ne null) {
         // "scalarun.Dog.$talk$1"
@@ -601,7 +601,7 @@ object ScalaSourceUtil {
         val topClzName = topSym.fullName('.')
 
         // "scalarun.Dog$$talk$1"
-        for (i ← topClzName.length until fqn.length) {
+        for (i <- topClzName.length until fqn.length) {
           if (fqn.charAt(i) == '.') {
             fqn.setCharAt(i, '$')
           }
@@ -651,8 +651,8 @@ object ScalaSourceUtil {
       throw new IllegalArgumentException
     }
     val source = Source.create(fo) match {
-      case null ⇒ throw new IllegalArgumentException
-      case x ⇒ x
+      case null => throw new IllegalArgumentException
+      case x => x
     }
     try {
       val result = new ArrayBuffer[ScalaDfns#ScalaDfn]
@@ -664,26 +664,26 @@ object ScalaSourceUtil {
           val global = pr.global
 
           def getAllDfns(scope: AstScope, kind: ElementKind, result: ArrayBuffer[global.ScalaDfn]): Seq[global.ScalaDfn] = {
-            scope.dfns foreach { dfn ⇒
+            scope.dfns foreach { dfn =>
               if (dfn.getKind == kind) result += dfn.asInstanceOf[global.ScalaDfn]
             }
             scope.subScopes foreach {
-              childScope ⇒ getAllDfns(childScope, kind, result)
+              childScope => getAllDfns(childScope, kind, result)
             }
             result
           }
 
           // * get all dfns will return all visible packages from the root and down
-          getAllDfns(root, ElementKind.PACKAGE, new ArrayBuffer[global.ScalaDfn]) foreach { packaging ⇒
+          getAllDfns(root, ElementKind.PACKAGE, new ArrayBuffer[global.ScalaDfn]) foreach { packaging =>
             // * only go through the defs for each package scope.
             // * Sub-packages are handled by the fact that
             // * getAllDefs will find them.
-            packaging.bindingScope.dfns foreach { dfn ⇒
+            packaging.bindingScope.dfns foreach { dfn =>
               if (isMainMethodExists(dfn.asInstanceOf[global.ScalaDfn])) result += dfn.asInstanceOf[global.ScalaDfn]
             }
           }
 
-          root.visibleDfns(ElementKind.MODULE) foreach { dfn ⇒
+          root.visibleDfns(ElementKind.MODULE) foreach { dfn =>
             if (isMainMethodExists(dfn.asInstanceOf[global.ScalaDfn])) result += dfn.asInstanceOf[global.ScalaDfn]
           }
         }
@@ -691,7 +691,7 @@ object ScalaSourceUtil {
       })
 
       result
-    } catch { case ex: ParseException ⇒ Exceptions.printStackTrace(ex); Nil }
+    } catch { case ex: ParseException => Exceptions.printStackTrace(ex); Nil }
   }
 
   def getMainClassesAsJavaCollection(fo: FileObject): java.util.Collection[AstDfn] = {
@@ -708,7 +708,7 @@ object ScalaSourceUtil {
    */
   def getMainClassesAsJavaCollection(sourceRoots: Array[FileObject]): java.util.Collection[AstDfn] = {
     val result = new java.util.ArrayList[AstDfn]
-    for (root ← sourceRoots) {
+    for (root <- sourceRoots) {
       result.addAll(getMainClassesAsJavaCollection(root))
       try {
         val bootCp = ClassPath.getClassPath(root, ClassPath.BOOT)
@@ -740,13 +740,13 @@ object ScalaSourceUtil {
         //                    }
         //                }, false);
         result
-      } catch { case ioe: Exception ⇒ Exceptions.printStackTrace(ioe); return java.util.Collections.emptySet[AstDfn] }
+      } catch { case ioe: Exception => Exceptions.printStackTrace(ioe); return java.util.Collections.emptySet[AstDfn] }
     }
     result
   }
 
   def isMainMethodExists(dfn: ScalaDfns#ScalaDfn): Boolean = {
-    dfn.members exists { member ⇒ member.isMethod && isMainMethod(member) }
+    dfn.members exists { member => member.isMethod && isMainMethod(member) }
   }
 
   /**
@@ -757,11 +757,11 @@ object ScalaSourceUtil {
   def isMainMethod(method: Symbols#Symbol): Boolean = {
     try {
       (method.nameString, method.tpe.paramTypes) match {
-        case ("main", List(x)) ⇒ true //NOI18N
-        case _ ⇒ false
+        case ("main", List(x)) => true //NOI18N
+        case _ => false
       }
     } catch {
-      case _: Throwable ⇒ false
+      case _: Throwable => false
     }
   }
 
@@ -773,7 +773,7 @@ object ScalaSourceUtil {
    */
   def getMainClasses(sourceRoots: Array[FileObject]): Seq[ScalaDfns#ScalaDfn] = {
     val result = new ArrayBuffer[ScalaDfns#ScalaDfn]
-    for (root ← sourceRoots) {
+    for (root <- sourceRoots) {
       result ++= getMainClasses(root)
       try {
         val bootCp = ClassPath.getClassPath(root, ClassPath.BOOT)
@@ -806,7 +806,7 @@ object ScalaSourceUtil {
         //                }, false);
         cpInfo
       } catch {
-        case ioe: Exception ⇒ Exceptions.printStackTrace(ioe); Nil
+        case ioe: Exception => Exceptions.printStackTrace(ioe); Nil
       }
     }
 
@@ -855,7 +855,7 @@ object ScalaSourceUtil {
     val end = try {
       org.netbeans.editor.Utilities.getRowLastNonWhite(doc, offset) + 1 // * @Note row should plus 1 to equal NetBeans' doc offset
     } catch {
-      case ex: javax.swing.text.BadLocationException ⇒ -1
+      case ex: javax.swing.text.BadLocationException => -1
     }
 
     if (end != -1 && end <= offset) {

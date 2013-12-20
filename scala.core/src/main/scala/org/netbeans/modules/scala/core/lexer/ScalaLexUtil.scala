@@ -143,20 +143,20 @@ object ScalaLexUtil extends LexUtil {
     var done = false
     while (ts.movePrevious && !done) {
       ts.token.id match {
-        case ScalaTokenId.DocCommentEnd ⇒
+        case ScalaTokenId.DocCommentEnd =>
           val token = ts.offsetToken
           endOffset = token.offset(th) + token.length
-        case ScalaTokenId.DocCommentStart ⇒
+        case ScalaTokenId.DocCommentStart =>
           val token = ts.offsetToken
           offset = token.offset(th)
           done = true
-        case id if !isWsComment(id) && !isKeyword(id) ⇒
+        case id if !isWsComment(id) && !isKeyword(id) =>
           ts.moveNext // recheck from this id
           findAnnotationBwd(ts) match {
-            case None ⇒ done = true
-            case Some(x) ⇒ // ts is moved to '@' now
+            case None => done = true
+            case Some(x) => // ts is moved to '@' now
           }
-        case _ ⇒
+        case _ =>
       }
     }
 
@@ -170,16 +170,16 @@ object ScalaLexUtil extends LexUtil {
     val token = ts.token
     var id = token.id
     id match {
-      case ScalaTokenId.Else ⇒
+      case ScalaTokenId.Else =>
         ts.moveNext
         id = ts.token.id
-      case ScalaTokenId.If | ScalaTokenId.For | ScalaTokenId.While ⇒
+      case ScalaTokenId.If | ScalaTokenId.For | ScalaTokenId.While =>
         ts.moveNext
         if (!skipParenthesis(ts, false)) {
           return OffsetRange.NONE
         }
         id = ts.token.id
-      case _ ⇒
+      case _ =>
         return OffsetRange.NONE
     }
 
@@ -215,8 +215,8 @@ object ScalaLexUtil extends LexUtil {
   /** Some AstItems have Xml Nl etc type of idToken, here we just pick following as proper one */
   def isProperIdToken(id: TokenId): Boolean = {
     id match {
-      case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super | ScalaTokenId.Wild ⇒ true
-      case _ ⇒ false
+      case ScalaTokenId.Identifier | ScalaTokenId.This | ScalaTokenId.Super | ScalaTokenId.Wild => true
+      case _ => false
     }
   }
 
@@ -230,16 +230,16 @@ object ScalaLexUtil extends LexUtil {
     while (ts.isValid && ts.movePrevious) {
       val token = ts.token
       token.id match {
-        case ScalaTokenId.Import ⇒
+        case ScalaTokenId.Import =>
           if (!lbraceExpected || lbraceExpected && lbraceMet) {
             // * since we are looking backward, the result is reversed
             return paths.toList
           }
-        case ScalaTokenId.Dot ⇒
+        case ScalaTokenId.Dot =>
           paths += token
-        case ScalaTokenId.Identifier ⇒
+        case ScalaTokenId.Identifier =>
           paths += token
-        case ScalaTokenId.LBrace ⇒
+        case ScalaTokenId.LBrace =>
           if (lbraceMet) {
             // * we can only meet LBrace one time
             return Nil
@@ -253,13 +253,13 @@ object ScalaLexUtil extends LexUtil {
               paths += idToken
             }
           }
-        case ScalaTokenId.Comma ⇒
+        case ScalaTokenId.Comma =>
           lbraceExpected = true
           if (paths.isEmpty) {
             exactBehindComma = true
           }
-        case id if isWsComment(id) ⇒
-        case _ ⇒ return Nil
+        case id if isWsComment(id) =>
+        case _ => return Nil
       }
     }
 
@@ -285,20 +285,20 @@ object ScalaLexUtil extends LexUtil {
     var newlineAllowed = false
     while (ts.isValid && ts.moveNext) {
       val token = ts.token match {
-        case x if x.isFlyweight ⇒ ts.offsetToken
-        case x ⇒ x
+        case x if x.isFlyweight => ts.offsetToken
+        case x => x
       }
 
       token.id match {
-        case ScalaTokenId.Identifier | ScalaTokenId.Wild ⇒
+        case ScalaTokenId.Identifier | ScalaTokenId.Wild =>
           end = token
           if (inBrace) {
             if (rarrowMet) {
               selectors match {
-                case (x, _) :: xs ⇒
+                case (x, _) :: xs =>
                   selectors = (x, token) :: xs
                   rarrowMet = false
-                case _ ⇒
+                case _ =>
               }
             } else {
               selectors = (token, token) :: selectors
@@ -307,19 +307,19 @@ object ScalaLexUtil extends LexUtil {
             newlineAllowed = false
             qual = token :: qual
           }
-        case ScalaTokenId.Dot ⇒
+        case ScalaTokenId.Dot =>
           newlineAllowed = true
-        case ScalaTokenId.LBrace ⇒
+        case ScalaTokenId.LBrace =>
           if (inBrace) return NullImportTokens // * we can only meet LBrace one time
           inBrace = true
           newlineAllowed = true
-        case ScalaTokenId.RBrace ⇒
+        case ScalaTokenId.RBrace =>
           end = token
           newlineAllowed = false
-        case ScalaTokenId.RArrow ⇒
+        case ScalaTokenId.RArrow =>
           rarrowMet = true
-        case ScalaTokenId.Comma ⇒
-        case ScalaTokenId.Nl ⇒
+        case ScalaTokenId.Comma =>
+        case ScalaTokenId.Nl =>
           if (!newlineAllowed) {
             if (selectors.isEmpty) {
               selectors = (qual.head, qual.head) :: selectors
@@ -327,8 +327,8 @@ object ScalaLexUtil extends LexUtil {
             }
             return ImportTokens(start, end, qual.reverse, selectors.reverse)
           }
-        case id if isWsComment(id) ⇒
-        case _ ⇒ return NullImportTokens
+        case id if isWsComment(id) =>
+        case _ => return NullImportTokens
       }
     }
 
@@ -341,7 +341,7 @@ object ScalaLexUtil extends LexUtil {
 
     while (ts.movePrevious) {
       ts.token.id match {
-        case ScalaTokenId.If ⇒
+        case ScalaTokenId.If =>
 
       }
     }
@@ -358,24 +358,24 @@ object ScalaLexUtil extends LexUtil {
     while (ts.movePrevious && !break) {
       val token = ts.token
       token.id match {
-        case id if ScalaLexUtil.isWsComment(id) ⇒
-        case ScalaTokenId.At ⇒
+        case id if ScalaLexUtil.isWsComment(id) =>
+        case ScalaTokenId.At =>
           collector = token :: collector
-        case ScalaTokenId.Identifier ⇒
+        case ScalaTokenId.Identifier =>
           collector = token :: collector
-        case ScalaTokenId.RParen ⇒
+        case ScalaTokenId.RParen =>
           ScalaLexUtil.findPairBwd(ts, ScalaTokenId.LParen, ScalaTokenId.RParen)
-        case ScalaTokenId.RBrace ⇒
+        case ScalaTokenId.RBrace =>
           ScalaLexUtil.findPairBwd(ts, ScalaTokenId.LBrace, ScalaTokenId.RBrace)
-        case ScalaTokenId.RBracket ⇒
+        case ScalaTokenId.RBracket =>
           ScalaLexUtil.findPairBwd(ts, ScalaTokenId.LBracket, ScalaTokenId.RBracket)
-        case _ ⇒ break = true
+        case _ => break = true
       }
 
       collector map { _.id } match {
-        case List(ScalaTokenId.At, ScalaTokenId.Identifier) ⇒ return Some(collector.last)
-        case List(_, _, _) ⇒ break = true // collect no more than 3 tokens
-        case _ ⇒
+        case List(ScalaTokenId.At, ScalaTokenId.Identifier) => return Some(collector.last)
+        case List(_, _, _) => break = true // collect no more than 3 tokens
+        case _ =>
       }
     }
 

@@ -100,17 +100,17 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
 
     // From core/output2/**/AbstractOutputPane
     val size = UIManager.get("customFontSize") match { //NOI18N
-      case null ⇒
+      case null =>
         UIManager.get("controlFont") match { // NOI18N
-          case null ⇒ 11
-          case f: Font ⇒ f.getSize
+          case null => 11
+          case f: Font => f.getSize
         }
-      case i: java.lang.Integer ⇒ i.intValue
+      case i: java.lang.Integer => i.intValue
     }
 
     val font = new Font("Monospaced", Font.PLAIN, size) match {
-      case null ⇒ new Font("Lucida Sans Typewriter", Font.PLAIN, size)
-      case f ⇒ f
+      case null => new Font("Lucida Sans Typewriter", Font.PLAIN, size)
+      case f => f
     }
     textPane.setFont(font)
 
@@ -118,8 +118,8 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
 
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
-      case null ⇒
-      case c ⇒ textPane.setSelectionColor(c)
+      case null =>
+      case c => textPane.setSelectionColor(c)
     }
 
     //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);
@@ -181,7 +181,7 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
 
     var builder: ExternalProcessBuilder = null
     log.info("==== Scala console args ====")
-    for (arg ← scalaArgs) {
+    for (arg <- scalaArgs) {
       log.info(arg)
       if (builder == null) {
         builder = new ExternalProcessBuilder(arg)
@@ -248,7 +248,7 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
 
               textPane.getCaret.setDot(pos)
             } catch {
-              case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex)
+              case ex: BadLocationException => Exceptions.printStackTrace(ex)
             }
           }
         })
@@ -317,12 +317,12 @@ object ScalaConsoleTopComponent {
   def findInstance() = synchronized {
     val win = WindowManager.getDefault().findTopComponent(PREFERRED_ID)
     win match {
-      case null ⇒
+      case null =>
         ErrorManager.getDefault.log(ErrorManager.WARNING,
           "Cannot find MyWindow component. It will not be located properly in the window system.")
         instance
-      case x: ScalaConsoleTopComponent ⇒ x
-      case _ ⇒
+      case x: ScalaConsoleTopComponent => x
+      case _ =>
         ErrorManager.getDefault.log(ErrorManager.WARNING,
           "There seem to be multiple components with the '" + PREFERRED_ID +
             "' ID. That is a potential source of errors and unexpected behavior.")

@@ -201,35 +201,35 @@ abstract class TerminalInput {
   def setKeyCodes(codes: Properties) {
     var i = 0
     while (i < 10) {
-      codes.getProperty("NUMPAD" + i) match { case null ⇒ ; case x ⇒ Numpad(i) = unEscape(x) }
+      codes.getProperty("NUMPAD" + i) match { case null => ; case x => Numpad(i) = unEscape(x) }
       i += 1
     }
     i = 1
     while (i < 20) {
-      codes.getProperty("F" + i) match { case null ⇒ ; case x ⇒ FunctionKey(i) = unEscape(x) }
-      codes.getProperty("SF" + i) match { case null ⇒ ; case x ⇒ FunctionKeyShift(i) = unEscape(x) }
-      codes.getProperty("CF" + i) match { case null ⇒ ; case x ⇒ FunctionKeyCtrl(i) = unEscape(x) }
-      codes.getProperty("AF" + i) match { case null ⇒ ; case x ⇒ FunctionKeyAlt(i) = unEscape(x) }
+      codes.getProperty("F" + i) match { case null => ; case x => FunctionKey(i) = unEscape(x) }
+      codes.getProperty("SF" + i) match { case null => ; case x => FunctionKeyShift(i) = unEscape(x) }
+      codes.getProperty("CF" + i) match { case null => ; case x => FunctionKeyCtrl(i) = unEscape(x) }
+      codes.getProperty("AF" + i) match { case null => ; case x => FunctionKeyAlt(i) = unEscape(x) }
       i += 1
     }
     val prefixes = Array("", "S", "C", "A")
     i = 0
     while (i < prefixes.length) {
-      codes.getProperty(prefixes(i) + "PGUP") match { case null ⇒ ; case x ⇒ PrevScn(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "PGDOWN") match { case null ⇒ ; case x ⇒ NextScn(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "END") match { case null ⇒ ; case x ⇒ KeyEnd(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "HOME") match { case null ⇒ ; case x ⇒ KeyHome(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "INSERT") match { case null ⇒ ; case x ⇒ Insert(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "REMOVE") match { case null ⇒ ; case x ⇒ Remove(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "UP") match { case null ⇒ ; case x ⇒ KeyUp(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "DOWN") match { case null ⇒ ; case x ⇒ KeyDown(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "LEFT") match { case null ⇒ ; case x ⇒ KeyLeft(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "RIGHT") match { case null ⇒ ; case x ⇒ KeyRight(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "ESCAPE") match { case null ⇒ ; case x ⇒ Escape(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "BACKSPACE") match { case null ⇒ ; case x ⇒ BackSpace(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "TAB") match { case null ⇒ ; case x ⇒ TabKey(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "NUMPLUS") match { case null ⇒ ; case x ⇒ NUMPlus(i) = unEscape(x) }
-      codes.getProperty(prefixes(i) + "NUMDECIMAL") match { case null ⇒ ; case x ⇒ NUMDot(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "PGUP") match { case null => ; case x => PrevScn(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "PGDOWN") match { case null => ; case x => NextScn(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "END") match { case null => ; case x => KeyEnd(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "HOME") match { case null => ; case x => KeyHome(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "INSERT") match { case null => ; case x => Insert(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "REMOVE") match { case null => ; case x => Remove(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "UP") match { case null => ; case x => KeyUp(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "DOWN") match { case null => ; case x => KeyDown(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "LEFT") match { case null => ; case x => KeyLeft(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "RIGHT") match { case null => ; case x => KeyRight(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "ESCAPE") match { case null => ; case x => Escape(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "BACKSPACE") match { case null => ; case x => BackSpace(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "TAB") match { case null => ; case x => TabKey(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "NUMPLUS") match { case null => ; case x => NUMPlus(i) = unEscape(x) }
+      codes.getProperty(prefixes(i) + "NUMDECIMAL") match { case null => ; case x => NUMDot(i) = unEscape(x) }
       i += 1
     }
   }
@@ -325,49 +325,49 @@ abstract class TerminalInput {
     }
 
     keyCode match {
-      case KeyEvent.VK_PAUSE ⇒
+      case KeyEvent.VK_PAUSE =>
         if (shift || control) sendTelnetCommand(243.toByte)
-      case KeyEvent.VK_F1 ⇒
+      case KeyEvent.VK_F1 =>
         writeSpecial(fmap(1))
-      case KeyEvent.VK_F2 ⇒
+      case KeyEvent.VK_F2 =>
         writeSpecial(fmap(2))
-      case KeyEvent.VK_F3 ⇒
+      case KeyEvent.VK_F3 =>
         writeSpecial(fmap(3))
-      case KeyEvent.VK_F4 ⇒
+      case KeyEvent.VK_F4 =>
         writeSpecial(fmap(4))
-      case KeyEvent.VK_F5 ⇒
+      case KeyEvent.VK_F5 =>
         writeSpecial(fmap(5))
-      case KeyEvent.VK_F6 ⇒
+      case KeyEvent.VK_F6 =>
         writeSpecial(fmap(6))
-      case KeyEvent.VK_F7 ⇒
+      case KeyEvent.VK_F7 =>
         writeSpecial(fmap(7))
-      case KeyEvent.VK_F8 ⇒
+      case KeyEvent.VK_F8 =>
         writeSpecial(fmap(8))
-      case KeyEvent.VK_F9 ⇒
+      case KeyEvent.VK_F9 =>
         writeSpecial(fmap(9))
-      case KeyEvent.VK_F10 ⇒
+      case KeyEvent.VK_F10 =>
         writeSpecial(fmap(10))
-      case KeyEvent.VK_F11 ⇒
+      case KeyEvent.VK_F11 =>
         writeSpecial(fmap(11))
-      case KeyEvent.VK_F12 ⇒
+      case KeyEvent.VK_F12 =>
         writeSpecial(fmap(12))
-      case KeyEvent.VK_UP ⇒
+      case KeyEvent.VK_UP =>
         writeSpecial(KeyUp(xind))
-      case KeyEvent.VK_DOWN ⇒
+      case KeyEvent.VK_DOWN =>
         writeSpecial(KeyDown(xind))
-      case KeyEvent.VK_LEFT ⇒
+      case KeyEvent.VK_LEFT =>
         writeSpecial(KeyLeft(xind))
-      case KeyEvent.VK_RIGHT ⇒
+      case KeyEvent.VK_RIGHT =>
         writeSpecial(KeyRight(xind))
-      case KeyEvent.VK_PAGE_DOWN ⇒
+      case KeyEvent.VK_PAGE_DOWN =>
         writeSpecial(NextScn(xind))
-      case KeyEvent.VK_PAGE_UP ⇒
+      case KeyEvent.VK_PAGE_UP =>
         writeSpecial(PrevScn(xind))
-      case KeyEvent.VK_INSERT ⇒
+      case KeyEvent.VK_INSERT =>
         writeSpecial(Insert(xind))
-      case KeyEvent.VK_DELETE ⇒
+      case KeyEvent.VK_DELETE =>
         writeSpecial(Remove(xind))
-      case KeyEvent.VK_BACK_SPACE ⇒
+      case KeyEvent.VK_BACK_SPACE =>
         writeSpecial(BackSpace(xind))
       //	if (localecho) {
       //	  if (BackSpace(xind) == "\b") {
@@ -376,21 +376,21 @@ abstract class TerminalInput {
       //	    putString(BackSpace(xind)) // echo it
       //	  }
       //	}
-      case KeyEvent.VK_HOME ⇒
+      case KeyEvent.VK_HOME =>
         writeSpecial(KeyHome(xind))
-      case KeyEvent.VK_END ⇒
+      case KeyEvent.VK_END =>
         writeSpecial(KeyEnd(xind))
-      case KeyEvent.VK_NUM_LOCK ⇒
+      case KeyEvent.VK_NUM_LOCK =>
         if (vms && control) {
           writeSpecial(PF1)
         }
         if (!control) {
           numlock = !numlock
         }
-      case KeyEvent.VK_CAPS_LOCK ⇒
+      case KeyEvent.VK_CAPS_LOCK =>
         capslock = !capslock
-      case KeyEvent.VK_SHIFT | KeyEvent.VK_CONTROL | KeyEvent.VK_ALT ⇒
-      case _ ⇒
+      case KeyEvent.VK_SHIFT | KeyEvent.VK_CONTROL | KeyEvent.VK_ALT =>
+      case _ =>
     }
   }
 
@@ -458,57 +458,57 @@ abstract class TerminalInput {
         return
       } else if (control)
         keyChar match {
-          case '0' ⇒
+          case '0' =>
             writeSpecial(Numpad(0))
             return
-          case '1' ⇒
+          case '1' =>
             writeSpecial(Numpad(1))
             return
-          case '2' ⇒
+          case '2' =>
             writeSpecial(Numpad(2))
             return
-          case '3' ⇒
+          case '3' =>
             writeSpecial(Numpad(3))
             return
-          case '4' ⇒
+          case '4' =>
             writeSpecial(Numpad(4))
             return
-          case '5' ⇒
+          case '5' =>
             writeSpecial(Numpad(5))
             return
-          case '6' ⇒
+          case '6' =>
             writeSpecial(Numpad(6))
             return
-          case '7' ⇒
+          case '7' =>
             writeSpecial(Numpad(7))
             return
-          case '8' ⇒
+          case '8' =>
             writeSpecial(Numpad(8))
             return
-          case '9' ⇒
+          case '9' =>
             writeSpecial(Numpad(9))
             return
-          case '.' ⇒
+          case '.' =>
             writeSpecial(KPPeriod)
             return
-          case '-' ⇒
-          case 31 ⇒
+          case '-' =>
+          case 31 =>
             writeSpecial(KPMinus)
             return
-          case '+' ⇒
+          case '+' =>
             writeSpecial(KPComma)
             return
-          case 10 ⇒
+          case 10 =>
             writeSpecial(KPEnter)
             return
-          case '/' ⇒
+          case '/' =>
             writeSpecial(PF2)
             return
-          case '*' ⇒
+          case '*' =>
             writeSpecial(PF3)
             return
           /* NUMLOCK handled in keyPressed */
-          case _ ⇒
+          case _ =>
         }
       /* Now what does this do and how did it get here. -Marcus
        if (shift && keyChar < 32) {
@@ -541,48 +541,48 @@ abstract class TerminalInput {
 
     if ((modifiers & KEY_ACTION) != 0) {
       keyCode match {
-        case KeyEvent.VK_NUMPAD0 ⇒
+        case KeyEvent.VK_NUMPAD0 =>
           writeSpecial(Numpad(0))
           return
-        case KeyEvent.VK_NUMPAD1 ⇒
+        case KeyEvent.VK_NUMPAD1 =>
           writeSpecial(Numpad(1))
           return
-        case KeyEvent.VK_NUMPAD2 ⇒
+        case KeyEvent.VK_NUMPAD2 =>
           writeSpecial(Numpad(2))
           return
-        case KeyEvent.VK_NUMPAD3 ⇒
+        case KeyEvent.VK_NUMPAD3 =>
           writeSpecial(Numpad(3))
           return
-        case KeyEvent.VK_NUMPAD4 ⇒
+        case KeyEvent.VK_NUMPAD4 =>
           writeSpecial(Numpad(4))
           return
-        case KeyEvent.VK_NUMPAD5 ⇒
+        case KeyEvent.VK_NUMPAD5 =>
           writeSpecial(Numpad(5))
           return
-        case KeyEvent.VK_NUMPAD6 ⇒
+        case KeyEvent.VK_NUMPAD6 =>
           writeSpecial(Numpad(6))
           return
-        case KeyEvent.VK_NUMPAD7 ⇒
+        case KeyEvent.VK_NUMPAD7 =>
           writeSpecial(Numpad(7))
           return
-        case KeyEvent.VK_NUMPAD8 ⇒
+        case KeyEvent.VK_NUMPAD8 =>
           writeSpecial(Numpad(8))
           return
-        case KeyEvent.VK_NUMPAD9 ⇒
+        case KeyEvent.VK_NUMPAD9 =>
           writeSpecial(Numpad(9))
           return
-        case KeyEvent.VK_DECIMAL ⇒
+        case KeyEvent.VK_DECIMAL =>
           writeSpecial(NUMDot(xind))
           return
-        case KeyEvent.VK_ADD ⇒
+        case KeyEvent.VK_ADD =>
           writeSpecial(NUMPlus(xind))
           return
       }
     }
 
     keyChar match {
-      case 8 | 127 | '\r' | '\n' ⇒
-      case _ ⇒
+      case 8 | 127 | '\r' | '\n' =>
+      case _ =>
         write("" + keyChar)
     }
   }
@@ -595,7 +595,7 @@ abstract class TerminalInput {
     _terminalId = id
 
     id match {
-      case ScoAnsi ⇒
+      case ScoAnsi =>
         FunctionKey(1) = "\u001b[M"
         FunctionKey(2) = "\u001b[N"
         FunctionKey(3) = "\u001b[O"
@@ -626,7 +626,7 @@ abstract class TerminalInput {
         NextScn(3) = "\u001b[G"
       // more theoretically.
 
-      case JLineWindows ⇒
+      case JLineWindows =>
         // @see jline.WindowsTerminal
         // SPECIAL_KEY_INDICATOR = 224, ie. '\u00E0', which will be sendSpecical convert to "-32" (bad)
         // So, we'll use NUMPAD_KEY_INDICATOR = 0 as the special key indicator for jline windows termnial. 
@@ -647,7 +647,7 @@ abstract class TerminalInput {
           i += 1
         }
 
-      case _ ⇒
+      case _ =>
     }
   }
 
@@ -677,21 +677,21 @@ object TerminalInput {
       if (idx == tmp.length) return cmd
 
       tmp.charAt(idx) match {
-        case 'b' ⇒
+        case 'b' =>
           cmd += "\b"
-        case 'e' ⇒
+        case 'e' =>
           cmd += "\u001b"
-        case 'n' ⇒
+        case 'n' =>
           cmd += "\n"
-        case 'r' ⇒
+        case 'r' =>
           cmd += "\r"
-        case 't' ⇒
+        case 't' =>
           cmd += "\t"
-        case 'v' ⇒
+        case 'v' =>
           cmd += "\u000b"
-        case 'a' ⇒
+        case 'a' =>
           cmd += "\u0012"
-        case _ ⇒
+        case _ =>
           if ((tmp.charAt(idx) >= '0') && (tmp.charAt(idx) <= '9')) {
             var i = idx
             var break = false

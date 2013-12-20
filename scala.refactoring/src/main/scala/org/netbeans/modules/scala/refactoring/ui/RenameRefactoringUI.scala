@@ -182,19 +182,19 @@ class RenameRefactoringUI(refactoring: AbstractRefactoring,
       var suffix = if (handle ne null) {
         handle.kind match {
           //if (kind.isClass() || kind.isInterface()) {
-          case ElementKind.CLASS /* || kind == ElementKind.MODULE*/ ⇒
+          case ElementKind.CLASS /* || kind == ElementKind.MODULE*/ =>
             /*kind.isInterface() ? getString("LBL_Interface") : */ getString("LBL_Class")
-          case ElementKind.METHOD ⇒
+          case ElementKind.METHOD =>
             getString("LBL_Method")
-          case ElementKind.FIELD ⇒
+          case ElementKind.FIELD =>
             getString("LBL_Field")
-          case ElementKind.VARIABLE ⇒
+          case ElementKind.VARIABLE =>
             getString("LBL_LocalVar")
-          case ElementKind.MODULE /*(jmiObject eq null && fromListener)*/ ⇒
+          case ElementKind.MODULE /*(jmiObject eq null && fromListener)*/ =>
             if (pkgRename) getString("LBL_Package") else getString("LBL_Folder")
-          case ElementKind.PARAMETER ⇒
+          case ElementKind.PARAMETER =>
             getString("LBL_Parameter")
-          case _ ⇒ ""
+          case _ => ""
         }
       } else ""
       suffix = suffix + " " + name // NOI18N
@@ -217,10 +217,10 @@ class RenameRefactoringUI(refactoring: AbstractRefactoring,
   def setParameters: Problem = {
     newName = getPanelName
     refactoring match {
-      case x: RenameRefactoring ⇒
+      case x: RenameRefactoring =>
         x.setNewName(newName)
         x.setSearchInComments(panel.searchJavadoc)
-      case _ ⇒ // MoveClassRefactoring etc
+      case _ => // MoveClassRefactoring etc
     }
 
     refactoring.checkParameters
@@ -230,9 +230,9 @@ class RenameRefactoringUI(refactoring: AbstractRefactoring,
     if (!panel.isUpdateReferences) return null
     newName = getPanelName
     refactoring match {
-      case x: RenameRefactoring ⇒
+      case x: RenameRefactoring =>
         x.setNewName(newName)
-      case _ ⇒ // MoveClassRefactoring etc
+      case _ => // MoveClassRefactoring etc
     }
 
     refactoring.fastCheckParameters

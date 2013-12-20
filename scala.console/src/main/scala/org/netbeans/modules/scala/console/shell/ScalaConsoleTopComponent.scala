@@ -88,7 +88,7 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
       try {
         console.close
       } catch {
-        case ex: Exception ⇒ log.warning(ex.getMessage)
+        case ex: Exception => log.warning(ex.getMessage)
       }
       console == null
     }
@@ -137,17 +137,17 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
   private def createTerminal: ScalaConsoleTerminal = {
     // From core/output2/**/AbstractOutputPane
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
-      case null ⇒
+      case null =>
         UIManager.get("controlFont") match { // NOI18N
-          case null ⇒ 11
-          case f: Font ⇒ f.getSize
+          case null => 11
+          case f: Font => f.getSize
         }
-      case i: java.lang.Integer ⇒ i.intValue
+      case i: java.lang.Integer => i.intValue
     }
 
     val font = new Font("Monospaced", Font.PLAIN, fontSize) match {
-      case null ⇒ new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
-      case x ⇒ x
+      case null => new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
+      case x => x
     }
 
     val textPane = new JTextPane()
@@ -160,8 +160,8 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
 
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
-      case null ⇒
-      case c ⇒ textPane.setSelectionColor(c)
+      case null =>
+      case c => textPane.setSelectionColor(c)
     }
 
     //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);
@@ -282,7 +282,7 @@ object ScalaConsoleTopComponent {
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String ⇒ Unit = null) {
+  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String => Unit = null) {
     val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
       def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
     })
@@ -293,11 +293,11 @@ object ScalaConsoleTopComponent {
 
         val tcId = toEscapedPreferredId(project)
         val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
-          case null ⇒
+          case null =>
             (new ScalaConsoleTopComponent(project), true)
-          case tc: ScalaConsoleTopComponent ⇒
+          case tc: ScalaConsoleTopComponent =>
             (tc, false)
-          case _ ⇒
+          case _ =>
             ErrorManager.getDefault.log(ErrorManager.WARNING,
               "There seem to be multiple components with the '" + tcId +
                 "' ID. That is a potential source of errors and unexpected behavior.")

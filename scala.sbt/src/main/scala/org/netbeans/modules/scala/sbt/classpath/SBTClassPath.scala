@@ -29,9 +29,9 @@ final class SBTClassPath(project: Project, scope: String, isTest: Boolean) exten
     x.addPropertyChangeListener(new PropertyChangeListener() {
       def propertyChange(evt: PropertyChangeEvent) {
         evt.getPropertyName match {
-          case SBTResolver.DESCRIPTOR_CHANGE ⇒
+          case SBTResolver.DESCRIPTOR_CHANGE =>
             pcs.firePropertyChange(ClassPathImplementation.PROP_RESOURCES, null, null)
-          case _ ⇒
+          case _ =>
         }
       }
     })
@@ -45,7 +45,7 @@ final class SBTClassPath(project: Project, scope: String, isTest: Boolean) exten
       result.addAll(getJavaBootResources)
     }
 
-    for (file ← sbtResolver.getResolvedClassPath(scope, isTest)) {
+    for (file <- sbtResolver.getResolvedClassPath(scope, isTest)) {
       val fo = FileUtil.toFileObject(file)
       try {
         val rootUrl =
@@ -65,7 +65,7 @@ final class SBTClassPath(project: Project, scope: String, isTest: Boolean) exten
           }
         result.add(ClassPathSupport.createResource(rootUrl))
       } catch {
-        case ex: FileStateInvalidException ⇒ Exceptions.printStackTrace(ex)
+        case ex: FileStateInvalidException => Exceptions.printStackTrace(ex)
       }
     }
 

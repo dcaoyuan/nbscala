@@ -104,9 +104,9 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
    */
   lazy val rootScope: ScalaRootScope = _root synchronized {
     _root match {
-      case None ⇒ toSemanticed
+      case None => toSemanticed
       //case Some(ScalaRootScope.EMPTY) => toSemanticed
-      case _ ⇒
+      case _ =>
     }
 
     // for some race conditions during cancel, the root may still be None,
@@ -145,10 +145,10 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
 
   private def collectErrors(reporter: Reporter) = {
     reporter match {
-      case ErrorReporter(Nil) ⇒ java.util.Collections.emptyList[Error]
-      case ErrorReporter(scalaErrors) ⇒
+      case ErrorReporter(Nil) => java.util.Collections.emptyList[Error]
+      case ErrorReporter(scalaErrors) =>
         val errs = new java.util.ArrayList[Error]
-        for (ScalaError(pos, msg, severity, force) ← scalaErrors if pos.isDefined) {
+        for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
           // It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
           if (srcFile.file eq pos.source.file) {
             val offset = pos.startOrPoint
@@ -164,7 +164,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
           }
         }
         errs
-      case _ ⇒ java.util.Collections.emptyList[Error]
+      case _ => java.util.Collections.emptyList[Error]
     }
   }
 
@@ -173,9 +173,9 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
   }
 
   override def toString = "ParserResult of " + fo.getNameExt + ", root is " + (_root match {
-    case None ⇒ "None"
-    case Some(ScalaRootScope.EMPTY) ⇒ "Empty"
-    case _ ⇒ "Ok"
+    case None => "None"
+    case Some(ScalaRootScope.EMPTY) => "Empty"
+    case _ => "Ok"
   })
 }
 
@@ -191,7 +191,7 @@ object ScalaParserResult {
     if (debug) {
       unreleasedResults.put(pr, snapshot.getSource.getFileObject.getPath)
       log.info("==== unreleased parser results: ")
-      for ((k, v) ← ScalaParserResult.unreleasedResults) log.info(k.toString)
+      for ((k, v) <- ScalaParserResult.unreleasedResults) log.info(k.toString)
     }
     pr
   }

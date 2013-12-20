@@ -80,8 +80,8 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
 
     assert(comp ne null)
     comp.getDocument match {
-      case null ⇒
-      case x ⇒
+      case null =>
+      case x =>
         doc = x.asInstanceOf[BaseDocument]
         RequestProcessor.getDefault.post(this)
     }
@@ -116,35 +116,35 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
             while (itr.hasNext) {
               val error = itr.next
               FixImportsHelper.checkMissingImport(error.getDescription) match {
-                case Some(missingName) if !missingNames.contains(missingName) ⇒
+                case Some(missingName) if !missingNames.contains(missingName) =>
                   FixImportsHelper.calcOffsetRange(doc, error.getStartPosition, error.getEndPosition) match {
-                    case Some(range) ⇒ missingNames += (missingName -> range)
-                    case None ⇒
+                    case Some(range) => missingNames += (missingName -> range)
+                    case None =>
                   }
-                case _ ⇒
+                case _ =>
               }
             }
           }
         }
       })
-    } catch { case ex: ParseException ⇒ Exceptions.printStackTrace(ex) }
+    } catch { case ex: ParseException => Exceptions.printStackTrace(ex) }
 
     // go over list of missing imports, fix it - if there is only one
     // candidate or populate choosers input list.
 
     var multipleCandidates: Map[String, List[ImportCandidate]] = Map()
-    for ((missing, range) ← missingNames) {
+    for ((missing, range) <- missingNames) {
       FixImportsHelper.getImportCandidate(fo, missing, range) match {
-        case Nil ⇒
-        case x :: Nil ⇒ FixImportsHelper.doImport(doc, missing, x.fqn, range)
-        case importCandidates ⇒ multipleCandidates += (missing -> importCandidates)
+        case Nil =>
+        case x :: Nil => FixImportsHelper.doImport(doc, missing, x.fqn, range)
+        case importCandidates => multipleCandidates += (missing -> importCandidates)
       }
     }
 
     // * do we have multiple candidate? In this case we need to present a chooser
     if (!multipleCandidates.isEmpty) {
       log.log(Level.FINEST, "multipleCandidates.size(): " + multipleCandidates.size)
-      for (ImportCandidate(missing, fqn, range, icon, importantsLevel) ← presentChooser(multipleCandidates)) {
+      for (ImportCandidate(missing, fqn, range, icon, importantsLevel) <- presentChooser(multipleCandidates)) {
         FixImportsHelper.doImport(doc, missing, fqn, range)
       }
     }
@@ -164,16 +164,16 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
     d.dispose
 
     dd.getValue match {
-      case NotifyDescriptor.OK_OPTION ⇒
+      case NotifyDescriptor.OK_OPTION =>
         val result = new ArrayBuffer[ImportCandidate]
         val selections = panel.getSelections
-        for ((missing, candidates) ← multipleCandidates) {
-          for (seletedFqn ← selections) {
+        for ((missing, candidates) <- multipleCandidates) {
+          for (seletedFqn <- selections) {
             candidates.find { _.fqn == seletedFqn } foreach { result += _ }
           }
         }
         result.toArray
-      case _ ⇒ Array()
+      case _ => Array()
     }
   }
 }

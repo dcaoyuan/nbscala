@@ -70,13 +70,13 @@ class SourceGroupTreeElement(asg: SourceGroup) extends TreeElement {
   private val dir = asg.getRootFolder
   private val displayName = asg.getDisplayName
   private val icon = asg.getIcon(false) match {
-    case null ⇒
+    case null =>
       try {
         var image = DataObject.find(asg.getRootFolder).getNodeDelegate.getIcon(BeanInfo.ICON_COLOR_16x16)
         image = ImageUtilities.mergeImages(image, ImageUtilities.loadImage(PACKAGE_BADGE), 7, 7)
         new ImageIcon(image)
-      } catch { case ex: DataObjectNotFoundException ⇒ null }
-    case x ⇒ x
+      } catch { case ex: DataObjectNotFoundException => null }
+    case x => x
   }
 
   override def getParent(isLogical: Boolean): TreeElement = {
@@ -93,8 +93,8 @@ class SourceGroupTreeElement(asg: SourceGroup) extends TreeElement {
 
   override def getUserObject: Object = {
     sg.get match {
-      case null ⇒ FolderTreeElement.getSourceGroup(dir)
-      case x ⇒ x
+      case null => FolderTreeElement.getSourceGroup(dir)
+      case x => x
     }
   }
 }

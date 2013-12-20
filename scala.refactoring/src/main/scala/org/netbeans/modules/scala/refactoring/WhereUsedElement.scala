@@ -122,7 +122,7 @@ object WhereUsedElement {
         }
       }
     } catch {
-      case ex: Exception ⇒ Exceptions.printStackTrace(ex)
+      case ex: Exception => Exceptions.printStackTrace(ex)
     } finally {
       bdoc.readUnlock
     }
@@ -178,8 +178,8 @@ class WhereUsedElement(bounds: PositionBounds, displayText: String, parentFile: 
 
   def getLookup: Lookup = {
     val composite = ElementGripFactory.getDefault.get(parentFile, bounds.getBegin.getOffset) match {
-      case null ⇒ parentFile
-      case x ⇒ x
+      case null => parentFile
+      case x => x
     }
 
     Lookups.singleton(composite)

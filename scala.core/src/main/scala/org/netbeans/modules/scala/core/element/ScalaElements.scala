@@ -64,7 +64,7 @@ import org.netbeans.modules.scala.core.{ JavaSourceUtil, ScalaGlobal, ScalaSourc
  *
  * @author Caoyuan Deng
  */
-trait ScalaElements { self: ScalaGlobal ⇒
+trait ScalaElements { self: ScalaGlobal =>
 
   object ScalaElement {
     def apply(symbol: Symbol, pResult: ParserResult) = {
@@ -104,10 +104,10 @@ trait ScalaElements { self: ScalaGlobal ⇒
         fo getOrElse {
           fo = ScalaSourceUtil.getFileObject(parserResult, symbol) // try to get
           fo match {
-            case Some(x) ⇒
+            case Some(x) =>
               path = x.getPath
               x
-            case None ⇒
+            case None =>
               triedGetFo = true
               null
           }
@@ -119,7 +119,7 @@ trait ScalaElements { self: ScalaGlobal ⇒
       try {
         symbol.owner.nameString
       } catch {
-        case _: Throwable ⇒ ""
+        case _: Throwable => ""
       }
     }
 
@@ -149,15 +149,15 @@ trait ScalaElements { self: ScalaGlobal ⇒
     def getDocComment: String = {
       if (!isLoaded) load
 
-      getDoc foreach { srcDoc ⇒
+      getDoc foreach { srcDoc =>
         if (isJava) {
-          javaElement foreach { x ⇒
+          javaElement foreach { x =>
             try {
               val docComment: String = JavaSourceUtil.getDocComment(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), x)
               if (docComment.length > 0) {
                 return new StringBuilder(docComment.length + 5).append("/**").append(docComment).append("*/").toString
               }
-            } catch { case ex: IOException ⇒ Exceptions.printStackTrace(ex) }
+            } catch { case ex: IOException => Exceptions.printStackTrace(ex) }
           }
         } else {
           return ScalaSourceUtil.getDocComment(srcDoc, getOffset)
@@ -171,10 +171,10 @@ trait ScalaElements { self: ScalaGlobal ⇒
       if (!isLoaded) load
 
       if (isJava) {
-        javaElement foreach { x ⇒
+        javaElement foreach { x =>
           try {
             return JavaSourceUtil.getOffset(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), x)
-          } catch { case ex: IOException ⇒ Exceptions.printStackTrace(ex) }
+          } catch { case ex: IOException => Exceptions.printStackTrace(ex) }
         }
       } else {
         val pos = symbol.pos
@@ -194,11 +194,11 @@ trait ScalaElements { self: ScalaGlobal ⇒
       val srcFo = getFileObject
       if (srcFo ne null) {
         doc match {
-          case None ⇒ GsfUtilities.getDocument(srcFo, true) match {
-            case null ⇒
-            case x ⇒ doc = Some(x)
+          case None => GsfUtilities.getDocument(srcFo, true) match {
+            case null =>
+            case x => doc = Some(x)
           }
-          case _ ⇒
+          case _ =>
         }
         doc
       } else None
@@ -232,14 +232,14 @@ trait ScalaElements { self: ScalaGlobal ⇒
              * all symbols Position
              */
             val root = askForSemantic(srcFile) match {
-              case Some(root) ⇒
+              case Some(root) =>
                 root.findDfnMatched(symbol) match {
-                  case Some(x) ⇒ offset = x.idOffset(srcFile.tokenHierarchy)
-                  case None ⇒
+                  case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
+                  case None =>
                 }
-              case None ⇒
+              case None =>
             }
-          } catch { case ex: BadLocationException ⇒ Exceptions.printStackTrace(ex) }
+          } catch { case ex: BadLocationException => Exceptions.printStackTrace(ex) }
         }
       }
 
@@ -254,7 +254,7 @@ trait ScalaElements { self: ScalaGlobal ⇒
       try {
         symbol.isDeprecated
       } catch {
-        case _: Throwable ⇒ false
+        case _: Throwable => false
       }
     }
     def isDeprecated_=(b: Boolean) {

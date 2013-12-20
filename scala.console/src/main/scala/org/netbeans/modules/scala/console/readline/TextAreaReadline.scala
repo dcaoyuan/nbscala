@@ -45,7 +45,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
 
   // No editing before startPos
   area.getDocument match {
-    case doc: AbstractDocument ⇒
+    case doc: AbstractDocument =>
       doc.setDocumentFilter(new DocumentFilter() {
         override def insertString(fb: DocumentFilter.FilterBypass, offset: Int, str: String, attr: AttributeSet) {
           if (offset >= startPos) super.insertString(fb, offset, str, attr)
@@ -83,15 +83,15 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
     val code = event.getKeyCode
 
     code match {
-      case KeyEvent.VK_TAB ⇒ completeAction(event)
-      case KeyEvent.VK_LEFT ⇒ backAction(event)
-      case KeyEvent.VK_BACK_SPACE ⇒ backAction(event)
-      case KeyEvent.VK_UP ⇒ upAction(event)
-      case KeyEvent.VK_DOWN ⇒ downAction(event)
-      case KeyEvent.VK_ENTER ⇒ enterAction(event)
-      case KeyEvent.VK_HOME ⇒
+      case KeyEvent.VK_TAB => completeAction(event)
+      case KeyEvent.VK_LEFT => backAction(event)
+      case KeyEvent.VK_BACK_SPACE => backAction(event)
+      case KeyEvent.VK_UP => upAction(event)
+      case KeyEvent.VK_DOWN => downAction(event)
+      case KeyEvent.VK_ENTER => enterAction(event)
+      case KeyEvent.VK_HOME =>
         event.consume; area.setCaretPosition(startPos)
-      case _ ⇒ // Ignore
+      case _ => // Ignore
     }
 
     if (completePopup.isVisible &&
@@ -122,7 +122,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
     try {
       area.getDocument.insertString(area.getDocument.getLength, str, style)
     } catch {
-      case ex: BadLocationException ⇒ // just ignore
+      case ex: BadLocationException => // just ignore
     }
   }
 
@@ -149,7 +149,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
     val bufstr = try {
       area.getText(startPos, area.getCaretPosition - startPos)
     } catch {
-      case ex: BadLocationException ⇒ return
+      case ex: BadLocationException => return
     }
 
     val cursor = area.getCaretPosition - startPos
@@ -180,9 +180,9 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
 
     completeCombo.removeAllItems
     if (cutoff != 0) {
-      candidates foreach { item ⇒ completeCombo.addItem(item.substring(cutoff)) }
+      candidates foreach { item => completeCombo.addItem(item.substring(cutoff)) }
     } else {
-      candidates foreach { item ⇒ completeCombo.addItem(item) }
+      candidates foreach { item => completeCombo.addItem(item) }
     }
 
     completePopup.show(area, pos.x, pos.y + area.getFontMetrics(area.getFont).getHeight)
@@ -246,7 +246,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
       area.getDocument.remove(start, end - start)
       area.getDocument.insertString(start, replacement, inputStyle)
     } catch {
-      case ex: BadLocationException ⇒ // Ifnore
+      case ex: BadLocationException => // Ifnore
     }
   }
 
@@ -254,7 +254,7 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
     try {
       area.getText(startPos, area.getDocument.getLength - startPos)
     } catch {
-      case ex: BadLocationException ⇒ null // Ifnore
+      case ex: BadLocationException => null // Ifnore
     }
   }
 

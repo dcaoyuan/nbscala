@@ -34,9 +34,9 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
 
   def findClassPath(fileObject: FileObject, scope: String): ClassPath = {
     getFileType(fileObject) match {
-      case MAIN_SOURCE ⇒ getClassPath(scope, isTest = false)
-      case TEST_SOURCE ⇒ getClassPath(scope, isTest = true)
-      case _ ⇒ null
+      case MAIN_SOURCE => getClassPath(scope, isTest = false)
+      case TEST_SOURCE => getClassPath(scope, isTest = true)
+      case _ => null
     }
   }
 
@@ -53,12 +53,12 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
 
   def propertyChange(evt: PropertyChangeEvent) {
     evt.getPropertyName match {
-      case ClassPathImplementation.PROP_RESOURCES ⇒ cache synchronized {
+      case ClassPathImplementation.PROP_RESOURCES => cache synchronized {
         clearCache
         mainSrcRoots = null
         testSrcRoots = null
       }
-      case _ ⇒
+      case _ =>
     }
   }
 
@@ -80,12 +80,12 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
 
       // always find mainSrcRoots first, since the fo may also be included in testSrcRoots
       mainSrcRoots find contains(fo) match {
-        case None ⇒
+        case None =>
           testSrcRoots find contains(fo) match {
-            case None ⇒ UNKNOWN
-            case _ ⇒ TEST_SOURCE
+            case None => UNKNOWN
+            case _ => TEST_SOURCE
           }
-        case _ ⇒ MAIN_SOURCE
+        case _ => MAIN_SOURCE
       }
     } finally {
       rock.readLock.unlock

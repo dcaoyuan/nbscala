@@ -49,11 +49,11 @@ object ProjectResources {
     def scalaTestSrcToOut: Map[AbstractFile, AbstractFile] = toScalaDirs(testSrcToOut)
 
     private def toDirPaths(dirs: Map[FileObject, FileObject]): Map[String, String] = {
-      for ((src, out) ← dirs) yield (toDirPath(src), toDirPath(out))
+      for ((src, out) <- dirs) yield (toDirPath(src), toDirPath(out))
     }
 
     private def toScalaDirs(dirs: Map[FileObject, FileObject]): Map[AbstractFile, AbstractFile] = {
-      for ((src, out) ← dirs) yield (toScalaDir(src), toScalaDir(out))
+      for ((src, out) <- dirs) yield (toScalaDir(src), toScalaDir(out))
     }
 
     private def toDirPath(fo: FileObject) = FileUtil.toFile(fo).getAbsolutePath
@@ -78,19 +78,19 @@ object ProjectResources {
 
   def getSrcFileObjects(fo: FileObject, refresh: Boolean): Array[FileObject] = {
     val resource = getResourceOf(fo, refresh)
-    val srcPaths = for ((src, out) ← resource) yield src
+    val srcPaths = for ((src, out) <- resource) yield src
 
     srcPaths.toArray
   }
 
   def getOutFileObject(fo: FileObject, refresh: Boolean): Option[FileObject] = {
     val resource = getResourceOf(fo, refresh)
-    for ((src, out) ← resource) {
+    for ((src, out) <- resource) {
       try {
         val file = FileUtil.toFile(out)
         if (!file.exists) file.mkdirs
       } catch {
-        case _: Throwable ⇒
+        case _: Throwable =>
       }
 
       return Some(out)
@@ -102,15 +102,15 @@ object ProjectResources {
   /** is this `fo` under test source? */
   def isForTest(resource: ProjectResource, fo: FileObject) = {
     // we should check mainSrcs first, since I'm not sure if the testSrcs includes this fo too.
-    if (resource.mainSrcToOut exists { case (src, _) ⇒ src.equals(fo) || FileUtil.isParentOf(src, fo) }) {
+    if (resource.mainSrcToOut exists { case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo) }) {
       false
     } else {
-      resource.testSrcToOut exists { case (src, _) ⇒ src.equals(fo) || FileUtil.isParentOf(src, fo) }
+      resource.testSrcToOut exists { case (src, _) => src.equals(fo) || FileUtil.isParentOf(src, fo) }
     }
   }
 
   def findAllSourcesOf(mimeType: String, result: mutable.ListBuffer[FileObject])(dirFo: FileObject) {
-    dirFo.getChildren foreach { x ⇒
+    dirFo.getChildren foreach { x =>
       if (x.isFolder) {
         findAllSourcesOf(mimeType, result)(x)
       } else if (x.getMIMEType == mimeType) {
@@ -132,12 +132,12 @@ object ProjectResources {
 
     val (mainSrcs, testSrcs) = findMainAndTestSrcs(project)
 
-    mainSrcs foreach { src ⇒
+    mainSrcs foreach { src =>
       val out = findOutDir(project, src)
       resource.mainSrcToOut += (src -> out)
     }
 
-    testSrcs foreach { src ⇒
+    testSrcs foreach { src =>
       val out = findOutDir(project, src)
       resource.testSrcToOut += (src -> out)
     }
@@ -159,14 +159,14 @@ object ProjectResources {
     log.fine((managedSgs map (_.getRootFolder.getPath)).mkString("Project's src group[Managed]  dir: [", ", ", "]"))
 
     List(scalaSgs, javaSgs, managedSgs) foreach {
-      case Array(mainSg) ⇒
+      case Array(mainSg) =>
         mainSrcs += mainSg.getRootFolder
 
-      case Array(mainSg, testSg, _*) ⇒
+      case Array(mainSg, testSg, _*) =>
         mainSrcs += mainSg.getRootFolder
         testSrcs += testSg.getRootFolder
 
-      case _ ⇒
+      case _ =>
       // @todo add other srcs
     }
 
@@ -179,7 +179,7 @@ object ProjectResources {
         // make sure the url is in same form of BinaryForSourceQueryImplementation
         FileUtil.toFile(srcRoot).toURI.toURL
       } catch {
-        case ex: MalformedURLException ⇒ Exceptions.printStackTrace(ex); null
+        case ex: MalformedURLException => Exceptions.printStackTrace(ex); null
       }
 
     var out: FileObject = null
@@ -194,7 +194,7 @@ object ProjectResources {
           if (!FileUtil.isArchiveFile(url)) {
             val uri = try {
               url.toURI
-            } catch { case ex: URISyntaxException ⇒ Exceptions.printStackTrace(ex); null }
+            } catch { case ex: URISyntaxException => Exceptions.printStackTrace(ex); null }
 
             if (uri != null) {
               val file = new File(uri)
@@ -222,11 +222,11 @@ object ProjectResources {
     if (out == null) {
       val execCp = ClassPath.getClassPath(srcRoot, ClassPath.EXECUTE)
       if (execCp != null) {
-        val candidates = execCp.getRoots filter { x ⇒ FileUtil.getArchiveFile(x) == null }
+        val candidates = execCp.getRoots filter { x => FileUtil.getArchiveFile(x) == null }
         out = candidates find (_.getPath.endsWith("classes")) match {
-          case Some(x) ⇒ x
-          case None if candidates.length > 0 ⇒ candidates(0)
-          case _ ⇒ null
+          case Some(x) => x
+          case None if candidates.length > 0 => candidates(0)
+          case _ => null
         }
       }
     }
@@ -238,10 +238,10 @@ object ProjectResources {
         try {
           val tmpClasses = "build.classes.tmp"
           out = projectDir.getFileObject(tmpClasses) match {
-            case null ⇒ projectDir.createFolder(tmpClasses)
-            case x ⇒ x
+            case null => projectDir.createFolder(tmpClasses)
+            case x => x
           }
-        } catch { case ex: IOException ⇒ Exceptions.printStackTrace(ex) }
+        } catch { case ex: IOException => Exceptions.printStackTrace(ex) }
       }
     }
 
@@ -272,22 +272,22 @@ object ProjectResources {
   def toClassPathString(cps: Iterable[ClassPath]): String = {
     val cpStrs = new mutable.HashSet[String]()
 
-    for (cp ← cps) {
+    for (cp <- cps) {
       val entries = cp.entries.iterator
       while (entries.hasNext) {
         try {
           entries.next.getRoot match {
-            case null ⇒ null
-            case entryRoot ⇒
+            case null => null
+            case entryRoot =>
               // test if entryRoot is an ArchiveRoot, if yes, FileUtil.getArchiveFile(entryRoot) will return an ArchiveFile
               val file = FileUtil.getArchiveFile(entryRoot) match {
-                case null ⇒ FileUtil.toFile(entryRoot) // a regular file
-                case archiveFile ⇒ FileUtil.toFile(archiveFile) // a archive file
+                case null => FileUtil.toFile(entryRoot) // a regular file
+                case archiveFile => FileUtil.toFile(archiveFile) // a archive file
               }
               cpStrs += file.getAbsolutePath
           }
         } catch {
-          case ex: FileStateInvalidException ⇒ Exceptions.printStackTrace(ex); null
+          case ex: FileStateInvalidException => Exceptions.printStackTrace(ex); null
         }
       }
     }
@@ -305,18 +305,18 @@ object ProjectResources {
     val execCps = new mutable.HashSet[ClassPath]()
 
     val resource = findProjectResource(project)
-    for ((src, out) ← resource.mainSrcToOut) {
+    for ((src, out) <- resource.mainSrcToOut) {
       ClassPath.getClassPath(src, ClassPath.BOOT) match {
-        case null ⇒
-        case cp ⇒ bootCps += cp
+        case null =>
+        case cp => bootCps += cp
       }
       ClassPath.getClassPath(src, ClassPath.COMPILE) match {
-        case null ⇒
-        case cp ⇒ compCps += cp
+        case null =>
+        case cp => compCps += cp
       }
       ClassPath.getClassPath(src, ClassPath.EXECUTE) match {
-        case null ⇒
-        case cp ⇒ execCps += cp
+        case null =>
+        case cp => execCps += cp
       }
     }
 
