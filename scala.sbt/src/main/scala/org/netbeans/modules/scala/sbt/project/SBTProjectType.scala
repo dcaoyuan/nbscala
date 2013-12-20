@@ -26,7 +26,7 @@ class SBTProjectType extends ProjectFactory {
 
   override def isProject(projectDir: FileObject) = {
     !isMavenProject(projectDir) && !isProjectFolder(projectDir) && !isUnderSrcFolder(projectDir) &&
-      (hasSbtProjectDefinition(projectDir) || hasStdScalaSrcDir(projectDir))
+      (hasSbtProjectDefinition(projectDir) || hasStdScalaSrcDir(projectDir) || hasNBDescriptorFile(projectDir))
   }
 
   @throws(classOf[IOException])
@@ -75,5 +75,9 @@ object SBTProjectType {
 
   def hasStdScalaSrcDir(projectDir: FileObject): Boolean = {
     projectDir.getFileObject("src/main/scala") != null
+  }
+
+  def hasNBDescriptorFile(projectDir: FileObject): Boolean = {
+    projectDir.getFileObject(SBTResolver.DESCRIPTOR_FILE_NAME) != null
   }
 }
