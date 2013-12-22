@@ -26,14 +26,13 @@ import org.netbeans.modules.scala.console.ConsoleOutputLineParser
 import org.netbeans.modules.scala.console.TerminalInput
 import org.netbeans.modules.scala.console.TopComponentId
 import org.netbeans.modules.scala.console.shell.ScalaExecution
-import org.openide.ErrorManager
 import org.openide.filesystems.FileUtil
 import org.openide.util.Cancellable
 import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 import org.openide.windows.TopComponent
 import org.openide.windows.WindowManager
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable
 
 /**
  *
@@ -41,6 +40,11 @@ import scala.collection.mutable.ArrayBuffer
  */
 final class SBTConsoleTopComponent private (project: Project) extends TopComponent {
   import SBTConsoleTopComponent._
+
+  /**
+   * @Note this id will be escaped by PersistenceManager and for findTopCompoment(id)
+   */
+  override protected val preferredID = toPreferredId(project, sn)
 
   private val log = Logger.getLogger(getClass.getName)
 
@@ -57,10 +61,10 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   }
 
   /**
-   * @Note this id will be escaped by PersistenceManager and for findTopCompoment(id)
+   * @Note
+   * Since NetBeans 7.2, if persistenceType is set to PERSISTENCE_NEVER,
+   * WindowManager.getDefault.findTopComponent(tcId) will always return null
    */
-  override protected val preferredID = toPreferredId(project)
-
   override def getPersistenceType = TopComponent.PERSISTENCE_NEVER
 
   override def canClose = true // make sure this tc can be truely closed
@@ -257,6 +261,13 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 object SBTConsoleTopComponent {
   private val log = Logger.getLogger(this.getClass.getName)
 
+  private def apply(project: Project) = {
+    sn += 1
+    new SBTConsoleTopComponent(project)
+  }
+
+  private val projectToDefault = new mutable.WeakHashMap[Project, SBTConsoleTopComponent]()
+
   val defaultFg = Color.BLACK
   val defaultBg = Color.WHITE
   val linkFg = Color.BLUE
@@ -266,25 +277,25 @@ object SBTConsoleTopComponent {
    */
   val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png"
 
-  private val compName = "SBTConsole"
-  /**
-   * @see org.netbeans.core.windows.persistence.PersistenceManager
-   */
-  private def toPreferredId(project: Project) = {
-    compName + project.getProjectDirectory.getPath
-  }
+  private val CompName = "SBTConsole"
+  private var sn = 0
 
   /**
    * @see org.netbeans.core.windows.persistence.PersistenceManager
    */
-  private def toEscapedPreferredId(project: Project) = {
-    TopComponentId.escape(compName + project.getProjectDirectory.getPath)
-  }
+  private def toPreferredId(project: Project, sn: Int) = CompName + project.getProjectDirectory.getPath + "_" + sn
+  private def toEscapedPreferredId(project: Project, sn: Int) = TopComponentId.escape(toPreferredId(project, sn))
+
+  def openNewInstance(project: Project, background: Boolean, commands: List[String])(postAction: String => Unit = null) =
+    openInstance(project, background, commands, true, null)(postAction)
+
+  def openInstance(project: Project, background: Boolean, commands: List[String], message: String)(postAction: String => Unit = null): Unit =
+    openInstance(project, background, commands, false, message)(postAction)
 
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String => Unit = null) {
+  private def openInstance(project: Project, background: Boolean, commands: List[String], isForceNew: Boolean, message: String)(postAction: String => Unit) {
     val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
       def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
     })
@@ -293,17 +304,17 @@ object SBTConsoleTopComponent {
       def run {
         progressHandle.start
 
-        val tcId = toEscapedPreferredId(project)
-        val (tc, isNewCreated) = WindowManager.getDefault.findTopComponent(tcId) match {
-          case null =>
-            (new SBTConsoleTopComponent(project), true)
-          case tc: SBTConsoleTopComponent =>
-            (tc, false)
-          case _ =>
-            ErrorManager.getDefault.log(ErrorManager.WARNING,
-              "There seem to be multiple components with the '" + tcId +
-                "' ID. That is a potential source of errors and unexpected behavior.")
-            (null, false)
+        val (tc, isNewCreated) = projectToDefault.get(project) match {
+          case None =>
+            val default = SBTConsoleTopComponent(project)
+            projectToDefault.put(project, default)
+            (default, true)
+          case Some(tc) =>
+            if (isForceNew) {
+              (SBTConsoleTopComponent(project), true)
+            } else {
+              (tc, false)
+            }
         }
 
         if (!tc.isOpened) {
@@ -386,7 +397,7 @@ object SBTConsoleTopComponent {
         if (line.length < 6) {
           Array((line, defaultStyle))
         } else {
-          val texts = new ArrayBuffer[(String, AttributeSet)]()
+          val texts = new mutable.ArrayBuffer[(String, AttributeSet)]()
           val testRest_style = if (line.startsWith(ERROR_PREFIX)) {
 
             val m = rERROR_WITH_FILE.matcher(line)
