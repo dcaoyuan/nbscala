@@ -197,13 +197,13 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
       }
     }
 
-    for (
-      item <- items;
-      idTokenItem = item.idToken if !ScalaLexUtil.isWs(idTokenItem.id);
-      occurrence <- rootScope.findOccurrences(item);
-      name = occurrence.getName if name != "this" && name != "super";
-      idToken = occurrence.idToken; if !ScalaLexUtil.isWs(idToken.id)
-    ) {
+    for {
+      item <- items
+      idTokenItem = item.idToken if !ScalaLexUtil.isWs(idTokenItem.id)
+      occurrence <- rootScope.findOccurrences(item)
+      name = occurrence.getName if name != "this" && name != "super"
+      idToken = occurrence.idToken if !ScalaLexUtil.isWs(idToken.id)
+    } {
       highlights.put(ScalaLexUtil.getRangeOfToken(th, idToken), ColoringAttributes.MARK_OCCURRENCES)
     }
 

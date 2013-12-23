@@ -289,8 +289,8 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
               }
 
             case ImportSelector(from, _, to, _) =>
-              val xsym = importedSymbol(qual, from, to)
-              if (xsym ne null) {
+              val xsyms = importedSymbol(qual, from, to)
+              for (xsym <- xsyms) {
                 withIdToken(getIdToken(tree, from.decode)) { idToken =>
                   val ref = ScalaRef(xsym, idToken, ElementKind.OTHER, fo)
                   if (scopes.top.addRef(ref)) {
@@ -636,7 +636,7 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
      * We'll find class/trait instead of object first.
      * @bug in scala compiler? why name is always TermName? which means it's object instead of class/trait
      */
-    private def importedSymbol(qual: Tree, xname: Name, yname: Name): Symbol = {
+    private def importedSymbol(qual: Tree, xname: Name, yname: Name): ScalaAstVisitor.this.Scope = {
       val targetName = xname.toTermName
       val members = try {
         qual.tpe.members
@@ -644,10 +644,7 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
         case ex: Throwable => EmptyScope
       }
 
-      val result = members filter { _.name.toTermName == targetName }
-
-      // * prefer type over object
-      result find ScalaUtil.isProperType getOrElse result.headOption.getOrElse(null)
+      members filter { _.name.toTermName == targetName }
     }
 
     private def withIdToken(idToken: Option[Token[TokenId]])(op: Token[TokenId] => Unit) {
