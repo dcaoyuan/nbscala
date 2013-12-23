@@ -261,6 +261,7 @@
                     <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                         <publicPackage>org.netbeans.modules.scala.project.api</publicPackage>
+                        <publicPackage>org.netbeans.modules.scala.project.ui.customizer</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

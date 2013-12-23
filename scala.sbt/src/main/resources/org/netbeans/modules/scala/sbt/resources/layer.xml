@@ -1,6 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
 <filesystem>
+
+    <folder name="Loaders">
+        <folder name="text">
+            <folder name="x-scala">
+                <folder name="Actions">
+                    <file name="scala-project-separator-1.instance">
+                        <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                        <attr name="position" intvalue="530"/>
+                        <attr name="misplaced.action.allowed" boolvalue="true"/>
+                    </file>
+                    <file name="RunFile.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.sbt.project.SBTProjectModule.run"/>
+                        <attr name="position" intvalue="550"/>
+                        <attr name="misplaced.action.allowed" boolvalue="true"/>
+                    </file>
+                    <file name="DebugFile.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.sbt.project.SBTProjectModule.debug"/>
+                        <attr name="position" intvalue="560"/>
+                        <attr name="misplaced.action.allowed" boolvalue="true"/>
+                    </file>
+                    <file name="DebugTestFile.instance">
+                        <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.sbt.project.SBTProjectModule.debugTest"/>
+                        <attr name="position" intvalue="570"/>
+                        <attr name="misplaced.action.allowed" boolvalue="true"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+
     <folder name="Projects">
         <folder name="org-netbeans-modules-scala-sbt">
             <folder name="Nodes">

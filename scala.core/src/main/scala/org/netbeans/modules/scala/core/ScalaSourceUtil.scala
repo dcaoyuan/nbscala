@@ -678,16 +678,18 @@ object ScalaSourceUtil {
             // * only go through the defs for each package scope.
             // * Sub-packages are handled by the fact that
             // * getAllDefs will find them.
-            packaging.bindingScope.dfns foreach { dfn =>
-              if (isMainMethodExists(dfn.asInstanceOf[global.ScalaDfn])) result += dfn.asInstanceOf[global.ScalaDfn]
+            packaging.bindingScope.dfns map (_.asInstanceOf[global.ScalaDfn]) foreach { dfn =>
+              if (isMainMethodExists(dfn)) {
+                result += dfn
+              } else if (dfn.kind == ElementKind.MODULE) {
+                if (dfn.bindingScope.visibleDfns(ElementKind.METHOD) map (_.asInstanceOf[global.ScalaDfn]) exists isMainMethod) {
+                  result += dfn
+                }
+              }
             }
           }
 
-          root.visibleDfns(ElementKind.MODULE) foreach { dfn =>
-            if (isMainMethodExists(dfn.asInstanceOf[global.ScalaDfn])) result += dfn.asInstanceOf[global.ScalaDfn]
-          }
         }
-
       })
 
       result
@@ -747,6 +749,10 @@ object ScalaSourceUtil {
 
   def isMainMethodExists(dfn: ScalaDfns#ScalaDfn): Boolean = {
     dfn.members exists { member => member.isMethod && isMainMethod(member) }
+  }
+
+  def isMainMethod(dfn: ScalaDfns#ScalaDfn): Boolean = {
+    dfn.kind == ElementKind.METHOD && isMainMethod(dfn.symbol)
   }
 
   /**

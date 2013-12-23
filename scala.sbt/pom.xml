@@ -124,6 +124,18 @@
             <artifactId>org-openide-loaders</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-apache-tools-ant-module</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+
+        <!-- scalac transitive dependencies (scalac will check class dependencies deeply): <scope>provided</scope> -->
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.netbeans.modules</groupId>
@@ -139,6 +151,12 @@
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-scala-core</artifactId>
             <version>${scala.core.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-scala-project</artifactId>
+            <version>${scala.project.version}</version>
         </dependency>
 
         <!-- sbt-launcher.jar contains a redundant copy of scala runtime packages, which may be conflict
@@ -181,6 +199,13 @@
                     <codeNameBase>org.netbeans.modules.scala.sbt/1</codeNameBase>
                     <licenseName>CDDL-GPLV2</licenseName>
                     <licenseFile>license.txt</licenseFile>
+                    <!-- to resolve the references to friend modules or private classes -->
+                    <moduleDependencies>
+                        <dependency>
+                            <id>org.netbeans.modules:org-netbeans-modules-java-preprocessorbridge</id>
+                            <type>impl</type>
+                        </dependency>
+                    </moduleDependencies>
                 </configuration>
             </plugin>
         </plugins>
