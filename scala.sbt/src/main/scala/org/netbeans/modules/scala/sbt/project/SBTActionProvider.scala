@@ -58,7 +58,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
       case COMMAND_SBT_CONSOLE =>
         val commands = project.getId match {
           case null => Nil
-          case id => List("project " + id)
+          case id   => List("project " + id)
         }
         SBTConsoleTopComponent.openNewInstance(rootProject, false, commands)()
 
@@ -73,21 +73,21 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
       case COMMAND_BUILD =>
         val commands = project.getId match {
           case null => List("compile")
-          case id => List("project " + id, "compile")
+          case id   => List("project " + id, "compile")
         }
         SBTConsoleTopComponent.openInstance(rootProject, false, commands, null)()
 
       case COMMAND_REBUILD =>
         val commands = project.getId match {
           case null => List("clean", "compile")
-          case id => List("project " + id, "clean", "compile")
+          case id   => List("project " + id, "clean", "compile")
         }
         SBTConsoleTopComponent.openInstance(rootProject, false, commands, null)()
 
       case COMMAND_CLEAN =>
         val commands = project.getId match {
           case null => List("clean")
-          case id => List("project " + id, "clean")
+          case id   => List("project " + id, "clean")
         }
         SBTConsoleTopComponent.openInstance(rootProject, false, commands, null)()
 
@@ -107,7 +107,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         if (clazz != null) {
           val commands = project.getId match {
             case null => List("run-main " + clazz)
-            case id => List("project " + id, "run-main " + clazz)
+            case id   => List("project " + id, "run-main " + clazz)
           }
           // TODO debug file
           SBTConsoleTopComponent.openInstance(rootProject, false, commands, null)()
