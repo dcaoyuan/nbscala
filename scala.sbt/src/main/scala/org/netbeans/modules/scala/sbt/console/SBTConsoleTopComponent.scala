@@ -12,6 +12,7 @@ import java.util.logging.Logger
 import java.util.regex.Pattern
 import javax.swing._
 import javax.swing.text.AttributeSet
+import javax.swing.text.DefaultCaret
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 import org.netbeans.api.extexecution.ExecutionDescriptor
@@ -38,7 +39,7 @@ import scala.collection.mutable
  *
  * @author Caoyuan Deng
  */
-final class SBTConsoleTopComponent private (project: Project) extends TopComponent {
+class SBTConsoleTopComponent private (project: Project) extends TopComponent {
   import SBTConsoleTopComponent._
 
   /**
@@ -102,27 +103,10 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
   }
 
   override protected def componentActivated() {
-    // Make the caret visible. See comment under componentDeactivated.
-    if (console != null) {
-      val caret = console.area.getCaret
-      if (caret != null) {
-        caret.setVisible(true)
-      }
-    }
     super.componentActivated
   }
 
   override protected def componentDeactivated() {
-    // I have to turn off the caret when the window loses focus. Text components
-    // normally do this by themselves, but the TextAreaReadline component seems
-    // to mess around with the editable property of the text pane, and
-    // the caret will not turn itself on/off for noneditable text areas.
-    if (console != null) {
-      val caret = console.area.getCaret
-      if (caret != null) {
-        caret.setVisible(false)
-      }
-    }
     super.componentDeactivated
   }
 
@@ -145,7 +129,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
       case null =>
         UIManager.get("controlFont") match { // NOI18N
-          case null => 11
+          case null    => 11
           case f: Font => f.getSize
         }
       case i: java.lang.Integer => i.intValue
@@ -153,7 +137,7 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
 
     val font = new Font("Monospaced", Font.PLAIN, fontSize) match {
       case null => new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
-      case x => x
+      case x    => x
     }
 
     val textPane = new JTextPane()
@@ -163,11 +147,12 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     textPane.setForeground(Color.BLACK)
     textPane.setBackground(Color.WHITE)
     textPane.setCaretColor(Color.BLACK)
+    textPane.getCaret.asInstanceOf[DefaultCaret].setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
 
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
       case null =>
-      case c => textPane.setSelectionColor(c)
+      case c    => textPane.setSelectionColor(c)
     }
 
     //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);
@@ -256,6 +241,8 @@ final class SBTConsoleTopComponent private (project: Project) extends TopCompone
     console
   }
 
+  var isRunningCommand: Boolean = _
+
 }
 
 object SBTConsoleTopComponent {
@@ -267,6 +254,7 @@ object SBTConsoleTopComponent {
   }
 
   private val projectToDefault = new mutable.WeakHashMap[Project, SBTConsoleTopComponent]()
+  def defaultFor(project: Project) = projectToDefault.get(project)
 
   val defaultFg = Color.BLACK
   val defaultBg = Color.WHITE
@@ -296,26 +284,28 @@ object SBTConsoleTopComponent {
    * Obtain the SBTConsoleTopComponent instance by project
    */
   private def openInstance(project: Project, background: Boolean, commands: List[String], isForceNew: Boolean, message: String)(postAction: String => Unit) {
-    val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
-      def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
-    })
+    val (tc, isNewCreated) = projectToDefault.get(project) match {
+      case None =>
+        val default = SBTConsoleTopComponent(project)
+        projectToDefault.put(project, default)
+        (default, true)
+      case Some(tc) =>
+        if (isForceNew || tc.isRunningCommand) {
+          (SBTConsoleTopComponent(project), true)
+        } else {
+          (tc, false)
+        }
+    }
+    tc.isRunningCommand = true
 
     val runnableTask = new Runnable() {
       def run {
-        progressHandle.start
 
-        val (tc, isNewCreated) = projectToDefault.get(project) match {
-          case None =>
-            val default = SBTConsoleTopComponent(project)
-            projectToDefault.put(project, default)
-            (default, true)
-          case Some(tc) =>
-            if (isForceNew) {
-              (SBTConsoleTopComponent(project), true)
-            } else {
-              (tc, false)
-            }
-        }
+        val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
+          def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
+        })
+
+        progressHandle.start
 
         if (!tc.isOpened) {
           tc.open
@@ -334,6 +324,8 @@ object SBTConsoleTopComponent {
         if (postAction != null) {
           postAction(results.lastOption getOrElse null)
         }
+
+        tc.isRunningCommand = false
 
         progressHandle.finish
       }
