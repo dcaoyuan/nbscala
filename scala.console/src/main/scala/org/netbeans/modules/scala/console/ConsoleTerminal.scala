@@ -85,8 +85,6 @@ class ConsoleCapturer {
 }
 
 object ConsoleCapturer {
-  private val log = Logger.getLogger(getClass.getName)
-
   trait EndAction {
     /** print captured output on console or not */
     def isHidingOutput: Boolean
@@ -203,14 +201,14 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   }
 
   val pipedOut = new PrintStream(new PipedOutputStream(pipedIn))
+  val terminalInput = new ConsoleTerminalInput
+  private val mouseListener = new ConsoleMouseListener(area)
   private val doc = area.getDocument.asInstanceOf[StyledDocument]
 
-  private object areaMouseListener extends ConsoleMouseListener(area)
-
-  area.setCaret(BlockCaret)
+  area.setCaret(new BlockCaret)
   area.addKeyListener(terminalInput)
-  area.addMouseListener(areaMouseListener)
-  area.addMouseMotionListener(areaMouseListener)
+  area.addMouseListener(mouseListener)
+  area.addMouseMotionListener(mouseListener)
 
   protected val completer = new Completer {
     lazy val combo = {
@@ -223,7 +221,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     lazy val popup = {
       val x = new BasicComboPopup(combo) {
         //override def getInsets = new Insets(4, 4, 4, 4) // looks ugly under Windows
-        // JPopupMenu will aleays show from (x, y) to right-lower, but we want to it shows to right-upper 
+        // JPopupMenu will aleays show from (x, y) to right-lower, but we want to it shows to right-upper
         override def show(invoker: Component, _x: Int, _y: Int) {
           val x = _x
           val y = _y - getPreferredSize.height
@@ -272,8 +270,8 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     underlyingTask map (_.cancel(true))
 
     area.removeKeyListener(terminalInput)
-    area.removeMouseListener(areaMouseListener)
-    area.removeMouseMotionListener(areaMouseListener)
+    area.removeMouseListener(mouseListener)
+    area.removeMouseMotionListener(mouseListener)
   }
 
   @throws(classOf[IOException])
@@ -314,8 +312,8 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       isWaitingUserInput = nonLineTeminatedText.length > 0
     }
 
-    // @Note 
-    // doFlushWith is usaully called by inputstream/outputstream processing thread, 
+    // @Note
+    // doFlushWith is usaully called by inputstream/outputstream processing thread,
     // whatever, we will force Swing related code to be executed in event dispatch thread
     if (!outputCapturer.isCapturing) {
       val theIsWaitingUserInput = isWaitingUserInput // keep a copy for async call
@@ -448,7 +446,6 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     val overwriteLen = math.min(doc.getLength - from, str.length)
     doc.remove(from, overwriteLen)
     doc.insertString(from, str, style)
-    area.setCaretPosition(from + str.length)
   }
 
   protected def replaceText(start: Int, end: Int, replacement: String) {
@@ -601,7 +598,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     }
   }
 
-  object terminalInput extends TerminalInput with KeyListener {
+  class ConsoleTerminalInput extends TerminalInput with KeyListener {
     import KeyEvent._
 
     def invokeCompleteAction {
@@ -646,7 +643,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
         keyPressed(evt.getKeyCode, evt.getKeyChar, getModifiers(evt))
       }
 
-      // --- evt consumes 
+      // --- evt consumes
       keyCode match {
         case VK_C if evt.isMetaDown | evt.isControlDown => // copy action (@Note Ctrl+A is used to move to line begin)
         case VK_V if evt.isMetaDown | evt.isControlDown => // paste action
@@ -773,7 +770,7 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
     term.currentStyle = term.defaultStyle
   }
 
-  // @Note before do any ansi cursor command, we should flush first to keep the 
+  // @Note before do any ansi cursor command, we should flush first to keep the
   // proper caret position which is sensitive to the order of ansi command and chars to print
   override protected def processCursorToColumn(screenCol: Int) {
     term.doFlushWith(false) {

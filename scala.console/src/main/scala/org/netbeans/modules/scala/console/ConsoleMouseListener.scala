@@ -69,7 +69,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
       SwingUtilities.invokeLater(new Runnable() {
         def run() {
           // Attempt to force the mouse click to appear on the last line of the text input
-          var pos = textPane.getDocument.getEndPosition.getOffset - 1
+          var pos = textPane.getDocument.getLength
           if (pos == -1) {
             return
           }
@@ -86,7 +86,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
               pos = textPane.viewToModel(r.getLocation)
             }
 
-            textPane.getCaret.setDot(pos)
+            textPane.setCaretPosition(pos)
           } catch {
             case ex: BadLocationException => Exceptions.printStackTrace(ex)
           }

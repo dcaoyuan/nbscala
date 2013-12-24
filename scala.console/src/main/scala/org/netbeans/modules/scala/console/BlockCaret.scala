@@ -6,7 +6,7 @@ import javax.swing.text.BadLocationException
 import javax.swing.text.DefaultCaret
 
 @SerialVersionUID(1L)
-object BlockCaret extends DefaultCaret {
+class BlockCaret extends DefaultCaret {
 
   setBlinkRate(0)
 
@@ -26,7 +26,7 @@ object BlockCaret extends DefaultCaret {
     if (width <= 0)
       width = getComponent.getWidth
 
-    repaint() // Calls getComponent().repaint(x, y, width, height) to erase 
+    repaint() // Calls getComponent().repaint(x, y, width, height) to erase
     repaint() // previous location of caret. Sometimes one call isn't enough.
   }
 
