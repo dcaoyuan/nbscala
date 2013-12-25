@@ -282,13 +282,13 @@ object ScalaConsoleTopComponent {
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  def openInstance(project: Project, background: Boolean, commands: List[String], message: String = null)(postAction: String => Unit = null) {
-    val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
-      def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
-    })
+  def openInstance(project: Project, commands: List[String], background: Boolean = false)(postAction: String => Unit = (_) => ()) {
 
     val runnableTask = new Runnable() {
       def run {
+        val progressHandle = ProgressHandleFactory.createHandle("Openning Scala console...", new Cancellable() {
+          def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
+        })
         progressHandle.start
 
         val tcId = toEscapedPreferredId(project)
@@ -318,9 +318,7 @@ object ScalaConsoleTopComponent {
           tc.close
         }
 
-        if (postAction != null) {
-          postAction(results.lastOption getOrElse null)
-        }
+        postAction(results.lastOption getOrElse null)
 
         progressHandle.finish
       }
@@ -333,7 +331,7 @@ object ScalaConsoleTopComponent {
 
     @throws(classOf[IOException])
     override protected def handleClose() {
-      runCommand(":quit") // try to exit underlying process gracefully 
+      runCommand(":quit") // try to exit underlying process gracefully
       super.handleClose()
     }
 

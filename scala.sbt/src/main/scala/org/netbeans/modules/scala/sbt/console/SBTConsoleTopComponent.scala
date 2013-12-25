@@ -129,7 +129,7 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
       case null =>
         UIManager.get("controlFont") match { // NOI18N
-          case null    => 11
+          case null => 11
           case f: Font => f.getSize
         }
       case i: java.lang.Integer => i.intValue
@@ -137,7 +137,7 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
 
     val font = new Font("Monospaced", Font.PLAIN, fontSize) match {
       case null => new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
-      case x    => x
+      case x => x
     }
 
     val textPane = new JTextPane()
@@ -152,7 +152,7 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
       case null =>
-      case c    => textPane.setSelectionColor(c)
+      case c => textPane.setSelectionColor(c)
     }
 
     //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);
@@ -194,24 +194,27 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
     add(pane)
     validate
 
-    val sbtHome = ScalaExecution.getSbtHome
-    val sbtLaunchJar = ScalaExecution.getSbtLaunchJar(sbtHome)
-
-    val (executable, args) = ScalaExecution.getSbtArgs(sbtHome)
-    var builder = args.foldLeft(new ExternalProcessBuilder(executable))(_ addArgument _)
-    log.info(args.mkString("==== Sbt console args ====\n" + executable + "\n", "\n", "\n==== End of Sbt console args ===="))
-
     // XXX under Mac OS jdk7, the java.home is point to /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/jre
     // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which cause the lack of javac
     //builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
     val pwd = FileUtil.toFile(project.getProjectDirectory)
-    builder = builder.workingDirectory(pwd)
+    val sbtHome = ScalaExecution.getSbtHome
+    val sbtLaunchJar = ScalaExecution.getSbtLaunchJar(sbtHome)
+
+    val (executable, args) = ScalaExecution.getSbtArgs(sbtHome)
+    val builder = args.foldLeft(new ExternalProcessBuilder(executable))(_ addArgument _).workingDirectory(pwd)
+    log.info(args.mkString(
+      "\n==== Sbt console args ====\n" + executable + "\n",
+      "\n",
+      "\n==== End of Sbt console args ===="))
 
     val pipedIn = new PipedInputStream()
     val console = new SbtConsoleTerminal(
       textPane, pipedIn,
-      NbBundle.getMessage(classOf[SBTConsoleTopComponent], "SBTConsoleWelcome") + "\n" +
+      NbBundle.getMessage(classOf[SBTConsoleTopComponent],
+        "SBTConsoleWelcome") + "\n" +
         "sbt-launch=" + sbtLaunchJar.getOrElse("none") + "\n")
+
     if (ScalaExecution.isWindows) {
       console.terminalInput.terminalId = TerminalInput.JLineWindows
     }
@@ -222,8 +225,8 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
     val err = new PrintWriter(new PrintStream(consoleOut))
     val inputOutput = new ConsoleInputOutput(in, out, err)
 
-    val execDescriptor = new ExecutionDescriptor().frontWindow(true).inputVisible(true)
-      .inputOutput(inputOutput).postExecution(new Runnable() {
+    val execDescriptor = new ExecutionDescriptor().frontWindow(true).controllable(true).inputVisible(true).inputOutput(inputOutput)
+      .postExecution(new Runnable() {
         override def run() {
           textPane.setEditable(false)
           SwingUtilities.invokeLater(new Runnable() {
@@ -266,6 +269,7 @@ object SBTConsoleTopComponent {
   val ICON_PATH = "org/netbeans/modules/scala/sbt/resources/sbt.png"
 
   private val CompName = "SBTConsole"
+  private val EmptyAction = { _: String => () }
   private var sn = 0
 
   /**
@@ -274,16 +278,16 @@ object SBTConsoleTopComponent {
   private def toPreferredId(project: Project, sn: Int) = CompName + project.getProjectDirectory.getPath + "_" + sn
   private def toEscapedPreferredId(project: Project, sn: Int) = TopComponentId.escape(toPreferredId(project, sn))
 
-  def openNewInstance(project: Project, background: Boolean, commands: List[String])(postAction: String => Unit = null) =
-    openInstance(project, background, commands, true, null)(postAction)
+  def openNewInstance(project: Project, commands: List[String])(postAction: String => Unit = EmptyAction) =
+    openInstance(project, commands, isForceNew = true, false)(postAction)
 
-  def openInstance(project: Project, background: Boolean, commands: List[String], message: String)(postAction: String => Unit = null): Unit =
-    openInstance(project, background, commands, false, message)(postAction)
+  def openInstance(project: Project, commands: List[String])(postAction: String => Unit = EmptyAction): Unit =
+    openInstance(project, commands, isForceNew = false, false)(postAction)
 
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  private def openInstance(project: Project, background: Boolean, commands: List[String], isForceNew: Boolean, message: String)(postAction: String => Unit) {
+  private def openInstance(project: Project, commands: List[String], isForceNew: Boolean, background: Boolean)(postAction: String => Unit) {
     val (tc, isNewCreated) = projectToDefault.get(project) match {
       case None =>
         val default = SBTConsoleTopComponent(project)
@@ -301,9 +305,10 @@ object SBTConsoleTopComponent {
     val runnableTask = new Runnable() {
       def run {
 
-        val progressHandle = ProgressHandleFactory.createHandle(message, new Cancellable() {
-          def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
-        })
+        val progressHandle = ProgressHandleFactory.createHandle("Running sbt commnad...",
+          new Cancellable() {
+            def cancel: Boolean = false // XXX todo possible for a AWT Event dispatch thread?
+          })
 
         progressHandle.start
 
@@ -321,9 +326,7 @@ object SBTConsoleTopComponent {
           tc.close
         }
 
-        if (postAction != null) {
-          postAction(results.lastOption getOrElse null)
-        }
+        postAction(results.lastOption getOrElse null)
 
         tc.isRunningCommand = false
 

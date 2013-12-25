@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
 import javax.swing.Action
 import org.netbeans.api.project.Project
-import org.netbeans.modules.scala.core.ProjectResources
 import org.openide.awt.DynamicMenuContent
 import org.openide.util.ContextAwareAction
 import org.openide.util.Lookup
@@ -36,7 +35,7 @@ class ScalaConsoleAction extends AbstractAction with ContextAwareAction {
     putValue(Action.NAME, NbBundle.getMessage(classOf[ScalaConsoleAction], "CTL_ScalaConsoleAction"))
 
     override def actionPerformed(e: ActionEvent) {
-      ScalaConsoleTopComponent.openInstance(project, false, Nil)()
+      ScalaConsoleTopComponent.openInstance(project, Nil)()
     }
   }
 }

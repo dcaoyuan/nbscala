@@ -56,7 +56,7 @@ import org.openide.modules.InstalledFileLocator
 //import org.openide.modules.Places
 import org.openide.util.Exceptions
 import org.openide.util.Utilities
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 
 /**
  *
@@ -68,10 +68,10 @@ object ScalaExecution {
   private val SCALA_MAIN_CLASS = "scala.tools.nsc.MainGenericRunner"
   private val SBT_MAIN_CLASS = "sbt.xMain"
 
-  private val JVM_DEBUG = "-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"
+  private val JVM_DEBUG = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
 
-  def getSbtArgs(sbtHome: String): (String, Array[String]) = {
-    val args = new ArrayBuffer[String]()
+  def getSbtArgs(sbtHome: String): (String, List[String]) = {
+    val args = new ListBuffer[String]()
 
     val executable = getJavaHome + File.separator + "bin" + File.separator + "java" // NOI18N
     // XXX Do I need java.exe on Windows?
@@ -98,13 +98,11 @@ object ScalaExecution {
     args += "-jar"
     args += getSbtLaunchJar(sbtHome) map (_.getAbsolutePath) getOrElse "" // NOI18N
 
-    // Application arguments follow
-
-    (executable, args.toArray)
+    (executable, args.toList)
   }
 
-  def getScalaArgs(scalaHome: String, project: Project = null): (String, Array[String]) = {
-    val args = new ArrayBuffer[String]()
+  def getScalaArgs(scalaHome: String, project: Project = null): (String, List[String]) = {
+    val args = new ListBuffer[String]()
 
     val executable = getJavaHome + File.separator + "bin" + File.separator + "java"
 
@@ -183,7 +181,7 @@ object ScalaExecution {
     args += SCALA_MAIN_CLASS
     // application arguments follow
 
-    (executable, args.toArray)
+    (executable, args.toList)
   }
 
   def isWindows: Boolean = System.getProperty("os.name").toLowerCase match {

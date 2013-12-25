@@ -55,15 +55,12 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   def invokeAction(command: String, context: Lookup) {
     val rootProject = project.getRootProject
     command match {
-      case COMMAND_SBT_CONSOLE =>
-        val commands = project.getId match {
-          case null => Nil
-          case id => List("project " + id)
-        }
-        SBTConsoleTopComponent.openNewInstance(rootProject, false, commands)()
-
       case COMMAND_SCALA_CONSOLE =>
-        ScalaConsoleTopComponent.openInstance(project, false, Nil)()
+        ScalaConsoleTopComponent.openInstance(project, Nil)()
+
+      case COMMAND_SBT_CONSOLE =>
+        val commands = selectProject
+        SBTConsoleTopComponent.openInstance(rootProject, commands)()
 
       case COMMAND_SBT_RELOAD =>
         val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
@@ -71,33 +68,23 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         sbtResolver.triggerSbtResolution
 
       case COMMAND_BUILD =>
-        val commands = project.getId match {
-          case null => List("compile")
-          case id => List("project " + id, "compile")
-        }
-        SBTConsoleTopComponent.openInstance(rootProject, false, commands, null)()
+        val commands = selectProject ::: List("compile")
+        SBTConsoleTopComponent.openInstance(rootProject, commands)()
 
       case COMMAND_REBUILD =>
-        val commands = project.getId match {
-          case null => List("clean", "compile")
-          case id => List("project " + id, "clean", "compile")
-        }
-        SBTConsoleTopComponent.openInstance(rootProject, false, commands, null)()
+        val commands = selectProject ::: List("clean", "compile")
+        SBTConsoleTopComponent.openInstance(rootProject, commands)()
 
       case COMMAND_CLEAN =>
-        val commands = project.getId match {
-          case null => List("clean")
-          case id => List("project " + id, "clean")
-        }
-        SBTConsoleTopComponent.openInstance(rootProject, false, commands, null)()
+        val commands = selectProject ::: List("clean")
+        SBTConsoleTopComponent.openInstance(rootProject, commands)()
 
       case COMMAND_RUN_SINGLE | COMMAND_DEBUG_SINGLE =>
         val file = findSources(context, false)(0)
         val mainClasses = getMainClasses(file)
         val clazz = if (mainClasses.size == 1) {
-          val next = mainClasses.iterator.next()
           // Just one main class, resolve from the symbol
-          next.qualifiedName
+          mainClasses.iterator.next().qualifiedName
         } else if (mainClasses.size > 1) {
           // Several main classes, let the user choose
           showMainClassWarning(file, mainClasses)
@@ -105,17 +92,35 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
           null
         }
         if (clazz != null) {
-          val commands = project.getId match {
-            case null => List("run-main " + clazz)
-            case id => List("project " + id, "run-main " + clazz)
+          command match {
+            case COMMAND_RUN_SINGLE =>
+              val commands = selectProject ::: List(
+                "set fork := false",
+                "set javaOptions := Nil",
+                "run-main " + clazz)
+              SBTConsoleTopComponent.openInstance(rootProject, commands)()
+            case COMMAND_DEBUG_SINGLE =>
+              val commands = selectProject ::: List(
+                "set fork := true",
+                "set javaOptions := List(\"" + debugOpts(5005) + "\")",
+                "run-main " + clazz)
+              SBTConsoleTopComponent.openInstance(rootProject, commands)()
           }
-          // TODO debug file
-          SBTConsoleTopComponent.openInstance(rootProject, false, commands, null)()
         }
 
       case _ =>
     }
   }
+
+  private def selectProject = project.getId match {
+    case null => Nil
+    case id => List("project " + id)
+  }
+
+  /**
+   * @Note "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005" does not work under JVM invoked in java.lang.Process
+   */
+  private def debugOpts(port: Int) = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=" + port
 
   /**
    * Find selected sources, the sources has to be under single source root,
