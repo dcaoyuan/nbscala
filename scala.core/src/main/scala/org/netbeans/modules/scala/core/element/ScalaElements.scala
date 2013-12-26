@@ -124,7 +124,7 @@ trait ScalaElements { self: ScalaGlobal =>
     }
 
     override def getKind: ElementKind = {
-      ScalaUtil.getKind(symbol)
+      ScalaUtil.askForKind(symbol)
     }
 
     override def getMimeType: String = {
@@ -133,7 +133,7 @@ trait ScalaElements { self: ScalaGlobal =>
 
     override def getModifiers: java.util.Set[Modifier] = {
       if (!_modifiers.isDefined) {
-        _modifiers = Some(ScalaUtil.getModifiers(symbol))
+        _modifiers = Some(ScalaUtil.askForModifiers(symbol))
       }
       _modifiers.get
     }

@@ -336,7 +336,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
        } else*/
 
       if (samePlaceSymToDSimpleSig.isEmpty) {
-        samePlaceSymToDSimpleSig = samePlaceSyms map { case x: global.Symbol => (x, global.ScalaUtil.symSimpleSig(x)) }
+        samePlaceSymToDSimpleSig = samePlaceSyms map { case x: global.Symbol => (x, global.ScalaUtil.askForSymSimpleSig(x)) }
       }
 
       if (isFindUsages) {

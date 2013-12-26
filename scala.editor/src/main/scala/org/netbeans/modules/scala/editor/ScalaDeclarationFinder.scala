@@ -100,7 +100,7 @@ class ScalaDeclarationFinder extends DeclarationFinder {
 
     val closest = root.findItemsAt(th, astOffset) match {
       case Nil => return DeclarationLocation.NONE
-      case xs => global.ScalaUtil.importantItem(xs)
+      case xs => global.ScalaUtil.askForImportantItem(xs)
     }
 
     root.findDfnOf(closest) match {
@@ -121,7 +121,7 @@ class ScalaDeclarationFinder extends DeclarationFinder {
               root.findItemsAt(th, token.offset(th)) match {
                 case Nil => DeclarationLocation.NONE
                 case xs =>
-                  val item = global.ScalaUtil.importantItem(xs).asInstanceOf[global.ScalaItem]
+                  val item = global.ScalaUtil.askForImportantItem(xs).asInstanceOf[global.ScalaItem]
                   val remoteDfn = global.ScalaElement(item.symbol, info)
                   val location = new DeclarationLocation(remoteDfn.getFileObject, remoteDfn.getOffset, remoteDfn)
                   if (remoteDfn.getFileObject eq null) {

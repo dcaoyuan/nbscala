@@ -63,13 +63,5 @@ trait ScalaItems { self: ScalaGlobal =>
       ElementKind.OTHER
     }
 
-    def members: Scope = {
-      try {
-        symbol.tpe.members
-      } catch {
-        case ex: Throwable => EmptyScope
-      }
-    }
-
   }
 }

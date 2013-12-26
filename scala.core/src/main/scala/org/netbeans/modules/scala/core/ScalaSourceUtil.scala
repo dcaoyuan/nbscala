@@ -55,7 +55,9 @@ import org.openide.util.{ Exceptions }
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import scala.reflect.internal.{ Flags, Symbols }
+import scala.reflect.internal.Scopes
+import scala.reflect.internal.Flags
+import scala.reflect.internal.Symbols
 
 /**
  *
@@ -655,42 +657,33 @@ object ScalaSourceUtil {
       case x => x
     }
     try {
-      val result = new ArrayBuffer[ScalaDfns#ScalaDfn]
+      val pr = Array.ofDim[ScalaParserResult](1)
       ParserManager.parse(java.util.Collections.singleton(source), new UserTask {
         @throws(classOf[Exception])
         override def run(ri: ResultIterator) {
-          val pr = ri.getParserResult.asInstanceOf[ScalaParserResult]
-          val root = pr.rootScope
-          val global = pr.global
-
-          def getAllDfns(scope: AstScope, kind: ElementKind, result: ArrayBuffer[global.ScalaDfn]): Seq[global.ScalaDfn] = {
-            scope.dfns foreach { dfn =>
-              if (dfn.getKind == kind) result += dfn.asInstanceOf[global.ScalaDfn]
-            }
-            scope.subScopes foreach {
-              childScope => getAllDfns(childScope, kind, result)
-            }
-            result
-          }
-
-          // * get all dfns will return all visible packages from the root and down
-          getAllDfns(root, ElementKind.PACKAGE, new ArrayBuffer[global.ScalaDfn]) foreach { packaging =>
-            // * only go through the defs for each package scope.
-            // * Sub-packages are handled by the fact that
-            // * getAllDefs will find them.
-            packaging.bindingScope.dfns map (_.asInstanceOf[global.ScalaDfn]) foreach { dfn =>
-              if (isMainMethodExists(dfn)) {
-                result += dfn
-              } else if (dfn.kind == ElementKind.MODULE) {
-                if (dfn.bindingScope.visibleDfns(ElementKind.METHOD) map (_.asInstanceOf[global.ScalaDfn]) exists isMainMethod) {
-                  result += dfn
-                }
-              }
-            }
-          }
-
+          pr(0) = ri.getParserResult.asInstanceOf[ScalaParserResult]
         }
       })
+
+      val result = new ArrayBuffer[ScalaDfns#ScalaDfn]
+      val root = pr(0).rootScope
+      implicit val global = pr(0).global
+
+      // get all dfns will return all visible packages from the root and down
+      getAllDfns(ElementKind.PACKAGE, result)(root) foreach { packaging =>
+        // only go through the defs for each package scope.
+        // Sub-packages are handled by the fact that
+        // getAllDefs will find them.
+        packaging.bindingScope.dfns map (_.asInstanceOf[global.ScalaDfn]) foreach { dfn =>
+          if (existsMainMethod(dfn)) {
+            result += dfn
+          } else if (dfn.kind == ElementKind.MODULE) {
+            if (dfn.bindingScope.visibleDfns(ElementKind.METHOD) map (_.asInstanceOf[global.ScalaDfn].symbol) exists isMainMethod) {
+              result += dfn
+            }
+          }
+        }
+      }
 
       result
     } catch { case ex: ParseException => Exceptions.printStackTrace(ex); Nil }
@@ -698,7 +691,7 @@ object ScalaSourceUtil {
 
   def getMainClassesAsJavaCollection(fo: FileObject): java.util.Collection[AstDfn] = {
     val result = new java.util.ArrayList[AstDfn]
-    getMainClasses(fo) foreach { result.add(_) }
+    getMainClasses(fo) foreach result.add
     result
   }
 
@@ -742,17 +735,20 @@ object ScalaSourceUtil {
         //                    }
         //                }, false);
         result
-      } catch { case ioe: Exception => Exceptions.printStackTrace(ioe); return java.util.Collections.emptySet[AstDfn] }
+      } catch { case ioe: Exception => Exceptions.printStackTrace(ioe); java.util.Collections.emptySet[AstDfn] }
     }
     result
   }
 
-  def isMainMethodExists(dfn: ScalaDfns#ScalaDfn): Boolean = {
-    dfn.members exists { member => member.isMethod && isMainMethod(member) }
+  def getAllDfns(kind: ElementKind, result: ArrayBuffer[ScalaDfns#ScalaDfn])(scope: AstScope): Seq[ScalaDfns#ScalaDfn] = {
+    result ++= scope.dfns filter (_.getKind == kind) map (_.asInstanceOf[ScalaDfns#ScalaDfn])
+    scope.subScopes foreach getAllDfns(kind, result)
+    result
   }
 
-  def isMainMethod(dfn: ScalaDfns#ScalaDfn): Boolean = {
-    dfn.kind == ElementKind.METHOD && isMainMethod(dfn.symbol)
+  def existsMainMethod(dfn: ScalaDfns#ScalaDfn)(implicit global: ScalaGlobal): Boolean = {
+    val members = global.ScalaUtil.askForMembers(dfn.symbol.asInstanceOf[global.Symbol])
+    members exists isMainMethod
   }
 
   /**
@@ -760,11 +756,16 @@ object ScalaSourceUtil {
    * @param method to be checked
    * @return true when the method is a main method
    */
-  def isMainMethod(method: Symbols#Symbol): Boolean = {
+  def isMainMethod(symbol: Symbols#Symbol)(implicit global: ScalaGlobal): Boolean = {
     try {
-      (method.nameString, method.tpe.paramTypes) match {
-        case ("main", List(x)) => true //NOI18N
-        case _ => false
+      symbol.isMethod && {
+        (symbol.nameString, symbol.tpe.paramTypes, symbol.tpe.resultType) match {
+          case ("main", List(x), returnType) =>
+            println(x)
+            println(returnType)
+            true
+          case _ => false
+        }
       }
     } catch {
       case _: Throwable => false

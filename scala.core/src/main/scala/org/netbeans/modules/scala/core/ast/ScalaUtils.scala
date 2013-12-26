@@ -51,7 +51,7 @@ trait ScalaUtils { self: ScalaGlobal =>
 
   object ScalaUtil {
 
-    def getModifiers(symbol: Symbol): java.util.Set[Modifier] = {
+    def askForModifiers(symbol: Symbol): java.util.Set[Modifier] = {
       val modifiers = new java.util.HashSet[Modifier]
       askForResponse { () =>
 
@@ -73,33 +73,33 @@ trait ScalaUtils { self: ScalaGlobal =>
       }
     }
 
-    def getKind(sym: Symbol): ElementKind = {
+    def askForKind(symbol: Symbol): ElementKind = {
       askForResponse { () =>
-        if (sym.isPackage) {
+        if (symbol.isPackage) {
           ElementKind.PACKAGE
-        } else if (sym.isClass) {
+        } else if (symbol.isClass) {
           ElementKind.CLASS
-        } else if (sym.isType) {
+        } else if (symbol.isType) {
           ElementKind.CLASS
-        } else if (sym.isTrait) {
+        } else if (symbol.isTrait) {
           ElementKind.CLASS
-        } else if (sym.isModule) {
+        } else if (symbol.isModule) {
           ElementKind.MODULE
-        } else if (sym.isConstructor) {
+        } else if (symbol.isConstructor) {
           ElementKind.CONSTRUCTOR
-        } else if (sym.isConstant) {
+        } else if (symbol.isConstant) {
           ElementKind.CONSTANT
-        } else if (sym.isValue) {
+        } else if (symbol.isValue) {
           ElementKind.FIELD
-        } else if (sym.isVariable) {
+        } else if (symbol.isVariable) {
           ElementKind.VARIABLE
-        } else if (sym.isGetter) {
+        } else if (symbol.isGetter) {
           ElementKind.FIELD
-        } else if (sym.isMethod) {
+        } else if (symbol.isMethod) {
           ElementKind.METHOD
-        } else if (sym.isValueParameter) {
+        } else if (symbol.isValueParameter) {
           ElementKind.PARAMETER
-        } else if (sym.isTypeParameter) {
+        } else if (symbol.isTypeParameter) {
           ElementKind.CLASS
         } else {
           ElementKind.OTHER
@@ -112,6 +112,21 @@ trait ScalaUtils { self: ScalaGlobal =>
           //      at scala.tools.nsc.symtab.Symbols$NoSymbol$.owner(Symbols.scala:1609)
           //      at scala.tools.nsc.symtab.Symbols$Symbol.isLocal(Symbols.scala:346)
           ElementKind.OTHER
+      }
+    }
+
+    def askForMembers(symbol: Symbol): Scope = {
+      askForResponse { () =>
+        completeIfWithLazyType(symbol)
+
+        try {
+          symbol.tpe.members
+        } catch {
+          case _: Throwable => EmptyScope
+        }
+      } get match {
+        case Left(x) => x
+        case Right(ex) => EmptyScope
       }
     }
 
@@ -182,17 +197,17 @@ trait ScalaUtils { self: ScalaGlobal =>
     def askForHtmlFormat(symbol: Symbol, fm: HtmlFormatter) {
       askForResponse { () =>
         symbol match {
-          case sym if sym.isPackage | sym.isClass | sym.isModule => fm.appendText(sym.nameString)
-          case sym if sym.isConstructor =>
-            fm.appendText(sym.owner.nameString)
-            htmlTypeName(sym, fm)
-          case sym if sym.isMethod =>
-            fm.appendText(sym.nameString)
-            htmlTypeName(sym, fm)
-          case sym =>
-            fm.appendText(sym.nameString)
+          case _ if symbol.isPackage | symbol.isClass | symbol.isModule => fm.appendText(symbol.nameString)
+          case _ if symbol.isConstructor =>
+            fm.appendText(symbol.owner.nameString)
+            htmlTypeName(symbol, fm)
+          case _ if symbol.isMethod =>
+            fm.appendText(symbol.nameString)
+            htmlTypeName(symbol, fm)
+          case _ =>
+            fm.appendText(symbol.nameString)
             fm.appendText(": ")
-            htmlTypeName(sym, fm)
+            htmlTypeName(symbol, fm)
         }
       } get match {
         case Left(_) =>
@@ -200,11 +215,11 @@ trait ScalaUtils { self: ScalaGlobal =>
       }
     }
 
-    private def tryTpe(sym: Symbol): Type = {
+    private def tryTpe(symbol: Symbol): Type = {
       try {
-        sym.tpe
+        symbol.tpe
       } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(self, ex); null
+        case ex: Throwable => ScalaGlobal.resetLate(self, ex); NoType
       }
     }
 
@@ -213,7 +228,6 @@ trait ScalaUtils { self: ScalaGlobal =>
     }
 
     private def htmlTypeName(tpe: Type, fm: HtmlFormatter): Unit = {
-      if (tpe eq null) return
       tpe match {
         case ErrorType => fm.appendText("<error>")
         // internal: error
@@ -248,7 +262,8 @@ trait ScalaUtils { self: ScalaGlobal =>
         // pre.sym[targs]
         case RefinedType(parents, defs) =>
         // parent1 with ... with parentn { defs }
-        case AnnotatedType(annots, tp, selfsym) => htmlTypeName(tp, fm)
+        case AnnotatedType(annots, tp, selfsym) =>
+          htmlTypeName(tp, fm)
         // tp @annots
 
         // the following are non-value types; you cannot write them down in Scala source.
@@ -311,9 +326,10 @@ trait ScalaUtils { self: ScalaGlobal =>
         // all alternatives of an overloaded ident
         case AntiPolyType(pre: Type, targs) =>
           fm.appendText("AntiPolyType")
-        case TypeVar(_, _) => tpe.safeToString
+        case TypeVar(_, _) =>
+          tpe.safeToString
         // a type variable
-        //case DeBruijnIndex(level, index) => 
+        //case DeBruijnIndex(level, index) =>
         //fm.appendText("DeBruijnIndex")
         case _ =>
           fm.appendText(tpe.getClass.getSimpleName)
@@ -361,8 +377,7 @@ trait ScalaUtils { self: ScalaGlobal =>
 
       } get match {
         case Left(x) =>
-        case Right(ex) =>
-          ScalaGlobal.resetLate(self, ex)
+        case Right(ex) => ScalaGlobal.resetLate(self, ex)
       }
     }
 
@@ -503,22 +518,24 @@ trait ScalaUtils { self: ScalaGlobal =>
       }
     }
 
+    /**
+     * @Note use only under compiler thread.
+     */
     def completeIfWithLazyType(sym: Symbol) {
-      askForResponse { () =>
-        val topClazz = sym.enclosingTopLevelClass
+      val topClazz = sym.enclosingTopLevelClass
 
-        if (topClazz.nameString.indexOf('$') != -1) return // avoid assertion error @see
+      if (topClazz.nameString.indexOf('$') != -1) return // avoid assertion error @see
 
-        val (clazz, staticModule) = if (topClazz.isModule) {
-          (topClazz.companionClass, topClazz)
-        } else {
-          (topClazz, topClazz.companionModule)
-        }
+      val (clazz, staticModule) = if (topClazz.isModule) {
+        (topClazz.companionClass, topClazz)
+      } else {
+        (topClazz, topClazz.companionModule)
+      }
 
-        if (clazz != NoSymbol && staticModule != NoSymbol) { // avoid Error: NoSymbol does not have owner
-          topClazz.rawInfo match {
-            case x if !x.isComplete =>
-              /*
+      if (clazz != NoSymbol && staticModule != NoSymbol) { // avoid Error: NoSymbol does not have owner
+        topClazz.rawInfo match {
+          case x if !x.isComplete =>
+            /*
                java.lang.AssertionError: assertion failed: object NotificationDisplayer$NotificationImpl
                at scala.Predef$.assert(Predef.scala:179)
                at scala.tools.nsc.Global.assert(Global.scala:239)
@@ -625,21 +642,17 @@ trait ScalaUtils { self: ScalaGlobal =>
                at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
                at java.lang.Thread.run(Thread.java:722)
                */
-              try {
-                x.complete(topClazz)
-              } catch {
-                case ex: Throwable =>
-              }
-            case _ =>
-          }
+            try {
+              x.complete(topClazz)
+            } catch {
+              case ex: Throwable =>
+            }
+          case _ =>
         }
-      } get match {
-        case Left(_) =>
-        case Right(ex) =>
       }
     }
 
-    def isProperType(sym: Symbol): Boolean = {
+    def askForIsProperType(sym: Symbol): Boolean = {
       askForResponse { () =>
         if (sym.isType && sym.hasRawInfo) {
           completeIfWithLazyType(sym)
@@ -654,8 +667,20 @@ trait ScalaUtils { self: ScalaGlobal =>
       }
     }
 
-    def importantItem(items: List[AstItem]): ScalaItem = {
+    def askForImportantItem(items: List[AstItem]): ScalaItem = {
       askForResponse { () =>
+        importantItem(items)
+      } get match {
+        case Left(x) => x
+        case Right(ex) => items.head.asInstanceOf[ScalaItem]
+      }
+    }
+
+    /**
+     * @Note use only under compiler thread.
+     */
+    def importantItem(items: List[AstItem]): ScalaItem = {
+      try {
         items map { item =>
           val (sym, baseLevel) = item match {
             case dfn: ScalaDfn => (dfn.symbol, 0)
@@ -674,24 +699,38 @@ trait ScalaUtils { self: ScalaGlobal =>
         } sortWith { (x1, x2) => x1._1 < x2._1 } head match {
           case (_, item) => item.asInstanceOf[ScalaItem]
         }
-      } get match {
-        case Left(x) => x
-        case Right(ex) => items.head.asInstanceOf[ScalaItem]
+      } catch {
+        case _: Throwable => items.head.asInstanceOf[ScalaItem]
       }
     }
 
-    @throws(classOf[Throwable])
-    def symSimpleSig(sym: Symbol): String = {
+    def askForSymSimpleSig(sym: Symbol): String = {
       askForResponse { () =>
         val tpe = sym.tpe // may throws exception
-        typeSimpleSig(tpe)
+        val sb = new StringBuilder
+        typeSimpleSig_(tpe, sb)
+        sb.toString
       } get match {
         case Left(x) => x
         case Right(ex) => "<error>"
       }
     }
 
-    def typeSimpleSig(tpe: Type): String = {
+    /**
+     * @Note use only under compiler thread.
+     */
+    def symSimpleSig(sym: Symbol): String = {
+      try {
+        val tpe = sym.tpe // may throws exception
+        val sb = new StringBuilder
+        typeSimpleSig_(tpe, sb)
+        sb.toString
+      } catch {
+        case _: Throwable => "<error>"
+      }
+    }
+
+    def askForTypeSimpleSig(tpe: Type): String = {
       askForResponse { () =>
         val sb = new StringBuilder
         typeSimpleSig_(tpe, sb)
