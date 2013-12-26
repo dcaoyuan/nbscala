@@ -129,6 +129,11 @@
             <artifactId>org-apache-tools-ant-module</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-debugger-jpda</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
 
         <!-- scalac transitive dependencies (scalac will check class dependencies deeply): <scope>provided</scope> -->
         <dependency>

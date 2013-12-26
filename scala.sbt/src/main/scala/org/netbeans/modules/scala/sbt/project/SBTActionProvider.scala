@@ -1,6 +1,8 @@
 package org.netbeans.modules.scala.sbt.project
 
 import java.awt.event.MouseEvent
+import java.util.logging.Level
+import java.util.logging.Logger
 import javax.swing.JButton
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
@@ -9,6 +11,8 @@ import org.netbeans.modules.scala.core.ScalaSourceUtil
 import org.netbeans.modules.scala.project.ui.customizer.MainClassWarning
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
 import org.apache.tools.ant.module.api.support.ActionUtils
+import org.netbeans.api.debugger.jpda.DebuggerStartException
+import org.netbeans.api.debugger.jpda.JPDADebugger
 import org.netbeans.api.language.util.ast.AstDfn
 import org.netbeans.modules.scala.console.shell.ScalaConsoleTopComponent
 import org.netbeans.spi.project.ActionProvider
@@ -29,6 +33,8 @@ import org.openide.util.NbBundle
  */
 class SBTActionProvider(project: SBTProject) extends ActionProvider {
   import SBTActionProvider._
+
+  private val log = Logger.getLogger(this.getClass.getName)
 
   private lazy val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
 
@@ -83,10 +89,10 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         val file = findSources(context, false)(0)
         val mainClasses = getMainClasses(file)
         val clazz = if (mainClasses.size == 1) {
-          // Just one main class, resolve from the symbol
+          // just one main class, resolve from the symbol
           mainClasses.iterator.next().qualifiedName
         } else if (mainClasses.size > 1) {
-          // Several main classes, let the user choose
+          // several main classes, let the user choose
           showMainClassWarning(file, mainClasses)
         } else {
           null
@@ -99,6 +105,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
                 "set javaOptions := Nil",
                 "run-main " + clazz)
               SBTConsoleTopComponent.openInstance(rootProject, commands)()
+
             case COMMAND_DEBUG_SINGLE =>
               val commands = selectProject ::: List(
                 "set fork := true",
@@ -120,7 +127,21 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   /**
    * @Note "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005" does not work under JVM invoked in java.lang.Process
    */
-  private def debugOpts(port: Int) = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=" + port
+  private def debugOpts(port: Int) = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=" + port
+
+  /**
+   * @TODO minor, arrange a proper place to run it ...
+   */
+  private def attachDebugger(host: String, port: Int) {
+    try {
+      JPDADebugger.attach(host, port, Array[AnyRef](null))
+    } catch {
+      case ex: DebuggerStartException =>
+        log.log(Level.WARNING, ex.getMessage, ex.getCause)
+        val msg = "Failed to connect debugger to " + host + ":" + port
+        DialogDisplayer.getDefault.notify(new NotifyDescriptor.Message(msg, NotifyDescriptor.ERROR_MESSAGE))
+    }
+  }
 
   /**
    * Find selected sources, the sources has to be under single source root,
