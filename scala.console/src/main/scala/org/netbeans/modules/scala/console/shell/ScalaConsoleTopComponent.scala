@@ -2,7 +2,6 @@ package org.netbeans.modules.scala.console.shell
 
 import java.awt.Color
 import java.awt.Font
-import java.awt.Insets
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PipedInputStream
@@ -12,6 +11,7 @@ import java.util.logging.Logger
 import java.util.regex.Pattern
 import javax.swing._
 import javax.swing.text.AttributeSet
+import javax.swing.text.DefaultCaret
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 import org.netbeans.api.extexecution.ExecutionDescriptor
@@ -134,95 +134,61 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
     }
   }
 
+  private def getDefaultFont = {
+    var size = UIManager.getInt("uiFontSize")
+    if (size < 3) {
+      size = UIManager.getInt("customFontSize")
+      val f = UIManager.get("controlFont").asInstanceOf[Font]
+      if (f != null) {
+        size = f.getSize
+      }
+    }
+    if (size < 3) {
+      size = 11
+    }
+    new Font("Monospaced", Font.PLAIN, size)
+  }
+
   private def createTerminal: ScalaConsoleTerminal = {
-    // From core/output2/**/AbstractOutputPane
-    val fontSize = UIManager.get("customFontSize") match { //NOI18N
-      case null =>
-        UIManager.get("controlFont") match { // NOI18N
-          case null => 11
-          case f: Font => f.getSize
-        }
-      case i: java.lang.Integer => i.intValue
-    }
-
-    val font = new Font("Monospaced", Font.PLAIN, fontSize) match {
-      case null => new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
-      case x => x
-    }
-
-    val textPane = new JTextPane()
-    textPane.getDocument.putProperty("mimeType", mimeType)
-    textPane.setMargin(new Insets(8, 8, 8, 8))
-    textPane.setFont(font)
-    textPane.setForeground(Color.BLACK)
-    textPane.setBackground(Color.WHITE)
-    textPane.setCaretColor(Color.BLACK)
-
-    // Try to initialize colors from NetBeans properties, see core/output2
-    UIManager.getColor("nb.output.selectionBackground") match {
-      case null =>
-      case c => textPane.setSelectionColor(c)
-    }
-
-    //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);
-    //Color caretColor;
-    //if (value instanceof Color) {
-    //    caretColor = (Color)value;
-    //} else {
-    //    caretColor = SettingsDefaults.defaultCaretColorInsertMode;
-    //}
-    //text.setCaretColor(caretColor);
-    //text.setBackground(UIManager.getColor("text")); //NOI18N
-    //Color selectedFg = UIManager.getColor ("nb.output.foreground.selected"); //NOI18N
-    //if (selectedFg == null) {
-    //    selectedFg = UIManager.getColor("textText") == null ? Color.BLACK : //NOI18N
-    //       UIManager.getColor("textText"); //NOI18N
-    //}
-    //
-    //Color unselectedFg = UIManager.getColor ("nb.output.foreground"); //NOI18N
-    //if (unselectedFg == null) {
-    //    unselectedFg = selectedFg;
-    //}
-    //text.setForeground(unselectedFg);
-    //text.setSelectedTextColor(selectedFg);
-    //
-    //Color selectedErr = UIManager.getColor ("nb.output.err.foreground.selected"); //NOI18N
-    //if (selectedErr == null) {
-    //    selectedErr = new Color (164, 0, 0);
-    //}
-    //Color unselectedErr = UIManager.getColor ("nb.output.err.foreground"); //NOI18N
-    //if (unselectedErr == null) {
-    //    unselectedErr = selectedErr;
-    //}
-
+    val textView = new JTextPane()
+    textView.setFont(getDefaultFont)
     setBorder(BorderFactory.createEmptyBorder)
 
+    // @see core.output2/org.netbeans.core.output2.ui/AbstractOutputPane
+    val c = UIManager.getColor("nb.output.selectionBackground")
+    if (c != null) {
+      textView.setSelectionColor(c)
+    }
+
+    textView.getDocument.putProperty("mimeType", mimeType)
+    textView.setForeground(Color.BLACK)
+    textView.setBackground(Color.WHITE)
+    textView.setCaretColor(Color.BLACK)
+    textView.getCaret.asInstanceOf[DefaultCaret].setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
+
     val pane = new JScrollPane()
-    pane.setViewportView(textPane)
-    pane.setBorder(BorderFactory.createLineBorder(Color.darkGray))
+    pane.setViewportView(textView)
+    pane.setBorder(BorderFactory.createEmptyBorder)
+    pane.setViewportBorder(BorderFactory.createEmptyBorder)
     add(pane)
     validate
 
+    val pwd = FileUtil.toFile(project.getProjectDirectory)
     val scalaHome = ScalaExecution.getScalaHome
     val scalaFile = ScalaExecution.getScala
-    if (scalaFile == null) {
-      return null
-    }
 
     val (executable, args) = ScalaExecution.getScalaArgs(scalaHome, project)
-    var builder = args.foldLeft(new ExternalProcessBuilder(executable))(_ addArgument _)
-    log.info(args.mkString("==== Scala console args ====\n" + executable + "\n", "\n", "\n==== End of Scala console args ===="))
-
     // XXX under Mac OS jdk7, the java.home is point to /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/jre
     // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which cause the lack of javac
     //builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
-    builder = builder.addEnvironmentVariable("SCALA_HOME", ScalaExecution.getScalaHome)
-    val pwd = FileUtil.toFile(project.getProjectDirectory)
-    builder = builder.workingDirectory(pwd)
+    val builder = args.foldLeft(new ExternalProcessBuilder(executable))(_ addArgument _)
+      .addEnvironmentVariable("SCALA_HOME", ScalaExecution.getScalaHome)
+      .workingDirectory(pwd)
+    log.info(args.mkString("==== Scala console args ====\n" + executable + "\n", "\n", "\n==== End of Scala console args ===="))
 
     val pipedIn = new PipedInputStream()
     val console = new ScalaConsoleTerminal(
-      textPane, pipedIn,
+      textView, pipedIn,
       " " + NbBundle.getMessage(classOf[ScalaConsoleTopComponent], "ScalaConsoleWelcome") + " " + "scala.home=" + scalaHome + "\n")
 
     val consoleOut = new AnsiConsoleOutputStream(console)
@@ -234,7 +200,7 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
     val execDescriptor = new ExecutionDescriptor().frontWindow(true).inputVisible(true)
       .inputOutput(inputOutput).postExecution(new Runnable() {
         override def run() {
-          textPane.setEditable(false)
+          textView.setEditable(false)
           SwingUtilities.invokeLater(new Runnable() {
             override def run() {
               ScalaConsoleTopComponent.this.close
