@@ -49,9 +49,10 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
     COMMAND_BUILD,
     COMMAND_REBUILD,
     COMMAND_CLEAN,
+    COMMAND_RUN,
+    COMMAND_DEBUG,
     COMMAND_RUN_SINGLE,
-    COMMAND_DEBUG_SINGLE,
-    COMMAND_DEBUG_TEST_SINGLE)
+    COMMAND_DEBUG_SINGLE)
 
   @throws(classOf[IllegalArgumentException])
   def isActionEnabled(command: String, context: Lookup): Boolean = {
@@ -85,34 +86,36 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         val commands = selectProject ::: List("clean")
         SBTConsoleTopComponent.openInstance(rootProject, commands)()
 
-      case COMMAND_RUN_SINGLE | COMMAND_DEBUG_SINGLE =>
-        val file = findSources(context, false)(0)
-        val mainClasses = getMainClasses(file)
-        val clazz = if (mainClasses.size == 1) {
-          // just one main class, resolve from the symbol
-          mainClasses.iterator.next().qualifiedName
-        } else if (mainClasses.size > 1) {
-          // several main classes, let the user choose
-          showMainClassWarning(file, mainClasses)
-        } else {
-          null
-        }
-        if (clazz != null) {
-          command match {
-            case COMMAND_RUN_SINGLE =>
-              val commands = selectProject ::: List(
-                "set fork := false",
-                "set javaOptions := Nil",
-                "run-main " + clazz)
-              SBTConsoleTopComponent.openInstance(rootProject, commands)()
+      case COMMAND_RUN =>
+        val commands = selectProject ::: List(
+          "set fork := false",
+          "set javaOptions := Nil",
+          "run")
+        SBTConsoleTopComponent.openInstance(rootProject, commands)()
 
-            case COMMAND_DEBUG_SINGLE =>
-              val commands = selectProject ::: List(
-                "set fork := true",
-                "set javaOptions := List(\"" + debugOpts(5005) + "\")",
-                "run-main " + clazz)
-              SBTConsoleTopComponent.openInstance(rootProject, commands)()
-          }
+      case COMMAND_DEBUG =>
+        val commands = selectProject ::: List(
+          "set fork := true",
+          "set javaOptions := List(\"" + debugOpts(5005) + "\")",
+          "run ")
+        SBTConsoleTopComponent.openInstance(rootProject, commands)()
+
+      case COMMAND_RUN_SINGLE =>
+        findMainClass(context) foreach { clazz =>
+          val commands = selectProject ::: List(
+            "set fork := false",
+            "set javaOptions := Nil",
+            "run-main " + clazz)
+          SBTConsoleTopComponent.openInstance(rootProject, commands)()
+        }
+
+      case COMMAND_DEBUG_SINGLE =>
+        findMainClass(context) foreach { clazz =>
+          val commands = selectProject ::: List(
+            "set fork := true",
+            "set javaOptions := List(\"" + debugOpts(5005) + "\")",
+            "run-main " + clazz)
+          SBTConsoleTopComponent.openInstance(rootProject, commands)()
         }
 
       case _ =>
@@ -122,6 +125,20 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
   private def selectProject = project.getId match {
     case null => Nil
     case id => List("project " + id)
+  }
+
+  private def findMainClass(context: Lookup) = {
+    val file = findSources(context, false)(0)
+    val mainClasses = getMainClasses(file)
+    if (mainClasses.size == 1) {
+      // just one main class, resolve from the symbol
+      Option(mainClasses.iterator.next().qualifiedName)
+    } else if (mainClasses.size > 1) {
+      // several main classes, let the user choose
+      Option(showMainClassWarning(file, mainClasses))
+    } else {
+      None
+    }
   }
 
   /**
@@ -207,6 +224,8 @@ object SBTActionProvider {
   val COMMAND_BUILD = ActionProvider.COMMAND_BUILD // compile
   val COMMAND_REBUILD = ActionProvider.COMMAND_REBUILD // clean and compile
   val COMMAND_CLEAN = ActionProvider.COMMAND_CLEAN // clean
+  val COMMAND_RUN = ActionProvider.COMMAND_RUN
+  val COMMAND_DEBUG = ActionProvider.COMMAND_DEBUG
 
   val COMMAND_RUN_SINGLE = ActionProvider.COMMAND_RUN_SINGLE
   val COMMAND_DEBUG_SINGLE = ActionProvider.COMMAND_DEBUG_SINGLE

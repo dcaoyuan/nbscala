@@ -15,16 +15,16 @@ object SBTProjectModule {
 
   def run(): Action = FileSensitiveActions.fileCommandAction(
     ActionProvider.COMMAND_RUN_SINGLE,
-    NbBundle.getMessage(this.getClass, "LBL_RunFile_Action"), // NOI18N
+    NbBundle.getMessage(this.getClass, "CTL_RunFileAction"), // NOI18N
     null)
 
   def debug(): Action = FileSensitiveActions.fileCommandAction(
     ActionProvider.COMMAND_DEBUG_SINGLE,
-    NbBundle.getMessage(this.getClass, "LBL_DebugFile_Action"), // NOI18N
+    NbBundle.getMessage(this.getClass, "CTL_DebugFileAction"), // NOI18N
     null)
 
   def debugTest(): Action = FileSensitiveActions.fileCommandAction(
     ActionProvider.COMMAND_DEBUG_TEST_SINGLE,
-    NbBundle.getMessage(this.getClass, "LBL_DebugTestFile_Action"), // NOI18N
+    NbBundle.getMessage(this.getClass, "CTL_DebugTestFileAction"), // NOI18N
     null)
 }

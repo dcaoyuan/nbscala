@@ -125,11 +125,11 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
   }
 
   private def createTerminal: SbtConsoleTerminal = {
-    // From core/output2/**/AbstractOutputPane
+    // From core.output2/org.netbeans.core.output2.ui/AbstractOutputPane
     val fontSize = UIManager.get("customFontSize") match { //NOI18N
       case null =>
         UIManager.get("controlFont") match { // NOI18N
-          case null => 11
+          case null    => 11
           case f: Font => f.getSize
         }
       case i: java.lang.Integer => i.intValue
@@ -137,7 +137,7 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
 
     val font = new Font("Monospaced", Font.PLAIN, fontSize) match {
       case null => new Font("Lucida Sans Typewriter", Font.PLAIN, fontSize)
-      case x => x
+      case x    => x
     }
 
     val textPane = new JTextPane()
@@ -152,7 +152,7 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
     // Try to initialize colors from NetBeans properties, see core/output2
     UIManager.getColor("nb.output.selectionBackground") match {
       case null =>
-      case c => textPane.setSelectionColor(c)
+      case c    => textPane.setSelectionColor(c)
     }
 
     //Object value = Settings.getValue(BaseKit.class, SettingsNames.CARET_COLOR_INSERT_MODE);

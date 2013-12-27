@@ -63,6 +63,8 @@ class SBTProjectLogicalView(project: SBTProject) extends LogicalViewProvider {
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_BUILD, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_BuildAction"), null),
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_CLEAN, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_CleanAction"), null),
       ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_REBUILD, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_RebuildAction"), null),
+      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_RUN, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_RunAction"), null),
+      ProjectSensitiveActions.projectCommandAction(SBTActionProvider.COMMAND_DEBUG, NbBundle.getMessage(classOf[SBTActionProvider], "CTL_DebugAction"), null),
       null,
       CommonProjectActions.newFileAction,
       CommonProjectActions.copyProjectAction,
