@@ -54,7 +54,6 @@ import xtc.util.Pair
  *
  * @author Caoyuan Deng
  */
-
 class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
   import ScalaLexer._
 
@@ -92,34 +91,29 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
     }
 
     st.tokenStream match {
-      case tokenInfo @ TokenInfo(len, id) :: tail =>
+      case tokenInfo @ TokenInfo(tkLen, id) :: tail =>
         // shift tokenStream
         st.tokenStream = tail
 
-        if (len == 0) { // EOF
+        if (tkLen == 0) { // EOF
           return null
         }
 
-        // read token's chars according to tokenInfo.length
-        var i = 0
-        while (i < len) {
-          input.read
-          i += 1
-        }
+        // seed token's chars according to tokenInfo.length
+        seed(input, tkLen)
+        st.lookahead -= tkLen
 
         // see if needs to lookahead, if true, perform it
-        st.lookahead -= len
         // to cheat incremently lexer, we needs to lookahead one more char when
         // tokens.size() > 1 (batched tokens that are not context free),
         // so, when modification happens exactly behind latest token, will
         // force lexer relexer from the 1st token of tokenStream
-        val lookahead = if (tail.isEmpty) st.lookahead else st.lookahead + 1
+        // Although lookahead 1 char is enough in theory, I notices that under some
+        // cases, for example the '*/' may be scanned as * and /. anyway, let's lookahead
+        // a bit more, 3 here.
+        val lookahead = if (tail.isEmpty) st.lookahead else st.lookahead + 3
         if (lookahead > 0) {
-          var i = 0
-          while (i < lookahead) {
-            input.read
-            i += 1
-          }
+          seed(input, lookahead)
           input.backup(lookahead)
         }
 
@@ -130,6 +124,14 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
       case Nil =>
         assert(false, "unrecognized input: " + input.read.toChar)
         null
+    }
+  }
+
+  private def seed(input: LexerInput, n: Int) {
+    var i = 0
+    while (i < n) {
+      input.read
+      i += 1
     }
   }
 
@@ -156,7 +158,7 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
         Nil
       }
     } catch {
-      case ex: Exception => log.log(Level.SEVERE, ex.getMessage, ex); Nil
+      case ex: Throwable => log.log(Level.SEVERE, ex.getMessage, ex); Nil
     }
 
     tokens.reverse
