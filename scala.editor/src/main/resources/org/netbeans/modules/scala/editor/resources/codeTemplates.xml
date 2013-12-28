@@ -31,9 +31,10 @@
     <codetemplate abbreviation="tr">
         <code>trait </code>
     </codetemplate>
-    <codetemplate abbreviation="Th">
+    <!-- if reformat after Throwable expended, will cause Throwable also inserted in the head of source file. -->
+    <!--codetemplate abbreviation="Th">
         <code>Throwable </code>
-    </codetemplate>
+    </codetemplate-->
     <codetemplate abbreviation="St">
         <code>String</code>
     </codetemplate>
