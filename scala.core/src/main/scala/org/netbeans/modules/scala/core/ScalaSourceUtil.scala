@@ -329,43 +329,36 @@ object ScalaSourceUtil {
   }
 
   def getFileObject(pr: ParserResult, sym: Symbols#Symbol): Option[FileObject] = {
+    val global = pr.asInstanceOf[ScalaParserResult].global
+    if (sym == global.NoSymbol) return None
+
     var srcPath: String = null
-
-    val pos = sym.pos
-    if (pos.isDefined) {
-      val srcFile = pos.source
-      if (srcFile ne null) {
+    val srcFile = sym.sourceFile
+    if (srcFile != null) {
+      val file = if (srcFile.file != null) {
+        srcFile.file
+      } else {
         srcPath = srcFile.path
-        var afile = srcFile.file
-        var file = if (afile ne null) afile.file else null
-        if (file eq null) {
-          if (srcPath ne null) {
-            file = new File(srcPath)
-          }
-        }
+        if (srcPath != null) {
+          new File(srcPath)
+        } else null
+      }
 
-        if ((file ne null) && file.exists) {
-          // * it's a real file instead of an archive file
-          return Some(FileUtil.toFileObject(file))
-        }
+      if (file != null && file.exists) { // it's a real file instead of an archive file
+        return Option(FileUtil.toFileObject(file))
       }
     }
 
-    val qName: String = try {
-      sym.enclClass.fullName('/')
-    } catch {
-      case ex: java.lang.Error => null
-      // java.lang.Error: no-symbol does not have owner
-      //        at scala.tools.nsc.symtab.Symbols$NoSymbol$.owner(Symbols.scala:1565)
-      //        at scala.tools.nsc.symtab.Symbols$Symbol.fullName(Symbols.scala:1156)
-      //        at scala.tools.nsc.symtab.Symbols$Symbol.fullName(Symbols.scala:1166)
+    val qName = {
+      val enclClass = sym.enclClass
+      if (enclClass.isPackage || enclClass.isPackageClass) {
+        sym.fullName('/')
+      } else {
+        sym.enclClass.fullName('/')
+      }
     }
 
-    if (qName eq null) {
-      return None
-    }
-
-    //* @Note Always use '/' instead File.SeparatorChar when try to findResource
+    // @Note Always use '/' instead File.SeparatorChar when try to findResource
 
     val pkgName = qName.lastIndexOf('/') match {
       case -1 => null
@@ -376,10 +369,10 @@ object ScalaSourceUtil {
 
     val fo = pr.getSnapshot.getSource.getFileObject
 
-    // * For some reason, the ClassPath.getClassPath(fo, ClassPath.SOURCE) can not get
-    // * "src/main/scala" back for maven project
-    // * The safer way is using ProjectUtils.getSources(project). See ScalaGlobal#findDirResources
-    // *     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
+    // For some reason, the ClassPath.getClassPath(fo, ClassPath.SOURCE) can not get
+    // "src/main/scala" back for maven project
+    // The safer way is using ProjectUtils.getSources(project). See ScalaGlobal#findDirResources
+    //     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
 
     val srcRootsMine = ProjectResources.getSrcFileObjects(fo, true)
     val srcCpMine = ClassPathSupport.createClassPath(srcRootsMine: _*)
@@ -388,13 +381,15 @@ object ScalaSourceUtil {
     val clzFo = cp.findResource(clzName)
     val root = cp.findOwnerRoot(clzFo)
 
-    val srcCpTarget = if (root ne null) {
+    val srcCpTarget = if (root != null) {
       val srcRoots1 = ProjectResources.getSrcFileObjects(root, true)
       val srcRoots2 = SourceForBinaryQuery.findSourceRoots(root.toURL).getRoots
       ClassPathSupport.createClassPath(srcRoots1 ++ srcRoots2: _*)
-    } else null
+    } else {
+      null
+    }
 
-    if ((srcPath ne null) && srcPath != "") {
+    if (srcPath != null && srcPath != "") {
       findSourceFileObject(srcCpMine, srcCpTarget, srcPath) match {
         case None =>
         case some => return some
@@ -410,32 +405,42 @@ object ScalaSourceUtil {
     }
 
     try {
-      srcPath = if (clzFo ne null) {
+      val srcPath = if (clzFo ne null) {
         val in = clzFo.getInputStream
         try {
           new ClassFile(in, false) match {
             case null => null
             case clzFile => clzFile.getSourceFileName
           }
-        } finally { if (in ne null) in.close }
-      } else null
+        } finally {
+          if (in != null) in.close
+        }
+      } else {
+        null
+      }
 
-      if (srcPath ne null) {
-        val srcPath1 = if (pkgName ne null) pkgName + "/" + srcPath else srcPath
+      if (srcPath != null) {
+        val srcPath1 = if (pkgName != null) pkgName + "/" + srcPath else srcPath
         findSourceFileObject(srcCpMine, srcCpTarget, srcPath1)
-      } else None
-    } catch { case ex: Exception => ex.printStackTrace; None }
+      } else {
+        None
+      }
+    } catch { case ex: Throwable => ex.printStackTrace; None }
   }
 
   def findSourceFileObject(srcCpMine: ClassPath, srcCpTarget: ClassPath, srcPath: String): Option[FileObject] = {
     // find in own project's srcCp first
     srcCpMine.findResource(srcPath) match {
-      case null if srcCpTarget eq null => None
-      case null => srcCpTarget.findResource(srcPath) match {
-        case null => None
-        case x => Some(x)
-      }
-      case x => return Some(x)
+      case null =>
+        if (srcCpTarget == null) {
+          None
+        } else {
+          srcCpTarget.findResource(srcPath) match {
+            case null => None
+            case x => Some(x)
+          }
+        }
+      case x => Some(x)
     }
 
   }

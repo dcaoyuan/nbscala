@@ -687,13 +687,16 @@ trait ScalaUtils { self: ScalaGlobal =>
             case ref: ScalaRef => (ref.symbol, 100)
           }
 
-          val importantLevel = baseLevel + (if (sym == NoSymbol) 90
-          else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 10
-          else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 20
-          else if (sym.isGetter) 30
-          else if (sym.isConstructor) 40
-          else if (!sym.isMethod) 50
-          else 60)
+          val importantLevel = baseLevel + {
+            if (sym == NoSymbol) 90
+            else if (sym.isMethod && sym.nameString == "apply") 10
+            else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
+            else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 30
+            else if (sym.isGetter) 40
+            else if (sym.isConstructor) 50
+            else if (!sym.isMethod) 60
+            else 60
+          }
 
           (importantLevel, item)
         } sortWith { (x1, x2) => x1._1 < x2._1 } head match {
