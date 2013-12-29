@@ -328,12 +328,37 @@ object ScalaSourceUtil {
     return -1
   }
 
+  def findTopEnclClass(pre: Symbols#Symbol, chain: List[Symbols#Symbol]): Symbols#Symbol = {
+    chain match {
+      case h :: tail =>
+        if (h.isPackage || h.isPackageClass) {
+          pre
+        } else {
+          findTopEnclClass(h, tail)
+        }
+      case Nil => pre
+    }
+  }
+
   def getFileObject(pr: ParserResult, sym: Symbols#Symbol): Option[FileObject] = {
     val global = pr.asInstanceOf[ScalaParserResult].global
     if (sym == global.NoSymbol) return None
 
+    val topEnclClass = try {
+      findTopEnclClass(sym, sym.enclClassChain)
+    } catch {
+      case _: Throwable => sym
+    }
+
     var srcPath: String = null
-    val srcFile = sym.sourceFile
+    val srcFile = sym.sourceFile match {
+      case null =>
+        try {
+          topEnclClass.sourceFile
+        } catch { case _: Throwable => null }
+      case x => x
+    }
+
     if (srcFile != null) {
       val file = if (srcFile.file != null) {
         srcFile.file
@@ -349,14 +374,7 @@ object ScalaSourceUtil {
       }
     }
 
-    val qName = {
-      val enclClass = sym.enclClass
-      if (enclClass.isPackage || enclClass.isPackageClass) {
-        sym.fullName('/')
-      } else {
-        sym.enclClass.fullName('/')
-      }
-    }
+    val qName = topEnclClass.fullName('/')
 
     // @Note Always use '/' instead File.SeparatorChar when try to findResource
 
