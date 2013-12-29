@@ -173,7 +173,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
                   coloringSet.add(ColoringAttributes.FIELD)
                   val owner = sym.owner
-                  if ((owner ne null) && (owner.isClass || owner.isTrait || owner.isModule)) {
+                  if (owner != null && (owner.isClass || owner.isTrait || owner.isModule)) {
                     coloringSet.add(ColoringAttributes.GLOBAL)
                   }
 
@@ -214,7 +214,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
                   coloringSet.add(ColoringAttributes.FIELD)
                   val owner = sym.owner
-                  if ((owner ne null) && (owner.isClass || owner.isTrait || owner.isModule)) {
+                  if (owner != null && (owner.isClass || owner.isTrait || owner.isModule)) {
                     coloringSet.add(ColoringAttributes.GLOBAL)
                   }
 
@@ -249,14 +249,13 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
                   sym.nameString match {
                     case "apply" | "unapply" =>
                       coloringSet.add(ColoringAttributes.CLASS)
-                      val isClass = try {
-                        val owner = sym.owner
-                        owner.isClass || owner.isType
+                      val isModule = try {
+                        sym.owner.isModule
                       } catch {
                         case _: Throwable => false
                       }
 
-                      if (!isClass) { // Object
+                      if (isModule) { // Object
                         coloringSet.add(ColoringAttributes.GLOBAL)
                       }
 

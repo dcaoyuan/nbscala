@@ -57,6 +57,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.reflect.internal.Flags
 import scala.reflect.internal.Symbols
+import scala.reflect.internal.util.SourceFile
 
 /**
  *
@@ -317,41 +318,15 @@ object ScalaSourceUtil {
     ""
   }
 
-  /** @todo */
-  def getOffset(pr: Parser.Result, element: JavaElements#JavaElement): Int = {
-    if (pr eq null) {
-      return -1
-    }
-
-    val th = pr.getSnapshot.getTokenHierarchy
-    //element.getPickOffset(th)
-    return -1
-  }
-
-  def findTopEnclClass(pre: Symbols#Symbol, chain: List[Symbols#Symbol]): Symbols#Symbol = {
-    chain match {
-      case h :: tail =>
-        if (h.isPackage || h.isPackageClass) {
-          pre
-        } else {
-          findTopEnclClass(h, tail)
-        }
-      case Nil => pre
-    }
-  }
-
-  def getFileObject(pr: ParserResult, sym: Symbols#Symbol): Option[FileObject] = {
+  /**
+   * @return position, 0 if no position info
+   */
+  def getOffset(pr: ParserResult, symbol: Symbols#Symbol): Int = {
     val global = pr.asInstanceOf[ScalaParserResult].global
-    if (sym == global.NoSymbol) return None
+    if (symbol == global.NoSymbol) return 0
 
-    val topEnclClass = try {
-      findTopEnclClass(sym, sym.enclClassChain)
-    } catch {
-      case _: Throwable => sym
-    }
-
-    var srcPath: String = null
-    val srcFile = sym.sourceFile match {
+    val topEnclClass = findTopEnclClass(symbol, symbol.enclClassChain)
+    val srcFile = symbol.sourceFile match {
       case null =>
         try {
           topEnclClass.sourceFile
@@ -359,6 +334,28 @@ object ScalaSourceUtil {
       case x => x
     }
 
+    val resp = new global.Response[global.Position]
+    global.askLinkPos(symbol.asInstanceOf[global.Symbol], srcFile.asInstanceOf[SourceFile], resp)
+    resp get match {
+      case Left(x) => x.startOrPoint
+      case Right(ex) => 0
+    }
+  }
+
+  def getFileObject(pr: ParserResult, symbol: Symbols#Symbol): Option[FileObject] = {
+    val global = pr.asInstanceOf[ScalaParserResult].global
+    if (symbol == global.NoSymbol) return None
+
+    val topEnclClass = findTopEnclClass(symbol, symbol.enclClassChain)
+    val srcFile = symbol.sourceFile match {
+      case null =>
+        try {
+          topEnclClass.sourceFile
+        } catch { case _: Throwable => null }
+      case x => x
+    }
+
+    var srcPath: String = null
     if (srcFile != null) {
       val file = if (srcFile.file != null) {
         srcFile.file
@@ -414,7 +411,7 @@ object ScalaSourceUtil {
       }
     }
 
-    val ext = if (sym hasFlag Flags.JAVA) ".java" else ".scala"
+    val ext = if (symbol hasFlag Flags.JAVA) ".java" else ".scala"
 
     // * see if we can find this class's source file straightforward
     findSourceFileObject(srcCpMine, srcCpTarget, qName + ext) match {
@@ -444,6 +441,22 @@ object ScalaSourceUtil {
         None
       }
     } catch { case ex: Throwable => ex.printStackTrace; None }
+  }
+
+  def findTopEnclClass(pre: Symbols#Symbol, chain: List[Symbols#Symbol]): Symbols#Symbol = {
+    try {
+      chain match {
+        case h :: tail =>
+          if (h.isPackage || h.isPackageClass) {
+            pre
+          } else {
+            findTopEnclClass(h, tail)
+          }
+        case Nil => pre
+      }
+    } catch {
+      case _: Throwable => pre
+    }
   }
 
   def findSourceFileObject(srcCpMine: ClassPath, srcCpTarget: ClassPath, srcPath: String): Option[FileObject] = {

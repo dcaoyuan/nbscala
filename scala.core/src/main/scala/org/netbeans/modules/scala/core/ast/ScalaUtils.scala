@@ -689,13 +689,14 @@ trait ScalaUtils { self: ScalaGlobal =>
 
           val importantLevel = baseLevel + {
             if (sym == NoSymbol) 90
-            else if (item.isInstanceOf[ScalaRef] && sym.isMethod && (sym.nameString == "apply" || sym.nameString == "unapply")) 10
             else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
-            else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 30
-            else if (sym.isGetter) 40
-            else if (sym.isConstructor) 50
-            else if (!sym.isMethod) 60
-            else 60
+            else if (sym.isMethod) {
+              if (item.isInstanceOf[ScalaRef] && sym.nameString == "apply" || sym.nameString == "unapply") 19
+              else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 11
+              else if (sym.isGetter) 12
+              else if (sym.isConstructor) 13
+              else 15
+            } else 60
           }
 
           (importantLevel, item)

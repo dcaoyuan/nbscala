@@ -99,22 +99,6 @@ trait ScalaElements { self: ScalaGlobal =>
       ""
     }
 
-    override def getFileObject: FileObject = {
-      if (!triedGetFo) {
-        fo getOrElse {
-          fo = ScalaSourceUtil.getFileObject(parserResult, symbol) // try to get
-          fo match {
-            case Some(x) =>
-              path = x.getPath
-              x
-            case None =>
-              triedGetFo = true
-              null
-          }
-        }
-      } else fo getOrElse null
-    }
-
     override def getIn: String = {
       try {
         symbol.owner.nameString
@@ -167,6 +151,22 @@ trait ScalaElements { self: ScalaGlobal =>
       ""
     }
 
+    override def getFileObject: FileObject = {
+      if (!triedGetFo) {
+        fo getOrElse {
+          fo = ScalaSourceUtil.getFileObject(parserResult, symbol) // try to get
+          fo match {
+            case Some(x) =>
+              path = x.getPath
+              x
+            case None =>
+              triedGetFo = true
+              null
+          }
+        }
+      } else fo getOrElse null
+    }
+
     def getOffset: Int = {
       if (!isLoaded) load
 
@@ -178,8 +178,10 @@ trait ScalaElements { self: ScalaGlobal =>
         }
       } else {
         val pos = symbol.pos
-        if (pos.isDefined) {
-          offset = pos.startOrPoint
+        offset = if (pos.isDefined) {
+          pos.startOrPoint
+        } else {
+          ScalaSourceUtil.getOffset(parserResult, symbol)
         }
       }
 
