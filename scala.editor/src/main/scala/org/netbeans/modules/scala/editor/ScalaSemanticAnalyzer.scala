@@ -246,29 +246,26 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
                 } else if (sym.isMethod) {
 
+                  sym.nameString match {
+                    case "apply" | "unapply" =>
+                      coloringSet.add(ColoringAttributes.CLASS)
+                      val isClass = try {
+                        val owner = sym.owner
+                        owner.isClass || owner.isType
+                      } catch {
+                        case _: Throwable => false
+                      }
+
+                      if (!isClass) { // Object
+                        coloringSet.add(ColoringAttributes.GLOBAL)
+                      }
+
+                    case _ =>
+                      coloringSet.add(ColoringAttributes.METHOD)
+                  }
+
                   if (ref.getKind == ElementKind.RULE) { // implicit call
                     coloringSet.add(ColoringAttributes.CUSTOM1)
-                  } else {
-                    sym.nameString match {
-                      case "apply" | "unapply" =>
-                        val isClass = try {
-                          val owner = sym.owner
-                          owner.isClass || owner.isType
-                        } catch {
-                          case _: Throwable => false
-                        }
-
-                        if (isClass) {
-                          coloringSet.add(ColoringAttributes.CLASS)
-                        } else { // Object
-                          coloringSet.add(ColoringAttributes.CLASS)
-                          coloringSet.add(ColoringAttributes.GLOBAL)
-                        }
-
-                      case _ =>
-                        coloringSet.add(ColoringAttributes.METHOD)
-                    }
-
                   }
 
                 } else if (sym.hasFlag(Flags.IMPLICIT)) {
