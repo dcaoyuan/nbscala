@@ -151,7 +151,7 @@ trait ScalaElements { self: ScalaGlobal =>
       ""
     }
 
-    override def getFileObject: FileObject = {
+    override def getFileObject(): FileObject = {
       if (!triedGetFo) {
         fo getOrElse {
           fo = ScalaSourceUtil.getFileObject(parserResult, symbol) // try to get
@@ -167,7 +167,7 @@ trait ScalaElements { self: ScalaGlobal =>
       } else fo getOrElse null
     }
 
-    def getOffset: Int = {
+    def getOffset(): Int = {
       if (!isLoaded) load
 
       if (isJava) {
@@ -181,7 +181,10 @@ trait ScalaElements { self: ScalaGlobal =>
         offset = if (pos.isDefined) {
           pos.startOrPoint
         } else {
-          ScalaSourceUtil.getOffset(parserResult, symbol)
+          val fo = getFileObject
+          if (fo != null) {
+            ScalaSourceUtil.getOffset(parserResult, symbol, fo)
+          } else 0
         }
       }
 

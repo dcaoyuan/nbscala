@@ -321,21 +321,12 @@ object ScalaSourceUtil {
   /**
    * @return position, 0 if no position info
    */
-  def getOffset(pr: ParserResult, symbol: Symbols#Symbol): Int = {
+  def getOffset(pr: ParserResult, symbol: Symbols#Symbol, foOfSymmbol: FileObject): Int = {
     val global = pr.asInstanceOf[ScalaParserResult].global
-    if (symbol == global.NoSymbol) return 0
 
-    val topEnclClass = findTopEnclClass(symbol, symbol.enclClassChain)
-    val srcFile = symbol.sourceFile match {
-      case null =>
-        try {
-          topEnclClass.sourceFile
-        } catch { case _: Throwable => null }
-      case x => x
-    }
-
+    val srcFile = ScalaSourceFile.sourceFileOf(foOfSymmbol)
     val resp = new global.Response[global.Position]
-    global.askLinkPos(symbol.asInstanceOf[global.Symbol], srcFile.asInstanceOf[SourceFile], resp)
+    global.askLinkPos(symbol.asInstanceOf[global.Symbol], srcFile, resp)
     resp get match {
       case Left(x) => x.startOrPoint
       case Right(ex) => 0

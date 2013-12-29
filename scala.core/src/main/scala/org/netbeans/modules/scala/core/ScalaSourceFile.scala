@@ -24,16 +24,14 @@ import scala.tools.nsc.util.Chars._
 object ScalaSourceFile {
   private val instances = new java.util.WeakHashMap[FileObject, Reference[ScalaSourceFile]]
 
-  def sourceFileOf(fileObject: FileObject) = instances synchronized {
-    val sourceRef = instances.get(fileObject)
-    var source = if (sourceRef eq null) null else sourceRef.get
-
-    if (source eq null) {
-      source = new ScalaSourceFile(fileObject)
-      instances.put(fileObject, new WeakReference[ScalaSourceFile](source))
+  def sourceFileOf(fileObject: FileObject): ScalaSourceFile = instances synchronized {
+    instances.get(fileObject) match {
+      case null =>
+        val srcFile = new ScalaSourceFile(fileObject)
+        instances.put(fileObject, new WeakReference[ScalaSourceFile](srcFile))
+        srcFile
+      case sourceRef => sourceRef.get
     }
-
-    source
   }
 }
 
@@ -49,7 +47,7 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
     if (javaIoFile ne null) new PlainFile(javaIoFile) else new VirtualFile("<current>", "")
   }
 
-  lazy val source = Source.create(fileObject) // if has been created, will return existed one
+  lazy val source = Source.create(fileObject) // if has been created, will return exi}sted one
 
   private var _snapshot: Snapshot = _
   def snapshot = {
