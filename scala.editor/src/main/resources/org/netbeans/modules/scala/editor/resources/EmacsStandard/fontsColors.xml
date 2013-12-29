@@ -4,8 +4,8 @@
 <fontscolors>
     <!-- See http://ui.netbeans.org/docs/ui/editor_fonts_colors/Editor_fonts_and_colors.htm#ruby -->
     <!-- A couple of things are not accurate yet; globals are not bold, and method calls are
-         black and bold instead of green (which would be identical to fields) -->
-         
+    black and bold instead of green (which would be identical to fields) -->
+
     <!-- ScalaTokenId categories -->
     <fontcolor name="CharacterLiteral" default="char"/>
     <fontcolor name="IntegerLiteral" default="number"/>
@@ -52,10 +52,12 @@
     <fontcolor name="mod-global" foreColor="228b22">  <!-- for Object Ref 717ab3, 7777cc -->
         <font style="italic" />
     </fontcolor>
-    <fontcolor name="mod-custom1" default="comment"/> <!-- implicit method Ref -->
+    <fontcolor name="mod-custom1"> <!-- implicit method Ref -->
+        <font style="italic" />
+    </fontcolor>
     <fontcolor name="mod-custom2" underline="0000ff"/> <!-- lazy val Ref/Dfn -->
-    <fontcolor name="mod-interface" default="comment"/> 
-   
+    <fontcolor name="mod-interface" default="comment"/>
+
     <fontcolor name="mod-annotation-type" />
     <fontcolor name="mod-enum" />
     <fontcolor name="mod-deprecated" strikeThrough="404040" />
@@ -66,15 +68,15 @@
     <fontcolor name="mod-public" />
 
     <fontcolor name="mod-regexp" foreColor="E9C062" />
-    
+
     <!--currently not used:-->
-<!--    <fontcolor name="mod-type-parameter-declaration" bgColor="lightGray"/>
+    <!--    <fontcolor name="mod-type-parameter-declaration" bgColor="lightGray"/>
     <fontcolor name="mod-type-parameter-use" bgColor="green"/>
     <fontcolor name="mod-undefined" foreColor="red"/>-->
 
     <!--mark occurrences:-->
     <fontcolor name="mark-occurrences" bgColor="ECEBA3"/>
-    
+
     <!-- JsCommentTokenId categories -->
     <fontcolor name="js-comment-tag" default="comment">
         <font style="bold" />
@@ -84,5 +86,5 @@
     </fontcolor>
     <fontcolor name="left-curly" default="comment"/>
     <fontcolor name="right-curly" default="comment"/>
-    
+
 </fontscolors>
