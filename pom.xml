@@ -60,13 +60,13 @@
         -->
         <netbeans.version>RELEASE74</netbeans.version>
 
-        <scala.version>2.10.1-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
-        <sbt.version>0.13.0</sbt.version>
+        <scala.version>2.10.3-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
+        <sbt.version>0.13.1</sbt.version>
         <scalariform.version>0.1.5</scalariform.version>
 
         <!-- module versions -->
-        <libs.scala.version>2.10.1.0</libs.scala.version>
-        <libs.sbt.version>0.13.0.0</libs.sbt.version>
+        <libs.scala.version>2.10.3.0</libs.scala.version>
+        <libs.sbt.version>0.13.1.0</libs.sbt.version>
         <libs.scalariform.version>0.1.5.0</libs.scalariform.version>
         <libs.xtc.version>1.15.1</libs.xtc.version>
         <scala.debugger.version>1.6.1</scala.debugger.version>

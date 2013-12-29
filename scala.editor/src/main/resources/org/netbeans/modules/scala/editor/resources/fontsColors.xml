@@ -6,7 +6,7 @@
     <!-- See http://bits.netbeans.org/dev/javadoc/org-netbeans-modules-editor-settings-storage/architecture-summary.html -->
     <!-- See org.netbeans.modules.csl.api.ColoringAttributes.java -->
     <!-- A couple of things are not accurate yet; globals are not bold, and method calls are
-         black and bold instead of green (which would be identical to fields) -->
+    black and bold instead of green (which would be identical to fields) -->
 
     <fontcolor name="CLASS_VAR" foreColor="ff098618">
         <font style="bold+italic"/>
@@ -83,7 +83,7 @@
     </fontcolor>
     <fontcolor name="mod-public" underline="000000"/>
     <fontcolor name="mod-abstract">
-      <font style="italic"/>
+        <font style="italic"/>
     </fontcolor>
     <fontcolor name="mod-deprecated" strikeThrough="404040"/>
 
@@ -93,9 +93,11 @@
         <font style="bold"/>
     </fontcolor>
     <fontcolor name="mod-method"/>
-    <fontcolor name="mod-custom1" default="comment"/> <!-- implicit method Ref -->
+    <fontcolor name="mod-custom1"> <!-- implicit method Ref -->
+        <font style="italic"/>
+    </fontcolor>
     <fontcolor name="mod-custom2" underline="000000"/> <!-- lazy val Ref/Dfn -->
-    <fontcolor name="mod-interface" default="comment"/> 
+    <fontcolor name="mod-interface" default="comment"/>
 
     <fontcolor name="mod-field" foreColor="009B00"/> <!-- val -->
     <fontcolor name="mod-local-variable" foreColor="CC0000"/> <!-- var -->
@@ -112,7 +114,7 @@
     <fontcolor name="mod-regexp" foreColor="9933CC"/>
 
     <!--currently not used:-->
-<!--    <fontcolor name="mod-type-parameter-declaration" bgColor="lightGray"/>
+    <!--    <fontcolor name="mod-type-parameter-declaration" bgColor="lightGray"/>
     <fontcolor name="mod-type-parameter-use" bgColor="green"/>
     <fontcolor name="mod-undefined" foreColor="red"/>-->
 
@@ -125,4 +127,4 @@
     <fontcolor name="left-curly" default="comment"/>
     <fontcolor name="right-curly" default="comment"/>
 
-</fontscolors> 
+</fontscolors>
