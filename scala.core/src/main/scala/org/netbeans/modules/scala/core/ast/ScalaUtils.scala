@@ -689,7 +689,7 @@ trait ScalaUtils { self: ScalaGlobal =>
 
           val importantLevel = baseLevel + {
             if (sym == NoSymbol) 90
-            else if (sym.isMethod && sym.nameString == "apply") 10
+            else if (item.isInstanceOf[ScalaRef] && sym.isMethod && sym.nameString == "apply") 10
             else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
             else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 30
             else if (sym.isGetter) 40
