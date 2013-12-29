@@ -691,11 +691,18 @@ trait ScalaUtils { self: ScalaGlobal =>
             if (sym == NoSymbol) 90
             else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
             else if (sym.isMethod) {
-              if (item.isInstanceOf[ScalaRef] && sym.nameString == "apply" || sym.nameString == "unapply") 19
-              else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 11
-              else if (sym.isGetter) 12
-              else if (sym.isConstructor) 13
-              else 15
+              if (item.isInstanceOf[ScalaRef]) {
+                if (sym.nameString == "apply" || sym.nameString == "unapply") 19
+                else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 11
+                else if (sym.isGetter) 12
+                else if (sym.isConstructor) 13
+                else 15
+              } else {
+                if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 31
+                else if (sym.isGetter) 32
+                else if (sym.isConstructor) 33
+                else 35
+              }
             } else 60
           }
 
