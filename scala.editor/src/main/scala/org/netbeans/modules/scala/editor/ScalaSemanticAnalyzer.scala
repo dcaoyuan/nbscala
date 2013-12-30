@@ -258,11 +258,11 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
                     coloringSet.add(ColoringAttributes.CUSTOM1)
                   }
 
-                } else if (sym.hasFlag(Flags.IMPLICIT)) {
+                } /* else if (sym.hasFlag(Flags.IMPLICIT)) {
 
                   coloringSet.add(ColoringAttributes.CUSTOM1)
 
-                } else if (sym.hasFlag(Flags.MUTABLE)) {
+                } */ else if (sym.hasFlag(Flags.MUTABLE)) {
 
                   coloringSet.add(ColoringAttributes.LOCAL_VARIABLE)
 
@@ -275,7 +275,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
             if (sym.isDeprecated) coloringSet.add(ColoringAttributes.DEPRECATED)
             if (sym.hasFlag(Flags.LAZY)) coloringSet.add(ColoringAttributes.CUSTOM2)
-            if (sym.hasFlag(Flags.BYNAMEPARAM)) coloringSet.add(ColoringAttributes.CUSTOM1)
+            //if (sym.hasFlag(Flags.BYNAMEPARAM)) coloringSet.add(ColoringAttributes.CUSTOM1)
 
             if (!coloringSet.isEmpty) highlights.put(hiRange, coloringSet)
 
