@@ -43,7 +43,7 @@ class SBTSources(project: Project) extends Sources {
   override def getSourceGroups(tpe: String): Array[SourceGroup] = {
     tpe match {
       case Sources.TYPE_GENERIC =>
-        // It's necessary for project's PhysicalView (in Files window), 
+        // It's necessary for project's PhysicalView (in Files window),
         // @see org.netbeans.modules.project.ui.PhysicalView#createNodesForProject(Project)
         val projectDir = project.getProjectDirectory
         Array(GenericSources.group(project, projectDir, projectDir.getNameExt, projectDir.getNameExt, null, null))
@@ -51,14 +51,7 @@ class SBTSources(project: Project) extends Sources {
       case ProjectResources.SOURCES_TYPE_JAVA | ProjectResources.SOURCES_TYPE_SCALA | ProjectResources.SOURCES_TYPE_MANAGED =>
         val mainSrcs = maybeAddGroup(tpe, false)
         val testSrcs = maybeAddGroup(tpe, true)
-        // We should keep the order Array(main, test), @see org.netbeans.modules.scala.core.ProjectResourcs#findMainAndTestSrcs
-        if (mainSrcs.length > 0 && testSrcs.length > 0) {
-          Array(mainSrcs(0), testSrcs(0))
-        } else if (mainSrcs.length > 0) {
-          Array(mainSrcs(0))
-        } else {
-          Array()
-        }
+        mainSrcs ++ testSrcs
 
       case _ =>
         Array()
@@ -97,7 +90,8 @@ class SBTSources(project: Project) extends Sources {
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ScalaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ScalaSources")
       case ProjectResources.SOURCES_TYPE_MANAGED =>
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ManagedSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ManagedSources")
-      case _ => NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
+      case _ =>
+        NbBundle.getMessage(classOf[SBTSources], "SG_OtherSources")
     }
 
     for (root <- roots if root != null) yield GenericSources.group(project, root, name, displayName, null, null)
