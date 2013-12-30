@@ -83,10 +83,10 @@ case class ErrorReporter(var errors: List[ScalaError] = Nil) extends Reporter {
   }
 
   private def toCslSeverity(severity: Severity) = severity match {
-    case INFO => org.netbeans.modules.csl.api.Severity.INFO
+    case INFO    => org.netbeans.modules.csl.api.Severity.INFO
     case WARNING => org.netbeans.modules.csl.api.Severity.WARNING
-    case ERROR => org.netbeans.modules.csl.api.Severity.ERROR
-    case _ => null
+    case ERROR   => org.netbeans.modules.csl.api.Severity.ERROR
+    case _       => null
   }
 }
 
@@ -122,7 +122,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   private def resetReporter {
     reporter match {
       case x: ErrorReporter => x.reset
-      case _ =>
+      case _                =>
     }
   }
 
@@ -133,7 +133,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     askReload(srcFiles, resp)
 
     resp.get match {
-      case Left(_) =>
+      case Left(_)   =>
       case Right(ex) => processGlobalException(ex)
     }
   }
@@ -164,7 +164,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
               askSemanticRoot(srcFile, rootTree, rootResp)
               if (isCancelled(srcFile)) return None
               rootResp get match {
-                case Left(x) => x
+                case Left(x)   => x
                 case Right(ex) => processGlobalException(ex, Some(ScalaRootScope.EMPTY))
               }
 
@@ -221,7 +221,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
       val ir = scheduler askDoQuickly op
       ir onComplete {
         case Left(result) => r set result
-        case Right(exc) => r raise exc
+        case Right(exc)   => r raise exc
       }
       r
     }
@@ -241,12 +241,12 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
 
-  // * @Note Should pass phase "lambdalift" to get anonfun's class symbol built
+  // @Note Should pass phase "lambdalift" to get anonfun's class symbol built
   def compileSourceForDebug(srcFile: ScalaSourceFile): ScalaRootScope = {
     compileSource(srcFile, constructors.phaseName)
   }
 
-  // * @Note the following setting excludes 'stopPhase' itself
+  // @Note the following setting excludes 'stopPhase' itself
   def compileSource(source: ScalaSourceFile, stopPhase: String): ScalaRootScope = synchronized {
     resetReporter
 
@@ -292,10 +292,11 @@ object ScalaGlobal {
 
   private val debug = false
 
-  private val projectToGlobals = new mutable.WeakHashMap[Project, Array[ScalaGlobal]]
+  /** project -> List([global, srcClasspath] */
+  private val projectToGlobals = new mutable.WeakHashMap[Project, mutable.HashMap[ScalaGlobal, ClassPath]]
   private var globalToListeners = Map[ScalaGlobal, List[FileChangeListener]]()
   private var globalForStdLib: Option[ScalaGlobal] = None
-  private var toResetGlobals = Map[ScalaGlobal, Project]()
+  private var toResetGlobals = Set[ScalaGlobal]()
 
   case class NormalReason(msg: String) extends Throwable(msg)
   object userRequest extends NormalReason("User's action")
@@ -304,29 +305,25 @@ object ScalaGlobal {
   def resetLate(global: ScalaGlobal, reason: Throwable) = synchronized {
     reason match {
       case NormalReason(msg) => log.info("Will reset global late due to: " + msg)
-      case _ => log.log(Level.WARNING, "Will reset global late due to:", reason)
+      case _                 => log.log(Level.WARNING, "Will reset global late due to:", reason)
     }
 
     if (globalForStdLib.isDefined && global == globalForStdLib.get) {
       globalForStdLib = None
     } else {
-      projectToGlobals foreach {
-        case (project, globals) =>
-          var found = false
-          var i = 0
-          val len = globals.length
-          while (i < len && !found) {
-            if (globals(i) == global) {
-              globals(i) = null
-              toResetGlobals += (global -> project)
-              for (xs <- globalToListeners.get(global); x <- xs) project.getProjectDirectory.getFileSystem.removeFileChangeListener(x)
-              globalToListeners -= global
-              found = true
-            }
-            i += 1
-          }
+      projectToGlobals.keySet foreach { project =>
+        val globals = projectToGlobals(project)
+        for {
+          found <- globals.remove(global)
+          listeners <- globalToListeners.get(global)
+        } {
+          listeners foreach project.getProjectDirectory.getFileSystem.removeFileChangeListener
+        }
       }
     }
+
+    toResetGlobals += global
+    globalToListeners -= global
   }
 
   /**
@@ -335,7 +332,7 @@ object ScalaGlobal {
    * it seems reset operation cannot got a clean global?
    */
   def resetBadGlobals = synchronized {
-    for ((global, project) <- toResetGlobals) {
+    for (global <- toResetGlobals) {
       log.info("Reset global: " + global)
 
       // this will cause global create a new TypeRun so as to release all unitbuf and filebuf.
@@ -353,18 +350,18 @@ object ScalaGlobal {
       global.askShutdown
     }
 
-    toResetGlobals = Map[ScalaGlobal, Project]()
+    toResetGlobals = Set[ScalaGlobal]()
   }
 
   /**
    * Scala's global is not thread safed
    */
-  def getGlobal(fo: FileObject, isForDebug: Boolean = false): ScalaGlobal = synchronized {
+  def getGlobal(fo: FileObject): ScalaGlobal = synchronized {
     resetBadGlobals
 
     val project = FileOwnerQuery.getOwner(fo)
     if (project == null) {
-      // * it may be a standalone file, or file in standard lib
+      // it may be a standalone file, or file in standard lib
       return globalForStdLib getOrElse {
         val g = ScalaHome.getGlobalForStdLib
         globalForStdLib = Some(g)
@@ -372,25 +369,11 @@ object ScalaGlobal {
       }
     }
 
-    val resource = ProjectResources.findProjectResource(project)
-    val isForTest = ProjectResources.isForTest(resource, fo)
-
-    // * Do not use `srcCp` as the key, different `fo` under same src dir seems returning diff instance of srcCp
-    val idx = if (isForDebug) {
-      if (isForTest) GlobalForTestDebug else GlobalForDebug
-    } else {
-      if (isForTest) GlobalForTest else Global
-    }
-
-    val globals = projectToGlobals.get(project) getOrElse {
-      val x = new Array[ScalaGlobal](4)
-      projectToGlobals += (project -> x)
-      x
-    }
-
-    globals(idx) match {
-      case null =>
-      case g => return g
+    projectToGlobals.get(project) map { globalToSrcCp =>
+      globalToSrcCp find { _._2.contains(fo) } match {
+        case Some(xy) => return xy._1
+        case None     => // create a new one
+      }
     }
 
     // ----- need to create a new global:
@@ -417,10 +400,10 @@ object ScalaGlobal {
 
     // ----- set bootclasspath, classpath
 
-    val bootCpStr = ProjectResources.toClassPathString(bootCp)
+    val bootCpStr = ScalaExecution.toClassPathString(bootCp)
     settings.bootclasspath.value = bootCpStr
 
-    val compCpStr = ProjectResources.toClassPathString(compCp)
+    val compCpStr = ScalaExecution.toClassPathString(compCp)
     settings.classpath.value = compCpStr
 
     // Should override extdirs to empty, otherwise all jars under scala.home/lib will be added
@@ -431,21 +414,21 @@ object ScalaGlobal {
     // Should explictly set the pluginsDir, otherwise the default will be set to scala.home/misc
     // which may bring uncompitable verions of scala's runtime call
     // @see scala.tools.util.PathResolver.Defaults
-    val pluginJarsDir = ProjectResources.getPluginJarsDir
+    val pluginJarsDir = ScalaExecution.getPluginJarsDir
     log.info("Bundled plugin jars dir is: " + pluginJarsDir)
-    settings.pluginsDir.value = if (pluginJarsDir != null) pluginJarsDir.getAbsolutePath else ""
+    settings.pluginsDir.value = pluginJarsDir map (_.getAbsolutePath) getOrElse ""
     settings.plugin.value = Nil
 
     // ----- set sourcepath, outpath
 
-    // @Note: do not add src path to global for test?, since the corresponding build/classes has been added to compCp
-    val srcOutDirsPath = (if (isForTest) resource.testSrcOutDirsPath else resource.mainSrcOutDirsPath)
-    // @Note: settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?\
+    val srcOutDirsPath = srcCp.getRoots map { srcRoot => (FileUtil.toFile(srcRoot).getAbsolutePath, FileUtil.toFile(ProjectResources.findOutDir(project, srcRoot)).getAbsolutePath) }
+    // @Note do not add src path to global for test?, since the corresponding build/classes has been added to compCp
+    //val srcOutDirsPath = (if (isForTest) resource.testSrcOutDirsPath else resource.mainSrcOutDirsPath)
+    // @Note settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?\
     // since Scala 2.10.0, this seems working. if not, we should global askForReload srcFiles later
-    srcOutDirsPath foreach {
-      case (src, out) =>
-        settings.outputDirs.add(src, out)
-        log.info("settings.outputDirs.add" + (src -> out))
+    srcOutDirsPath foreach { src_out =>
+      settings.outputDirs.add(src_out._1, src_out._2)
+      log.info("settings.outputDirs.add" + (src_out._1 -> src_out._2))
     }
     settings.sourcepath.value = srcOutDirsPath.toList map (_._1) mkString ("", File.pathSeparator, "")
 
@@ -459,34 +442,32 @@ object ScalaGlobal {
     // to the constructor's param reporter, so we have to make sure only one reporter
     // is assigned to Global (during create new instance)
     val global = new ScalaGlobal(settings, ErrorReporter())
-    globals(idx) = global
+    projectToGlobals.getOrElseUpdate(project, new mutable.HashMap[ScalaGlobal, ClassPath]) += (global -> srcCp)
 
     // listen to compCp's change
     if (compCp != null) {
-      if (!isForDebug) {
-        val compCpListener = new CompCpListener(global, compCp)
-        globalToListeners += (global -> (compCpListener :: globalToListeners.getOrElse(global, Nil)))
-        project.getProjectDirectory.getFileSystem.addFileChangeListener(compCpListener)
-      }
+      val compCpListener = new CompCpListener(global, compCp)
+
+      globalToListeners += (global -> (compCpListener :: globalToListeners.getOrElse(global, Nil)))
+      project.getProjectDirectory.getFileSystem.addFileChangeListener(compCpListener)
     }
 
     if (srcCp != null) {
       log.info(srcCp.getRoots.map(_.getPath).mkString("Project's srcCp: [", ", ", "]"))
-      if (!isForDebug) {
-        val srcCpListener = new SrcCpListener(global, srcCp)
-        globalToListeners += (global -> (srcCpListener :: globalToListeners.getOrElse(global, Nil)))
-        project.getProjectDirectory.getFileSystem.addFileChangeListener(srcCpListener)
 
-        // we have to do following step to get mixed java sources visible to scala sources
-        // since scala 2.10.0, this does not seem to be necessary.
+      val srcCpListener = new SrcCpListener(global, srcCp)
+      globalToListeners += (global -> (srcCpListener :: globalToListeners.getOrElse(global, Nil)))
+      project.getProjectDirectory.getFileSystem.addFileChangeListener(srcCpListener)
 
-        // should push java srcs before scala srcs
-        // push scala src files to get classes that with different name from file name to be recognized properly
-        // the reporter should be set previous, otherwise, no java source is resolved, may throw exception already.
-        //val (javaSrcs, scalaSrcs) = ProjectResources.findAllSources(srcCp)
-        //val srcFiles = (javaSrcs ++ scalaSrcs).toList map toSourceFile
-        //global askForReload srcFiles
-      }
+      // we have to do following step to get mixed java sources visible to scala sources
+      // since scala 2.10.0, this does not seem to be necessary.
+
+      // should push java srcs before scala srcs
+      // push scala src files to get classes that with different name from file name to be recognized properly
+      // the reporter should be set previous, otherwise, no java source is resolved, may throw exception already.
+      //val (javaSrcs, scalaSrcs) = ProjectResources.findAllSources(srcCp)
+      //val srcFiles = (javaSrcs ++ scalaSrcs).toList map toSourceFile
+      //global askForReload srcFiles
     } else {
       log.warning("Project's srcCp is null !")
     }
@@ -512,7 +493,7 @@ object ScalaGlobal {
 
     private def isInterestedMime(mimeType: String) = mimeType match {
       case JavaMimeType | ScalaMimeType => true
-      case _ => false
+      case _                            => false
     }
 
     override def fileDataCreated(fe: FileEvent) {
@@ -542,7 +523,7 @@ object ScalaGlobal {
         val resp = new global.Response[Unit]
         global askFilesDeleted (List(toSourceFile(fo)), resp)
         resp.get match {
-          case Left(_) =>
+          case Left(_)   =>
           case Right(ex) => global.processGlobalException(ex)
         }
       }
@@ -553,7 +534,7 @@ object ScalaGlobal {
     val compRoots = compCp.getRoots
 
     private def isUnderCompCp(fo: FileObject) = {
-      // * when there are series of folder/file created, only top created folder can be listener
+      // when there are series of folder/file created, only top created folder can be listener
       val found = compRoots find { x => FileUtil.isParentOf(fo, x) || x == fo }
       if (found.isDefined) log.finest("under compCp: fo=" + fo + ", found=" + found)
       found isDefined
@@ -576,7 +557,6 @@ object ScalaGlobal {
     }
 
     override def fileChanged(fe: FileEvent) {
-      val a: AnyRef = ""
       val fo = fe.getFile
       if (isUnderCompCp(fo) && (global ne null)) {
         log.finest("file changed: " + fo)

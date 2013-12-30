@@ -54,7 +54,7 @@ trait AstRef extends AstItem {
       // if it's a OTHER, we could try to get its kind from its dfn
       case x @ ElementKind.OTHER => rootScope.findDfnOf(this) match {
         case Some(dfn) => dfn.getKind
-        case None => x
+        case None      => x
       }
       case x => x
     }

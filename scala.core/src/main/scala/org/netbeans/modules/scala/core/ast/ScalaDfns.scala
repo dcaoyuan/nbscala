@@ -88,7 +88,7 @@ trait ScalaDfns { self: ScalaGlobal =>
         if (ref.symbol == symbol) true else {
           symbol match {
             case me: TermSymbol => me.referenced == ref.symbol
-            case _ => false
+            case _              => false
           }
         }
       } else false
@@ -98,7 +98,7 @@ trait ScalaDfns { self: ScalaGlobal =>
       val srcDoc = getDoc.getOrElse(return "")
       TokenHierarchy.get(srcDoc) match {
         case null => return ""
-        case th => ScalaSourceUtil.getDocComment(srcDoc, idOffset(th))
+        case th   => ScalaSourceUtil.getDocComment(srcDoc, idOffset(th))
       }
     }
 

@@ -122,7 +122,7 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
   override def equals(that: Any) = that match {
     case that: BatchSourceFile => file.path == that.file.path && start == that.start
     case that: ScalaSourceFile => file.file == that.file.file // compare underlying java io file.
-    case _ => false
+    case _                     => false
   }
 
 }

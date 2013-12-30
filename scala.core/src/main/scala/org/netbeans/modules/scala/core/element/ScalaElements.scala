@@ -201,7 +201,7 @@ trait ScalaElements { self: ScalaGlobal =>
         doc match {
           case None => GsfUtilities.getDocument(srcFo, true) match {
             case null =>
-            case x => doc = Some(x)
+            case x    => doc = Some(x)
           }
           case _ =>
         }
@@ -240,7 +240,7 @@ trait ScalaElements { self: ScalaGlobal =>
               case Some(root) =>
                 root.findDfnMatched(symbol) match {
                   case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
-                  case None =>
+                  case None    =>
                 }
               case None =>
             }

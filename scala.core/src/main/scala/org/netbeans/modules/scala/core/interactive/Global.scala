@@ -35,12 +35,12 @@ class Global(_settings: Settings, _reporter: Reporter, projectName: String = "")
   final def recoveredType(tree: Tree): Option[Type] = {
     def findViaGet(atree: Tree) = qualToRecoveredType.get(atree) match {
       case None => qualToRecoveredType find {
-        case (Select(qual, _), _) => qual == atree
+        case (Select(qual, _), _)             => qual == atree
         case (SelectFromTypeTree(qual, _), _) => qual == atree
-        case (Apply(fun, _), _) => fun == atree
-        case (x, _) => x == atree // usaully Ident tree
+        case (Apply(fun, _), _)               => fun == atree
+        case (x, _)                           => x == atree // usaully Ident tree
       } match {
-        case None => None
+        case None           => None
         case Some((_, tpe)) => Some(tpe)
       }
       case some => some
@@ -56,7 +56,7 @@ class Global(_settings: Settings, _reporter: Reporter, projectName: String = "")
       case (x, _) =>
         (x.pos sameRange atree.pos) // usaully Ident tree
     } match {
-      case None => None
+      case None           => None
       case Some((_, tpe)) => Some(tpe)
     }
 
@@ -64,10 +64,10 @@ class Global(_settings: Settings, _reporter: Reporter, projectName: String = "")
       op(tree) match {
         case None =>
           tree match {
-            case Select(qual, _) => op(qual)
+            case Select(qual, _)             => op(qual)
             case SelectFromTypeTree(qual, _) => op(qual)
-            case Apply(fun, _) => op(fun)
-            case _ => None
+            case Apply(fun, _)               => op(fun)
+            case _                           => None
           }
         case some => some
       }

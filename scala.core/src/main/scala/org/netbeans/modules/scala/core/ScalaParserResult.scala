@@ -106,7 +106,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     _root match {
       case None => toSemanticed
       //case Some(ScalaRootScope.EMPTY) => toSemanticed
-      case _ =>
+      case _    =>
     }
 
     // for some race conditions during cancel, the root may still be None,
@@ -156,7 +156,7 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
 
             val isLineError = (end == -1)
             val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fo, offset, end, isLineError, severity)
-            //error.setParameters(Array(offset, msg))                
+            //error.setParameters(Array(offset, msg))
 
             errs.add(error)
           } else {
@@ -168,14 +168,10 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
     }
   }
 
-  lazy val rootScopeForDebug: ScalaRootScope = {
-    ScalaGlobal.getGlobal(fo, true).compileSourceForDebug(srcFile)
-  }
-
   override def toString = "ParserResult of " + fo.getNameExt + ", root is " + (_root match {
-    case None => "None"
+    case None                       => "None"
     case Some(ScalaRootScope.EMPTY) => "Empty"
-    case _ => "Ok"
+    case _                          => "Ok"
   })
 }
 

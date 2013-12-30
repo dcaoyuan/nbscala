@@ -153,7 +153,7 @@ object ScalaLexUtil extends LexUtil {
         case id if !isWsComment(id) && !isKeyword(id) =>
           ts.moveNext // recheck from this id
           findAnnotationBwd(ts) match {
-            case None => done = true
+            case None    => done = true
             case Some(x) => // ts is moved to '@' now
           }
         case _ =>
@@ -259,7 +259,7 @@ object ScalaLexUtil extends LexUtil {
             exactBehindComma = true
           }
         case id if isWsComment(id) =>
-        case _ => return Nil
+        case _                     => return Nil
       }
     }
 
@@ -286,7 +286,7 @@ object ScalaLexUtil extends LexUtil {
     while (ts.isValid && ts.moveNext) {
       val token = ts.token match {
         case x if x.isFlyweight => ts.offsetToken
-        case x => x
+        case x                  => x
       }
 
       token.id match {
@@ -328,7 +328,7 @@ object ScalaLexUtil extends LexUtil {
             return ImportTokens(start, end, qual.reverse, selectors.reverse)
           }
         case id if isWsComment(id) =>
-        case _ => return NullImportTokens
+        case _                     => return NullImportTokens
       }
     }
 

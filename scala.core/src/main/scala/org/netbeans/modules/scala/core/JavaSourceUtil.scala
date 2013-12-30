@@ -172,7 +172,7 @@ object JavaSourceUtil {
   def getCompilationInfoForScalaFile(fo: FileObject): CompilationInfo = {
     var info = scalaFileToJavaCompilationInfo.get(fo) match {
       case null => null
-      case ref => ref.get
+      case ref  => ref.get
     }
 
     if (info eq null) {
@@ -223,7 +223,7 @@ object JavaSourceUtil {
   def getDocComment(info: CompilationInfo, e: Element): String = {
     // to resolve javadoc, only needs Phase.ELEMENT_RESOLVED, and we have reached when create info
     info.getElementUtilities.javaDocFor(e) match {
-      case null => ""
+      case null    => ""
       case javaDoc => javaDoc.getRawCommentText
     }
   }
@@ -235,7 +235,7 @@ object JavaSourceUtil {
     val handle = ElementHandle.create(e)
     SourceUtils.getFile(handle, info.getClasspathInfo) match {
       case null => None
-      case x => Some(x)
+      case x    => Some(x)
     }
   }
 
@@ -323,7 +323,7 @@ object JavaSourceUtil {
             case _ =>
           }
           case ElementKind.FIELD => return Some(element)
-          case _ =>
+          case _                 =>
         }
       }
     }

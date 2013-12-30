@@ -116,21 +116,21 @@ object ScalaHome {
   def getJavaHome: String = {
     System.getProperty("scala.java.home") match { // NOI18N
       case null => System.getProperty("java.home") // NOI18N
-      case x => x
+      case x    => x
     }
   }
 
   def getJavaClassPath: String = {
     System.getProperty("java.class.path") match {
       case null => ""
-      case x => x
+      case x    => x
     }
   }
 
   def getScalaHome: String = {
     val scalaHome = System.getProperty("scala.home") match { // NOI18N
       case null => System.getenv("SCALA_HOME") // NOI18N
-      case x => System.setProperty("scala.home", x); x
+      case x    => System.setProperty("scala.home", x); x
     }
 
     if (scalaHome ne null) {
@@ -155,7 +155,7 @@ object ScalaHome {
             if (Utilities.isWindows) {
               bin.getFileObject("scala", "exe") match {
                 case null => bin.getFileObject("scala", "bat")
-                case x => x
+                case x    => x
               }
             } else {
               bin.getFileObject("scala", null) //NOI18N

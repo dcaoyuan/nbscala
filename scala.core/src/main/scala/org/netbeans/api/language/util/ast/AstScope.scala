@@ -88,14 +88,14 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   def boundsOffset(th: TokenHierarchy[_]): Int = {
     boundsToken match {
       case Some(x) => x.offset(th)
-      case None => -1
+      case None    => -1
     }
   }
 
   def boundsEndOffset(th: TokenHierarchy[_]): Int = {
     boundsEndToken match {
       case Some(x) => x.offset(th) + x.length
-      case None => -1
+      case None    => -1
     }
   }
 
@@ -253,13 +253,13 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   private def findDfnOfUpward(ref: AstRef): Option[AstDfn] = {
     _dfns.find { _ isReferredBy ref } match {
       case Some(x) => return Some(x)
-      case None =>
+      case None    =>
     }
 
     // * search upward
     parent match {
       case Some(x) => x.findDfnOfUpward(ref)
-      case None => None
+      case None    => None
     }
   }
 
@@ -275,7 +275,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
     // find if there is closest override Def, if so, we shoud bypass it now:
     _dfns.find { x => x != dfn && x.mayEqual(dfn) } match {
       case Some(x) => return
-      case None =>
+      case None    =>
     }
 
     result ++= _refs.filter { dfn isReferredBy _ }
@@ -286,7 +286,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
   final def root: AstRootScope = parent match {
     case Some(x) => x.root
-    case None => this.asInstanceOf[AstRootScope]
+    case None    => this.asInstanceOf[AstRootScope]
   }
 
   private def findAllRefsSameAs(ref: AstRef): Seq[AstRef] = {
@@ -322,7 +322,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
     val found = _subScopes find { _.contains(th, offset) } match {
       case Some(child) => child.closestScope(th, offset)
-      case None => None
+      case None        => None
     }
 
     found match {
@@ -350,14 +350,14 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
     parent match {
       case Some(x) => x.visibleDfnsUpward(kind, result)
-      case None =>
+      case None    =>
     }
   }
 
   def enclosingDfn(kinds: Set[ElementKind], th: TokenHierarchy[_], offset: Int): Option[AstDfn] = {
     closestScope(th, offset) match {
       case Some(x) => x.enclosingDfn(kinds)
-      case None => None
+      case None    => None
     }
   }
 
@@ -366,7 +366,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
       case Some(x) if kinds.contains(x.getKind) => bindingDfn
       case _ => parent match {
         case Some(x) => x.enclosingDfn(kinds)
-        case None => None
+        case None    => None
       }
     }
   }
@@ -374,7 +374,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
   def enclosingDfn(kind: ElementKind, th: TokenHierarchy[_], offset: Int): Option[AstDfn] = {
     closestScope(th, offset) match {
       case Some(x) => x.enclosingDfn(kind)
-      case None => None
+      case None    => None
     }
   }
 
@@ -383,7 +383,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
       case Some(x) if x.getKind == kind => bindingDfn
       case _ => parent match {
         case Some(x) => x.enclosingDfn(kind)
-        case None => None
+        case None    => None
       }
     }
   }
@@ -399,14 +399,14 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
 
     parent match {
       case Some(x) => x.visibleDfnsUpward(clazz, result)
-      case None =>
+      case None    =>
     }
   }
 
   def enclosingDfn[A <: AstDfn](clazz: Class[A], th: TokenHierarchy[_], offset: Int): Option[A] = {
     closestScope(th, offset) match {
       case Some(x) => x.enclosingDfn(clazz)
-      case None => None
+      case None    => None
     }
   }
 
@@ -414,7 +414,7 @@ class AstScope(var boundsTokens: Array[Token[TokenId]]) {
     case Some(x) if clazz.isInstance(x) => bindingDfn.asInstanceOf[Option[A]]
     case _ => parent match {
       case Some(x) => x.enclosingDfn(clazz)
-      case None => None
+      case None    => None
     }
   }
 

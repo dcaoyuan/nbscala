@@ -68,7 +68,7 @@ trait ScalaUtils { self: ScalaGlobal =>
 
         modifiers
       } get match {
-        case Left(x) => x
+        case Left(x)  => x
         case Right(_) => modifiers
       }
     }
@@ -125,7 +125,7 @@ trait ScalaUtils { self: ScalaGlobal =>
           case _: Throwable => EmptyScope
         }
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => EmptyScope
       }
     }
@@ -210,7 +210,7 @@ trait ScalaUtils { self: ScalaGlobal =>
             htmlTypeName(symbol, fm)
         }
       } get match {
-        case Left(_) =>
+        case Left(_)  =>
         case Right(_) =>
       }
     }
@@ -229,12 +229,12 @@ trait ScalaUtils { self: ScalaGlobal =>
 
     private def htmlTypeName(tpe: Type, fm: HtmlFormatter): Unit = {
       tpe match {
-        case ErrorType => fm.appendText("<error>")
+        case ErrorType    => fm.appendText("<error>")
         // internal: error
         case WildcardType => fm.appendText("_")
         // internal: unknown
-        case NoType => fm.appendText("<notype>")
-        case NoPrefix => fm.appendText("<noprefix>")
+        case NoType       => fm.appendText("<notype>")
+        case NoPrefix     => fm.appendText("<noprefix>")
         case ThisType(sym) =>
           fm.appendText(sym.nameString)
           fm.appendText(".this.type")
@@ -376,7 +376,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         }
 
       } get match {
-        case Left(x) =>
+        case Left(x)   =>
         case Right(ex) => ScalaGlobal.resetLate(self, ex)
       }
     }
@@ -393,12 +393,12 @@ trait ScalaUtils { self: ScalaGlobal =>
     private def htmlTypeInfo(tpe: Type, fm: HtmlFormatter) {
       if (tpe eq null) return
       tpe match {
-        case ErrorType => fm.appendText("<error>")
+        case ErrorType    => fm.appendText("<error>")
         // internal: error
         case WildcardType => fm.appendText("_")
         // internal: unknown
-        case NoType => fm.appendText("<notype>")
-        case NoPrefix => fm.appendText("<noprefix>")
+        case NoType       => fm.appendText("<notype>")
+        case NoPrefix     => fm.appendText("<noprefix>")
         case ThisType(sym) =>
           fm.appendText(sym.nameString)
           fm.appendText(".this.type")
@@ -658,11 +658,11 @@ trait ScalaUtils { self: ScalaGlobal =>
           completeIfWithLazyType(sym)
           sym.rawInfo match {
             case NoType | ErrorType => false
-            case _ => true
+            case _                  => true
           }
         } else false
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => false
       }
     }
@@ -671,7 +671,7 @@ trait ScalaUtils { self: ScalaGlobal =>
       askForResponse { () =>
         importantItem(items)
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => items.head.asInstanceOf[ScalaItem]
       }
     }
@@ -733,7 +733,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         typeSimpleSig_(tpe, sb)
         sb.toString
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => "<error>"
       }
     }
@@ -758,7 +758,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         typeSimpleSig_(tpe, sb)
         sb.toString
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => "<error>"
       }
     }
@@ -772,8 +772,8 @@ trait ScalaUtils { self: ScalaGlobal =>
         // internal: error
         case WildcardType => sb.append("_")
         // internal: unknown
-        case NoType => sb.append("<notype>")
-        case NoPrefix => sb.append("<noprefix>")
+        case NoType       => sb.append("<notype>")
+        case NoPrefix     => sb.append("<noprefix>")
         case ThisType(sym) =>
           sb append (sym.fullName)
         case SingleType(pre, sym) =>

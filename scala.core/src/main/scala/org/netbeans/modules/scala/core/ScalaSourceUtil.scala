@@ -57,7 +57,6 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
 import scala.reflect.internal.Flags
 import scala.reflect.internal.Symbols
-import scala.reflect.internal.util.SourceFile
 
 /**
  *
@@ -74,17 +73,17 @@ object ScalaSourceUtil {
   def isIdentifierChar(c: Char): Boolean = {
     c match {
       case '$' | '@' | '&' | ':' | '!' | '?' | '=' => true // Function name suffixes
-      case _ if Character.isJavaIdentifierPart(c) => true // Globals, fields and parameter prefixes (for blocks and symbols)
-      case _ => false
+      case _ if Character.isJavaIdentifierPart(c)  => true // Globals, fields and parameter prefixes (for blocks and symbols)
+      case _                                       => false
     }
   }
 
   /** Includes things you'd want selected as a unit when double clicking in the editor */
   def isStrictIdentifierChar(c: Char): Boolean = {
     c match {
-      case '!' | '?' | '=' => true
+      case '!' | '?' | '='                        => true
       case _ if Character.isJavaIdentifierPart(c) => true
-      case _ => false
+      case _                                      => false
     }
   }
 
@@ -95,9 +94,9 @@ object ScalaSourceUtil {
       var break = false
       for (i <- offset until text.length if !break) {
         text.charAt(i) match {
-          case '\n' => break = true
+          case '\n'                            => break = true
           case c if !Character.isWhitespace(c) => return false
-          case _ =>
+          case _                               =>
         }
       }
 
@@ -105,9 +104,9 @@ object ScalaSourceUtil {
       break = false
       for (i <- offset - 1 to 0 if !break) {
         text.charAt(i) match {
-          case '\n' => break = true
+          case '\n'                            => break = true
           case c if !Character.isWhitespace(c) => return false
-          case _ =>
+          case _                               =>
         }
       }
 
@@ -162,9 +161,9 @@ object ScalaSourceUtil {
       i -= 1
       while (i >= 0) {
         text.charAt(i) match {
-          case '\n' => return -1
+          case '\n'                            => return -1
           case c if !Character.isWhitespace(c) => return i
-          case _ => i -= 1
+          case _                               => i -= 1
         }
       }
 
@@ -192,9 +191,9 @@ object ScalaSourceUtil {
       // Search forwards to find first nonspace char from offset
       while (i < text.length) {
         text.charAt(i) match {
-          case '\n' => return -1
+          case '\n'                            => return -1
           case c if !Character.isWhitespace(c) => return i
-          case _ => i += 1
+          case _                               => i += 1
         }
       }
 
@@ -214,7 +213,7 @@ object ScalaSourceUtil {
       for (i <- offset - 1 to 0) {
         text.charAt(i) match {
           case '\n' => return i + 1
-          case _ =>
+          case _    =>
         }
       }
 
@@ -283,7 +282,7 @@ object ScalaSourceUtil {
     }
 
     val doc = pr.getSnapshot.getSource.getDocument(true) match {
-      case null => return null
+      case null            => return null
       case x: BaseDocument => x
     }
 
@@ -304,7 +303,7 @@ object ScalaSourceUtil {
   def getDocComment(doc: BaseDocument, symbolOffset: Int): String = {
     val th = TokenHierarchy.get(doc) match {
       case null => return ""
-      case x => x
+      case x    => x
     }
 
     val range = ScalaLexUtil.getDocCommentRangeBefore(doc, th, symbolOffset)
@@ -328,7 +327,7 @@ object ScalaSourceUtil {
     val resp = new global.Response[global.Position]
     global.askLinkPos(symbol.asInstanceOf[global.Symbol], srcFile, resp)
     resp get match {
-      case Left(x) => x.startOrPoint
+      case Left(x)   => x.startOrPoint
       case Right(ex) => 0
     }
   }
@@ -368,29 +367,21 @@ object ScalaSourceUtil {
 
     val pkgName = qName.lastIndexOf('/') match {
       case -1 => null
-      case i => qName.substring(0, i)
+      case i  => qName.substring(0, i)
     }
 
     val clzName = qName + ".class"
 
     val fo = pr.getSnapshot.getSource.getFileObject
-
-    // For some reason, the ClassPath.getClassPath(fo, ClassPath.SOURCE) can not get
-    // "src/main/scala" back for maven project
-    // The safer way is using ProjectUtils.getSources(project). See ScalaGlobal#findDirResources
-    //     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
-
-    val srcRootsMine = ProjectResources.getSrcFileObjects(fo, true)
-    val srcCpMine = ClassPathSupport.createClassPath(srcRootsMine: _*)
+    val srcCpMine = ClassPath.getClassPath(fo, ClassPath.SOURCE)
 
     val cp = getClassPath(fo)
     val clzFo = cp.findResource(clzName)
     val root = cp.findOwnerRoot(clzFo)
 
     val srcCpTarget = if (root != null) {
-      val srcRoots1 = ProjectResources.getSrcFileObjects(root, true)
-      val srcRoots2 = SourceForBinaryQuery.findSourceRoots(root.toURL).getRoots
-      ClassPathSupport.createClassPath(srcRoots1 ++ srcRoots2: _*)
+      val srcRoots = SourceForBinaryQuery.findSourceRoots(root.toURL).getRoots
+      ClassPathSupport.createClassPath(srcRoots: _*)
     } else {
       null
     }
@@ -415,7 +406,7 @@ object ScalaSourceUtil {
         val in = clzFo.getInputStream
         try {
           new ClassFile(in, false) match {
-            case null => null
+            case null    => null
             case clzFile => clzFile.getSourceFileName
           }
         } finally {
@@ -459,7 +450,7 @@ object ScalaSourceUtil {
         } else {
           srcCpTarget.findResource(srcPath) match {
             case null => None
-            case x => Some(x)
+            case x    => Some(x)
           }
         }
       case x => Some(x)
@@ -493,7 +484,7 @@ object ScalaSourceUtil {
       }
     }
 
-    // * collect dependencies
+    // collect dependencies
     val result = new HashSet[URL]
     var todo = List(root)
     while (!todo.isEmpty) {
@@ -507,7 +498,7 @@ object ScalaSourceUtil {
       }
     }
 
-    // * filter non opened projects
+    // filter non opened projects
     val cps = GlobalPathRegistry.getDefault.getPaths(ClassPath.SOURCE).iterator
     val toRetain = new HashSet[URL]
     while (cps.hasNext) {
@@ -561,13 +552,13 @@ object ScalaSourceUtil {
       }
 
     } get match {
-      case Left(_) =>
+      case Left(_)  =>
       case Right(_) =>
     }
 
     if (clazzName.length == 0) return null
 
-    val out = ProjectResources.getOutFileObject(fo, true) getOrElse { return clazzName }
+    val out = ProjectResources.getOutFileObjectForSrc(fo) getOrElse { return clazzName }
 
     def findAllClassFilesWith(prefix: String, dirFo: FileObject, result: ArrayBuffer[FileObject]): Unit = {
       dirFo.getChildren foreach {
@@ -598,7 +589,7 @@ object ScalaSourceUtil {
                 clazzName = FileUtil.getRelativePath(out, clazzFo).replace('/', '.')
                 clazzName = clazzName.lastIndexOf(".class") match {
                   case -1 => clazzName
-                  case i => clazzName.substring(0, i)
+                  case i  => clazzName.substring(0, i)
                 }
                 logger.info("Found binary class name: " + clazzName)
                 return clazzName
@@ -610,62 +601,6 @@ object ScalaSourceUtil {
     }
 
     clazzName
-  }
-
-  @deprecated("For reference only", "1.6.0")
-  def getBinaryClassName_old(pr: ScalaParserResult, offset: Int): String = {
-    val root = pr.rootScopeForDebug
-    val th = pr.getSnapshot.getTokenHierarchy
-
-    var clzName = ""
-    root.enclosingDfn(TMPL_KINDS, th, offset) foreach { enclDfn =>
-      val sym = enclDfn.asInstanceOf[ScalaDfns#ScalaDfn].symbol
-      if (sym ne null) {
-        // "scalarun.Dog.$talk$1"
-        val fqn = new StringBuilder(sym.fullName('.'))
-
-        // * getTopLevelClassName "scalarun.Dog"
-        val topSym = sym.enclosingTopLevelClass
-        val topClzName = topSym.fullName('.')
-
-        // "scalarun.Dog$$talk$1"
-        for (i <- topClzName.length until fqn.length) {
-          if (fqn.charAt(i) == '.') {
-            fqn.setCharAt(i, '$')
-          }
-        }
-
-        // * According to Symbol#kindString, an object template isModuleClass()
-        // * trait's symbol name has been added "$class" by compiler
-        if (topSym.isModuleClass) {
-          fqn.append("$")
-        }
-        clzName = fqn.toString
-      }
-    }
-
-    if (clzName.length == 0) {
-      clzName = null
-    }
-
-    //        AstDfn tmpl = rootScope.getEnclosinDef(ElementKind.CLASS, th, offset);
-    //        if (tmpl eq null) {
-    //            tmpl = rootScope.getEnclosinDef(ElementKind.MODULE, th, offset);
-    //        }
-    //        if (tmpl eq null) {
-    //            ErrorManager.getDefault().log(ErrorManager.WARNING,
-    //                    "No enclosing class for " + pResult.getSnapshot().getSource().getFileObject() + ", offset = " + offset);
-    //        }
-    //
-    //        String className = tmpl.getBinaryName();
-    //
-    //        String enclosingPackage = tmpl.getPackageName();
-    //        if (enclosingPackage eq null || enclosingPackage ne null && enclosingPackage.length() == 0) {
-    //            result[0] = className;
-    //        } else {
-    //            result[0] = enclosingPackage + "." + className;
-    //        }
-    clzName
   }
 
   def getMainClassesAsJavaCollection(fo: FileObject): java.util.Collection[AstDfn] = {
@@ -731,7 +666,7 @@ object ScalaSourceUtil {
     }
     val source = Source.create(fo) match {
       case null => throw new IllegalArgumentException
-      case x => x
+      case x    => x
     }
     try {
       val pr = Array.ofDim[ScalaParserResult](1)
@@ -784,10 +719,10 @@ object ScalaSourceUtil {
       val tpe = symbol.tpe // should be called under compiler thread
       (tpe.paramTypes, tpe.resultType) match {
         case (List(x), returnType) => true // todo
-        case x => false
+        case x                     => false
       }
     } get match {
-      case Left(x) => x
+      case Left(x)  => x
       case Right(_) => false
     }
   }

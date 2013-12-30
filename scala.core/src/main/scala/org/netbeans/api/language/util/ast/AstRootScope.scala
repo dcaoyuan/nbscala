@@ -130,7 +130,7 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
       } else {
         _idTokenToItems.get(middle) match {
           case Some(x) if !x.isEmpty => return x
-          case _ =>
+          case _                     =>
         }
       }
     }
@@ -170,7 +170,7 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
             _idTokenToItems.valuesIterator foreach { xs =>
               xs foreach {
                 case x: AstDfn if x.isReferredBy(refx) => return Some(x)
-                case _ =>
+                case _                                 =>
               }
             }
           case _ =>
@@ -190,7 +190,7 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
             _idTokenToItems.valuesIterator foreach { xs =>
               occurrences ++= xs filter {
                 case x: AstRef => dfnx.isReferredBy(x)
-                case _ => false
+                case _         => false
               }
             }
           case _ =>
@@ -220,7 +220,7 @@ class AstRootScope(boundsTokens: Array[Token[TokenId]]) extends AstScope(boundsT
   def findFirstItemWithName(name: String): Option[AstItem] = {
     _idTokenToItems.find { case (token, items) => token.text.toString == name } match {
       case Some((token, x)) if !x.isEmpty => Some(x.head)
-      case _ => None
+      case _                              => None
     }
   }
 

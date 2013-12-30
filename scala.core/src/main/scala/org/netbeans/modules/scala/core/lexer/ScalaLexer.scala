@@ -136,7 +136,7 @@ class ScalaLexer(info: LexerRestartInfo[TokenId]) extends Lexer[TokenId] {
   }
 
   private def createToken(id: ScalaTokenId, tokenLen: Int): Token[TokenId] = id.fixedText match {
-    case null => tokenFactory.createToken(id, tokenLen)
+    case null      => tokenFactory.createToken(id, tokenLen)
     case fixedText => tokenFactory.getFlyweightToken(id, fixedText)
   }
 
@@ -224,7 +224,7 @@ object ScalaLexer {
   private class LexerInputReader(input: LexerInput) extends Reader {
     override def read: Int = input.read match {
       case LexerInput.EOF => -1
-      case c => c
+      case c              => c
     }
 
     override def read(cbuf: Array[Char], off: Int, len: Int): Int = {

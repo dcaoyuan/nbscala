@@ -144,7 +144,7 @@ trait LexUtil {
       val rangeStart = lexicalRange.getStart
       pResult.getSnapshot.getEmbeddedOffset(rangeStart) match {
         case `rangeStart` => lexicalRange
-        case -1 => OffsetRange.NONE
+        case -1           => OffsetRange.NONE
         case start =>
           // Assumes the translated range maintains size
           new OffsetRange(start, start + lexicalRange.getLength)
@@ -156,7 +156,7 @@ trait LexUtil {
   final def getTokenHierarchy(doc: BaseDocument, offset: Int): Option[TokenHierarchy[_]] = {
     TokenHierarchy.get(doc) match {
       case null => None
-      case x => Some(x)
+      case x    => Some(x)
     }
   }
 
@@ -221,7 +221,7 @@ trait LexUtil {
           case ex: AssertionError =>
             doc.getProperty(Document.StreamDescriptionProperty) match {
               case dobj: DataObject => Exceptions.attachMessage(ex, FileUtil.getFileDisplayName(dobj.getPrimaryFile))
-              case _ =>
+              case _                =>
             }
             throw ex
         }
@@ -236,7 +236,7 @@ trait LexUtil {
   def getToken(doc: BaseDocument, offset: Int): Option[Token[TokenId]] = {
     getPositionedSequence(doc, offset) match {
       case Some(x) => x.token match {
-        case null => None
+        case null  => None
         case token => Some(token)
       }
       case None => None
@@ -789,7 +789,7 @@ trait LexUtil {
 
     getTokenId(doc, begin) match {
       case Some(x) if isLineComment(x) => true
-      case _ => false
+      case _                           => false
     }
   }
 
@@ -1376,7 +1376,7 @@ trait LexUtil {
       }
     } catch {
       case ex: DataObjectNotFoundException => Exceptions.printStackTrace(ex)
-      case ex: IOException => Exceptions.printStackTrace(ex)
+      case ex: IOException                 => Exceptions.printStackTrace(ex)
     }
 
     None
