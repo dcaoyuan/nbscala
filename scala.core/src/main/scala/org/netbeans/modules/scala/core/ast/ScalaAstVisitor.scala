@@ -801,6 +801,7 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
       token.id match {
         case ScalaTokenId.SymbolLiteral => text.substring(1, text.length - 1) == name // strip '`'
         case ScalaTokenId.LArrow if name == "foreach" || name == "map" => true
+        case ScalaTokenId.Identifier if text.startsWith("`") && text.endsWith("`") => text.substring(1, text.length - 1) == name // strip '`'
         case ScalaTokenId.Identifier if name == "apply" || name.startsWith("<error") => true // return the first matched identifier token
         case _ if name.endsWith("_=") => text == name || text + "_=" == name
         case _ if name == "Sequence" => text == name || text == "Seq" // Seq may have symbol name "Sequence"
