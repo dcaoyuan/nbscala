@@ -40,9 +40,9 @@ object LibrariesNodeFactory {
 
     def node(key: String): Node = {
       key match {
-        case LIBRARIES => new LibrariesNode(project, isTest = false)
+        case LIBRARIES      => new LibrariesNode(project, isTest = false)
         case TEST_LIBRARIES => new LibrariesNode(project, isTest = true)
-        case _ => assert(false, "No node for key: " + key); null
+        case _              => assert(false, "No node for key: " + key); null
       }
     }
 

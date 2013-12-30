@@ -32,18 +32,18 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
   private var testSrcRoots: Set[FileObject] = _
   private val cache = new mutable.HashMap[String, ClassPath]()
 
-  def findClassPath(fileObject: FileObject, scope: String): ClassPath = {
+  def findClassPath(fileObject: FileObject, tpe: String): ClassPath = {
     getFileType(fileObject) match {
-      case MAIN_SOURCE => getClassPath(scope, isTest = false)
-      case TEST_SOURCE => getClassPath(scope, isTest = true)
-      case _ => null
+      case MAIN_SOURCE => getClassPath(tpe, isTest = false)
+      case TEST_SOURCE => getClassPath(tpe, isTest = true)
+      case _           => null
     }
   }
 
-  def getClassPath(scope: String, isTest: Boolean): ClassPath = cache synchronized {
-    val cacheKey = scope + (if (isTest) "/main" else "/test")
+  def getClassPath(tpe: String, isTest: Boolean): ClassPath = cache synchronized {
+    val cacheKey = tpe + (if (isTest) "/main" else "/test")
     cache.getOrElseUpdate(cacheKey, {
-      val cpi = new SBTClassPath(project, scope, isTest)
+      val cpi = new SBTClassPath(project, tpe, isTest)
       val cp = ClassPathFactory.createClassPath(cpi)
       cpi.addPropertyChangeListener(this)
       cache += cacheKey -> cp
@@ -83,7 +83,7 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
         case None =>
           testSrcRoots find contains(fo) match {
             case None => UNKNOWN
-            case _ => TEST_SOURCE
+            case _    => TEST_SOURCE
           }
         case _ => MAIN_SOURCE
       }

@@ -21,6 +21,7 @@ import org.openide.util.lookup.Lookups
  * @author Caoyuan Deng
  */
 class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
+  // TODO @see org.netbeans.api.project.ProjectUtil for more providers
   private lazy val lookup: Lookup = Lookups.fixed(
     this,
     new Info(),
@@ -44,7 +45,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
           case projectFolder: FileObject if projectFolder.isFolder =>
             ProjectManager.getDefault.findProject(parentDir) match {
               case x: SBTProject => Some(x)
-              case _ => None
+              case _             => None
             }
           case _ => None
         }
@@ -61,14 +62,14 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
 
   private def getProjectChain(project: SBTProject, chain: List[SBTProject]): List[SBTProject] = {
     project.getMasterProject match {
-      case None => chain
+      case None    => chain
       case Some(x) => getProjectChain(x, x :: chain)
     }
   }
 
   def getName: String = {
     val resolvedName = getLookup.lookup(classOf[SBTResolver]) match {
-      case null => null
+      case null     => null
       case resolver => resolver.getName
     }
     if (resolvedName != null) {
@@ -83,7 +84,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
    */
   def getId: String = {
     getLookup.lookup(classOf[SBTResolver]) match {
-      case null => null
+      case null     => null
       case resolver => resolver.getId
     }
   }

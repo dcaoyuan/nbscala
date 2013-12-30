@@ -228,6 +228,8 @@
                                 <goal>format</goal>
                             </goals>
                             <configuration>
+                                <indentSpaces>2</indentSpaces>
+                                <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
                                 <alignParameters>true</alignParameters>
                                 <rewriteArrowSymbols>false</rewriteArrowSymbols>
                             </configuration>

@@ -107,7 +107,7 @@ abstract class ScalaCompletionProposals {
         if (emphasize) fm.emphasis(false)
 
       } get match {
-        case Left(_) =>
+        case Left(_)  =>
         case Right(_) =>
       }
 
@@ -126,7 +126,7 @@ abstract class ScalaCompletionProposals {
             val retType = try {
               sym.tpe match {
                 case null => null
-                case x => x.resultType
+                case x    => x.resultType
               }
             } catch {
               case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
@@ -140,7 +140,7 @@ abstract class ScalaCompletionProposals {
         }
 
       } get match {
-        case Left(_) =>
+        case Left(_)  =>
         case Right(_) =>
       }
 
@@ -190,7 +190,7 @@ abstract class ScalaCompletionProposals {
         val typeParams = try {
           sym.tpe match {
             case null => Nil
-            case tpe => tpe.typeParams
+            case tpe  => tpe.typeParams
           }
         } catch {
           case ex: Throwable => ScalaGlobal.resetLate(completer.global, ex); Nil
@@ -233,11 +233,11 @@ abstract class ScalaCompletionProposals {
               fm.appendHtml(")") // NOI18N
             }
           case NullaryMethodType(resultType) =>
-          case _ =>
+          case _                             =>
         }
 
       } get match {
-        case Left(x) =>
+        case Left(x)   =>
         case Right(ex) => ScalaGlobal.resetLate(completer.global, ex)
       }
 
@@ -248,12 +248,12 @@ abstract class ScalaCompletionProposals {
       askForResponse { () =>
         sym.tpe match {
           case MethodType(params, resultType) => params map (_.nameString)
-          case NullaryMethodType(resultType) => Nil
-          case _ => Nil
+          case NullaryMethodType(resultType)  => Nil
+          case _                              => Nil
         }
 
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => ScalaGlobal.resetLate(completer.global, ex); Nil
       }
     }
@@ -283,7 +283,7 @@ abstract class ScalaCompletionProposals {
 
         sb.append(" default=\"") // NOI18N
         paramDesc.indexOf(':') match {
-          case -1 => sb.append(paramDesc)
+          case -1      => sb.append(paramDesc)
           case typeIdx => sb.appendAll(paramDesc.toArray, 0, typeIdx)
         }
         sb.append("\"") // NOI18N
@@ -351,7 +351,7 @@ abstract class ScalaCompletionProposals {
     override def getName: String = {
       val name = element.getName
       name.lastIndexOf('.') match {
-        case -1 => name
+        case -1      => name
         case lastDot => name.substring(lastDot + 1, name.length)
       }
     }
@@ -378,7 +378,7 @@ abstract class ScalaCompletionProposals {
       val name = element.qualifiedName
       name.lastIndexOf('.') match {
         case -1 => name
-        case i => name.substring(i + 1, name.length)
+        case i  => name.substring(i + 1, name.length)
       }
     }
 
@@ -400,7 +400,7 @@ abstract class ScalaCompletionProposals {
       val qname = element.qualifiedName
       val in = qname.lastIndexOf('.') match {
         case -1 => ""
-        case i => qname.substring(0, i)
+        case i  => qname.substring(0, i)
       }
       fm.appendText(in)
       fm.getText

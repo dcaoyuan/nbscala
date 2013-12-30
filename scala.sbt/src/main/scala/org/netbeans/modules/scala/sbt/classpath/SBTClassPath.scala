@@ -17,13 +17,12 @@ import org.netbeans.spi.java.classpath.support.ClassPathSupport
 import org.openide.filesystems.FileStateInvalidException
 import org.openide.filesystems.FileUtil
 import org.openide.util.Exceptions
-import scala.annotation.tailrec
 
 /**
  *
  * @author Caoyuan Deng
  */
-final class SBTClassPath(project: Project, scope: String, isTest: Boolean) extends ClassPathImplementation {
+final class SBTClassPath(project: Project, tpe: String, isTest: Boolean) extends ClassPathImplementation {
   private val pcs = new PropertyChangeSupport(this)
 
   private lazy val sbtResolver = {
@@ -44,7 +43,7 @@ final class SBTClassPath(project: Project, scope: String, isTest: Boolean) exten
 
   def getResources: java.util.List[PathResourceImplementation] = {
     val result = new java.util.ArrayList[PathResourceImplementation]()
-    if (scope == ClassPath.BOOT) {
+    if (tpe == ClassPath.BOOT) {
       result.addAll(getJavaBootResources)
     }
 
@@ -56,7 +55,7 @@ final class SBTClassPath(project: Project, scope: String, isTest: Boolean) exten
 
   private def getResolvedClassPath(resolver: SBTResolver, isTest: Boolean, result: java.util.ArrayList[PathResourceImplementation]) {
     for {
-      file <- resolver.getResolvedClassPath(scope, isTest)
+      file <- resolver.getResolvedClassPath(tpe, isTest)
       fo = FileUtil.toFileObject(file)
     } {
       try {

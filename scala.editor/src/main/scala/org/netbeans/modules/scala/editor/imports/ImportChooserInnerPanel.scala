@@ -278,7 +278,7 @@ class ImportChooserInnerPanel extends javax.swing.JPanel {
     def actionPerformed(e: ActionEvent) {
       e.getSource match {
         case combo: JComboBox[_] => combo.setPopupVisible(!combo.isPopupVisible)
-        case _ =>
+        case _                   =>
       }
     }
   }

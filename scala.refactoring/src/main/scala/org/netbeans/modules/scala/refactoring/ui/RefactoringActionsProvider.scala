@@ -180,7 +180,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
         val textC = ec.getOpenedPanes()(0)
         val d = textC.getDocument match {
           case x: BaseDocument => x
-          case _ => return true
+          case _               => return true
         }
         d.readLock
         try {
@@ -296,7 +296,7 @@ class RefactoringActionsProvider extends ActionsImplementationProvider {
          } */
         val inPlaceItem = root.findItemsAt(th, caret) match {
           case Nil => return
-          case xs => xs find { _.idToken ne null } getOrElse { return }
+          case xs  => xs find { _.idToken ne null } getOrElse { return }
         }
 
         val handle = root.findDfnOf(inPlaceItem) getOrElse inPlaceItem

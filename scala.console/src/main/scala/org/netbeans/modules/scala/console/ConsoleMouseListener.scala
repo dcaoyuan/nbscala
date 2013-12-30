@@ -34,7 +34,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
     val element = textPane.getStyledDocument.getCharacterElement(offset)
     element.getAttributes.getAttribute("file") match {
       case x: String => textPane.setCursor(handCursor)
-      case _ => textPane.setCursor(defaultCursor)
+      case _         => textPane.setCursor(defaultCursor)
     }
   }
 
@@ -51,7 +51,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
         val lineNo = try {
           element.getAttributes.getAttribute("line") match {
             case line: String => line.toInt
-            case _ => -1
+            case _            => -1
           }
         } catch {
           case _: Exception => -1
@@ -169,8 +169,8 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
         cookie.openDocument
       } catch {
         case ex: UserQuestionException => e = ex
-        case ex: IOException =>
-        case ex: Exception =>
+        case ex: IOException           =>
+        case ex: Exception             =>
       }
     }
 

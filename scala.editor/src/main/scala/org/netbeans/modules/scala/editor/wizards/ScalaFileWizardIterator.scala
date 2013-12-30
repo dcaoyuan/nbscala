@@ -106,7 +106,7 @@ class ScalaFileWizardIterator extends WizardDescriptor.InstantiatingIterator[Wiz
     val pkgName = getPackageName(dir)
     val dobj = pkgName match {
       case null => dTemplate.createFromTemplate(df, targetName)
-      case _ => dTemplate.createFromTemplate(df, targetName, ju.Collections.singletonMap("package", pkgName)) // NOI18N
+      case _    => dTemplate.createFromTemplate(df, targetName, ju.Collections.singletonMap("package", pkgName)) // NOI18N
     }
     ju.Collections.singleton(dobj.getPrimaryFile())
   }
@@ -118,7 +118,7 @@ class ScalaFileWizardIterator extends WizardDescriptor.InstantiatingIterator[Wiz
     // Make sure list of steps is accurate.
     val beforeSteps = wiz.getProperty(WizardDescriptor.PROP_CONTENT_DATA) match {
       case s: Array[String] => s
-      case _ => Array[String]()
+      case _                => Array[String]()
     }
     val steps = createSteps(beforeSteps, panels)
     var i = 0

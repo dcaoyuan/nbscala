@@ -316,7 +316,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
     }
     searchHandle.fo match {
       case Some(x) if x.isValid => return null
-      case _ => return new Problem(true, NbBundle.getMessage(classOf[RenameRefactoringPlugin], "DSC_ElNotAvail")) // NOI18N
+      case _                    => return new Problem(true, NbBundle.getMessage(classOf[RenameRefactoringPlugin], "DSC_ElNotAvail")) // NOI18N
     }
   }
 
@@ -529,7 +529,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
             if (doc ne null) doc.readUnlock
           }
         } get match {
-          case Left(_) =>
+          case Left(_)  =>
           case Right(_) =>
         }
       } else {
@@ -631,7 +631,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
               }
             case _ =>
               ts.embedded.asInstanceOf[TokenSequence[TokenId]] match {
-                case null =>
+                case null     =>
                 case embedded => searchTokenSequence(embedded)
               }
           }
@@ -732,7 +732,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
           }
         }
       } catch {
-        case ex: IOException => Exceptions.printStackTrace(ex)
+        case ex: IOException          => Exceptions.printStackTrace(ex)
         case ex: BadLocationException => Exceptions.printStackTrace(ex)
       } finally {
         if (doc ne null) {

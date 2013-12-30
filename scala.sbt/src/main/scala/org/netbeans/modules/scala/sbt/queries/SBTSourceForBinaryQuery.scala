@@ -100,7 +100,7 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
           if (jarFile != null) {
             artifacts find (_.jarFile == jarFile) match {
               case Some(x) if x.sourceFile != null => Array(x.sourceFile)
-              case _ => Array[File]()
+              case _                               => Array[File]()
             }
           } else Array[File]()
         } else Array[File]()

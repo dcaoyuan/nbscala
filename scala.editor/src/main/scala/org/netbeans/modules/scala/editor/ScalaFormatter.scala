@@ -131,7 +131,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
           // * is this `class`/`object`/`trait` enlcosed in an outer `class`/`object`/`trait`?
           ScalaLexUtil.findBwd(ts, ScalaTokenId.LBrace, ScalaTokenId.RBrace) match {
             case OffsetRange.NONE => return ts.offset
-            case range => // go on for outer `class`/`object`/`trait`
+            case range            => // go on for outer `class`/`object`/`trait`
           }
         case _ =>
       }
@@ -651,7 +651,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
       case e: AssertionError =>
         doc.getProperty(Document.StreamDescriptionProperty) match {
           case dobj: DataObject => Exceptions.attachMessage(e, FileUtil.getFileDisplayName(dobj.getPrimaryFile))
-          case _ =>
+          case _                =>
         }
 
         throw e

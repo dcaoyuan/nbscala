@@ -19,13 +19,13 @@ import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.extexecution.ExternalProcessBuilder
 import org.netbeans.api.progress.ProgressHandleFactory
 import org.netbeans.api.project.Project
+import org.netbeans.modules.scala.core.ScalaExecution
 import org.netbeans.modules.scala.console.AnsiConsoleOutputStream
 import org.netbeans.modules.scala.console.ConsoleInputOutput
 import org.netbeans.modules.scala.console.ConsoleTerminal
 import org.netbeans.modules.scala.console.ConsoleOutputLineParser
 import org.netbeans.modules.scala.console.TerminalInput
 import org.netbeans.modules.scala.console.TopComponentId
-import org.netbeans.modules.scala.console.shell.ScalaExecution
 import org.openide.filesystems.FileUtil
 import org.openide.util.Cancellable
 import org.openide.util.ImageUtilities

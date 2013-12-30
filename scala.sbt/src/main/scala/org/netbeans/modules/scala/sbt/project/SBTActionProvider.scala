@@ -124,7 +124,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
 
   private def selectProject = project.getId match {
     case null => Nil
-    case id => List("project " + id)
+    case id   => List("project " + id)
   }
 
   private def findMainClass(context: Lookup) = {

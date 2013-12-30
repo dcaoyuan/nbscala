@@ -396,7 +396,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
     if (options.size > index) {
       options(index) match {
         case value: Int => value
-        case _ => throw new IllegalArgumentException()
+        case _          => throw new IllegalArgumentException()
       }
     } else {
       throw new IllegalArgumentException()
@@ -407,7 +407,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
     if (options.size > index) {
       options(index) match {
         case value: Int => value
-        case _ => defaultValue
+        case _          => defaultValue
       }
     } else {
       defaultValue

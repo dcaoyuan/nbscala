@@ -271,7 +271,7 @@ class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @tr
     override def getName: String = {
       super.getName match {
         case null => "ComboBox.renderer" // NOI18N
-        case x => x
+        case x    => x
       }
     }
   }

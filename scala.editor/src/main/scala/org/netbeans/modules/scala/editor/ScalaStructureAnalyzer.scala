@@ -105,12 +105,12 @@ class ScalaStructureAnalyzer extends StructureScanner {
 
     val doc = result.getSnapshot.getSource.getDocument(true) match {
       case null => return emptyFolds
-      case x => x.asInstanceOf[BaseDocument]
+      case x    => x.asInstanceOf[BaseDocument]
     }
 
     val th = result.getSnapshot.getTokenHierarchy match {
       case null => return emptyFolds
-      case x => x
+      case x    => x
     }
 
     val ts = ScalaLexUtil.getTokenSequence(doc, th, 1).getOrElse(return emptyFolds)
@@ -253,7 +253,7 @@ class ScalaStructureAnalyzer extends StructureScanner {
           case child: ScalaDfns#ScalaDfn =>
             child.getKind match {
               case PARAMETER | OTHER =>
-              case _ => children.add(new ScalaStructureItem(child, pResult))
+              case _                 => children.add(new ScalaStructureItem(child, pResult))
             }
         }
 
@@ -265,7 +265,7 @@ class ScalaStructureAnalyzer extends StructureScanner {
       try {
         pResult.getSnapshot.getTokenHierarchy match {
           case null => 0
-          case th => dfn.boundsOffset(th)
+          case th   => dfn.boundsOffset(th)
         }
       } catch { case ex: Throwable => 0 }
     }
@@ -274,7 +274,7 @@ class ScalaStructureAnalyzer extends StructureScanner {
       try {
         pResult.getSnapshot.getTokenHierarchy match {
           case null => 0
-          case th => dfn.boundsEndOffset(th)
+          case th   => dfn.boundsEndOffset(th)
         }
       } catch { case ex: Throwable => 0 }
     }

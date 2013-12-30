@@ -67,7 +67,7 @@ class TreeElementFactoryImpl extends TreeElementFactoryImplementation {
   override def getTreeElement(o: Object): TreeElement = {
     val result = o match {
       case x: SourceGroup => map.get(x.getRootFolder)
-      case _ => map.get(o)
+      case _              => map.get(o)
     }
 
     if (result.isDefined) {
@@ -103,7 +103,7 @@ class TreeElementFactoryImpl extends TreeElementFactoryImplementation {
     if (r ne null) {
       o match {
         case x: SourceGroup => map.put(x.getRootFolder, r)
-        case _ => map.put(o, r)
+        case _              => map.put(o, r)
       }
     }
 

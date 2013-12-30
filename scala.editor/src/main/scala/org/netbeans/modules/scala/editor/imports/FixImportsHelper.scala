@@ -71,7 +71,7 @@ object FixImportsHelper {
       case x if x.matches => Some(x.group(1))
       case _ => NotFoundType.matcher(desc) match {
         case x if x.matches => Some(x.group(1))
-        case _ => None
+        case _              => None
       }
     }
   }
@@ -140,7 +140,7 @@ object FixImportsHelper {
           } else {
             return null
           }
-        case ScalaTokenId.Semicolon => //ignore semicolons
+        case ScalaTokenId.Semicolon             => //ignore semicolons
         case id if ScalaLexUtil.isWsComment(id) =>
         case _ =>
           if (collecting) {

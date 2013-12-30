@@ -229,7 +229,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
   private def newAnnotations(as: List[IsOverriddenAnnotation]) {
     AnnotationsHolder(file) match {
       case null =>
-      case x => x.setNewAnnotations(as)
+      case x    => x.setNewAnnotations(as)
     }
   }
 
@@ -245,7 +245,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
 
     val doc = pr.getSnapshot.getSource.getDocument(true) match {
       case x: StyledDocument => x
-      case _ => return Nil
+      case _                 => return Nil
     }
 
     val global = pr.global
@@ -473,7 +473,7 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
     // null is a valid value for files which have no source path (default filesystem).
     ClassPath.getClassPath(file, ClassPath.SOURCE) match {
       case null => null
-      case cp => cp.getRoots find (root => FileUtil.isParentOf(root, file)) getOrElse null
+      case cp   => cp.getRoots find (root => FileUtil.isParentOf(root, file)) getOrElse null
     }
   }
 

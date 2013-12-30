@@ -56,7 +56,7 @@ class RefactoringTreeElement(element: RefactoringElement) extends TreeElement {
   val thisFeature: ElementGrip = getFeature(element.getLookup.lookup(classOf[ElementGrip]))
   val parent: ElementGrip = thisFeature.getParent match {
     case null => thisFeature
-    case x => x
+    case x    => x
   }
 
   private def getFeature(el: ElementGrip): ElementGrip = {

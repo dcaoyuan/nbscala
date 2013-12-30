@@ -34,7 +34,7 @@ class DirWatcher(fileName: String) extends TimerTask {
       } {
         file.lastModified.getTime match {
           case NOT_SURE =>
-          case time => fileToTime(file) = time
+          case time     => fileToTime(file) = time
         }
       }
 

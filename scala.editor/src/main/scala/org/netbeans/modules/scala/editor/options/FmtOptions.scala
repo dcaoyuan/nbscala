@@ -116,7 +116,7 @@ object FmtOptions {
     if (kitClass eq null) {
       kitClass = MimeLookup.getLookup(MimePath.get(mimePath)).lookup(classOf[EditorKit]) match {
         case null => classOf[EditorKit]
-        case kit => kit.getClass.asInstanceOf[Class[EditorKit]]
+        case kit  => kit.getClass.asInstanceOf[Class[EditorKit]]
       }
     }
     kitClass
@@ -129,7 +129,7 @@ object FmtOptions {
   def getEditorKit(mimePath: String): EditorKit = {
     val kit = MimeLookup.getLookup(MimePath.parse(mimePath)).lookup(classOf[EditorKit]) match {
       case null => MimeLookup.getLookup(MimePath.parse("text/plain")).lookup(classOf[EditorKit])
-      case x => x
+      case x    => x
     }
 
     // * Don't use the prototype instance straightaway
@@ -314,19 +314,19 @@ object FmtOptions {
 
     private def performOperation(operation: Int, jc: JComponent, optionID: String, p: Preferences) {
       operation match {
-        case LOAD => loadData(jc, optionID, p)
-        case STORE => storeData(jc, optionID, p)
+        case LOAD          => loadData(jc, optionID, p)
+        case STORE         => storeData(jc, optionID, p)
         case ADD_LISTENERS => addListener(jc)
-        case _ =>
+        case _             =>
       }
     }
 
     private def scan(what: Int, p: Preferences) {
       for (jc <- components) {
         jc.getClientProperty(OPTION_ID) match {
-          case x: String => performOperation(what, jc, x, p)
+          case x: String         => performOperation(what, jc, x, p)
           case xs: Array[String] => xs foreach { performOperation(what, jc, _, p) }
-          case _ =>
+          case _                 =>
         }
       }
     }

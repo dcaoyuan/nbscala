@@ -86,7 +86,7 @@ object JavaIndex {
   def get(fo: FileObject, pResult: ScalaParserResult): Option[JavaIndex] = {
     ScalaSourceUtil.getClasspathInfo(fo) match {
       case Some(cpInfo) => cpInfo.getClassIndex match {
-        case null => None
+        case null  => None
         case index => Some(new JavaIndex(index, pResult))
       }
       case None => None

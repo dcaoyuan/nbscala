@@ -179,7 +179,7 @@ class WhereUsedElement(bounds: PositionBounds, displayText: String, parentFile: 
   def getLookup: Lookup = {
     val composite = ElementGripFactory.getDefault.get(parentFile, bounds.getBegin.getOffset) match {
       case null => parentFile
-      case x => x
+      case x    => x
     }
 
     Lookups.singleton(composite)

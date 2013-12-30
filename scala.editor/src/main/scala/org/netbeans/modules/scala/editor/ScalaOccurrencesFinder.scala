@@ -127,7 +127,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
     for (item <- items; idToken = item.idToken if !ScalaLexUtil.isWs(idToken.id)) {
       val doc = pResult.getSnapshot.getSource.getDocument(true) match {
         case x: BaseDocument => x
-        case _ => return // null, document was just closed
+        case _               => return // null, document was just closed
       }
 
       //doc.readLock
@@ -218,7 +218,7 @@ class ScalaOccurrencesFinder extends OccurrencesFinder[ScalaParserResult] {
         val entry = itr.next
         ScalaLexUtil.getLexerOffsets(pResult, entry.getKey) match {
           case OffsetRange.NONE =>
-          case range => translated.put(range, entry.getValue)
+          case range            => translated.put(range, entry.getValue)
         }
       }
 

@@ -100,7 +100,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
     //Boolean b = ((Boolean)Settings.getValue(doc.getKitClass(), SettingsNames.PAIR_CHARACTERS_COMPLETION));
     //return b eq null || b.booleanValue();
     EditorOptions.get(ScalaMimeResolver.MIME_TYPE) match {
-      case null => true
+      case null    => true
       case options => options.getMatchBrackets
     }
   }
@@ -316,7 +316,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
           while (i < line.length && !break) {
             line.charAt(i) match {
               case c @ (' ' | '\t') => sb.append(c)
-              case _ => break = true
+              case _                => break = true
             }
             i += 1
           }
@@ -362,7 +362,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
           case -1 =>
           case prevBegin => ScalaLexUtil.getTokenId(doc, prevBegin) match {
             case Some(ScalaTokenId.LineComment) => prevLineIsComment = true
-            case _ =>
+            case _                              =>
           }
         }
       }
@@ -372,7 +372,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
           case -1 =>
           case nextBegin => ScalaLexUtil.getTokenId(doc, nextBegin) match {
             case Some(ScalaTokenId.LineComment) => nextLineIsComment = true
-            case _ =>
+            case _                              =>
           }
         }
       }
@@ -393,7 +393,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
           // * contains only a comment (after leading whitespace)
           ScalaLexUtil.getTokenId(doc, begin) match {
             case Some(ScalaTokenId.LineComment) => continueComment = true
-            case _ =>
+            case _                              =>
           }
         }
         if (!continueComment) {
@@ -405,7 +405,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
               case -1 =>
               case nextLineFirst => ScalaLexUtil.getTokenId(doc, nextLineFirst) match {
                 case Some(ScalaTokenId.LineComment) => continueComment = true
-                case _ =>
+                case _                              =>
               }
             }
           }
@@ -426,7 +426,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         while (i < line.length && !break) {
           line.charAt(i) match {
             case c @ (' ' | '\t') => sb.append(c)
-            case _ => break = true
+            case _                => break = true
           }
           i += 1
         }
@@ -1249,7 +1249,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       // check if the caret is at the very end of the line comment
       ScalaLexUtil.getTokenId(doc, dotPos - 1) match {
         case Some(ScalaTokenId.LineComment) => return false
-        case _ =>
+        case _                              =>
       }
     }
 
@@ -1289,7 +1289,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         if ((dotPos - 1) > 0) {
           ScalaLexUtil.getTokenId(doc, dotPos - 1) match {
             case Some(ScalaTokenId.StringLiteral) => insideString = true // XXX TODO use language embedding to handle this
-            case _ =>
+            case _                                =>
           }
         }
       }
@@ -1363,7 +1363,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
 
       doc.getChars(firstNonWhiteFwd, 1)(0) match {
         case ')' | ',' | '+' | '}' | ';' | ']' | '/' => true
-        case _ => false
+        case _                                       => false
       }
     }
   }
@@ -1374,16 +1374,16 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
    */
   private def matching(bracket: Char): Char = {
     bracket match {
-      case '"' => '"'
+      case '"'  => '"'
       case '\'' => '\''
-      case '(' => ')'
-      case '/' => '/'
-      case '[' => ']'
-      case '{' => '}'
-      case '}' => '{'
-      case '`' => '`'
-      case '<' => '>'
-      case _ => bracket
+      case '('  => ')'
+      case '/'  => '/'
+      case '['  => ']'
+      case '{'  => '}'
+      case '}'  => '{'
+      case '`'  => '`'
+      case '<'  => '>'
+      case _    => bracket
     }
   }
 
@@ -1410,7 +1410,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
     // leaf "node" which contains the comment line and then comment block
     try {
       val doc = info.getSnapshot.getSource.getDocument(true) match {
-        case null => return ranges
+        case null            => return ranges
         case x: BaseDocument => x
       }
       length = doc.getLength
@@ -1677,7 +1677,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
   private def dumpTokens(doc: BaseDocument, dot: Int) {
     val ts = ScalaLexUtil.getTokenSequence(doc, dot) match {
       case Some(x) => x
-      case None => return
+      case None    => return
     }
 
     println("Dumping tokens for dot=" + dot)

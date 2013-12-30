@@ -156,7 +156,7 @@ object RetoucheUtils {
       case x: CloneableEditorSupport => x
       case _ => dob.getCookie(classOf[org.openide.cookies.EditorCookie]) match {
         case x: CloneableEditorSupport => x
-        case _ => null
+        case _                         => null
       }
     }
   }
@@ -189,7 +189,7 @@ object RetoucheUtils {
         case null =>
           category = token.id.primaryCategory match {
             case null => "whitespace" //NOI18N
-            case x => x
+            case x    => x
           }
           settings.getTokenFontColors(category)
         case x => x
@@ -470,7 +470,7 @@ object RetoucheUtils {
         val name = root.getName match {
           case "vendor" | "script" => // NOI18N
           // skip non-refactorable parts in renaming
-          case _ => addScalaFiles(files, root)
+          case _                   => addScalaFiles(files, root)
         }
       }
     }
@@ -493,7 +493,7 @@ object RetoucheUtils {
         val name = root.getName match {
           case "vendor" | "script" => // NOI18N
           // skip non-refactorable parts in renaming
-          case _ => addScalaFiles(files, root)
+          case _                   => addScalaFiles(files, root)
         }
       }
     }
@@ -514,7 +514,7 @@ object RetoucheUtils {
       result ++= (scope.dfns filter {
         _.kind match {
           case ElementKind.CLASS | ElementKind.MODULE => true
-          case _ => false
+          case _                                      => false
         }
       })
 

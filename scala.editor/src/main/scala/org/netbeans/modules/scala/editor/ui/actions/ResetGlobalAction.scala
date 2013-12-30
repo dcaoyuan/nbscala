@@ -64,7 +64,7 @@ class ResetGlobalAction extends BaseAction(NbBundle.getMessage(classOf[ResetGlob
     assert(comp ne null)
     doc = comp.getDocument match {
       case null => None
-      case x => Some(x)
+      case x    => Some(x)
     }
 
     if (doc.isDefined) {

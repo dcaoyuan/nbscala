@@ -331,7 +331,7 @@ object HuntDiff {
 
           val (add, del) = diff.tpe match {
             case Diff.ADD => (diff, last)
-            case _ => (last, diff)
+            case _        => (last, diff)
           }
           val d1f1l1 = add.firstStart - (del.firstEnd - del.firstStart)
           val d2f1l1 = del.firstStart

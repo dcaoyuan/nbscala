@@ -64,7 +64,7 @@ object AnnotationsHolder {
       val od = DataObject.find(file)
       fileToAnnotations.get(od) match {
         case Some(x) => return x
-        case _ =>
+        case _       =>
       }
 
       val ec = od.getLookup.lookup(classOf[EditorCookie.Observable])

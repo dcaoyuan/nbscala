@@ -114,11 +114,11 @@ object DepProjectsNodeFactory {
         for (projectFo <- projectFos) {
           ProjectManager.getDefault.findProject(projectFo) match {
             case x: SBTProject => toSort.put(x.getName, x)
-            case _ =>
+            case _             =>
           }
         }
       } catch {
-        case ex: IOException => Exceptions.printStackTrace(ex)
+        case ex: IOException              => Exceptions.printStackTrace(ex)
         case ex: IllegalArgumentException => Exceptions.printStackTrace(ex)
       }
 

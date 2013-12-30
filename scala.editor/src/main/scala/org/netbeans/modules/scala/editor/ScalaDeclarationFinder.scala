@@ -100,7 +100,7 @@ class ScalaDeclarationFinder extends DeclarationFinder {
 
     val closest = root.findItemsAt(th, astOffset) match {
       case Nil => return DeclarationLocation.NONE
-      case xs => global.ScalaUtil.askForImportantItem(xs)
+      case xs  => global.ScalaUtil.askForImportantItem(xs)
     }
 
     root.findDfnOf(closest) match {

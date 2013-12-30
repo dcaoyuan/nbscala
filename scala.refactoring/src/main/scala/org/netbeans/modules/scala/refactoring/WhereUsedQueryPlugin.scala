@@ -97,7 +97,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
   override def preCheck: Problem = {
     searchHandle.fo match {
       case Some(x) if x.isValid => null
-      case _ => return new Problem(true, NbBundle.getMessage(classOf[WhereUsedQueryPlugin], "DSC_ElNotAvail")) // NOI18N
+      case _                    => return new Problem(true, NbBundle.getMessage(classOf[WhereUsedQueryPlugin], "DSC_ElNotAvail")) // NOI18N
     }
   }
 
@@ -417,7 +417,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
               }
             case _ =>
               ts.embedded.asInstanceOf[TokenSequence[TokenId]] match {
-                case null =>
+                case null     =>
                 case embedded => searchTokenSequence(pr, embedded)
               }
           }

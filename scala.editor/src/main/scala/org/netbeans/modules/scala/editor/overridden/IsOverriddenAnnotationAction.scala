@@ -98,7 +98,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
   private def getFile(component: JTextComponent): FileObject = {
     val doc = component.getDocument
     doc.getProperty(Document.StreamDescriptionProperty) match {
-      case null => null
+      case null           => null
       case od: DataObject => od.getPrimaryFile
     }
   }
@@ -120,7 +120,7 @@ class IsOverriddenAnnotationAction extends AbstractAction {
 
     ah.getAnnotations find (x => x.getPosition.getOffset == offset && x.getShortDescription == desc.getShortDescription) match {
       case Some(x) => x
-      case _ => null
+      case _       => null
     }
   }
 

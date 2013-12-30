@@ -297,7 +297,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
             val qname = tpElement.getQualifiedName
             val sname = qname.lastIndexOf(".") match {
               case -1 => qname
-              case i => qname.substring(i + 1, qname.length)
+              case i  => qname.substring(i + 1, qname.length)
             }
             if (sname.startsWith(prefix)) {
               val jElement = global.JavaElement(tpElement)
@@ -381,14 +381,14 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
 
       var closestOpt = root.findItemsAt(th, astOffset1) match {
         case Nil => None
-        case xs => Some(xs.reverse.head)
+        case xs  => Some(xs.reverse.head)
       }
       var closestOffset = astOffset1 - 1
       while (closestOpt == None && closestOffset > 0) {
         closestOffset -= 1
         closestOpt = root.findItemsAt(th, closestOffset) match {
           case Nil => None
-          case xs => Some(xs.reverse.head)
+          case xs  => Some(xs.reverse.head)
         }
       }
 
@@ -543,11 +543,11 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
         case null | global.ErrorType | global.NoType => None
         case tpe => tpe.resultType match {
           case null => None
-          case x => Some(x)
+          case x    => Some(x)
         }
       }
     } get match {
-      case Left(x) => x
+      case Left(x)   => x
       case Right(ex) => ScalaGlobal.resetLate(global, ex); None
     }
   }

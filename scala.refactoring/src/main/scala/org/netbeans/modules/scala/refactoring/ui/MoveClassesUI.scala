@@ -153,7 +153,7 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
       refactoring.setTarget(Lookups.singleton(new URL(url.toExternalForm + URLEncoder.encode(panel.getPackageName.replace('.', '/'), "utf-8")))) // NOI18N
     } catch {
       case ex: UnsupportedEncodingException => Exceptions.printStackTrace(ex)
-      case ex: MalformedURLException => Exceptions.printStackTrace(ex)
+      case ex: MalformedURLException        => Exceptions.printStackTrace(ex)
     }
 
     if (checkOnly) {

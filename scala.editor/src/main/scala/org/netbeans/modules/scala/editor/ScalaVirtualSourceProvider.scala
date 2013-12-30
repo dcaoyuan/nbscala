@@ -218,7 +218,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                         case null => ""
                         case packaging => packaging.fullName match {
                           case "<empty>" => ""
-                          case x => x
+                          case x         => x
                         }
                       }
                       case _ => ""
@@ -233,7 +233,7 @@ class ScalaVirtualSourceProvider extends VirtualSourceProvider {
                 }
 
               } get match {
-                case Left(_) =>
+                case Left(_)   =>
                 case Right(ex) => log.log(Level.WARNING, ex.getMessage, ex)
               }
           }

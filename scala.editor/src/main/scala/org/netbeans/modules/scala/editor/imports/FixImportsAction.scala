@@ -119,7 +119,7 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
                 case Some(missingName) if !missingNames.contains(missingName) =>
                   FixImportsHelper.calcOffsetRange(doc, error.getStartPosition, error.getEndPosition) match {
                     case Some(range) => missingNames += (missingName -> range)
-                    case None =>
+                    case None        =>
                   }
                 case _ =>
               }
@@ -135,8 +135,8 @@ class FixImportsAction extends BaseAction(NbBundle.getMessage(classOf[FixImports
     var multipleCandidates: Map[String, List[ImportCandidate]] = Map()
     for ((missing, range) <- missingNames) {
       FixImportsHelper.getImportCandidate(fo, missing, range) match {
-        case Nil =>
-        case x :: Nil => FixImportsHelper.doImport(doc, missing, x.fqn, range)
+        case Nil              =>
+        case x :: Nil         => FixImportsHelper.doImport(doc, missing, x.fqn, range)
         case importCandidates => multipleCandidates += (missing -> importCandidates)
       }
     }

@@ -107,7 +107,7 @@ object ScalaCodeCompletionHandler {
     val id = ts.token.id
     id.primaryCategory match {
       case "comment" | "string" | "regexp" => false
-      case _ => true
+      case _                               => true
     }
   }
 
@@ -132,17 +132,17 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     val lexOffset = context.getCaretOffset
     val prefix = context.getPrefix match {
       case null => ""
-      case x => x
+      case x    => x
     }
 
     val doc = pr.getSnapshot.getSource.getDocument(true) match {
       case null => return CodeCompletionResult.NONE
-      case x => x.asInstanceOf[BaseDocument]
+      case x    => x.asInstanceOf[BaseDocument]
     }
 
     val astOffset = ScalaLexUtil.getAstOffset(pr, lexOffset) match {
       case -1 => return CodeCompletionResult.NONE
-      case x => x
+      case x  => x
     }
 
     val proposals = new java.util.ArrayList[CompletionProposal]
@@ -617,7 +617,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
             ScalaTokenId.REGEXP_LITERAL | ScalaTokenId.REGEXP_BEGIN | ScalaTokenId.REGEXP_END if lexOffset > 0 =>
             doc.getText(lexOffset - 1, 1).charAt(0) match {
               case '\\' => return "\\"
-              case _ => return ""
+              case _    => return ""
             }
           case _ =>
         }
@@ -1097,8 +1097,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     typedText.charAt(0) match {
       // TODO - auto query on ' and " when you're in $() or $F()
       case '\n' | '(' | '[' | '{' | ';' => return QueryType.STOP
-      case c if c != '.' => return QueryType.NONE
-      case _ =>
+      case c if c != '.'                => return QueryType.NONE
+      case _                            =>
     }
 
     val offset = component.getCaretPosition
@@ -1126,7 +1126,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
         // TODO - handle embedded JavaScript
         id.primaryCategory match {
           case "comment" | "string" | "regexp" => return QueryType.NONE
-          case _ => return QueryType.COMPLETION
+          case _                               => return QueryType.COMPLETION
         }
     }
 
@@ -1159,7 +1159,7 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
     val html = new StringBuilder
     element.getFileObject match {
       case null =>
-      case fo => html.append("<b>").append(fo.getPath).append("</b><br>")
+      case fo   => html.append("<b>").append(fo.getPath).append("</b><br>")
     }
 
     if (comment.length > 0) {

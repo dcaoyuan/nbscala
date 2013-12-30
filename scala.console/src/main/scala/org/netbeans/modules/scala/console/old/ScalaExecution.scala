@@ -222,7 +222,7 @@ object ScalaExecution {
   def getJavaHome: String = {
     System.getProperty("scala.java.home") match { // NOI18N
       case null => System.getProperty("java.home") // NOI18N
-      case x => x
+      case x    => x
     }
   }
 

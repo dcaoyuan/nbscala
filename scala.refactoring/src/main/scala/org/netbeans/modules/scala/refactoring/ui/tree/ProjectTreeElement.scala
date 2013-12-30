@@ -77,7 +77,7 @@ class ProjectTreeElement(aprj: Project) extends TreeElement {
   override def getUserObject: Object = {
     prj.get match {
       case null => FileOwnerQuery.getOwner(prjDir)
-      case x => x
+      case x    => x
     }
   }
 }

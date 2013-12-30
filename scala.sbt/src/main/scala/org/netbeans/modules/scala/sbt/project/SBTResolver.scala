@@ -248,13 +248,14 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
         } else {
           projectContext.mainJavaSrcs ++ projectContext.mainScalaSrcs ++ projectContext.mainManagedSrcs map (_._1)
         }
-      case ClassPath.BOOT => projectContext.mainCps filter { cp =>
-        val name = cp.getName
-        name.endsWith(".jar") && (name.startsWith("scala-library") ||
-          name.startsWith("scala-compiler") || // necessary?
-          name.startsWith("scala-reflect") // necessary?
-          )
-      }
+      case ClassPath.BOOT =>
+        projectContext.mainCps filter { cp =>
+          val name = cp.getName
+          name.endsWith(".jar") && (name.startsWith("scala-library") ||
+            name.startsWith("scala-compiler") || // necessary?
+            name.startsWith("scala-reflect") // necessary?
+            )
+        }
       case _ => Array()
     }
   }

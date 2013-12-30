@@ -94,7 +94,7 @@ class SourceGroupTreeElement(asg: SourceGroup) extends TreeElement {
   override def getUserObject: Object = {
     sg.get match {
       case null => FolderTreeElement.getSourceGroup(dir)
-      case x => x
+      case x    => x
     }
   }
 }

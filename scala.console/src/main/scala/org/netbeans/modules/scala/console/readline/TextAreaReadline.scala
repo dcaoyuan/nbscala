@@ -83,12 +83,12 @@ class TextAreaReadline(area: JTextComponent, message: String, pipedIn: PipedInpu
     val code = event.getKeyCode
 
     code match {
-      case KeyEvent.VK_TAB => completeAction(event)
-      case KeyEvent.VK_LEFT => backAction(event)
+      case KeyEvent.VK_TAB        => completeAction(event)
+      case KeyEvent.VK_LEFT       => backAction(event)
       case KeyEvent.VK_BACK_SPACE => backAction(event)
-      case KeyEvent.VK_UP => upAction(event)
-      case KeyEvent.VK_DOWN => downAction(event)
-      case KeyEvent.VK_ENTER => enterAction(event)
+      case KeyEvent.VK_UP         => upAction(event)
+      case KeyEvent.VK_DOWN       => downAction(event)
+      case KeyEvent.VK_ENTER      => enterAction(event)
       case KeyEvent.VK_HOME =>
         event.consume; area.setCaretPosition(startPos)
       case _ => // Ignore

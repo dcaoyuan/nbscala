@@ -114,7 +114,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       } else {
         input.lastIndexOf(' ')
       }) match {
-        case -1 => input.lastIndexOf('\t')
+        case -1  => input.lastIndexOf('\t')
         case idx => idx
       }
 
@@ -626,7 +626,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
             completeUpSelectAction(evt)
           case VK_DOWN =>
             completeDownSelectAction(evt)
-          case VK_ENTER =>
+          case VK_ENTER  =>
           // terminalInput process VK_ENTER in keyTyped, so keep completePopup visible here
           case VK_ESCAPE =>
           // terminalInput process VK_ESCAPE in keyTyped, so keep completePopup visible here
@@ -758,9 +758,9 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
         StyleConstants.setUnderline(term.sequenceStyle, true)
       case ATTRIBUTE_UNDERLINE_OFF =>
         StyleConstants.setUnderline(term.sequenceStyle, false)
-      case ATTRIBUTE_NEGATIVE_ON =>
+      case ATTRIBUTE_NEGATIVE_ON  =>
       case ATTRIBUTE_NEGATIVE_Off =>
-      case _ =>
+      case _                      =>
     }
 
     term.currentStyle = term.sequenceStyle

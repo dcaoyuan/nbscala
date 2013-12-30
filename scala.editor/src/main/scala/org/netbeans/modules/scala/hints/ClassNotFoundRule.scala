@@ -98,7 +98,7 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
     val hintfixes = mutable.ListBuffer[HintFix]()
     FixImportsHelper.checkMissingImport(desc) match {
       case Some(missing) => hintfixes.addAll(createImportHints(missing, context, error, rangeOpt.get))
-      case None =>
+      case None          =>
     }
 
     new Hint(this, error.getDescription, context.getFileObject, rangeOpt.get,
@@ -109,7 +109,7 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
   private def createImportHints(missing: String, context: ScalaRuleContext, error: Error, range: OffsetRange): mutable.ListBuffer[HintFix] = {
     val pathInfo = context.getClasspathInfo match {
       case Some(x) => x
-      case None => return mutable.ListBuffer[HintFix]()
+      case None    => return mutable.ListBuffer[HintFix]()
     }
     val typeNames: mutable.Set[ElementHandle[TypeElement]] = pathInfo.getClassIndex.getDeclaredTypes(missing, ClassIndex.NameKind.SIMPLE_NAME,
       java.util.EnumSet.allOf(classOf[ClassIndex.SearchScope]))
@@ -171,7 +171,7 @@ class ClassNotFoundRule extends ScalaErrorRule with NbBundler {
             collecting = true
             false
           }
-          case ScalaTokenId.RParen => true
+          case ScalaTokenId.RParen      => true
           case ScalaTokenId.ANY_KEYWORD => true
           case ScalaTokenId.Identifier => {
             //TODO
