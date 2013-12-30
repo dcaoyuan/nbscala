@@ -682,28 +682,34 @@ trait ScalaUtils { self: ScalaGlobal =>
     def importantItem(items: List[AstItem]): ScalaItem = {
       try {
         items map { item =>
-          val (sym, baseLevel) = item match {
-            case dfn: ScalaDfn => (dfn.symbol, 0)
-            case ref: ScalaRef => (ref.symbol, 100)
-          }
+          val importantLevel = item match {
+            case dfn: ScalaDfn =>
+              val sym = dfn.symbol
+              0 + {
+                if (sym == NoSymbol) 90
+                else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
+                else if (sym.isMethod) {
+                  if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 31
+                  else if (sym.isGetter) 32
+                  else if (sym.isConstructor) 33
+                  else 35
 
-          val importantLevel = baseLevel + {
-            if (sym == NoSymbol) 90
-            else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
-            else if (sym.isMethod) {
-              if (item.isInstanceOf[ScalaRef]) {
-                if (sym.nameString == "apply" || sym.nameString == "unapply") 19
-                else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 11
-                else if (sym.isGetter) 12
-                else if (sym.isConstructor) 13
-                else 15
-              } else {
-                if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 31
-                else if (sym.isGetter) 32
-                else if (sym.isConstructor) 33
-                else 35
+                } else 60
               }
-            } else 60
+            case ref: ScalaRef =>
+              val sym = ref.symbol
+              100 + {
+                if (sym == NoSymbol) 90
+                else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
+                else if (sym.isMethod) {
+                  if (sym.nameString == "apply" || sym.nameString == "unapply") 19
+                  else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 12
+                  else if (sym.isGetter) 13
+                  else if (sym.isConstructor) 14
+                  else 15
+                } else if (sym.hasFlag(Flags.PARAM) || sym.hasFlag(Flags.PARAMACCESSOR)) 11
+                else 60
+              }
           }
 
           (importantLevel, item)

@@ -249,15 +249,6 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
                   sym.nameString match {
                     case "apply" | "unapply" =>
                       coloringSet.add(ColoringAttributes.CLASS)
-                      val isModule = try {
-                        sym.owner.isModule
-                      } catch {
-                        case _: Throwable => false
-                      }
-
-                      if (isModule) { // Object
-                        coloringSet.add(ColoringAttributes.GLOBAL)
-                      }
 
                     case _ =>
                       coloringSet.add(ColoringAttributes.METHOD)
