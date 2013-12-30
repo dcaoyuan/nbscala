@@ -68,7 +68,7 @@ trait ScalaUtils { self: ScalaGlobal =>
 
         modifiers
       } get match {
-        case Left(x) => x
+        case Left(x)  => x
         case Right(_) => modifiers
       }
     }
@@ -125,7 +125,7 @@ trait ScalaUtils { self: ScalaGlobal =>
           case _: Throwable => EmptyScope
         }
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => EmptyScope
       }
     }
@@ -210,7 +210,7 @@ trait ScalaUtils { self: ScalaGlobal =>
             htmlTypeName(symbol, fm)
         }
       } get match {
-        case Left(_) =>
+        case Left(_)  =>
         case Right(_) =>
       }
     }
@@ -229,12 +229,12 @@ trait ScalaUtils { self: ScalaGlobal =>
 
     private def htmlTypeName(tpe: Type, fm: HtmlFormatter): Unit = {
       tpe match {
-        case ErrorType => fm.appendText("<error>")
+        case ErrorType    => fm.appendText("<error>")
         // internal: error
         case WildcardType => fm.appendText("_")
         // internal: unknown
-        case NoType => fm.appendText("<notype>")
-        case NoPrefix => fm.appendText("<noprefix>")
+        case NoType       => fm.appendText("<notype>")
+        case NoPrefix     => fm.appendText("<noprefix>")
         case ThisType(sym) =>
           fm.appendText(sym.nameString)
           fm.appendText(".this.type")
@@ -376,7 +376,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         }
 
       } get match {
-        case Left(x) =>
+        case Left(x)   =>
         case Right(ex) => ScalaGlobal.resetLate(self, ex)
       }
     }
@@ -393,12 +393,12 @@ trait ScalaUtils { self: ScalaGlobal =>
     private def htmlTypeInfo(tpe: Type, fm: HtmlFormatter) {
       if (tpe eq null) return
       tpe match {
-        case ErrorType => fm.appendText("<error>")
+        case ErrorType    => fm.appendText("<error>")
         // internal: error
         case WildcardType => fm.appendText("_")
         // internal: unknown
-        case NoType => fm.appendText("<notype>")
-        case NoPrefix => fm.appendText("<noprefix>")
+        case NoType       => fm.appendText("<notype>")
+        case NoPrefix     => fm.appendText("<noprefix>")
         case ThisType(sym) =>
           fm.appendText(sym.nameString)
           fm.appendText(".this.type")
@@ -658,11 +658,11 @@ trait ScalaUtils { self: ScalaGlobal =>
           completeIfWithLazyType(sym)
           sym.rawInfo match {
             case NoType | ErrorType => false
-            case _ => true
+            case _                  => true
           }
         } else false
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => false
       }
     }
@@ -671,7 +671,7 @@ trait ScalaUtils { self: ScalaGlobal =>
       askForResponse { () =>
         importantItem(items)
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => items.head.asInstanceOf[ScalaItem]
       }
     }
@@ -681,42 +681,44 @@ trait ScalaUtils { self: ScalaGlobal =>
      */
     def importantItem(items: List[AstItem]): ScalaItem = {
       try {
-        items map { item =>
-          val importantLevel = item match {
-            case dfn: ScalaDfn =>
-              val sym = dfn.symbol
-              0 + {
-                if (sym == NoSymbol) 90
-                else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
-                else if (sym.isMethod) {
-                  if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 31
-                  else if (sym.isGetter) 32
-                  else if (sym.isConstructor) 33
-                  else 35
+        items.map {
+          case item: ScalaItem =>
+            val sym = item.symbol
+            val importantLevel = item match {
+              case dfn: ScalaDfn =>
+                0 + {
+                  if (sym == NoSymbol) 90
+                  else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
+                  else if (sym.isMethod) {
+                    if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 21
+                    else if (sym.isGetter) 22
+                    else if (sym.isConstructor) 23
+                    else 25
 
-                } else 60
-              }
-            case ref: ScalaRef =>
-              val sym = ref.symbol
-              100 + {
-                if (sym == NoSymbol) 90
-                else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
-                else if (sym.hasFlag(Flags.PARAM) || sym.hasFlag(Flags.PARAMACCESSOR)) 11
-                else if (sym.isValue || sym.isVariable) 11
-                else if (sym.isMethod) {
-                  if (sym.nameString == "apply" || sym.nameString == "unapply") 19
-                  else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 12
-                  else if (sym.isGetter) 13
-                  else if (sym.isConstructor) 14
-                  else 15
-                } else 60
-              }
-          }
+                  } else 60
+                }
 
-          (importantLevel, item)
-        } sortWith { (x1, x2) => x1._1 < x2._1 } head match {
-          case (_, item) => item.asInstanceOf[ScalaItem]
-        }
+              case ref: ScalaRef =>
+                100 + {
+                  if (sym == NoSymbol) 90
+                  else if (sym.isClass || sym.isTrait || sym.isType || sym.isModule) 20
+                  else if (sym.hasFlag(Flags.PARAM) || sym.hasFlag(Flags.PARAMACCESSOR)) 21
+                  else if (sym.isValue || sym.isVariable) 21
+                  else if (sym.isMethod) {
+                    // it's difficult to process apply/unapply method on same token, since in
+                    // this case, the token is bound to multipe symbols: the apply method, the
+                    // term symbol of this ref itself etc. so just let it behind.
+                    if (sym.nameString == "apply" || sym.nameString == "unapply") 29
+                    else if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 22
+                    else if (sym.isGetter) 23
+                    else if (sym.isConstructor) 24
+                    else 25
+                  } else 60
+                }
+            }
+
+            (importantLevel, item)
+        }.sortWith(_._1 < _._1).head._2
       } catch {
         case _: Throwable => items.head.asInstanceOf[ScalaItem]
       }
@@ -729,7 +731,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         typeSimpleSig_(tpe, sb)
         sb.toString
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => "<error>"
       }
     }
@@ -754,7 +756,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         typeSimpleSig_(tpe, sb)
         sb.toString
       } get match {
-        case Left(x) => x
+        case Left(x)   => x
         case Right(ex) => "<error>"
       }
     }
@@ -768,8 +770,8 @@ trait ScalaUtils { self: ScalaGlobal =>
         // internal: error
         case WildcardType => sb.append("_")
         // internal: unknown
-        case NoType => sb.append("<notype>")
-        case NoPrefix => sb.append("<noprefix>")
+        case NoType       => sb.append("<notype>")
+        case NoPrefix     => sb.append("<noprefix>")
         case ThisType(sym) =>
           sb append (sym.fullName)
         case SingleType(pre, sym) =>
