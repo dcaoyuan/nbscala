@@ -60,7 +60,7 @@ Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:r
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <nb.installation>${user.home}/myapps/netbeans-71</nb.installation>
+                <nb.installation>${user.home}/myapps/netbeans-7.4-fordev</nb.installation>
             </properties>
         </profile>
     </profiles>
@@ -111,7 +111,7 @@ Build-Debug-Cycle: (after changed module was successfuly built)
  * After installation, it's always better to restart NetBeans
  * You may need to delete NetBeans' old cache to get improved features working. To find the cache location, read the netbeans.conf at:
 
-        NetBeansInstallationPlace/etc/netbeans.conf
+        $NetBeansInstallationPlace/etc/netbeans.conf
 
 ## Project Details
 
@@ -150,7 +150,7 @@ The Project targets version 2.10.x of the scala release.
 ### How to
 
 * Install the newest nbscala plugins, [download directly](https://sourceforge.net/projects/erlybird/files/nb-scala) or [build by yourself](https://github.com/dcaoyuan/nbscala) on NetBeans 7.2+.
-* Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt>:
+* Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt> (nbsbt-plugin 1.1.0+ has been deployed to repo.scala-sbt.org, that means it will be automatilly resolved when you run sbt):
 
         git clone git@github.com:dcaoyuan/nbsbt.git
         cd nbsbt
