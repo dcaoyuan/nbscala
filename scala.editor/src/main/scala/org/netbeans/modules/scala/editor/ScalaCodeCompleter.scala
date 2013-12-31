@@ -226,6 +226,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
    * Determine if we're trying to complete the name for a "new" (in which case
    * we show available constructors.
    */
+  @deprecated("Use completeType", "1.6.0")
   def completeNew(proposals: java.util.List[CompletionProposal]): Boolean = {
     val ts = ScalaLexUtil.getTokenSequence(doc, th, lexOffset).getOrElse(return true)
     ts.move(lexOffset)
@@ -314,33 +315,34 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     false
   }
 
-  /*
-   @Deprecated
-   def completeImport(proposals: java.util.List[CompletionProposal]): Boolean = {
-   val fqnPrefix = prefix match {
-   case null => return false
-   case x => x
-   }
+  def completeType(proposals: java.util.List[CompletionProposal]): Boolean = {
+    if (prefix.length < 1) {
+      return false
+    }
 
-   val cpInfo = ScalaSourceUtil.getClasspathInfo(fileObject).getOrElse(return false)
+    val cpInfo = ScalaSourceUtil.getClasspathInfo(pr.getSnapshot.getSource.getFileObject).getOrElse(return true)
+    val tpElements = cpInfo.getClassIndex.getDeclaredTypes(prefix, NameKind.CASE_INSENSITIVE_PREFIX,
+      java.util.EnumSet.allOf(classOf[ClassIndex.SearchScope]))
 
-   val lastDot = fqnPrefix.lastIndexOf('.')
-   val (fulledPath, lastPart) =  if (lastDot == -1) {
-   (fqnPrefix, "")
-   } else if (lastDot == fqnPrefix.length - 1) {
-   (fqnPrefix.substring(0, lastDot), "")
-   } else {
-   (fqnPrefix.substring(0, lastDot), fqnPrefix.substring(lastDot + 1, fqnPrefix.length))
-   }
+    var found = false
+    val itr = tpElements.iterator
+    while (itr.hasNext) {
+      val tpElement = itr.next
+      val qname = tpElement.getQualifiedName
+      val sname = qname.lastIndexOf(".") match {
+        case -1 => qname
+        case i  => qname.substring(i + 1, qname.length)
+      }
+      if (sname.startsWith(prefix)) {
+        val jElement = global.JavaElement(tpElement)
+        val proposal = TypeProposal(jElement, this)
+        proposals.add(proposal)
+        found = true
+      }
+    }
 
-   resolver.resolveQualifiedName("", fulledPath) match {
-   case None => false
-   case Some(x) =>
-   prefix = lastPart
-   completeSymbolMembers(x, proposals)
-   }
-   }
-   */
+    found
+  }
 
   /**
    * Compute the current method call at the given offset. Returns false if we're not in a method call.
@@ -477,16 +479,13 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     global.askScopeCompletion(pos, resp)
     resp.get match {
       case Left(members) =>
-        for (
-          global.ScopeMember(sym, tpe, accessible, viaImport) <- members if startsWith(sym.nameString, prefix) && !sym.isConstructor
-        ) {
-          if (accessible) {
+        for (global.ScopeMember(sym, tpe, accessible, viaImport) <- members if accessible && startsWith(sym.nameString, prefix)) {
+          if (!sym.isConstructor && !sym.isType && !sym.isClass && !sym.isTrait && !sym.isModule && !sym.isModuleClass && !sym.isTypeParameter) {
             createSymbolProposal(sym) foreach { proposals add _ }
           }
         }
       case Right(ex) => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
     }
-
   }
 
   def completeSymbolMembers(baseToken: Token[TokenId], proposals: java.util.List[CompletionProposal]): Boolean = {
@@ -499,15 +498,11 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     global.askTypeCompletion(pos, resp)
     resp.get match {
       case Left(members) =>
-        for (
-          global.TypeMember(sym, tpe, accessible, inherited, viaView) <- members if startsWith(sym.nameString, prefix) && !sym.isConstructor
-        ) {
-          if (accessible) {
-            createSymbolProposal(sym) foreach { proposal =>
-              proposal.getElement.asInstanceOf[global.ScalaElement].isInherited = inherited
-              proposal.getElement.asInstanceOf[global.ScalaElement].isImplicit = (viaView != global.NoSymbol)
-              proposals.add(proposal)
-            }
+        for (global.TypeMember(sym, tpe, accessible, inherited, viaView) <- members if accessible && startsWith(sym.nameString, prefix) && !sym.isConstructor) {
+          createSymbolProposal(sym) foreach { proposal =>
+            proposal.getElement.asInstanceOf[global.ScalaElement].isInherited = inherited
+            proposal.getElement.asInstanceOf[global.ScalaElement].isImplicit = (viaView != global.NoSymbol)
+            proposals.add(proposal)
           }
         }
       case Right(ex) => ScalaGlobal.resetLate(global, ex)
