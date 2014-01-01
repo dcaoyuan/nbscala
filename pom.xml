@@ -310,7 +310,7 @@
         <profile>
             <id>sign-nbscala-nbms</id>
             <!-- my keys/keystore was generated as (note: The keystore and key password needs to be the same):
-                 keytool -genkey -dname "CN=Caoyuan Deng, OU=nbscala, O=AIOTrade Co., L=Richmond, S=BC, C=CA" -alias nbscala -validity 1800
+                 keytool -genkey -dname "CN=Caoyuan Deng, OU=nbscala, O=inloop.io, L=Richmond, S=BC, C=CA" -alias nbscala -validity 1800
                  keytool -list -v
 
                  To enable it, add all three keystore related parameters in ~/m2/settings.xml as:
