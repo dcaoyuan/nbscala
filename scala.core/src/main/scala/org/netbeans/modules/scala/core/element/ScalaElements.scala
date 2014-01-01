@@ -79,16 +79,15 @@ trait ScalaElements { self: ScalaGlobal =>
 
     private var _modifiers: Option[java.util.Set[Modifier]] = None
     private var _isInherited: Boolean = _
-    private var _isSmart: Boolean = _
     private var _isImplicite: Boolean = _
 
-    private var path: String = _
-    private var doc: Option[BaseDocument] = None
-    private var offset: Int = _
-    private var javaElement: Option[Element] = None
+    private var _path: String = _
+    private var _doc: Option[BaseDocument] = None
+    private var _offset: Int = _
+    private var _javaElement: Option[Element] = None
     private var _isLoaded: Boolean = _
 
-    private var triedGetFo: Boolean = _
+    private var _triedGetFo: Boolean = _
 
     def this(kind: ElementKind) = {
       this(null, null)
@@ -135,7 +134,7 @@ trait ScalaElements { self: ScalaGlobal =>
 
       getDoc foreach { srcDoc =>
         if (isJava) {
-          javaElement foreach { x =>
+          _javaElement foreach { x =>
             try {
               val docComment: String = JavaSourceUtil.getDocComment(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), x)
               if (docComment.length > 0) {
@@ -152,15 +151,15 @@ trait ScalaElements { self: ScalaGlobal =>
     }
 
     override def getFileObject(): FileObject = {
-      if (!triedGetFo) {
+      if (!_triedGetFo) {
         fo getOrElse {
           fo = ScalaSourceUtil.getFileObject(parserResult, symbol) // try to get
           fo match {
             case Some(x) =>
-              path = x.getPath
+              _path = x.getPath
               x
             case None =>
-              triedGetFo = true
+              _triedGetFo = true
               null
           }
         }
@@ -171,14 +170,14 @@ trait ScalaElements { self: ScalaGlobal =>
       if (!isLoaded) load
 
       if (isJava) {
-        javaElement foreach { x =>
+        _javaElement foreach { x =>
           try {
             return JavaSourceUtil.getOffset(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), x)
           } catch { case ex: IOException => Exceptions.printStackTrace(ex) }
         }
       } else {
         val pos = symbol.pos
-        offset = if (pos.isDefined) {
+        _offset = if (pos.isDefined) {
           pos.startOrPoint
         } else {
           val fo = getFileObject
@@ -188,7 +187,7 @@ trait ScalaElements { self: ScalaGlobal =>
         }
       }
 
-      offset
+      _offset
     }
 
     override def getOffsetRange(result: ParserResult): OffsetRange = {
@@ -198,14 +197,14 @@ trait ScalaElements { self: ScalaGlobal =>
     def getDoc: Option[BaseDocument] = {
       val srcFo = getFileObject
       if (srcFo ne null) {
-        doc match {
+        _doc match {
           case None => GsfUtilities.getDocument(srcFo, true) match {
             case null =>
-            case x    => doc = Some(x)
+            case x    => _doc = Some(x)
           }
           case _ =>
         }
-        doc
+        _doc
       } else None
     }
 
@@ -213,7 +212,7 @@ trait ScalaElements { self: ScalaGlobal =>
       if (_isLoaded) return true
 
       if (isJava) {
-        javaElement.isDefined
+        _javaElement.isDefined
       } else {
         symbol.pos.isDefined
       }
@@ -223,7 +222,7 @@ trait ScalaElements { self: ScalaGlobal =>
       if (isLoaded) return
 
       if (isJava) {
-        javaElement = JavaSourceUtil.getJavaElement(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), symbol)
+        _javaElement = JavaSourceUtil.getJavaElement(JavaSourceUtil.getCompilationInfoForScalaFile(parserResult.getSnapshot.getSource.getFileObject), symbol)
       } else {
         val fo = getFileObject
         if (fo ne null) {
@@ -239,7 +238,7 @@ trait ScalaElements { self: ScalaGlobal =>
             val root = askForSemantic(srcFile) match {
               case Some(root) =>
                 root.findDfnMatched(symbol) match {
-                  case Some(x) => offset = x.idOffset(srcFile.tokenHierarchy)
+                  case Some(x) => _offset = x.idOffset(srcFile.tokenHierarchy)
                   case None    =>
                 }
               case None =>
@@ -274,11 +273,6 @@ trait ScalaElements { self: ScalaGlobal =>
     def isEmphasize = !isInherited
     def isEmphasize_=(b: Boolean) {
 
-    }
-
-    def isSmart = _isSmart
-    def isSmart_=(b: Boolean) {
-      _isSmart = b
     }
 
     def isImplicit = _isImplicite

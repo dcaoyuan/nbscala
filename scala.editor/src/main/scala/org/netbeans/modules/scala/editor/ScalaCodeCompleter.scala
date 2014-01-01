@@ -471,7 +471,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     true
   }
 
-  def completeLocals(proposals: java.util.List[CompletionProposal]) {
+  def completeScope(proposals: java.util.List[CompletionProposal]) {
     //pResult.toTyped
 
     val pos = global.rangePos(pr.srcFile, lexOffset, lexOffset, lexOffset)
@@ -480,8 +480,25 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     resp.get match {
       case Left(members) =>
         for (global.ScopeMember(sym, tpe, accessible, viaImport) <- members if accessible && startsWith(sym.nameString, prefix)) {
-          if (!sym.isConstructor && !sym.isType && !sym.isClass && !sym.isTrait && !sym.isModule && !sym.isModuleClass && !sym.isTypeParameter) {
-            createSymbolProposal(sym) foreach { proposals add _ }
+          if (!sym.isType && !sym.isClass && !sym.isTrait && !sym.isModule && !sym.isModuleClass && !sym.isTypeParameter) {
+            val s = sym
+            val t = tpe
+            val prio = try {
+              tpe match {
+                case _: global.TypeRef                      => 0
+                case _: global.MethodType if sym.isImplicit => 1
+                case _: global.MethodType                   => -1
+                case _: global.NullaryMethodType            => -1
+                case _: global.TypeVar                      => -3
+                case _                                      => 0
+              }
+            } catch { case _: Throwable => 0 }
+
+            createSymbolProposal(sym) foreach { proposal =>
+              proposal.setSortPrioOverride(prio)
+              proposal.setSmart(sym.isLocal)
+              proposals.add(proposal)
+            }
           }
         }
       case Right(ex) => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
@@ -512,24 +529,20 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     true
   }
 
-  private def createSymbolProposal(sym: global.Symbol): Option[CompletionProposal] = {
-    var element: global.ScalaElement = null
-    var proposal: CompletionProposal = null
+  private def createSymbolProposal(sym: global.Symbol): Option[ScalaCompletionProposal] = {
     if (sym.isMethod) {
-      element = global.ScalaElement(sym, pr)
-      proposal = FunctionProposal(element, this)
+      val element = global.ScalaElement(sym, pr)
+      Some(FunctionProposal(element, this))
     } else if (sym.isVariable) {
-      element = global.ScalaElement(sym, pr)
-      proposal = PlainProposal(element, this)
+      val element = global.ScalaElement(sym, pr)
+      Some(PlainProposal(element, this))
     } else if (sym.isValue) {
-      element = global.ScalaElement(sym, pr)
-      proposal = PlainProposal(element, this)
+      val element = global.ScalaElement(sym, pr)
+      Some(PlainProposal(element, this))
     } else if (sym.isClass || sym.isTrait || sym.isModule || sym.isPackage) {
-      element = global.ScalaElement(sym, pr)
-      proposal = PlainProposal(element, this)
-    }
-
-    if (proposal ne null) Some(proposal) else None
+      val element = global.ScalaElement(sym, pr)
+      Some(PlainProposal(element, this))
+    } else None
   }
 
   private def getResultType(sym: global.Symbol): Option[global.Type] = {

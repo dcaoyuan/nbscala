@@ -257,8 +257,8 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       needSemantice()
       // try all posibilities
       completer.completeType(proposals)
-      completer.completeLocals(proposals)
-      completer.completeKeywords(proposals)
+      completer.completeScope(proposals)
+      //completer.completeKeywords(proposals)
 
     } finally {
       doc.readUnlock

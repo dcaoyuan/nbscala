@@ -64,14 +64,21 @@ abstract class ScalaCompletionProposals {
   }
 
   abstract class ScalaCompletionProposal(element: AstElementHandle, completer: ScalaCodeCompleter) extends CompletionProposal {
+    private var _isSmart = false
+    private var _sortPrioOverride = 0
 
     def getAnchorOffset: Int = completer.anchor
 
-    override def getName: String = element.getName
+    def getName: String = element.getName
 
-    override def getInsertPrefix: String = getName
+    def isSmart = _isSmart
+    def setSmart(x: Boolean) {
+      _isSmart = x
+    }
 
-    override def getSortText: String = {
+    def getInsertPrefix: String = getName
+
+    def getSortText: String = {
       val name = getName
       val order = name.charAt(0) match {
         case c if c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' => "0"
@@ -80,8 +87,9 @@ abstract class ScalaCompletionProposals {
       order + name
     }
 
-    def getSortPrioOverride: Int = {
-      0
+    def getSortPrioOverride: Int = _sortPrioOverride
+    def setSortPrioOverride(x: Int) {
+      _sortPrioOverride = x
     }
 
     def getElement: ElementHandle = element
@@ -114,7 +122,7 @@ abstract class ScalaCompletionProposals {
       fm.getText
     }
 
-    override def getRhsHtml(fm: HtmlFormatter): String = {
+    def getRhsHtml(fm: HtmlFormatter): String = {
       askForResponse { () =>
         element match {
           case x: ScalaElement =>
@@ -147,7 +155,8 @@ abstract class ScalaCompletionProposals {
       fm.getText
     }
 
-    override def getModifiers: java.util.Set[Modifier] = element.getModifiers
+    def getModifiers: java.util.Set[Modifier] = element.getModifiers
+    def getCustomInsertTemplate: String = null
 
     override def toString: String = {
       var cls = this.getClass.getName
@@ -156,9 +165,6 @@ abstract class ScalaCompletionProposals {
       cls + "(" + getKind + "): " + getName
     }
 
-    def isSmart: Boolean = false
-
-    override def getCustomInsertTemplate: String = null
   }
 
   final case class FunctionProposal(element: AstElementHandle, completer: ScalaCodeCompleter) extends ScalaCompletionProposal(element, completer) {
@@ -339,7 +345,6 @@ abstract class ScalaCompletionProposals {
       PseudoElement(keyword, ElementKind.KEYWORD) // For completion documentation
     }
 
-    override def isSmart: Boolean = false
   }
 
   final case class PlainProposal(element: AstElementHandle, completer: ScalaCodeCompleter) extends ScalaCompletionProposal(element, completer) {}
@@ -367,7 +372,6 @@ abstract class ScalaCompletionProposals {
 
     override def getRhsHtml(fm: HtmlFormatter): String = null
 
-    override def isSmart: Boolean = true
   }
 
   final case class TypeProposal(element: AstElementHandle, completer: ScalaCodeCompleter) extends ScalaCompletionProposal(element, completer) {
