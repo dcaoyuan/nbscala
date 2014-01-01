@@ -327,6 +327,11 @@
                          </properties>
                      </profile>
                  </profiles>
+
+                 To pack a zip file for plugins.netbeans.org:
+                 mvn nbm:autoupdate
+                 cd target/netbeans_site
+                 zip nbscala-version.zip *.nbm
             -->
         </profile>
 
