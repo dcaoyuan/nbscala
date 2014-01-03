@@ -38,7 +38,7 @@ import scala.collection.mutable
  *
  * @author Caoyuan Deng
  */
-class SBTConsoleTopComponent private (project: Project) extends TopComponent {
+class SBTConsoleTopComponent private (project: Project, isDebug: Boolean) extends TopComponent {
   import SBTConsoleTopComponent._
 
   /**
@@ -55,7 +55,7 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
 
   private def initComponents() {
     setLayout(new java.awt.BorderLayout())
-    setName("SBT " + project.getProjectDirectory.getName)
+    setName("SBT " + project.getProjectDirectory.getName + (if (isDebug) " [debug]" else ""))
     setToolTipText(NbBundle.getMessage(classOf[SBTConsoleTopComponent], "HINT_SBTConsoleTopComponent") + " for " + project.getProjectDirectory.getPath)
     setIcon(ImageUtilities.loadImage(ICON_PATH, true))
   }
@@ -166,7 +166,8 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
     val sbtHome = ScalaExecution.getSbtHome
     val sbtLaunchJar = ScalaExecution.getSbtLaunchJar(sbtHome)
 
-    val (executable, args) = ScalaExecution.getSbtArgs(sbtHome)
+    val (executable, _args) = ScalaExecution.getSbtArgs(sbtHome)
+    val args = if (isDebug) debugOpts(5005) :: _args else _args
     // XXX under Mac OS jdk7, the java.home is point to /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/jre
     // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which cause the lack of javac
     //builder = builder.addEnvironmentVariable("JAVA_HOME", SBTExecution.getJavaHome)
@@ -222,9 +223,9 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
 object SBTConsoleTopComponent {
   private val log = Logger.getLogger(this.getClass.getName)
 
-  private def apply(project: Project) = {
+  private def apply(project: Project, isDebug: Boolean) = {
     sn += 1
-    new SBTConsoleTopComponent(project)
+    new SBTConsoleTopComponent(project, isDebug)
   }
 
   private val projectToDefault = new mutable.WeakHashMap[Project, SBTConsoleTopComponent]()
@@ -249,24 +250,26 @@ object SBTConsoleTopComponent {
   private def toPreferredId(project: Project, sn: Int) = CompName + project.getProjectDirectory.getPath + "_" + sn
   private def toEscapedPreferredId(project: Project, sn: Int) = TopComponentId.escape(toPreferredId(project, sn))
 
-  def openNewInstance(project: Project, commands: List[String])(postAction: String => Unit = EmptyAction) =
-    openInstance(project, commands, isForceNew = true, false)(postAction)
+  def debugOpts(port: Int) = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=" + port
 
-  def openInstance(project: Project, commands: List[String])(postAction: String => Unit = EmptyAction): Unit =
-    openInstance(project, commands, isForceNew = false, false)(postAction)
+  def openNewInstance(project: Project, commands: List[String], isDebug: Boolean)(postAction: String => Unit = EmptyAction) =
+    openInstance(project, commands, isForceNew = true, isDebug, false)(postAction)
+
+  def openInstance(project: Project, commands: List[String], isDebug: Boolean)(postAction: String => Unit = EmptyAction): Unit =
+    openInstance(project, commands, isForceNew = false, isDebug, false)(postAction)
 
   /**
    * Obtain the SBTConsoleTopComponent instance by project
    */
-  private def openInstance(project: Project, commands: List[String], isForceNew: Boolean, background: Boolean)(postAction: String => Unit) {
+  private def openInstance(project: Project, commands: List[String], isForceNew: Boolean, isDebug: Boolean, background: Boolean)(postAction: String => Unit) {
     val (tc, isNewCreated) = projectToDefault.get(project) match {
       case None =>
-        val default = SBTConsoleTopComponent(project)
+        val default = SBTConsoleTopComponent(project, isDebug)
         projectToDefault.put(project, default)
         (default, true)
       case Some(tc) =>
         if (isForceNew || tc.isRunningCommand) {
-          (SBTConsoleTopComponent(project), true)
+          (SBTConsoleTopComponent(project, isDebug), true)
         } else {
           (tc, false)
         }

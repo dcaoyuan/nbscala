@@ -11,7 +11,6 @@ import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
 import org.openide.filesystems.FileUtil
-import org.openide.util.NbBundle
 import scala.collection.mutable.ArrayBuffer
 
 case class ProjectContext(
@@ -58,7 +57,7 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
       _isResolvedOrResolving = true
       val rootProject = project.getRootProject
       val commands = List("netbeans")
-      SBTConsoleTopComponent.openInstance(rootProject, commands) { _ =>
+      SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false) { _ =>
         pcs.firePropertyChange(SBT_RESOLVED, null, null)
       }
     }
