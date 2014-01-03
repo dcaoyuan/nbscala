@@ -140,7 +140,7 @@ class SBTConsoleTopComponent private (project: Project) extends TopComponent {
 
   private def createTerminal: SbtConsoleTerminal = {
     val textView = new JTextPane()
-    textView.setFont(getDefaultFont)
+    textView.setFont(new Font("Monospaced", Font.PLAIN, 13))
     setBorder(BorderFactory.createEmptyBorder)
 
     // @see core.output2/org.netbeans.core.output2.ui/AbstractOutputPane

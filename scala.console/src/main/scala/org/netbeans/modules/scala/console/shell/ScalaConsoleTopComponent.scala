@@ -152,7 +152,7 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
 
   private def createTerminal: ScalaConsoleTerminal = {
     val textView = new JTextPane()
-    textView.setFont(getDefaultFont)
+    textView.setFont(new Font("Monospaced", Font.PLAIN, 13))
     setBorder(BorderFactory.createEmptyBorder)
 
     // @see core.output2/org.netbeans.core.output2.ui/AbstractOutputPane

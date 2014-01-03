@@ -67,7 +67,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
 
       case COMMAND_SBT_CONSOLE =>
         val commands = selectProject
-        SBTConsoleTopComponent.openInstance(rootProject, commands)()
+        SBTConsoleTopComponent.openNewInstance(rootProject, commands)()
 
       case COMMAND_SBT_RELOAD =>
         val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
@@ -91,14 +91,14 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
           "set fork := false",
           "set javaOptions := Nil",
           "run")
-        SBTConsoleTopComponent.openInstance(rootProject, commands)()
+        SBTConsoleTopComponent.openNewInstance(rootProject, commands)()
 
       case COMMAND_DEBUG =>
         val commands = selectProject ::: List(
           "set fork := true",
           "set javaOptions := List(\"" + debugOpts(5005) + "\")",
           "run ")
-        SBTConsoleTopComponent.openInstance(rootProject, commands)()
+        SBTConsoleTopComponent.openNewInstance(rootProject, commands)()
 
       case COMMAND_RUN_SINGLE =>
         findMainClass(context) foreach { clazz =>
@@ -106,7 +106,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
             "set fork := false",
             "set javaOptions := Nil",
             "run-main " + clazz)
-          SBTConsoleTopComponent.openInstance(rootProject, commands)()
+          SBTConsoleTopComponent.openNewInstance(rootProject, commands)()
         }
 
       case COMMAND_DEBUG_SINGLE =>
@@ -115,7 +115,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
             "set fork := true",
             "set javaOptions := List(\"" + debugOpts(5005) + "\")",
             "run-main " + clazz)
-          SBTConsoleTopComponent.openInstance(rootProject, commands)()
+          SBTConsoleTopComponent.openNewInstance(rootProject, commands)()
         }
 
       case _ =>
