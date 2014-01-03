@@ -240,6 +240,9 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     overwrite(welcome, messageStyle)
   }
 
+  /**
+   * We'll cancel underlyingTask here to make sure all opened streams are properly closed
+   */
   private var _underlyingTask: Option[Future[Integer]] = None
   def underlyingTask = _underlyingTask
   def underlyingTask_=(underlyingTask: Option[Future[Integer]]) {

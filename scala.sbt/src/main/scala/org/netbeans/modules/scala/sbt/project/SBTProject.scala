@@ -38,18 +38,20 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
 
   override def getLookup: Lookup = lookup
 
-  def getMasterProject: Option[SBTProject] = {
-    projectDir.getParent match {
-      case parentDir: FileObject if parentDir.isFolder =>
-        parentDir.getFileObject(ProjectConstants.PROJECT_FOLDER_NAME) match {
-          case projectFolder: FileObject if projectFolder.isFolder =>
-            ProjectManager.getDefault.findProject(parentDir) match {
-              case x: SBTProject => Some(x)
-              case _             => None
-            }
-          case _ => None
-        }
-      case _ => None
+  private def findParentProject: Option[SBTProject] = findParentProject(projectDir)
+  private def findParentProject(dir: FileObject): Option[SBTProject] = {
+    if (dir.isRoot) {
+      None
+    } else {
+      val parentDir = dir.getParent
+      SBTProjectType.findSbtProjectFolder(parentDir) match {
+        case Some(x) =>
+          ProjectManager.getDefault.findProject(parentDir) match {
+            case x: SBTProject => Some(x)
+            case _             => findParentProject(parentDir)
+          }
+        case None => findParentProject(parentDir)
+      }
     }
   }
 
@@ -61,7 +63,7 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
   def getProjectChain: List[SBTProject] = getProjectChain(this, List(this))
 
   private def getProjectChain(project: SBTProject, chain: List[SBTProject]): List[SBTProject] = {
-    project.getMasterProject match {
+    project.findParentProject match {
       case None    => chain
       case Some(x) => getProjectChain(x, x :: chain)
     }

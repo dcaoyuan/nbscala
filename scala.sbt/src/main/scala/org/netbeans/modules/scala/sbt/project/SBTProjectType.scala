@@ -22,12 +22,8 @@ import org.openide.util.lookup.ServiceProvider
  */
 @ServiceProvider(service = classOf[ProjectFactory])
 class SBTProjectType extends ProjectFactory {
-  import SBTProjectType._
 
-  override def isProject(projectDir: FileObject) = {
-    !isMavenProject(projectDir) && !isProjectFolder(projectDir) && !isUnderSrcFolder(projectDir) &&
-      (hasSbtProjectDefinition(projectDir) || hasStdScalaSrcDir(projectDir) || hasNBDescriptorFile(projectDir))
-  }
+  override def isProject(projectDir: FileObject) = SBTProjectType.isSBTProjectDir(projectDir)
 
   @throws(classOf[IOException])
   override def loadProject(dir: FileObject, state: ProjectState): Project = {
@@ -48,17 +44,40 @@ class SBTProjectType extends ProjectFactory {
 
 object SBTProjectType {
 
-  def hasSbtProjectDefinition(projectDir: FileObject): Boolean = {
-    val sbtProjectFolder = projectDir.getFileObject("project")
-
-    val containsSbtFile = projectDir.getChildren find (f => f.isData && f.getExt == "sbt") isDefined
-
-    val containsSbtProjectFolder = if (sbtProjectFolder != null && sbtProjectFolder.isFolder) {
-      sbtProjectFolder.getChildren find (f => f.isData && (f.getExt == "sbt" || f.getExt == "scala")) isDefined
-    } else {
+  /**
+   * TODO This method will recognize target/resources/... or any dir as project
+   */
+  @deprecated("Don't use it", "not now")
+  private def isProjectDirRecurively(dir: FileObject): Boolean = {
+    if (dir == null || dir.isRoot) {
       false
+    } else {
+      if (isSBTProjectDir(dir)) {
+        true
+      } else {
+        isProjectDirRecurively(dir.getParent)
+      }
     }
-    containsSbtFile || containsSbtProjectFolder
+  }
+
+  def isSBTProjectDir(projDir: FileObject) = {
+    !isMavenProject(projDir) && !isProjectFolder(projDir) && !isUnderSrcFolder(projDir) &&
+      (hasSbtProjectDefinition(projDir) || hasStdScalaSrcDir(projDir) || hasNBDescriptorFile(projDir))
+  }
+
+  def hasSbtProjectDefinition(projectDir: FileObject): Boolean = {
+    val sbtFile = projectDir.getChildren find (f => f.isData && f.getExt == "sbt")
+
+    findSbtProjectFolder(projectDir).isDefined || sbtFile.isDefined
+  }
+
+  def findSbtProjectFolder(dir: FileObject): Option[FileObject] = {
+    val sbtProjectFolder = dir.getFileObject("project")
+    if (sbtProjectFolder != null && sbtProjectFolder.isFolder) {
+      sbtProjectFolder.getChildren find (f => f.isData && (f.getExt == "sbt" || f.getExt == "scala"))
+    } else {
+      None
+    }
   }
 
   def isMavenProject(projectDir: FileObject): Boolean = {
@@ -74,7 +93,7 @@ object SBTProjectType {
   }
 
   def hasStdScalaSrcDir(projectDir: FileObject): Boolean = {
-    projectDir.getFileObject("src/main/scala") != null
+    projectDir.getFileObject("src/main/scala") != null || projectDir.getFileObject("src/test/scala") != null
   }
 
   def hasNBDescriptorFile(projectDir: FileObject): Boolean = {

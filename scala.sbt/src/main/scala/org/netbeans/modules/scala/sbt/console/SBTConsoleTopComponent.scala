@@ -7,6 +7,7 @@ import java.io.InputStreamReader
 import java.io.PipedInputStream
 import java.io.PrintStream
 import java.io.PrintWriter
+import java.util.concurrent.Future
 import java.util.logging.Logger
 import java.util.regex.Pattern
 import javax.swing._
