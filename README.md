@@ -114,6 +114,7 @@ Generate keys/keystore (note: The keystore and key password needs to be the same
     keytool -list -v
               
 Enable signing modules by adding all three keystore related parameters in ~/m2/settings.xml as:
+
                  <profiles>
                      <profile>
                          <id>sign-nbscala-nbms</id>
