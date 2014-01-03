@@ -106,6 +106,36 @@ Build-Debug-Cycle: (after changed module was successfuly built)
 
     mvn nbm:cluster nbm:run-ide -Pdebug-ide
 
+### Publish to plugins.netbeans.org
+
+Generate keys/keystore (note: The keystore and key password needs to be the same):
+
+    keytool -genkey -dname "CN=Caoyuan Deng, OU=nbscala, O=inloop.io, L=Richmond, S=BC, C=CA" -alias nbscala -validity 1800
+    keytool -list -v
+              
+Enable signing modules by adding all three keystore related parameters in ~/m2/settings.xml as:
+                 <profiles>
+                     <profile>
+                         <id>sign-nbscala-nbms</id>
+                         <activation>
+                             <activeByDefault>true</activeByDefault>
+                         </activation>
+                         <properties>
+                             <nbm.sign.keystore>${user.home}/.keystore</nbm.sign.keystore>
+                             <nbm.sign.keystorealias>nbscala</nbm.sign.keystorealias>
+                             <nbm.sign.keystorepassword>thepassword</nbm.sign.keystorepassword>
+                         </properties>
+                     </profile>
+                 </profiles>
+
+Pack a zip file for plugins.netbeans.org:
+
+    mvn nbm:autoupdate
+    cd target/netbeans_site
+    zip nbscala-version.zip *.nbm
+
+
+
 ### Installation Notes:
 
  * After installation, it's always better to restart NetBeans

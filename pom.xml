@@ -54,8 +54,8 @@
         <brandingToken>nbscala</brandingToken>
         <deploy.version>snapshots</deploy.version>
 
-        <!-- Since this project has implementation dependencies on NetBeans no-friend module,
-             we should build it using lower version NetBeans to get it can be installed both
+        <!-- Since this project has implementation dependencies on NetBeans no-friend modules,
+             we should build it using lower version NetBeans to get it to be able installed both
              on lower and higher version, unless we use un-compatible features of higher version.
         -->
         <netbeans.version>RELEASE74</netbeans.version>
