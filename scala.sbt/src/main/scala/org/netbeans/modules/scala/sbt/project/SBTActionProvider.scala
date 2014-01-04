@@ -14,10 +14,12 @@ import org.apache.tools.ant.module.api.support.ActionUtils
 import org.netbeans.api.debugger.jpda.DebuggerStartException
 import org.netbeans.api.debugger.jpda.JPDADebugger
 import org.netbeans.api.language.util.ast.AstDfn
+import org.netbeans.api.project.ProjectManager
 import org.netbeans.modules.scala.console.shell.ScalaConsoleTopComponent
 import org.netbeans.spi.project.ActionProvider
 import org.openide.DialogDescriptor
 import org.openide.DialogDisplayer
+import org.openide.LifecycleManager
 import org.openide.NotifyDescriptor
 import org.openide.awt.MouseUtils
 import org.openide.filesystems.FileObject
@@ -61,6 +63,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
 
   def invokeAction(command: String, context: Lookup) {
     val rootProject = project.getRootProject
+
     command match {
       case COMMAND_SCALA_CONSOLE =>
         ScalaConsoleTopComponent.openInstance(project, Nil)()
@@ -75,18 +78,26 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         sbtResolver.triggerSbtResolution
 
       case COMMAND_BUILD =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
         val commands = selectProject ::: List("compile")
         SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false)()
 
       case COMMAND_REBUILD =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
         val commands = selectProject ::: List("clean", "compile")
         SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false)()
 
       case COMMAND_CLEAN =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
         val commands = selectProject ::: List("clean")
         SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false)()
 
       case COMMAND_RUN =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
         val commands = selectProject ::: List(
           //"set fork := false",
           //"set javaOptions := Nil",
@@ -94,6 +105,8 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         SBTConsoleTopComponent.openNewInstance(rootProject, commands, isDebug = false)()
 
       case COMMAND_DEBUG =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
         val commands = selectProject ::: List(
           //"set fork := true",
           //"set javaOptions := List(\"" + debugOpts(5005) + "\")",
@@ -101,6 +114,8 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         SBTConsoleTopComponent.openNewInstance(rootProject, commands, isDebug = true)()
 
       case COMMAND_RUN_SINGLE =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
         findMainClass(context) foreach { clazz =>
           val commands = selectProject ::: List(
             //"set fork := false",
@@ -110,6 +125,8 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         }
 
       case COMMAND_DEBUG_SINGLE =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
         findMainClass(context) foreach { clazz =>
           val commands = selectProject ::: List(
             //"set fork := true",
