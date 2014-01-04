@@ -56,9 +56,12 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     if (!_isResolvedOrResolving) {
       _isResolvedOrResolving = true
       val rootProject = project.getRootProject
-      val commands = List("netbeans")
-      SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false) { _ =>
-        pcs.firePropertyChange(SBT_RESOLVED, null, null)
+      def rootResolver = rootProject.getLookup.lookup(classOf[SBTResolver])
+      if (rootProject == project || !rootResolver.isResolvedOrResolving) {
+        val commands = List("netbeans")
+        SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false) { _ =>
+          pcs.firePropertyChange(SBT_RESOLVED, null, null)
+        }
       }
     }
   }
