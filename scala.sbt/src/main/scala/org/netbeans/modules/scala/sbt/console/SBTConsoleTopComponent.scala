@@ -7,7 +7,6 @@ import java.io.InputStreamReader
 import java.io.PipedInputStream
 import java.io.PrintStream
 import java.io.PrintWriter
-import java.util.concurrent.Future
 import java.util.logging.Logger
 import java.util.regex.Pattern
 import javax.swing._
@@ -39,7 +38,7 @@ import scala.collection.mutable
  *
  * @author Caoyuan Deng
  */
-class SBTConsoleTopComponent private (project: Project, isDebug: Boolean) extends TopComponent {
+class SBTConsoleTopComponent private (project: Project, val isDebug: Boolean) extends TopComponent {
   import SBTConsoleTopComponent._
 
   /**
@@ -263,18 +262,23 @@ object SBTConsoleTopComponent {
    * Obtain the SBTConsoleTopComponent instance by project
    */
   private def openInstance(project: Project, commands: List[String], isForceNew: Boolean, isDebug: Boolean, background: Boolean)(postAction: String => Unit) {
-    val (tc, isNewCreated) = projectToDefault.get(project) match {
-      case None =>
-        val default = SBTConsoleTopComponent(project, isDebug)
-        projectToDefault.put(project, default)
-        (default, true)
-      case Some(tc) =>
-        if (isForceNew || tc.isRunningCommand) {
-          (SBTConsoleTopComponent(project, isDebug), true)
-        } else {
-          (tc, false)
-        }
+    val (tc, isNewCreated) = if (isDebug) {
+      (SBTConsoleTopComponent(project, isDebug), true)
+    } else {
+      projectToDefault.get(project) match {
+        case None =>
+          val default = SBTConsoleTopComponent(project, isDebug)
+          projectToDefault.put(project, default)
+          (default, true)
+        case Some(tc) =>
+          if (isForceNew || tc.isRunningCommand) {
+            (SBTConsoleTopComponent(project, isDebug), true)
+          } else {
+            (tc, false)
+          }
+      }
     }
+
     tc.isRunningCommand = true
 
     val runnableTask = new Runnable() {
