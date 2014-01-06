@@ -53,8 +53,9 @@ trait ScalaUtils { self: ScalaGlobal =>
 
     def askForModifiers(symbol: Symbol): java.util.Set[Modifier] = {
       val modifiers = new java.util.HashSet[Modifier]
-      askForResponse { () =>
+      if (symbol == NoSymbol) return modifiers
 
+      askForResponse { () =>
         if (symbol hasFlag Flags.PROTECTED) {
           modifiers.add(Modifier.PROTECTED)
         } else if (symbol hasFlag Flags.PRIVATE) {
@@ -68,12 +69,13 @@ trait ScalaUtils { self: ScalaGlobal =>
 
         modifiers
       } get match {
-        case Left(x)  => x
-        case Right(_) => modifiers
+        case Left(x)   => x
+        case Right(ex) => processGlobalException(ex, modifiers)
       }
     }
 
     def askForKind(symbol: Symbol): ElementKind = {
+      if (symbol == NoSymbol) return ElementKind.OTHER
       askForResponse { () =>
         if (symbol.isPackage) {
           ElementKind.PACKAGE
@@ -107,26 +109,29 @@ trait ScalaUtils { self: ScalaGlobal =>
 
       } get match {
         case Left(x) => x
-        case Right(_) =>
+        case Right(ex) =>
           // java.lang.Error: no-symbol does not have owner
           //      at scala.tools.nsc.symtab.Symbols$NoSymbol$.owner(Symbols.scala:1609)
           //      at scala.tools.nsc.symtab.Symbols$Symbol.isLocal(Symbols.scala:346)
-          ElementKind.OTHER
+          processGlobalException(ex, ElementKind.OTHER)
       }
     }
 
     def askForMembers(symbol: Symbol): Scope = {
+      if (symbol == NoSymbol) return EmptyScope
       askForResponse { () =>
         completeIfWithLazyType(symbol)
 
         try {
           symbol.tpe.members
         } catch {
-          case _: Throwable => EmptyScope
+          case ex: Throwable =>
+            processGlobalException(ex)
+            EmptyScope
         }
       } get match {
         case Left(x)   => x
-        case Right(ex) => EmptyScope
+        case Right(ex) => processGlobalException(ex, EmptyScope)
       }
     }
 
@@ -142,10 +147,10 @@ trait ScalaUtils { self: ScalaGlobal =>
      * We should bypass it via symbolQualifiedName
      */
     def symbolQualifiedName(symbol: Symbol, forScala: Boolean): String = {
-      if (symbol.isError) {
-        "<error>"
-      } else if (symbol == NoSymbol) {
+      if (symbol == NoSymbol) {
         "<none>"
+      } else if (symbol.isError) {
+        "<error>"
       } else {
         var paths: List[String] = Nil
         var owner = symbol.owner
@@ -186,9 +191,7 @@ trait ScalaUtils { self: ScalaGlobal =>
       val str = try {
         tpe.toString
       } catch {
-        case ex: java.lang.AssertionError =>
-          ScalaGlobal.resetLate(self, ex); null // ignore assert ex from scala
-        case ex: Throwable => ScalaGlobal.resetLate(self, ex); null
+        case ex: Throwable => processGlobalException(ex, null)
       }
 
       if (str ne null) str else tpe.termSymbol.nameString
@@ -210,8 +213,8 @@ trait ScalaUtils { self: ScalaGlobal =>
             htmlTypeName(symbol, fm)
         }
       } get match {
-        case Left(_)  =>
-        case Right(_) =>
+        case Left(_)   =>
+        case Right(ex) => processGlobalException(ex)
       }
     }
 
@@ -219,7 +222,7 @@ trait ScalaUtils { self: ScalaGlobal =>
       try {
         symbol.tpe
       } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(self, ex); NoType
+        case ex: Throwable => processGlobalException(ex, NoType)
       }
     }
 
@@ -377,7 +380,7 @@ trait ScalaUtils { self: ScalaGlobal =>
 
       } get match {
         case Left(x)   =>
-        case Right(ex) => ScalaGlobal.resetLate(self, ex)
+        case Right(ex) => processGlobalException(ex)
       }
     }
 
@@ -645,7 +648,7 @@ trait ScalaUtils { self: ScalaGlobal =>
             try {
               x.complete(topClazz)
             } catch {
-              case ex: Throwable =>
+              case ex: Throwable => processGlobalException(ex)
             }
           case _ =>
         }
@@ -663,7 +666,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         } else false
       } get match {
         case Left(x)   => x
-        case Right(ex) => false
+        case Right(ex) => processGlobalException(ex, false)
       }
     }
 
@@ -672,7 +675,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         importantItem(items)
       } get match {
         case Left(x)   => x
-        case Right(ex) => items.head.asInstanceOf[ScalaItem]
+        case Right(ex) => processGlobalException(ex, items.head.asInstanceOf[ScalaItem])
       }
     }
 
@@ -688,7 +691,7 @@ trait ScalaUtils { self: ScalaGlobal =>
               case dfn: ScalaDfn =>
                 0 + {
                   if (sym == NoSymbol) 90
-                  else if (sym.isClass) 20 // prefer moduleClass over module
+                  else if (sym.isClass || sym.isModuleClass) 20 // prefer class/moduleClass over module
                   else if (sym.isTrait || sym.isType || sym.isModule) 21
                   else if (sym.isMethod) {
                     if (sym.isSetter || sym.hasFlag(Flags.MUTABLE)) 31
@@ -702,7 +705,7 @@ trait ScalaUtils { self: ScalaGlobal =>
               case ref: ScalaRef =>
                 100 + {
                   if (sym == NoSymbol) 90
-                  else if (sym.isClass) 20 // prefer moduleClass over module
+                  else if (sym.isClass || sym.isModuleClass) 20 // prefer class/moduleClass over module
                   else if (sym.isTrait || sym.isType || sym.isModule) 21
                   else if (sym.hasFlag(Flags.PARAM) || sym.hasFlag(Flags.PARAMACCESSOR)) 31
                   else if (sym.isValue || sym.isVariable) 31
@@ -722,7 +725,7 @@ trait ScalaUtils { self: ScalaGlobal =>
             (importantLevel, item)
         }.sortWith(_._1 < _._1).head._2
       } catch {
-        case _: Throwable => items.head.asInstanceOf[ScalaItem]
+        case ex: Throwable => processGlobalException(ex, items.head.asInstanceOf[ScalaItem])
       }
     }
 
@@ -734,7 +737,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         sb.toString
       } get match {
         case Left(x)   => x
-        case Right(ex) => "<error>"
+        case Right(ex) => processGlobalException(ex, "<error>")
       }
     }
 
@@ -748,7 +751,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         typeSimpleSig_(tpe, sb)
         sb.toString
       } catch {
-        case _: Throwable => "<error>"
+        case ex: Throwable => processGlobalException(ex, "<error>")
       }
     }
 
@@ -759,7 +762,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         sb.toString
       } get match {
         case Left(x)   => x
-        case Right(ex) => "<error>"
+        case Right(ex) => processGlobalException(ex, "<error>")
       }
     }
 

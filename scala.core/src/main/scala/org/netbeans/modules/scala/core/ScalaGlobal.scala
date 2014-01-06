@@ -179,8 +179,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     }
   }
 
-  protected def processGlobalException[T](ex: Throwable, toReturn: T = ()): T = {
-    log1.log(Level.WARNING, ex.getMessage, ex)
+  def processGlobalException[T](ex: Throwable, toReturn: T = ()): T = {
     ex match {
       case _: AssertionError =>
         /**
@@ -188,6 +187,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
          * symbol table may have been broken, we have to reset ScalaGlobal
          * to clean this global
          */
+        log1.log(Level.WARNING, ex.getMessage, ex)
         ScalaGlobal.resetLate(this, ex)
       case _: java.lang.Error => // avoid scala nsc's Error error
         log1.log(Level.WARNING, ex.getMessage, ex)

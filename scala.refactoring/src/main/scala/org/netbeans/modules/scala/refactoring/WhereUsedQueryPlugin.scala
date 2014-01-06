@@ -369,7 +369,10 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
             logger.info(pr.getSnapshot.getSource.getFileObject + ": find where used element " + sym.fullName)
             elements.add(refactoring, WhereUsedElement(pr, item.asInstanceOf[ScalaItem]))
           }
-        } get
+        } get match {
+          case Left(_)   =>
+          case Right(ex) => global.processGlobalException(ex)
+        }
 
       } else if (isFindOverridingMethods) {
         // TODO

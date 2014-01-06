@@ -1,8 +1,8 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
+ *
  * Copyright 2008 Sun Microsystems, Inc. All rights reserved.
- * 
+ *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common
  * Development and Distribution License("CDDL") (collectively, the
@@ -20,7 +20,7 @@
  * License Header, with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- * 
+ *
  * If you wish your version of this file to be governed by only the CDDL
  * or only the GPL Version 2, indicate your decision by adding
  * "[Contributor] elects to include this software in this distribution
@@ -31,9 +31,9 @@
  * However, if you add GPL Version 2 code and therefore, elected the GPL
  * Version 2 license, then the option applies only if the new code is
  * made subject to such option by the copyright holder.
- * 
+ *
  * Contributor(s):
- * 
+ *
  * Portions Copyrighted 2008 Sun Microsystems, Inc.
  */
 package org.netbeans.modules.scala.editor
@@ -211,7 +211,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       javaCode.toString
     } get match {
       case Left(x)   => x
-      case Right(ex) => ""
+      case Right(ex) => global.processGlobalException(ex, "")
     }
   }
 
@@ -219,7 +219,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
     try {
       sym.tpe
     } catch {
-      case _: Throwable => null
+      case ex: Throwable => global.processGlobalException(ex, null)
     }
   }
 
@@ -231,7 +231,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       (try {
         tpe.members
       } catch {
-        case ex: Throwable => EmptyScope
+        case ex: Throwable => global.processGlobalException(ex, EmptyScope)
       }) exists (_ hasFlag Flags.DEFERRED))
   }
 
@@ -250,14 +250,14 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val members = try {
         tpe.members
       } catch {
-        case ex: Throwable => EmptyScope
+        case ex: Throwable => global.processGlobalException(ex, EmptyScope)
       }
 
       for (member <- members if !member.hasFlag(Flags.PRIVATE)) {
         val memberType = try {
           member.tpe
         } catch {
-          case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
+          case ex: Throwable => global.processGlobalException(ex, null)
         }
         javaCode ++= genJavaMember(sym, member, memberType)
       }
@@ -312,7 +312,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val mResTpe = try {
         memberType.resultType
       } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(global, ex); null
+        case ex: Throwable => global.processGlobalException(ex, null)
       }
 
       if ((mResTpe ne null) && mSName != "$init$" && mSName != "synchronized") {
@@ -395,7 +395,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       val tpeName = try {
         encodeQName(param.tpe.typeSymbol.fullName)
       } catch {
-        case ex: Throwable => ScalaGlobal.resetLate(global, ex); "Object"
+        case ex: Throwable => global.processGlobalException(ex, "Object")
       }
       sb.append(tpeName)
       sb.append(" ")
@@ -498,8 +498,8 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
                 } else fullNameInSig(sym)) + (
                   if (args.isEmpty) "" else
                     (args map argSig).mkString("<", ",", ">")) /* + (
-                ";"
-              ) */ ).replace('/', '.')
+                                                              ";"
+                                                              ) */ ).replace('/', '.')
           }
 
           // If args isEmpty, Array is being used as a type constructor
@@ -637,15 +637,15 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
   // ----- end of scala.tools.nsc.transform.Erasure.scala
 
   /*
-   * to java name
-   */
+               * to java name
+               */
   private def encodeName(scalaTermName: String): String = {
     NameTransformer.encode(scalaTermName)
   }
 
   /*
-   * to java type name
-   */
+               * to java type name
+               */
   private def encodeType(scalaTypeQName: String): String = {
     scalaTypeQName match {
       case "scala.runtime.BoxedUnit" => "void"

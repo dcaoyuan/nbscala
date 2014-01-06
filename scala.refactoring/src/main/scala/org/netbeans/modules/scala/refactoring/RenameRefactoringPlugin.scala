@@ -328,7 +328,7 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
       set.add(fo)
 
       // is there any symbol in this place not private?
-      val notLocal = samePlaceSyms exists { x => !x.hasFlag(Flags.PRIVATE) }
+      val notLocal = samePlaceSyms exists { x => !x.hasFlag(Flags.PRIVATE) } // TODO
       if (notLocal) {
         val srcCp = cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE)
         if (srcCp ne null) {
@@ -529,8 +529,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
             if (doc ne null) doc.readUnlock
           }
         } get match {
-          case Left(_)  =>
-          case Right(_) =>
+          case Left(_)   =>
+          case Right(ex) => global.processGlobalException(ex)
         }
       } else {
         //System.out.println("Skipping file " + workingCopy.getFileObject());

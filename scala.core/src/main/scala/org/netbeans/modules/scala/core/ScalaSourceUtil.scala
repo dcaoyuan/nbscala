@@ -552,8 +552,8 @@ object ScalaSourceUtil {
       }
 
     } get match {
-      case Left(_)  =>
-      case Right(_) =>
+      case Left(_)   =>
+      case Right(ex) => global.processGlobalException(ex)
     }
 
     if (clazzName.length == 0) return null
@@ -722,8 +722,8 @@ object ScalaSourceUtil {
         case x                     => false
       }
     } get match {
-      case Left(x)  => x
-      case Right(_) => false
+      case Left(x)   => x
+      case Right(ex) => global.processGlobalException(ex, false)
     }
   }
 

@@ -115,8 +115,8 @@ abstract class ScalaCompletionProposals {
         if (emphasize) fm.emphasis(false)
 
       } get match {
-        case Left(_)  =>
-        case Right(_) =>
+        case Left(_)   =>
+        case Right(ex) => processGlobalException(ex)
       }
 
       fm.getText
@@ -148,8 +148,8 @@ abstract class ScalaCompletionProposals {
         }
 
       } get match {
-        case Left(_)  =>
-        case Right(_) =>
+        case Left(_)   =>
+        case Right(ex) => processGlobalException(ex)
       }
 
       fm.getText
@@ -244,7 +244,7 @@ abstract class ScalaCompletionProposals {
 
       } get match {
         case Left(x)   =>
-        case Right(ex) => ScalaGlobal.resetLate(completer.global, ex)
+        case Right(ex) => processGlobalException(ex)
       }
 
       fm.getText

@@ -51,6 +51,8 @@ trait ScalaItems { self: ScalaGlobal =>
     type T = Type
 
     override def getKind: ElementKind = {
+      if (symbol == NoSymbol) return ElementKind.OTHER
+
       if (super.getKind != ElementKind.OTHER) return super.getKind
 
       if (symbol hasFlag Flags.ACCESSOR) return ElementKind.FIELD
@@ -61,6 +63,14 @@ trait ScalaItems { self: ScalaGlobal =>
       if (symbol.isVariable || symbol.isValue) return ElementKind.VARIABLE
 
       ElementKind.OTHER
+    }
+
+    override def samePlaceSymbols: Seq[S] = {
+      samePlaceItems map (_.symbol) filter (_ != NoSymbol)
+    }
+
+    override def samePlaceItems: Seq[ScalaItem] = {
+      rootScope.samePlaceItems(this).asInstanceOf[Seq[ScalaItem]]
     }
 
   }

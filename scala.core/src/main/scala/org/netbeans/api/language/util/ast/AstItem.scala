@@ -1,8 +1,8 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
+ *
  * Copyright 2008 Sun Microsystems, Inc. All rights reserved.
- * 
+ *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common
  * Development and Distribution License("CDDL") (collectively, the
@@ -20,7 +20,7 @@
  * License Header, with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
- * 
+ *
  * If you wish your version of this file to be governed by only the CDDL
  * or only the GPL Version 2, indicate your decision by adding
  * "[Contributor] elects to include this software in this distribution
@@ -31,9 +31,9 @@
  * However, if you add GPL Version 2 code and therefore, elected the GPL
  * Version 2 license, then the option applies only if the new code is
  * made subject to such option by the copyright holder.
- * 
+ *
  * Contributor(s):
- * 
+ *
  * Portions Copyrighted 2008 Sun Microsystems, Inc.
  */
 package org.netbeans.api.language.util.ast
@@ -145,13 +145,13 @@ trait AstItem extends ForElementHandle {
     _enclosingScope
   }
 
-  final def rootScope: AstRootScope = enclosingScope.root
+  def rootScope: AstRootScope = enclosingScope.root
 
-  final def samePlaceSymbols: Seq[AstItem#S] = {
+  def samePlaceSymbols: Seq[AstItem#S] = {
     samePlaceItems map (_.symbol)
   }
 
-  final def samePlaceItems: Seq[AstItem] = {
+  def samePlaceItems: Seq[AstItem] = {
     rootScope.samePlaceItems(this)
   }
 

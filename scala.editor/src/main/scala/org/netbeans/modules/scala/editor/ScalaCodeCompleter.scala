@@ -501,7 +501,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
             }
           }
         }
-      case Right(ex) => ScalaGlobal.resetLate(global, ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
+      case Right(ex) => global.processGlobalException(ex) // there may be scala.tools.nsc.FatalError: no context found for scala.tools.nsc.util.OffsetPosition@e302cef1
     }
   }
 
@@ -522,7 +522,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
             proposals.add(proposal)
           }
         }
-      case Right(ex) => ScalaGlobal.resetLate(global, ex)
+      case Right(ex) => global.processGlobalException(ex)
     }
 
     // always return true ?
@@ -556,7 +556,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
       }
     } get match {
       case Left(x)   => x
-      case Right(ex) => ScalaGlobal.resetLate(global, ex); None
+      case Right(ex) => global.processGlobalException(ex, None)
     }
   }
 

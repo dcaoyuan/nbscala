@@ -301,7 +301,10 @@ class IsOverriddenAnnotationHandler(file: FileObject) extends ParserResultTask[S
           }
         }
       }
-    } get
+    } get match {
+      case Left(_)   =>
+      case Right(ex) => global.processGlobalException(ex)
+    }
 
     /* for (td <- v.type2Declaration.keySet) {
      if (isCanceled)
