@@ -25,14 +25,22 @@ object ScalaSourceFile {
   private val instances = new java.util.WeakHashMap[FileObject, Reference[ScalaSourceFile]]
 
   def sourceFileOf(fileObject: FileObject): ScalaSourceFile = instances synchronized {
+    def createNew() = {
+      val srcFile = new ScalaSourceFile(fileObject)
+      instances.put(fileObject, new WeakReference[ScalaSourceFile](srcFile))
+      srcFile
+    }
+
     instances.get(fileObject) match {
-      case null =>
-        val srcFile = new ScalaSourceFile(fileObject)
-        instances.put(fileObject, new WeakReference[ScalaSourceFile](srcFile))
-        srcFile
-      case sourceRef => sourceRef.get
+      case null => createNew
+      case srcRef =>
+        srcRef.get match {
+          case null    => createNew() // srcRef.get is null, WHY?
+          case srcFile => srcFile
+        }
     }
   }
+
 }
 
 /**
