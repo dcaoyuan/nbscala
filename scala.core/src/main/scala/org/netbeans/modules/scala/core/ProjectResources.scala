@@ -258,7 +258,7 @@ object ProjectResources {
   def getOutFileObjectForSrc(src: FileObject): Option[FileObject] = {
     val execCp = ClassPath.getClassPath(src, ClassPath.EXECUTE)
     if (execCp != null) {
-      val candidates = execCp.getRoots filter { x => FileUtil.getArchiveFile(x) == null }
+      val candidates = execCp.getRoots filter (FileUtil.getArchiveFile(_) == null)
       candidates find (_.getPath.endsWith("classes")) match {
         case None =>
           if (candidates.length > 0) {

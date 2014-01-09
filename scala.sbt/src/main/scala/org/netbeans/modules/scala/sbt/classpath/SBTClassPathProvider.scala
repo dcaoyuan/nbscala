@@ -41,6 +41,15 @@ class SBTClassPathProvider(project: Project) extends ClassPathProvider with Prop
   }
 
   def getClassPath(tpe: String, isTest: Boolean): ClassPath = cache synchronized {
+    val cpi = new SBTClassPath(project, tpe, isTest)
+    ClassPathFactory.createClassPath(cpi)
+  }
+
+  /**
+   * It seems this method cannot refresh "clean" build, which will recreate a "classes"
+   * folder  TODO where is the properties source? implemented in ClassPathProvider ?
+   */
+  def getClassPath_cached(tpe: String, isTest: Boolean): ClassPath = cache synchronized {
     val cacheKey = tpe + (if (isTest) "/main" else "/test")
     cache.getOrElseUpdate(cacheKey, {
       val cpi = new SBTClassPath(project, tpe, isTest)
