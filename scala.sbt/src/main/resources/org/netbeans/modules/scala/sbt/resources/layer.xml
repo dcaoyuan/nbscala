@@ -54,6 +54,10 @@
                     org.netbeans.modules.scala.sbt.nodes.ProjectFolderNodeFactory
                     <attr intvalue="143" name="position"/>
                 </file>
+                <file name="org-netbeans-modules-scala-sbt-nodes-SbtFilesNodeFactory.instance">
+                    org.netbeans.modules.scala.sbt.nodes.SbtFilesNodeFactory
+                    <attr intvalue="144" name="position"/>
+                </file>
             </folder>
             <folder name="Actions">
                 <file name="org-openide-actions-FindAction.shadow">
