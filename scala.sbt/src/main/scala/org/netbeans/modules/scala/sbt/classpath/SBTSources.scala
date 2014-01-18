@@ -48,7 +48,7 @@ class SBTSources(project: Project) extends Sources {
         val projectDir = project.getProjectDirectory
         Array(GenericSources.group(project, projectDir, projectDir.getNameExt, projectDir.getNameExt, null, null))
 
-      case ProjectResources.SOURCES_TYPE_JAVA | ProjectResources.SOURCES_TYPE_SCALA | ProjectResources.SOURCES_TYPE_MANAGED =>
+      case ProjectResources.SOURCES_TYPE_JAVA | ProjectResources.SOURCES_TYPE_SCALA | ProjectResources.SOURCES_TYPE_RESOURCES | ProjectResources.SOURCES_TYPE_MANAGED =>
         val mainSrcs = maybeAddGroup(tpe, false)
         val testSrcs = maybeAddGroup(tpe, true)
         mainSrcs ++ testSrcs
@@ -68,6 +68,8 @@ class SBTSources(project: Project) extends Sources {
           Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/java"))
         case ProjectResources.SOURCES_TYPE_SCALA =>
           Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/scala"))
+        case ProjectResources.SOURCES_TYPE_RESOURCES =>
+          Array(project.getProjectDirectory.getFileObject("src/" + (if (isTest) "test" else "main") + "/resources"))
         case _ =>
           Array[FileObject]()
       }
@@ -78,6 +80,8 @@ class SBTSources(project: Project) extends Sources {
         if (isTest) NAME_JAVATESTSOURCE else NAME_JAVASOURCE
       case ProjectResources.SOURCES_TYPE_SCALA =>
         if (isTest) NAME_SCALATESTSOURCE else NAME_SCALASOURCE
+      case ProjectResources.SOURCES_TYPE_RESOURCES =>
+        if (isTest) NAME_RESOURCESTESTSOURCE else NAME_RESOURCESSOURCE
       case ProjectResources.SOURCES_TYPE_MANAGED =>
         if (isTest) NAME_MANAGEDTESTSOURCE else NAME_MANAGEDSOURCE
       case _ => NAME_OTHERSOURCE
@@ -88,6 +92,8 @@ class SBTSources(project: Project) extends Sources {
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_JavaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_JavaSources")
       case ProjectResources.SOURCES_TYPE_SCALA =>
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ScalaSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ScalaSources")
+      case ProjectResources.SOURCES_TYPE_RESOURCES =>
+        if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ResourcesSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ResourcesSources")
       case ProjectResources.SOURCES_TYPE_MANAGED =>
         if (isTest) NbBundle.getMessage(classOf[SBTSources], "SG_Test_ManagedSources") else NbBundle.getMessage(classOf[SBTSources], "SG_ManagedSources")
       case _ =>

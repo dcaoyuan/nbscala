@@ -29,6 +29,8 @@ object SourcesNodeFactory {
       javaSgs foreach theKeys.add
       val scalaSgs = sources.getSourceGroups(ProjectResources.SOURCES_TYPE_SCALA)
       scalaSgs foreach theKeys.add
+      val resourcesSgs = sources.getSourceGroups(ProjectResources.SOURCES_TYPE_RESOURCES)
+      resourcesSgs foreach theKeys.add
       val managedSgs = sources.getSourceGroups(ProjectResources.SOURCES_TYPE_MANAGED)
       managedSgs foreach theKeys.add
 

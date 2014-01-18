@@ -20,6 +20,8 @@ case class ProjectContext(
   testJavaSrcs: Array[(File, File)],
   mainScalaSrcs: Array[(File, File)],
   testScalaSrcs: Array[(File, File)],
+  mainResourcesSrcs: Array[(File, File)],
+  testResourcesSrcs: Array[(File, File)],
   mainManagedSrcs: Array[(File, File)],
   testManagedSrcs: Array[(File, File)],
   mainCps: Array[File],
@@ -113,6 +115,8 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
     val testJavaSrcs = new ArrayBuffer[(File, File)]()
     val mainScalaSrcs = new ArrayBuffer[(File, File)]()
     val testScalaSrcs = new ArrayBuffer[(File, File)]()
+    val mainResourcesSrcs = new ArrayBuffer[(File, File)]()
+    val testResourcesSrcs = new ArrayBuffer[(File, File)]()
     val mainManagedSrcs = new ArrayBuffer[(File, File)]()
     val testManagedSrcs = new ArrayBuffer[(File, File)]()
     val mainCps = new ArrayBuffer[File]()
@@ -148,18 +152,19 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
 
                 if (srcFo != null && !isDepProject) {
                   val isJava = srcFo.getPath.split("/") find (_ == "java") isDefined
+                  val isResources = srcFo.getPath.split("/") find (_ == "resources") isDefined
                   val srcDir = FileUtil.toFile(srcFo)
                   val srcs = if (isTest) {
                     if (isManaged) {
                       testManagedSrcs
                     } else {
-                      if (isJava) testJavaSrcs else testScalaSrcs
+                      if (isJava) testJavaSrcs else if (isResources) testResourcesSrcs else testScalaSrcs
                     }
                   } else { // main
                     if (isManaged) {
                       mainManagedSrcs
                     } else {
-                      if (isJava) mainJavaSrcs else mainScalaSrcs
+                      if (isJava) mainJavaSrcs else if (isResources) mainResourcesSrcs else mainScalaSrcs
                     }
                   }
                   srcs += srcDir -> outDir
@@ -210,12 +215,15 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
       case ex: Exception =>
     }
 
-    ProjectContext(name,
+    ProjectContext(
+      name,
       id,
       mainJavaSrcs map { case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o) } toArray,
       testJavaSrcs map { case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o) } toArray,
       mainScalaSrcs map { case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o) } toArray,
       testScalaSrcs map { case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o) } toArray,
+      mainResourcesSrcs map { case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o) } toArray,
+      testResourcesSrcs map { case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o) } toArray,
       mainManagedSrcs map { case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o) } toArray,
       testManagedSrcs map { case (s, o) => FileUtil.normalizeFile(s) -> FileUtil.normalizeFile(o) } toArray,
       mainCps map FileUtil.normalizeFile toArray,
@@ -268,6 +276,8 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
         if (isTest) projectContext.testJavaSrcs else projectContext.mainJavaSrcs
       case ProjectResources.SOURCES_TYPE_SCALA =>
         if (isTest) projectContext.testScalaSrcs else projectContext.mainScalaSrcs
+      case ProjectResources.SOURCES_TYPE_RESOURCES =>
+        if (isTest) projectContext.testResourcesSrcs else projectContext.mainResourcesSrcs
       case ProjectResources.SOURCES_TYPE_MANAGED =>
         if (isTest) projectContext.testManagedSrcs else projectContext.mainManagedSrcs
       case _ => Array()
@@ -287,6 +297,8 @@ object SBTResolver {
 
   val EmptyContext = ProjectContext(null,
     null,
+    Array[(File, File)](),
+    Array[(File, File)](),
     Array[(File, File)](),
     Array[(File, File)](),
     Array[(File, File)](),
