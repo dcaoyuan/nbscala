@@ -2,12 +2,14 @@ package org.netbeans.modules.scala.sbt.console
 
 import java.awt.Color
 import java.awt.Font
+import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PipedInputStream
 import java.io.PrintStream
 import java.io.PrintWriter
 import java.util.logging.Logger
+import java.util.prefs.Preferences
 import java.util.regex.Pattern
 import javax.swing._
 import javax.swing.text.AttributeSet
@@ -40,6 +42,7 @@ import scala.collection.mutable
  */
 class SBTConsoleTopComponent private (project: Project, val isDebug: Boolean) extends TopComponent {
   import SBTConsoleTopComponent._
+  import SBTConsoleSettings._
 
   /**
    * @Note this id will be escaped by PersistenceManager and for findTopCompoment(id)
@@ -138,6 +141,43 @@ class SBTConsoleTopComponent private (project: Project, val isDebug: Boolean) ex
     new Font("Monospaced", Font.PLAIN, size)
   }
 
+  private val packagePreferences: Preferences = Preferences.userNodeForPackage(this.getClass)
+  private val maxHeapSize = packagePreferences.getInt(SbtMaxHeapSizeKey, DefaultMaxHeapSizeMB.toInt)
+  private val initialHeapSize = packagePreferences.getInt(SbtInitialHeapSizeKey, DefaultInitialHeapSizeMB.toInt)
+  private val maxPermGenSize = packagePreferences.getInt(SbtMaxPermGenSizeKey, DefaultMaxPermGenSizeMB.toInt)
+  private val additionalArgs = packagePreferences.get(SbtAdditionalArgsKey, DefaultAdditionalArgs)
+
+  private def getSbtArgs(sbtHome: String): (String, List[String]) = {
+    val args = new mutable.ListBuffer[String]()
+
+    val executable = ScalaExecution.getJavaHome + File.separator + "bin" + File.separator + "java" // NOI18N
+    // XXX Do I need java.exe on Windows?
+    args += s"-Xmx${maxHeapSize}m"
+    args += s"-Xms${initialHeapSize}m"
+    args += s"-Xss1m"
+    args ++= additionalArgs.split(" ")
+    args += s"-XX:MaxPermSize=${maxPermGenSize}m"
+
+    args += "-Dsbt.log.noformat=true"
+    /**
+     * @Note:
+     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why?
+     * Also, from Scala-2.7.1, jline is used for scala shell, we should
+     * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"?
+     * And jline may cause terminal unresponsed after netbeans quited.
+     */
+    //args += "-Djline.terminal=jline.UnsupportedTerminal"
+    args += "-Djline.WindowsTerminal.directConsole=false"
+
+    // TODO - turn off verifier?
+
+    // Main class
+    args += "-jar"
+    args += ScalaExecution.getSbtLaunchJar(sbtHome) map (_.getAbsolutePath) getOrElse "" // NOI18N
+
+    (executable, args.toList)
+  }
+
   private def createTerminal: SbtConsoleTerminal = {
     val textView = new JTextPane()
     textView.setFont(new Font("Monospaced", Font.PLAIN, 13))
@@ -166,7 +206,7 @@ class SBTConsoleTopComponent private (project: Project, val isDebug: Boolean) ex
     val sbtHome = ScalaExecution.getSbtHome
     val sbtLaunchJar = ScalaExecution.getSbtLaunchJar(sbtHome)
 
-    val (executable, _args) = ScalaExecution.getSbtArgs(sbtHome)
+    val (executable, _args) = getSbtArgs(sbtHome)
     val args = if (isDebug) debugOpts(5005) :: _args else _args
     // XXX under Mac OS jdk7, the java.home is point to /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/jre
     // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which cause the lack of javac
@@ -218,6 +258,18 @@ class SBTConsoleTopComponent private (project: Project, val isDebug: Boolean) ex
 
   var isRunningCommand: Boolean = _
 
+}
+
+object SBTConsoleSettings {
+  val SbtMaxHeapSizeKey = "SBT_MAX_HEAP_MB"
+  val SbtInitialHeapSizeKey = "SBT_INIT_HEAP_MB"
+  val SbtMaxPermGenSizeKey = "SBT_MAX_PERMGEN_MB"
+  val SbtAdditionalArgsKey = "SBT_ADDTIONAL_ARGS"
+
+  val DefaultMaxHeapSizeMB = "512"
+  val DefaultInitialHeapSizeMB = "128"
+  val DefaultMaxPermGenSizeMB = "128"
+  val DefaultAdditionalArgs = "-XX:+UseCodeCacheFlushing -XX:+CMSClassUnloadingEnabled"
 }
 
 object SBTConsoleTopComponent {

@@ -2,6 +2,18 @@
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
 <filesystem>
 
+    <folder name="OptionsDialog">
+        <folder name="Advanced">
+            <file name="org-netbeans-modules-scala-sbt-options-SbtOptionsAdvancedOption.instance">
+                <attr name="controller" newvalue="org.netbeans.modules.scala.sbt.options.SbtOptionsPanelController"/>
+                <attr name="displayName"  bundlevalue="org.netbeans.modules.scala.sbt.options.Bundle#AdvancedOption_DisplayName_Sbt"/>
+                <attr name="instanceCreate" methodvalue="org.netbeans.spi.options.AdvancedOption.createSubCategory"/>
+                <attr name="keywords" bundlevalue="org.netbeans.modules.scala.sbt.options.Bundle#AdvancedOption_Keywords_Sbt"/>
+                <attr name="tooltip" bundlevalue="org.netbeans.modules.scala.sbt.options.Bundle#AdvancedOption_Tooltip_Sbt"/>
+                <attr name="keywordsCategory" stringvalue="Advanced/Sbt"/>                
+            </file>
+        </folder>
+    </folder>
     <folder name="Loaders">
         <folder name="text">
             <folder name="x-scala">
