@@ -3,6 +3,7 @@ package org.netbeans.modules.scala.editor
 import java.io.StringReader
 import javax.swing.text.BadLocationException
 import javax.swing.text.StyledDocument
+import org.netbeans.api.project.FileOwnerQuery
 import org.netbeans.modules.editor.indent.spi.Context
 import org.netbeans.modules.editor.indent.spi.ExtraLock
 import org.netbeans.modules.editor.indent.spi.ReformatTask
@@ -10,9 +11,11 @@ import org.netbeans.modules.parsing.api.Source
 import org.netbeans.modules.parsing.impl.Utilities
 import org.netbeans.modules.scala.core.ScalaMimeResolver
 import org.netbeans.modules.scala.editor.options.CodeStyle
+import org.netbeans.modules.scala.editor.spi.ScalariformPrefsProvider
 import scalariform.formatter.preferences.AlignParameters
 import scalariform.formatter.preferences.AlignSingleLineCaseStatements
 import scalariform.formatter.preferences.FormattingPreferences
+import scalariform.formatter.preferences.IFormattingPreferences
 import scalariform.formatter.preferences.IndentSpaces
 import scalariform.formatter.preferences.RewriteArrowSymbols
 import scalariform.parser.ScalaParserException
@@ -28,11 +31,17 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
   @throws(classOf[BadLocationException])
   def reformat() {
     val cs = CodeStyle.get(doc)
-    val preferences = FormattingPreferences()
-      .setPreference(IndentSpaces, cs.indentSize)
-      .setPreference(RewriteArrowSymbols, false)
-      .setPreference(AlignParameters, true)
-      .setPreference(AlignSingleLineCaseStatements, true)
+    val project = FileOwnerQuery.getOwner(source.getFileObject)
+    val prefs = if (project != null) {
+      val formPrefsProvider = project.getLookup.lookup(classOf[ScalariformPrefsProvider])
+      if (formPrefsProvider != null) {
+        formPrefsProvider.formatPreferences
+      } else {
+        ScalaReformatter.defaultPreferences(cs.indentSize)
+      }
+    } else {
+      ScalaReformatter.defaultPreferences(cs.indentSize)
+    }
 
     val indentRegions = context.indentRegions
     java.util.Collections.reverse(indentRegions)
@@ -46,7 +55,7 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
       if (start >= 0 && length > 0) {
         val text = doc.getText(start, length)
         val formattedText = try {
-          scalariform.formatter.ScalaFormatter.format(text, preferences)
+          scalariform.formatter.ScalaFormatter.format(text, prefs)
         } catch {
           case ex: ScalaParserException => null
         }
@@ -129,4 +138,10 @@ object ScalaReformatter {
       if (source != null) new ScalaReformatter(source, context) else null
     }
   }
+
+  def defaultPreferences(indentSize: Int) = FormattingPreferences()
+    .setPreference(IndentSpaces, indentSize)
+    .setPreference(RewriteArrowSymbols, false)
+    .setPreference(AlignParameters, true)
+    .setPreference(AlignSingleLineCaseStatements, true)
 }

@@ -336,6 +336,7 @@
                         </dependency>
                     </moduleDependencies>
                     <publicPackages>
+                        <publicPackage>org.netbeans.modules.scala.editor.spi</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

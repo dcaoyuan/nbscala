@@ -32,7 +32,8 @@ class SBTProject(projectDir: FileObject, state: ProjectState) extends Project {
     new SBTProjectOpenedHook(this),
     new SBTActionProvider(this),
     new SBTSourceForBinaryQuery(this),
-    new SBTBinaryForSourceQuery(this))
+    new SBTBinaryForSourceQuery(this),
+    new ScalariformPrefs(this))
 
   override def getProjectDirectory = projectDir
 

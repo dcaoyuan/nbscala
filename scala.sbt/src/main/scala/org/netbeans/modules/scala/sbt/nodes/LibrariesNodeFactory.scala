@@ -23,7 +23,7 @@ object LibrariesNodeFactory {
   private val LIBRARIES = "Libs" //NOI18N
   private val TEST_LIBRARIES = "TestLibs" //NOI18N
 
-  private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png") //NOI18N
+  private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/nodes/libraries-badge.png") //NOI18N
 
   private class LibrariesNodeList(project: Project) extends NodeList[String] {
     private val cs = new ChangeSupport(this)

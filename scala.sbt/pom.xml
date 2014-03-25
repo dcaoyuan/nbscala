@@ -157,11 +157,22 @@
             <artifactId>org-netbeans-modules-scala-core</artifactId>
             <version>${scala.core.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-scala-editor</artifactId>
+            <version>${scala.editor.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-scala-project</artifactId>
             <version>${scala.project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scalariform</artifactId>
+            <version>${libs.scalariform.version}</version>
         </dependency>
 
         <!-- sbt-launcher.jar contains a redundant copy of scala runtime packages, which may be conflict

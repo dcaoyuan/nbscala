@@ -84,10 +84,33 @@
             <artifactId>org-openide-io</artifactId>
             <version>${netbeans.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scala-library</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-modules-scala-editor</artifactId>
+            <version>${scala.editor.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scalariform</artifactId>
+            <version>${libs.scalariform.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

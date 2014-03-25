@@ -13,7 +13,7 @@ import org.netbeans.spi.project.ui.ProjectOpenedHook
 class SBTProjectOpenedHook(project: Project) extends ProjectOpenedHook {
   private var classpaths: Array[ClassPath] = _
 
-  override protected def projectOpened() {
+  protected def projectOpened() {
     val cpProvider = project.getLookup.lookup(classOf[SBTClassPathProvider])
     classpaths = Array(
       cpProvider.getClassPath(ClassPath.COMPILE, isTest = false),
@@ -22,7 +22,7 @@ class SBTProjectOpenedHook(project: Project) extends ProjectOpenedHook {
     GlobalPathRegistry.getDefault.register(ClassPath.COMPILE, classpaths)
   }
 
-  override protected def projectClosed() {
+  protected def projectClosed() {
     GlobalPathRegistry.getDefault.unregister(ClassPath.COMPILE, classpaths)
     SBTResolver.dirWatcher.removeChangeListener(project.getLookup.lookup(classOf[SBTResolver]))
   }
