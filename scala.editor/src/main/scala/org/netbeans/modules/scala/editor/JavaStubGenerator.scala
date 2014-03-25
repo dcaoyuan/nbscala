@@ -103,9 +103,11 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
       javaCode ++= clzName
 
       val tpe = tryTpe(sym)
-      javaSig(sym, tpe) match {
-        case Some(sig) => javaCode ++= getGenericPart(sig)
-        case None      =>
+      if (tpe != global.NoType) {
+        javaSig(sym, tpe) match {
+          case Some(sig) => javaCode ++= getGenericPart(sig)
+          case None      =>
+        }
       }
 
       val qName = sym.fullName
@@ -183,8 +185,7 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
 
           val oSym = syms(1)
           val oTpe = tryTpe(oSym)
-
-          if (oTpe ne null) {
+          if (oTpe != global.NoType) {
             javaCode ++= new JavaMemberStubGenerator(IS_OBJECT, IS_NOT_TRAIT).genJavaMembers(oSym, oTpe)
           }
         } else {
@@ -216,11 +217,13 @@ abstract class JavaStubGenerator extends scala.reflect.internal.transform.Erasur
   }
 
   private def tryTpe(sym: Symbol): Type = {
-    try {
-      sym.tpe
-    } catch {
-      case ex: Throwable => global.processGlobalException(ex, null)
-    }
+    if (sym ne null) {
+      try {
+        sym.tpe
+      } catch {
+        case ex: Throwable => global.processGlobalException(ex, global.NoType)
+      }
+    } else global.NoType
   }
 
   /**
