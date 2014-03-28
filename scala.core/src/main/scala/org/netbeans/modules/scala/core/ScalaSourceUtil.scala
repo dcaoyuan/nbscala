@@ -380,7 +380,9 @@ object ScalaSourceUtil {
     val root = cp.findOwnerRoot(clzFo)
 
     val srcCpTarget = if (root != null) {
-      val srcRoots = SourceForBinaryQuery.findSourceRoots(root.toURL).getRoots
+      val srcRoots = SourceForBinaryQuery.findSourceRoots(root.toURL).getRoots map { fo =>
+        if (FileUtil.isArchiveFile(fo)) FileUtil.getArchiveRoot(fo) else fo
+      }
       ClassPathSupport.createClassPath(srcRoots: _*)
     } else {
       null

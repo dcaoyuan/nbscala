@@ -36,13 +36,13 @@ Cause of the small group of people involved in the project we only supply update
 
 ### Requirement - Run:
 * Java 1.6+
-* NetBeans 7.4
+* NetBeans 7.4+
 
 ### Requirement - Build:
 * Java 1.7 (for master branch)
 * Java 1.6 (for 2.9.x branch)
 * Maven 2.x/3.x 
-* NetBeans 7.4
+* NetBeans 7.4+
 
 ### Branches:
 * master -- tracking Scala 2.10.x currently
@@ -189,7 +189,7 @@ The Project targets version 2.10.x of the scala release.
 
 * Add nbsbt to your plugin definition file. You can use either the global one at  **~/.sbt/0.13/plugins/plugins.sbt** or the project-specific one at **PROJECT_DIR/project/plugins.sbt**
 
-        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.1.0")
+        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.1.2")
 
 
 ## FAQ
@@ -197,6 +197,10 @@ The Project targets version 2.10.x of the scala release.
 **Q**: NetBeans' response becomes slower after a while.
 
 **A**: Edit your NetBeans configuration file (NetBeansInstallationPlace/etc/netbeans.conf), add -J-Xmx1024M (or bigger)
+
+**Q**: How to navigate sbt project's dependency sources.
+
+**A**: From version 1.6.3, this plugin supported to open ivy's sources jar. You may need to have sbt download the dependency's sources, please see http://www.scala-sbt.org/0.13.1/docs/Detailed-Topics/Library-Management.html#download-sources
 
 **Q**: I got:
 

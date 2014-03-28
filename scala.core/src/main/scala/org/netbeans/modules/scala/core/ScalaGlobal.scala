@@ -202,7 +202,7 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
     askForResponse(resp) { () =>
       val start = System.currentTimeMillis
       val rootScope = astVisit(source, rootTree)
-      log1.info("Visited " + source.file.file.getName + " in " + (System.currentTimeMillis - start) + "ms")
+      log1.info("Visited " + source.fileObject.getNameExt + " in " + (System.currentTimeMillis - start) + "ms")
       if (isCancelled(source)) None else Some(rootScope)
     }
   }
@@ -233,10 +233,10 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   private[core] def tryCancelSemantic(srcFile: SourceFile): Boolean = {
     if (srcFile != null && sourceToResponse.containsKey(srcFile)) {
       sourceToResponse.remove(srcFile)
-      log1.info("Will cancel semantic " + srcFile.file.file.getName)
+      log1.info("Will cancel semantic " + srcFile.path)
       true
     } else {
-      log1.info("Won't cancel semantic " + srcFile.file.file.getName + ", since it's not under semantic.")
+      log1.info("Won't cancel semantic " + srcFile.path + ", since it's not under semantic.")
       false
     }
   }
@@ -292,10 +292,10 @@ object ScalaGlobal {
 
   private val debug = false
 
-  /** project -> List([global, srcClasspath] */
+  /** project -> Map[global, srcClasspath] */
   private val projectToGlobals = new mutable.WeakHashMap[Project, mutable.HashMap[ScalaGlobal, ClassPath]]
   private var globalToListeners = Map[ScalaGlobal, List[FileChangeListener]]()
-  private var globalForStdLib: Option[ScalaGlobal] = None
+  private var _globalForStdLib: Option[ScalaGlobal] = None
   private var toResetGlobals = Set[ScalaGlobal]()
 
   case class NormalReason(msg: String) extends Throwable(msg)
@@ -308,8 +308,8 @@ object ScalaGlobal {
       case _                 => log.log(Level.WARNING, "Will reset global late due to:", reason)
     }
 
-    if (globalForStdLib.isDefined && global == globalForStdLib.get) {
-      globalForStdLib = None
+    if (_globalForStdLib.isDefined && global == _globalForStdLib.get) {
+      _globalForStdLib = None
     } else {
       projectToGlobals.keySet foreach { project =>
         val globals = projectToGlobals(project)
@@ -353,27 +353,46 @@ object ScalaGlobal {
     toResetGlobals = Set[ScalaGlobal]()
   }
 
+  def globalForStdLib = _globalForStdLib match {
+    case Some(x) => x
+    case None =>
+      val g = ScalaHome.getGlobalForStdLib
+      _globalForStdLib = Some(g)
+      g
+  }
+
   /**
    * Scala's global is not thread safed
    */
   def getGlobal(fo: FileObject): ScalaGlobal = synchronized {
     resetBadGlobals
 
-    val project = FileOwnerQuery.getOwner(fo)
-    if (project == null) {
-      // it may be a standalone file, or file in standard lib
-      return globalForStdLib getOrElse {
-        val g = ScalaHome.getGlobalForStdLib
-        globalForStdLib = Some(g)
-        g
-      }
+    val isArchiveFile = FileUtil.isArchiveFile(fo)
+    val project = if (isArchiveFile) {
+      FileOwnerQuery.getOwner(FileUtil.getArchiveRoot(fo))
+    } else {
+      FileOwnerQuery.getOwner(fo)
     }
 
-    projectToGlobals.get(project) map { globalToSrcCp =>
-      globalToSrcCp find { _._2.contains(fo) } match {
-        case Some(xy) => return xy._1
-        case None     => // create a new one
+    if (project == null) {
+      // it may be a standalone file, or file in standard lib
+      return globalForStdLib
+    }
+
+    if (isArchiveFile) {
+      projectToGlobals.get(project) match {
+        case Some(globalToSrcCp) =>
+          globalToSrcCp.headOption match {
+            case Some(x) => return x._1
+            case None    => return globalForStdLib
+          }
+        case None => return globalForStdLib
       }
+    } else {
+      for {
+        globalToSrcCp <- projectToGlobals.get(project)
+        (global, _) <- globalToSrcCp find (_._2.contains(fo))
+      } return global
     }
 
     // ----- need to create a new global:
@@ -421,16 +440,21 @@ object ScalaGlobal {
 
     // ----- set sourcepath, outpath
 
-    val srcOutDirsPath = srcCp.getRoots map { srcRoot => (FileUtil.toFile(srcRoot).getAbsolutePath, FileUtil.toFile(ProjectResources.findOutDir(project, srcRoot)).getAbsolutePath) }
-    // @Note do not add src path to global for test?, since the corresponding build/classes has been added to compCp
-    //val srcOutDirsPath = (if (isForTest) resource.testSrcOutDirsPath else resource.mainSrcOutDirsPath)
-    // @Note settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?\
-    // since Scala 2.10.0, this seems working. if not, we should global askForReload srcFiles later
-    srcOutDirsPath foreach { src_out =>
-      settings.outputDirs.add(src_out._1, src_out._2)
-      log.info("settings.outputDirs.add" + (src_out._1 -> src_out._2))
+    if (srcCp != null) {
+      val srcOutDirsPath = srcCp.getRoots map { srcRoot =>
+        (FileUtil.toFile(srcRoot).getAbsolutePath, FileUtil.toFile(ProjectResources.findOutDir(project, srcRoot)).getAbsolutePath)
+      }
+      settings.sourcepath.value = srcOutDirsPath.toList map (_._1) mkString (File.pathSeparator)
+
+      //val srcOutDirsPath = (if (isForTest) resource.testSrcOutDirsPath else resource.mainSrcOutDirsPath)
+      // @Note settings.outputDirs.add(src, out) seems cannot resolve symbols in other source files, why?\
+      // since Scala 2.10.0, this seems working. if not, we should global askForReload srcFiles later
+      srcOutDirsPath foreach { src_out =>
+        settings.outputDirs.add(src_out._1, src_out._2)
+        log.info("settings.outputDirs.add" + (src_out._1 -> src_out._2))
+      }
+      settings.sourcepath.value = srcOutDirsPath.toList map (_._1) mkString (File.pathSeparator)
     }
-    settings.sourcepath.value = srcOutDirsPath.toList map (_._1) mkString ("", File.pathSeparator, "")
 
     // we need at least one existed out path
     // if we do not set outdir explicitly, it will now point to ".", that's ok for presentation compiler
@@ -442,7 +466,9 @@ object ScalaGlobal {
     // to the constructor's param reporter, so we have to make sure only one reporter
     // is assigned to Global (during create new instance)
     val global = new ScalaGlobal(settings, ErrorReporter())
-    projectToGlobals.getOrElseUpdate(project, new mutable.HashMap[ScalaGlobal, ClassPath]) += (global -> srcCp)
+    if (srcCp != null) {
+      projectToGlobals.getOrElseUpdate(project, new mutable.HashMap[ScalaGlobal, ClassPath]) += (global -> srcCp)
+    }
 
     // listen to compCp's change
     if (compCp != null) {
