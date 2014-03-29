@@ -445,19 +445,12 @@ object ScalaSourceUtil {
 
   def findSourceFileObject(srcCpMine: ClassPath, srcCpTarget: ClassPath, srcPath: String): Option[FileObject] = {
     // find in own project's srcCp first
-    srcCpMine.findResource(srcPath) match {
-      case null =>
-        if (srcCpTarget == null) {
-          None
-        } else {
-          srcCpTarget.findResource(srcPath) match {
-            case null => None
-            case x    => Some(x)
-          }
-        }
-      case x => Some(x)
+    (srcCpMine, srcCpTarget) match {
+      case (null, null)         => None
+      case (x: ClassPath, null) => Option(srcCpMine.findResource(srcPath))
+      case (null, x: ClassPath) => Option(srcCpTarget.findResource(srcPath))
+      case _                    => Option(srcCpMine.findResource(srcPath)) orElse Option(srcCpTarget.findResource(srcPath))
     }
-
   }
 
   /** @see org.netbeans.api.java.source.SourceUtils#getDependentRoots */
@@ -792,10 +785,11 @@ object ScalaSourceUtil {
   }
 
   def getClassPath(fo: FileObject) = {
-    val bootCp = ClassPath.getClassPath(fo, ClassPath.BOOT)
-    val compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
+    // be ware of the following order:
     val srcCp = ClassPath.getClassPath(fo, ClassPath.SOURCE)
-    ClassPathSupport.createProxyClassPath(Array(bootCp, compCp, srcCp): _*)
+    val compCp = ClassPath.getClassPath(fo, ClassPath.COMPILE)
+    val bootCp = ClassPath.getClassPath(fo, ClassPath.BOOT)
+    ClassPathSupport.createProxyClassPath(Array(srcCp, compCp, bootCp): _*)
   }
 
   /** What's difference from getClassPath(fo: FileObject) ? */

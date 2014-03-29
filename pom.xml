@@ -348,6 +348,7 @@
             <id>debug-ide</id>
             <properties>
                 <nbm.run.arguments>-J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8888</nbm.run.arguments>
+                <!--nbm.run.arguments>-J-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8888</nbm.run.arguments-->
             </properties>
         </profile>
     </profiles>
