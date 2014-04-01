@@ -194,9 +194,16 @@ public class SourcePathProviderImpl extends SourcePathProvider {
                 }
             }
             
+            List<FileObject> allSourceRoots1 = new ArrayList<FileObject>(allSourceRoots.size());
+            for (FileObject fo: allSourceRoots) {
+                if (FileUtil.isArchiveFile(fo)) {
+                    allSourceRoots1.add(FileUtil.getArchiveRoot(fo));
+                } else {
+                    allSourceRoots1.add(fo);
+                }
+            }
             originalSourcePath = ClassPathSupport.createClassPath (
-                allSourceRoots.toArray 
-                    (new FileObject [allSourceRoots.size()])
+                allSourceRoots1.toArray(new FileObject [allSourceRoots1.size()])
             );
             projectSourceRoots = getSourceRoots(originalSourcePath);
             
@@ -208,11 +215,11 @@ public class SourcePathProviderImpl extends SourcePathProvider {
                     getRoots ();
                 int j, jj = roots.length;
                 for (j = 0; j < jj; j++)
-                    allSourceRoots.remove (roots [j]);
+                    allSourceRoots1.remove (roots [j]);
             }
             smartSteppingSourcePath = ClassPathSupport.createClassPath (
-                allSourceRoots.toArray 
-                    (new FileObject [allSourceRoots.size()])
+                allSourceRoots1.toArray 
+                    (new FileObject [allSourceRoots1.size()])
             );
         }
         
