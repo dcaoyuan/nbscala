@@ -24,7 +24,7 @@ Released builds can be found here [https://sourceforge.net/projects/erlybird/fil
 ### Installation
 Make sure you don't have an old version installed. (Check your netbeans installation for a 'nbscala' directory: if it exists, delete it.)
 
-1. Download the latest release at sourceforge.
+1. Download the latest release at plugins.netbeans.org.
 2. Extract all files into a directory.
 3. Start Netbeans.
 4. Select Tools -> Plugins -> Downloaded -> Add Plugins...
@@ -32,7 +32,7 @@ Make sure you don't have an old version installed. (Check your netbeans installa
 6. Accept the license and the installation of unsigned plugins. 
 
 ## Build Instructions
-Cause of the small group of people involved in the project we only supply updates for the latest netbeans version (7.2 at the moment).
+Cause of the small group of people involved in the project we only supply updates for the latest netbeans version.
 
 ### Requirement - Run:
 * Java 1.6+
@@ -180,8 +180,8 @@ The Project targets version 2.10.x of the scala release.
 
 ### How to
 
-* Install the newest nbscala plugins, [download directly](https://sourceforge.net/projects/erlybird/files/nb-scala) or [build by yourself](https://github.com/dcaoyuan/nbscala) on NetBeans 7.2+.
-* Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt> (nbsbt-plugin 1.1.0+ has been deployed to repo.scala-sbt.org, that means it will be automatilly resolved when you run sbt):
+* Install the newest nbscala plugins, [download directly](http://plugins.netbeans.org/plugin/54162) or [build by yourself](https://github.com/dcaoyuan/nbscala) on NetBeans 7.4+.
+* Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt> (nbsbt-plugin 1.1.2 has been deployed to repo.scala-sbt.org, that means it will be automatilly resolved when you run sbt):
 
         git clone git@github.com:dcaoyuan/nbsbt.git
         cd nbsbt
