@@ -132,7 +132,10 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
               case Some(x) if x.sourceFile != null =>
                 val srcsJar = FileUtil.toFileObject(x.sourceFile)
                 FileOwnerQuery.markExternalOwner(srcsJar, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
-                Array(srcsJar)
+                val srcsJarFo = if (FileUtil.isArchiveFile(srcsJar)) {
+                  FileUtil.getArchiveRoot(srcsJar)
+                } else srcsJar
+                Array(srcsJarFo)
               case _ =>
                 Array[FileObject]()
             }
