@@ -60,7 +60,7 @@ Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:r
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <nb.installation>${user.home}/myapps/netbeans-7.4-fordev</nb.installation>
+                <nb.installation>${user.home}/myapps/netbeans-8.0-fordev</nb.installation>
             </properties>
         </profile>
     </profiles>
