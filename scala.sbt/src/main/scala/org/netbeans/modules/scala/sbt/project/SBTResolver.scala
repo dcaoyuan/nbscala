@@ -199,7 +199,11 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                 case "lib" =>
                   val path = (entry \ "@path").text.trim.replace("\\", "/")
                   val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
-                  val libFile = new File(path)
+                  val libFile = new File(path) match {
+                    case x if x.isAbsolute => x
+                    case _                 => new File(projectDir, path)
+                  }
+
                   if (libFile.exists) {
                     if (isTest) {
                       testCps += libFile
