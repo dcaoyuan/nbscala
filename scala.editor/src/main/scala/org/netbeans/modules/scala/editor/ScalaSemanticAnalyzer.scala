@@ -40,8 +40,7 @@
 package org.netbeans.modules.scala.editor
 
 import java.util.logging.Logger
-import java.util.logging.Level
-import org.netbeans.api.lexer.{ TokenHierarchy }
+import org.netbeans.api.lexer.TokenHierarchy
 import org.netbeans.modules.csl.api.{ ElementKind, ColoringAttributes, OffsetRange, SemanticAnalyzer }
 import org.netbeans.modules.parsing.spi.{ Scheduler, SchedulerEvent }
 import org.netbeans.modules.scala.core.ScalaGlobal
@@ -201,7 +200,11 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
               case ref: global.ScalaRef =>
 
-                if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter || sym.isConstructor) {
+                if (sym.hasFlag(Flags.PACKAGE) || sym.isPackage) {
+
+                  coloringSet.add(ColoringAttributes.PACKAGE_PRIVATE)
+
+                } else if (sym.isClass || sym.isType || sym.isTrait || sym.isTypeParameter || sym.isConstructor) {
 
                   coloringSet.add(ColoringAttributes.CLASS)
 
@@ -251,7 +254,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
                       coloringSet.add(ColoringAttributes.CLASS)
 
                     case _ =>
-                      coloringSet.add(ColoringAttributes.METHOD)
+                      coloringSet.add(ColoringAttributes.CONSTRUCTOR) // method ref
                   }
 
                   if (ref.getKind == ElementKind.RULE) { // implicit call
