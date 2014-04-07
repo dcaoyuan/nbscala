@@ -24,7 +24,7 @@
     <fontcolor name="BlockComment" default="comment" />
     <fontcolor name="LineComment" default="comment" />
     <fontcolor name="DocComment" default="comment" />
-    <fontcolor name="CommentTag" forcolor="008b00" />
+    <fontcolor name="CommentTag" foreColor="008b00" />
 
     <fontcolor name="Final" foreColor="da70d6" />
     <fontcolor name="Override" foreColor="da70d6" />
@@ -79,7 +79,7 @@
     <fontcolor name="mod-enum" />
 
     <fontcolor name="mod-private" />
-    <fontcolor name="mod-package-private" forcolor="0000cd" /> <!-- packege name -->
+    <fontcolor name="mod-package-private" foreColor="0000cd" /> <!-- packege name -->
     <fontcolor name="mod-protected" />
 
     <fontcolor name="mod-regexp" foreColor="e9c062" />

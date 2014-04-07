@@ -147,7 +147,11 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
               case dfn: global.ScalaDfn =>
 
-                if (sym.isModule) {
+                if (sym.hasFlag(Flags.PACKAGE) || sym.isPackage) {
+
+                  coloringSet.add(ColoringAttributes.PACKAGE_PRIVATE)
+
+                } else if (sym.isModule) {
 
                   coloringSet.add(ColoringAttributes.CLASS)
                   coloringSet.add(ColoringAttributes.DECLARATION)

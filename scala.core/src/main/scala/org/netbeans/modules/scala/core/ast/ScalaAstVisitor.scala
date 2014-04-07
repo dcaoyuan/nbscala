@@ -262,6 +262,7 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
 
         case LabelDef(name, params, rhs) =>
           traverseTrees(params); traverse(rhs)
+
         case Import(expr, selectors) =>
           val qual = tree.symbol.tpe match {
             case analyzer.ImportType(expr0) => expr0
@@ -312,7 +313,8 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
               }
           }
 
-        //traverse(expr)
+          traverse(expr)
+
         case Annotated(annot, arg) =>
           traverse(annot); traverse(arg)
         case DocDef(comment, definition) =>
