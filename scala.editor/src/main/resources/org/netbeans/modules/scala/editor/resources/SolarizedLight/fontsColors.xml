@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fontscolors PUBLIC "-//NetBeans//DTD Editor Fonts and Colors settings 1.1//EN" "http://www.netbeans.org/dtds/EditorFontsColors-1_1.dtd">
+
+<fontscolors>
+    <!-- ScalaTokenId categories -->
+    <fontcolor name="CharacterLiteral" default="char" />
+    <fontcolor name="IntegerLiteral" default="number" />
+    <fontcolor name="FloatingPointLiteral" default="number" />
+    <fontcolor name="StringLiteral" default="string" />
+    <fontcolor name="Error" default="error" />
+    <fontcolor name="Identifier" default="identifier" />
+    <fontcolor name="Ws" default="whitespace" />
+    <fontcolor name="Keyword" default="keyword" />
+    <fontcolor name="Operator" default="operator" />
+    <fontcolor name="xml" foreColor="identifier" />
+
+    <fontcolor name="BlockComment" default="comment" />
+    <fontcolor name="LineComment" default="comment" />
+    <fontcolor name="DocComment" default="comment" />
+    <fontcolor name="CommentTag" foreColor="comment">
+        <font style="bold" />
+    </fontcolor>
+
+    <fontcolor name="True" foreColor="cb4b16" /> <!-- orange -->
+    <fontcolor name="False" foreColor="cb4b16" />
+    <fontcolor name="Abstract" foreColor="cb4b16" />
+    <fontcolor name="Final" foreColor="cb4b16" />
+    <fontcolor name="Implicit" foreColor="cb4b16" />
+    <fontcolor name="Lazy" foreColor="cb4b16" />
+    <fontcolor name="Override" foreColor="cb4b16" />
+    <fontcolor name="Private" foreColor="cb4b16" />
+    <fontcolor name="Protected" foreColor="cb4b16" />
+    <fontcolor name="Sealed" foreColor="cb4b16" />
+
+    <!-- This is intended for an embedded regular expression language -->
+    <!--
+    <fontcolor name="REGEXP_TEXT" foreColor="ff006f00" />
+    <fontcolor name="REGEXP_META" foreColor="ff006f00" />
+    <fontcolor name="REGEXP_INVALID" foreColor="ffff006b" strikeThrough="ffff006b" />
+    -->
+
+    <!--"semantic" highlighting:-->
+    <fontcolor name="mod-declaration">
+        <font style="bold" />
+    </fontcolor>
+    <fontcolor name="mod-static">
+        <font style="italic" />
+    </fontcolor>
+    <fontcolor name="mod-global">
+        <font style="italic" />
+    </fontcolor>
+    <fontcolor name="mod-public" underline="000000" />
+    <fontcolor name="mod-abstract">
+        <font style="italic" />
+    </fontcolor>
+    <fontcolor name="mod-deprecated" strikeThrough="586e75" /> <!-- base01 -->
+
+    <fontcolor name="mod-class" foreColor="b58900" /> <!-- yellow, Type -->
+
+    <fontcolor name="mod-method" foreColor="268bd2" /> <!-- blue, method def -->
+    <fontcolor name="mod-constructor" foreColor="586e75" /> <!-- base01, method ref -->
+    <fontcolor name="mod-custom1"> <!-- implicit method Ref -->
+        <font style="italic" />
+    </fontcolor>
+    <fontcolor name="mod-custom2" underline="0000ff" /> <!-- lazy val Ref/Dfn -->
+    <fontcolor name="mod-interface" default="comment" />
+    
+    <fontcolor name="mod-field" foreColor="586e75" /> <!-- base01, val -->
+    <fontcolor name="mod-local-variable" foreColor="d33682" /> <!-- magenta, var -->
+    <fontcolor name="mod-parameter" foreColor="859900" /> <!-- green, param -->
+
+    <fontcolor name="mod-unused" waveUnderlined="999999" />
+
+    <fontcolor name="mod-annotation-type" />
+    <fontcolor name="mod-enum" />
+
+    <fontcolor name="mod-private" />
+    <fontcolor name="mod-package-private" foreColor="6c71c4" /> <!-- violet, packege name -->
+    <fontcolor name="mod-protected" />
+
+    <fontcolor name="mod-regexp" foreColor="e9c062" />
+
+    <!--currently not used:-->
+    <!--    <fontcolor name="mod-type-parameter-declaration" bgColor="lightGray"/>
+    <fontcolor name="mod-type-parameter-use" bgColor="green"/>
+    <fontcolor name="mod-undefined" foreColor="red"/>-->
+
+    <!--mark occurrences:-->
+    <fontcolor name="mark-occurrences" bgColor="eceba3" />
+
+    <!-- JsCommentTokenId categories -->
+    <fontcolor name="js-comment-tag" default="comment" />
+    <fontcolor name="html-tag" default="comment" />
+    <fontcolor name="left-curly" default="comment" />
+    <fontcolor name="right-curly" default="comment" />
+
+</fontscolors>

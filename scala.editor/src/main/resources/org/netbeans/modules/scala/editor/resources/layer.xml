@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
 <filesystem>
     <folder name="Services">
         <folder name="MIMEResolver">
@@ -27,7 +27,21 @@
             </folder>
             <folder name="EmacsStandard">
                 <folder name="Defaults">
-                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="EmacsStandard/defaults.xml">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="EmacsStandard/fontsColors.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml">
+                    </file>
+                </folder>
+            </folder>
+            <folder name="SolarizedLight">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="SolarizedLight/fontsColors.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="SolarizedLight/defaults.xml">
                         <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
                     </file>
                 </folder>
@@ -75,6 +89,13 @@
                     <folder name="EmacsStandard">
                         <folder name="Defaults">
                             <file name="coloring.xml" url="EmacsStandard/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editor.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                    <folder name="SolarizedLight">
+                        <folder name="Defaults">
+                            <file name="colorings.xml" url="SolarizedLight/fontsColors.xml">
                                 <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editor.Bundle"/>
                             </file>
                         </folder>
