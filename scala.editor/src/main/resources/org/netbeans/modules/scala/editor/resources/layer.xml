@@ -46,6 +46,17 @@
                     </file>
                 </folder>
             </folder>
+            <folder name="SolarizedDark">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="SolarizedDark/fontsColors.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="SolarizedDark/defaults.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                    </file>
+                </folder>
+            </folder>
         </folder>
 
         <folder name="text">
@@ -96,6 +107,13 @@
                     <folder name="SolarizedLight">
                         <folder name="Defaults">
                             <file name="colorings.xml" url="SolarizedLight/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editor.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                    <folder name="SolarizedDark">
+                        <folder name="Defaults">
+                            <file name="colorings.xml" url="SolarizedDark/fontsColors.xml">
                                 <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.editor.Bundle"/>
                             </file>
                         </folder>

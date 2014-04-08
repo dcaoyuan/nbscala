@@ -48,7 +48,6 @@ import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ast.ScalaRootScope
 import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.netbeans.modules.scala.core.lexer.ScalaTokenId
-
 import scala.reflect.internal.Flags
 
 /**
