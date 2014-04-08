@@ -4,7 +4,7 @@
     <!-- see https://code.google.com/p/gnuemacscolorthemetest/source/browse/html/emacs-21-java.html?spec=svn7&r=3 -->
 
     <fontcolor name="default" foreColor="000000" bgColor="ffffff">
-        <font name="Monaco" size="12" style="plain" />
+        <font name="Monaco" size="13" style="plain" />
     </fontcolor>
     <fontcolor name="whitespace" />
     <fontcolor name="number" />

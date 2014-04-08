@@ -2,10 +2,6 @@
 <!DOCTYPE fontscolors PUBLIC "-//NetBeans//DTD Editor Fonts and Colors settings 1.1//EN" "http://www.netbeans.org/dtds/EditorFontsColors-1_1.dtd">
 
 <fontscolors>
-    <!-- See http://ui.netbeans.org/docs/ui/editor_fonts_colors/Editor_fonts_and_colors.htm#ruby -->
-    <!-- A couple of things are not accurate yet; globals are not bold, and method calls are
-    black and bold instead of green (which would be identical to fields) -->
-
     <!-- ScalaTokenId categories -->
     <fontcolor name="CharacterLiteral" default="char" />
     <fontcolor name="IntegerLiteral" default="number" />
@@ -16,9 +12,7 @@
     <fontcolor name="Ws" default="whitespace" />
     <fontcolor name="Keyword" default="keyword" />
     <fontcolor name="Operator" default="operator" />
-    <fontcolor name="TODO" foreColor="99006b">
-        <font style="bold" />
-    </fontcolor>
+    <fontcolor name="TODO" foreColor="99006b" />
     <fontcolor name="xml" foreColor="2e92c7" />
 
     <fontcolor name="BlockComment" default="comment" />
@@ -26,7 +20,10 @@
     <fontcolor name="DocComment" default="comment" />
     <fontcolor name="CommentTag" foreColor="008b00" />
 
+    <fontcolor name="Abstract" foreColor="da70d6" />
     <fontcolor name="Final" foreColor="da70d6" />
+    <fontcolor name="Implicit" foreColor="da70d6" />
+    <fontcolor name="Lazy" foreColor="da70d6" />
     <fontcolor name="Override" foreColor="da70d6" />
     <fontcolor name="Private" foreColor="da70d6" />
     <fontcolor name="Protected" foreColor="da70d6" />
@@ -34,21 +31,15 @@
 
     <!-- This is intended for an embedded regular expression language -->
     <!--
-    <fontcolor name="REGEXP_TEXT" foreColor="ff006f00"/>
-    <fontcolor name="REGEXP_META" foreColor="ff006f00">
-        <font style="bold"/>
-    </fontcolor>
-    <fontcolor name="REGEXP_INVALID" foreColor="ffff006b" strikeThrough="ffff006b" >
-        <font style="bold"/>
-    </fontcolor>
+    <fontcolor name="REGEXP_TEXT" foreColor="ff006f00" />
+    <fontcolor name="REGEXP_META" foreColor="ff006f00" />
+    <fontcolor name="REGEXP_INVALID" foreColor="ffff006b" strikeThrough="ffff006b" />
     -->
 
     <!--"semantic" highlighting:-->
-    <fontcolor name="mod-declaration">
-        <font style="bold" />
-    </fontcolor>
+    <fontcolor name="mod-declaration" />
     <fontcolor name="mod-static">
-        <font style="bold+italic" />
+        <font style="italic" />
     </fontcolor>
     <fontcolor name="mod-global">
         <font style="italic" />
@@ -93,12 +84,8 @@
     <fontcolor name="mark-occurrences" bgColor="eceba3" />
 
     <!-- JsCommentTokenId categories -->
-    <fontcolor name="js-comment-tag" default="comment">
-        <font style="bold" />
-    </fontcolor>
-    <fontcolor name="html-tag" default="comment">
-        <font style="bold" />
-    </fontcolor>
+    <fontcolor name="js-comment-tag" default="comment" />
+    <fontcolor name="html-tag" default="comment" />
     <fontcolor name="left-curly" default="comment" />
     <fontcolor name="right-curly" default="comment" />
 
