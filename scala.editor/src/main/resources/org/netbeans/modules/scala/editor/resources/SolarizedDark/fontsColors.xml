@@ -99,5 +99,8 @@
     <fontcolor name="line-number" foreColor="93a1a1" bgColor="073642" /> <!-- base1/base02 -->
     <fontcolor name="indent-guide-lines" foreColor="586e75" /> <!-- base01 -->
     <fontcolor name="text-limit-line-color" foreColor="586e75" /> <!-- base01 -->
+    <fontcolor name="caret-color-insert-mode" foreColor="white" />
+    <fontcolor name="caret-color-overwrite-mode" foreColor="white" />
+    <fontcolor name="selection" bgColor="eee8d5" /> <!-- base2 -->
 
 </fontscolors>

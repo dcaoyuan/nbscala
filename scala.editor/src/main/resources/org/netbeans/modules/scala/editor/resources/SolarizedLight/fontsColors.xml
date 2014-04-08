@@ -99,5 +99,6 @@
     <fontcolor name="line-number" foreColor="586e75" bgColor="eee8d5" /> <!-- base01/base2 -->
     <!--fontcolor name="indent-guide-lines" foreColor="93a1a1" /--> <!-- base1 -->
     <!--fontcolor name="text-limit-line-color" foreColor="93a1a1" /--> <!-- base1 -->
-
+    <fontcolor name="selection" bgColor="073642" /> <!-- base02 -->
+    
 </fontscolors>
