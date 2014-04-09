@@ -21,16 +21,16 @@
         <font style="bold" />
     </fontcolor>
 
-    <fontcolor name="True" foreColor="cb4b16" /> <!-- orange -->
-    <fontcolor name="False" foreColor="cb4b16" />
-    <fontcolor name="Abstract" foreColor="cb4b16" />
-    <fontcolor name="Final" foreColor="cb4b16" />
-    <fontcolor name="Implicit" foreColor="cb4b16" />
-    <fontcolor name="Lazy" foreColor="cb4b16" />
-    <fontcolor name="Override" foreColor="cb4b16" />
-    <fontcolor name="Private" foreColor="cb4b16" />
-    <fontcolor name="Protected" foreColor="cb4b16" />
-    <fontcolor name="Sealed" foreColor="cb4b16" />
+    <fontcolor name="True" foreColor="6c71c4" /> <!-- violet -->
+    <fontcolor name="False" foreColor="6c71c4" />
+    <fontcolor name="Abstract" foreColor="6c71c4" />
+    <fontcolor name="Final" foreColor="6c71c4" />
+    <fontcolor name="Implicit" foreColor="6c71c4" />
+    <fontcolor name="Lazy" foreColor="6c71c4" />
+    <fontcolor name="Override" foreColor="6c71c4" />
+    <fontcolor name="Private" foreColor="6c71c4" />
+    <fontcolor name="Protected" foreColor="6c71c4" />
+    <fontcolor name="Sealed" foreColor="6c71c4" />
 
     <!-- This is intended for an embedded regular expression language -->
     <!--
@@ -75,7 +75,7 @@
     <fontcolor name="mod-enum" />
 
     <fontcolor name="mod-private" />
-    <fontcolor name="mod-package-private" foreColor="6c71c4" /> <!-- violet, packege name -->
+    <fontcolor name="mod-package-private" foreColor="cb4b16" /> <!-- orange, packege name -->
     <fontcolor name="mod-protected" />
 
     <fontcolor name="mod-regexp" foreColor="e9c062" />

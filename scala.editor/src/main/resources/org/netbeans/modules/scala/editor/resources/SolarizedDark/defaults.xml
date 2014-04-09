@@ -31,7 +31,7 @@
     <fontcolor name="number" foreCorlor="2aa198" /> <!-- cyan -->
     <fontcolor name="char" foreColor="2aa198" /> <!-- cyan -->
     <fontcolor name="string" foreColor="2aa198" /> <!-- cyan -->
-    <fontcolor name="keyword" foreColor="cb4b16"> <!-- orange -->
+    <fontcolor name="keyword" foreColor="6c71c4"> <!-- voilet -->
         <font style="bold" />
     </fontcolor>
     <fontcolor name="comment" foreColor="586e75" /> <!-- base01 -->
