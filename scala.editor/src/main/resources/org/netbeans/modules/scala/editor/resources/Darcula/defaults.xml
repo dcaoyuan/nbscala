@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fontscolors PUBLIC "-//NetBeans//DTD Editor Fonts and Colors settings 1.1//EN" "http://www.netbeans.org/dtds/EditorFontsColors-1_1.dtd">
+<fontscolors>
+    <!-- @see http://blog.jetbrains.com/idea/2012/12/intellij-idea-12-is-available-for-download/
+         @see http://eclipsecolorthemes.org/?view=theme&id=12886
+         @see https://github.com/JetBrains/intellij-community/blob/master/colorSchemes/src/colorSchemes/Darcula.xml
+    -->
+
+    <fontcolor name="default" foreColor="a9b7c6" bgColor="2b2b2b"> 
+        <font name="Monospaced" size="13" style="plain" />
+    </fontcolor>
+    <fontcolor name="number" foreCorlor="6897bb" /> 
+    <fontcolor name="char" foreColor="6a8759" /> 
+    <fontcolor name="string" foreColor="6a8759" /> 
+    <fontcolor name="keyword" foreColor="cc7832"> 
+        <font style="bold" />
+    </fontcolor>
+    <fontcolor name="comment" foreColor="629755" /> 
+    <fontcolor name="error" foreColor="657b83" waveUnderlined="ff3333" />
+    <fontcolor name="method" default="identifier" />
+    <fontcolor name="field" default="identifier" />
+    <fontcolor name="separator" />
+    <fontcolor name="identifier" />
+    <fontcolor name="whitespace" />
+    <fontcolor name="markup-attribute-value" default="string" />
+    <fontcolor name="markup-element" default="keyword" />
+    <fontcolor name="markup-attribute" default="field" />
+    <fontcolor name="entity-reference" default="default" />
+    
+</fontscolors>
