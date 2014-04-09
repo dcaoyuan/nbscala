@@ -16,7 +16,7 @@
         <folder name="FontsColors">
             <folder name="Twilight">
                 <folder name="Defaults">
-                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="Twilight/editor.xml">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="Twilight/fontsColors.xml">
                         <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
                         <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
                     </file>
