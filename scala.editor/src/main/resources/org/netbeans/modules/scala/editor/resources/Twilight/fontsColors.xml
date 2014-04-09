@@ -16,7 +16,7 @@
     <fontcolor name="Ws" default="whitespace" />
     <fontcolor name="Keyword" default="keyword" />
     <fontcolor name="Operator" default="operator" />
-    <fontcolor name="xml" default="identifier" />
+    <fontcolor name="xml" default="keyword" />
 
     <fontcolor name="BlockComment" default="comment" />
     <fontcolor name="LineComment" default="comment" />
