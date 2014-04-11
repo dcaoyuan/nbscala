@@ -12,12 +12,12 @@
     <fontcolor name="Ws" default="whitespace" />
     <fontcolor name="Keyword" default="keyword" />
     <fontcolor name="Operator" default="operator" />
-    <fontcolor name="xml" foreColor="identifier" />
+    <fontcolor name="xml" default="keyword" />
 
     <fontcolor name="BlockComment" default="comment" />
     <fontcolor name="LineComment" default="comment" />
     <fontcolor name="DocComment" default="comment" />
-    <fontcolor name="CommentTag" foreColor="comment">
+    <fontcolor name="CommentTag" default="comment">
         <font style="bold" />
     </fontcolor>
 
@@ -62,12 +62,11 @@
     <fontcolor name="mod-custom1"> <!-- implicit method Ref -->
         <font style="italic" />
     </fontcolor>
-    <fontcolor name="mod-custom2" underline="268bd2" /> <!-- blue lazy val Ref/Dfn -->
-    <fontcolor name="mod-interface" default="comment" />
-    
-    <fontcolor name="mod-field" foreColor="268bd2" /> <!-- blue, val -->
+ 
+    <fontcolor name="mod-custom2" underline="859900" /> <!-- green lazy val Ref/Dfn -->
+    <fontcolor name="mod-field" foreColor="859900" /> <!-- green val -->
     <fontcolor name="mod-local-variable" foreColor="d33682" /> <!-- magenta, var -->
-    <fontcolor name="mod-parameter" foreColor="859900" /> <!-- green, param -->
+    <fontcolor name="mod-parameter" foreColor="268bd2" /> <!-- blue param -->
 
     <fontcolor name="mod-unused" waveUnderlined="999999" />
 
@@ -78,6 +77,7 @@
     <fontcolor name="mod-package-private" foreColor="cb4b16" /> <!-- orange, packege name -->
     <fontcolor name="mod-protected" />
 
+    <fontcolor name="mod-interface" default="comment" />
     <fontcolor name="mod-regexp" foreColor="e9c062" />
 
     <!--currently not used:-->
