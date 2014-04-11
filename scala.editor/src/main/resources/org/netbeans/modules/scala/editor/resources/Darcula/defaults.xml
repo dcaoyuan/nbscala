@@ -12,9 +12,7 @@
     <fontcolor name="number" foreCorlor="6897bb" /> 
     <fontcolor name="char" foreColor="6a8759" /> 
     <fontcolor name="string" foreColor="6a8759" /> 
-    <fontcolor name="keyword" foreColor="cc7832"> 
-        <font style="bold" />
-    </fontcolor>
+    <fontcolor name="keyword" foreColor="cc7832" /> 
     <fontcolor name="comment" foreColor="629755" /> 
     <fontcolor name="error" foreColor="657b83" waveUnderlined="ff3333" />
     <fontcolor name="method" default="identifier" />
