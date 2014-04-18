@@ -31,8 +31,6 @@
                         <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
                         <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
                     </file>
-                    <file name="org-netbeans-modules-defaults-token-colorings.xml">
-                    </file>
                 </folder>
             </folder>
             <folder name="SolarizedLight">
@@ -181,8 +179,8 @@
                         <attr name="originalFile" stringvalue="Actions/Scala/org-netbeans-modules-scala-editor-imports-FixImportsAction.instance"/>
                         <attr name="position" intvalue="801"/>
                     </file>
-
                 </folder>
+        
                 <folder name="Toolbars">
                     <folder name="Default">
                         <file name="Separator-before-comment.instance">

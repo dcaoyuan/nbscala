@@ -15,7 +15,6 @@ import org.netbeans.modules.scala.editor.spi.ScalariformPrefsProvider
 import scalariform.formatter.preferences.AlignParameters
 import scalariform.formatter.preferences.AlignSingleLineCaseStatements
 import scalariform.formatter.preferences.FormattingPreferences
-import scalariform.formatter.preferences.IFormattingPreferences
 import scalariform.formatter.preferences.IndentSpaces
 import scalariform.formatter.preferences.RewriteArrowSymbols
 import scalariform.parser.ScalaParserException
@@ -116,6 +115,21 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
       case _ => null
     }
   }
+
+  /**
+   * @Note should override it:
+   * WARNING [org.netbeans.core.spi.multiview.text.MultiViewCloneableEditor]: Need
+   * to override toString() to contain the file name in o.n.api.action.Savable
+   * class org.netbeans.modules.csl.core.GsfDataObject$GenericEditorSupport$Environment$SaveSupport
+   * with lookup [/home/dcaoyuan/myprjs/nbscala/scala.editor/src/main/scala/org/netbeans/modules/scala/editor/ScalaReformatter.scala@898be162:566f7588,
+   * org.netbeans.modules.csl.core.GsfDataNode[name=ScalaReformatter; displayName=ScalaReformatter.scala]
+   * [Name=ScalaReformatter, displayName=ScalaReformatter.scala],
+   * org.netbeans.modules.csl.core.GsfDataObject@2c6e77c4[/home/dcaoyuan/myprjs/nbscala/scala.editor/src/main/scala/org/netbeans/modules/scala/editor/ScalaReformatter.scala@898be162:566f7588],
+   * org.netbeans.modules.csl.core.GsfDataObject$GenericEditorSupport$Environment$SaveSupport@b6d0d86,
+   * org.netbeans.core.multiview.MultiViewTopComponentLookup$LookupProxyActionMap@22b1d509,
+   * CES: DocumentOpenClose: GenericEditorSupport@1314970463, documentStatus=OPENED, docRef=(GsfDocument@1057563712)]
+   */
+  override def toString = "Scala Reformatter"
 }
 
 object ScalaReformatter {
