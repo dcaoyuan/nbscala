@@ -200,7 +200,7 @@ The Project targets version 2.10.x of the scala release.
 
 **Q**: How to navigate sbt project's dependency sources.
 
-**A**: From version 1.6.3, this plugin supported to open ivy's sources jar. You may need to have sbt download the dependency's sources, please see http://www.scala-sbt.org/0.13.1/docs/Detailed-Topics/Library-Management.html#download-sources
+**A**: From version 1.6.3, this plugin supported to open ivy's sources jar. You may need to have sbt download the dependency's sources, please see http://www.scala-sbt.org/0.13.1/docs/Detailed-Topics/Library-Management.html#download-sources. Hint: run "updateClassifiers"
 
 **Q**: I got:
 
