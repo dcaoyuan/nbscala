@@ -48,6 +48,7 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
     COMMAND_SBT_CONSOLE,
     COMMAND_SCALA_CONSOLE,
     COMMAND_SBT_RELOAD,
+    COMMAND_SBT_UPDATE_CLASSIFIERS,
     COMMAND_BUILD,
     COMMAND_REBUILD,
     COMMAND_CLEAN,
@@ -76,6 +77,12 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
         val sbtResolver = project.getLookup.lookup(classOf[SBTResolver])
         sbtResolver.isResolvedOrResolving = false
         sbtResolver.triggerSbtResolution
+
+      case COMMAND_SBT_UPDATE_CLASSIFIERS =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
+        val commands = selectProject ::: List("updateClassifiers")
+        SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false)()
 
       case COMMAND_BUILD =>
         ProjectManager.getDefault.saveProject(project)
@@ -237,6 +244,7 @@ object SBTActionProvider {
   val COMMAND_SBT_CONSOLE = "sbt.console"
   val COMMAND_SCALA_CONSOLE = "scala.console"
   val COMMAND_SBT_RELOAD = "sbt.reload"
+  val COMMAND_SBT_UPDATE_CLASSIFIERS = "sbt.updateclassifiers"
 
   val COMMAND_BUILD = ActionProvider.COMMAND_BUILD // compile
   val COMMAND_REBUILD = ActionProvider.COMMAND_REBUILD // clean and compile
