@@ -23,14 +23,17 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
       case LOOKING_FOR_FIRST_ESC_CHAR =>
         data match {
           case FIRST_ESC_CHAR =>
-            buffer(pos) = data.toByte; pos += 1
+            buffer(pos) = data.toByte
+            pos += 1
+
             state = LOOKING_FOR_SECOND_ESC_CHAR
           case _ =>
             out.write(data)
         }
 
       case LOOKING_FOR_SECOND_ESC_CHAR =>
-        buffer(pos) = data.toByte; pos += 1
+        buffer(pos) = data.toByte
+        pos += 1
 
         data match {
           case SECOND_ESC_CHAR =>
@@ -42,7 +45,8 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
         }
 
       case LOOKING_FOR_NEXT_ARG =>
-        buffer(pos) = data.toByte; pos += 1
+        buffer(pos) = data.toByte
+        pos += 1
 
         data match {
           case '"' =>
@@ -58,11 +62,12 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
           case '=' =>
             options += '='
           case _ =>
-            reset(processEscapeCommand(options, data))
+            reset(processEscapeCommand(options.toArray, data))
         }
 
       case LOOKING_FOR_INT_ARG_END =>
-        buffer(pos) = data.toByte; pos += 1
+        buffer(pos) = data.toByte
+        pos += 1
 
         data match {
           case _ if '0' <= data && data <= '9' =>
@@ -74,12 +79,13 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
               case ';' =>
                 state = LOOKING_FOR_NEXT_ARG
               case _ =>
-                reset(processEscapeCommand(options, data))
+                reset(processEscapeCommand(options.toArray, data))
             }
         }
 
       case LOOKING_FOR_STR_ARG_END =>
-        buffer(pos) = data.toByte; pos += 1
+        buffer(pos) = data.toByte
+        pos += 1
 
         data match {
           case '"' =>
@@ -90,12 +96,13 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
               case ';' =>
                 state = LOOKING_FOR_NEXT_ARG
               case _ =>
-                reset(processEscapeCommand(options, data))
+                reset(processEscapeCommand(options.toArray, data))
             }
         }
 
       case LOOKING_FOR_OSC_COMMAND =>
-        buffer(pos) = data.toByte; pos += 1
+        buffer(pos) = data.toByte
+        pos += 1
 
         data match {
           case _ if '0' <= data && data <= '9' =>
@@ -106,7 +113,8 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
         }
 
       case LOOKING_FOR_OSC_COMMAND_END =>
-        buffer(pos) = data.toByte; pos += 1
+        buffer(pos) = data.toByte
+        pos += 1
 
         data match {
           case ';' =>
@@ -123,13 +131,14 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
         }
 
       case LOOKING_FOR_OSC_PARAM =>
-        buffer(pos) = data.toByte; pos += 1
+        buffer(pos) = data.toByte
+        pos += 1
 
         data match {
           case BEL =>
             val value = new String(buffer, startOfValue, (pos - 1) - startOfValue, "UTF-8")
             options += value
-            reset(processOperatingSystemCommand(options))
+            reset(processOperatingSystemCommand(options.toArray))
           case FIRST_ESC_CHAR =>
             state = LOOKING_FOR_ST
           case _ =>
@@ -137,13 +146,14 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
         }
 
       case LOOKING_FOR_ST =>
-        buffer(pos) = data.toByte; pos += 1
+        buffer(pos) = data.toByte
+        pos += 1
 
         data match {
           case SECOND_ST_CHAR =>
             val value = new String(buffer, startOfValue, (pos - 2) - startOfValue, "UTF-8")
             options += value
-            reset(processOperatingSystemCommand(options))
+            reset(processOperatingSystemCommand(options.toArray))
           case _ =>
             state = LOOKING_FOR_OSC_PARAM
         }
@@ -178,7 +188,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
    * @return true if the escape command was processed.
    */
   @throws(classOf[IOException])
-  private def processEscapeCommand(options: ArrayBuffer[Any], command: Int): Boolean = {
+  private def processEscapeCommand(options: Array[_], command: Int): Boolean = {
     try {
       command match {
         case 'A' =>
@@ -209,7 +219,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
           processEraseScreen(optionInt(options, 0, 0))
           true
         case 'K' =>
-          processEraseLine(optionInt(options, 0, 0))
+          processEraseInLine(optionInt(options, 0, 0))
           true
         case 'S' =>
           processScrollUp(optionInt(options, 0, 1))
@@ -219,39 +229,26 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
           true
         case 'm' =>
           // all options should be ints...
-          var count = 0
-          options foreach {
-            case value: Int =>
-              count += 1
-              value match {
-                case _ if 30 <= value && value <= 37 =>
-                  processSetForegroundColor(value - 30)
-                case _ if 40 <= value && value <= 47 =>
-                  processSetBackgroundColor(value - 40)
-                case 39 =>
-                  processDefaultTextColor
-                case 49 =>
-                  processDefaultBackgroundColor
-                case 0 =>
-                  processAttributeRest
-                case _ =>
-                  processSetAttribute(value)
-              }
-            case null =>
-            // ginore
-            case _ =>
-              throw new IllegalArgumentException()
+          options match {
+            case Array(0, _*)                             => processAttributeRest()
+            case Array(39, _*)                            => processDefaultTextColor()
+            case Array(40, _*)                            => processDefaultBackgroundColor()
+            case Array(38, 5, x: Int, _*)                 => processExtendedSetForegroundColor(x)
+            case Array(38, 2, r: Int, g: Int, b: Int, _*) => processExtendedSetForegroundColorRGB(r, g, b)
+            case Array(48, 5, x: Int, _*)                 => processExtendedSetBackgroundColor(x)
+            case Array(48, 2, r: Int, g: Int, b: Int, _*) => processExtendedSetBackgroundColorRGB(r, g, b)
+            case Array(x: Int, _*) if 30 <= x && x <= 37  => processSetForegroundColor(x - 30)
+            case Array(x: Int, _*) if 40 <= x && x <= 47  => processSetBackgroundColor(x - 40)
+            case Array(x: Int, _*)                        => processSetAttribute(x)
+            case _                                        => throw new IllegalArgumentException()
           }
 
-          if (count == 0) {
-            processAttributeRest
-          }
           true
         case 's' =>
-          processSaveCursorPosition
+          processSaveCursorPosition()
           true
         case 'u' =>
-          processRestoreCursorPosition
+          processRestoreCursorPosition()
           true
         case 'n' if optionInt(options, 0, -1) == 6 =>
           processReportCursorPosition
@@ -278,7 +275,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
    * @return true if the operating system command was processed.
    */
   @throws(classOf[IOException])
-  private def processOperatingSystemCommand(options: ArrayBuffer[Any]): Boolean = {
+  private def processOperatingSystemCommand(options: Array[_]): Boolean = {
     val command = optionInt(options, 0)
     val label = options(1).asInstanceOf[String]
     // for command > 2 label could be composed (i.e. contain ';'), but we'll leave
@@ -323,7 +320,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   protected def processEraseScreen(eraseOption: Int) {}
 
   @throws(classOf[IOException])
-  protected def processEraseLine(eraseOption: Int) {}
+  protected def processEraseInLine(eraseOption: Int) {}
 
   @throws(classOf[IOException])
   protected def processSetAttribute(attribute: Int) {}
@@ -339,6 +336,18 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
 
   @throws(classOf[IOException])
   protected def processDefaultBackgroundColor() {}
+
+  @throws(classOf[IOException])
+  protected def processExtendedSetForegroundColor(color: Int) {}
+
+  @throws(classOf[IOException])
+  protected def processExtendedSetForegroundColorRGB(r: Int, g: Int, b: Int) {}
+
+  @throws(classOf[IOException])
+  protected def processExtendedSetBackgroundColor(color: Int) {}
+
+  @throws(classOf[IOException])
+  protected def processExtendedSetBackgroundColorRGB(r: Int, g: Int, b: Int) {}
 
   @throws(classOf[IOException])
   protected def processAttributeRest() {}
@@ -379,7 +388,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
   @throws(classOf[IOException])
   protected def processCursorUp(count: Int) {}
 
-  protected def processUnknownExtension(options: ArrayBuffer[Any], command: Int) {}
+  protected def processUnknownExtension(options: Array[_], command: Int) {}
 
   protected def processChangeIconNameAndWindowTitle(label: String) {
     processChangeIconName(label)
@@ -392,7 +401,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
 
   protected def processUnknownOperatingSystemCommand(command: Int, param: String) {}
 
-  private def optionInt(options: ArrayBuffer[Any], index: Int): Int = {
+  private def optionInt(options: Array[_], index: Int): Int = {
     if (options.size > index) {
       options(index) match {
         case value: Int => value
@@ -403,7 +412,7 @@ class AnsiOutputStream(os: OutputStream) extends FilterOutputStream(os) {
     }
   }
 
-  private def optionInt(options: ArrayBuffer[Any], index: Int, defaultValue: Int): Int = {
+  private def optionInt(options: Array[_], index: Int, defaultValue: Int): Int = {
     if (options.size > index) {
       options(index) match {
         case value: Int => value
@@ -478,15 +487,6 @@ object Ansi {
 
   trait Attr
 
-  abstract class Color(val value: Int, name: String) extends Attr {
-    def fg = value + 30
-    def bg = value + 40
-    def fgBright = value + 90
-    def bgBright = value + 100
-
-    override def toString = name
-  }
-
   object Color {
     case object BLACK extends Color(0, "BLACK")
     case object RED extends Color(1, "RED")
@@ -499,7 +499,12 @@ object Ansi {
     case object DEFAULT extends Color(9, "DEFAULT")
   }
 
-  abstract class Attribute(val value: Int, name: String) extends Attr {
+  abstract class Color(val value: Int, name: String) extends Attr {
+    def fg = value + 30
+    def bg = value + 40
+    def fgBright = value + 90
+    def bgBright = value + 100
+
     override def toString = name
   }
 
@@ -524,7 +529,7 @@ object Ansi {
     case object STRIKETHROUGH_OFF extends Attribute(29, "STRIKETHROUGH_OFF")
   }
 
-  abstract class Erase(val value: Int, name: String) extends Attr {
+  abstract class Attribute(val value: Int, name: String) extends Attr {
     override def toString = name
   }
 
@@ -534,23 +539,8 @@ object Ansi {
     case object ALL extends Erase(2, "ALL")
   }
 
-  abstract class Code(a: Attr, name: String, background: Boolean) {
-    def this(n: Attr, name: String) = this(n, name, false)
-
-    Code.nameToValue += name -> this
-
-    //
-    // TODO: Find a better way to keep Code in sync with Color/Attribute/Erase
-    //
-
-    def isColor = a.isInstanceOf[Ansi.Color]
-    def getColor = a.asInstanceOf[Ansi.Color]
-
-    def isAttribute = a.isInstanceOf[Attribute]
-    def getAttribute = a.asInstanceOf[Attribute]
-
-    def isBackground = background
-
+  abstract class Erase(val value: Int, name: String) extends Attr {
+    override def toString = name
   }
 
   object Code {
@@ -610,4 +600,23 @@ object Ansi {
     case object BOLD extends Code(Attribute.INTENSITY_BOLD, "BOLD")
     case object FAINT extends Code(Attribute.INTENSITY_FAINT, "FAINT")
   }
+
+  abstract class Code(a: Attr, name: String, background: Boolean) {
+    def this(n: Attr, name: String) = this(n, name, false)
+
+    Code.nameToValue += name -> this
+
+    //
+    // TODO: Find a better way to keep Code in sync with Color/Attribute/Erase
+    //
+
+    def isColor = a.isInstanceOf[Ansi.Color]
+    def getColor = a.asInstanceOf[Ansi.Color]
+
+    def isAttribute = a.isInstanceOf[Attribute]
+    def getAttribute = a.asInstanceOf[Attribute]
+
+    def isBackground = background
+  }
+
 }

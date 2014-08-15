@@ -31,8 +31,10 @@ import javax.swing.text.StyleConstants
 import javax.swing.text.StyledDocument
 import scala.collection.mutable
 
+final case class StyledText(text: String, style: AttributeSet)
+
 trait ConsoleOutputLineParser {
-  def parseLine(line: String): Array[(String, AttributeSet)]
+  def parseLine(line: String): Array[StyledText]
 }
 
 class ConsoleCapturer {
@@ -169,8 +171,10 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   }
 
   /** buffer which will be used for the next line */
-  private val buf = new StringBuffer(1000)
-  private val linesBuf = new mutable.ArrayBuffer[String]()
+  private val buf = new StringBuilder(1000)
+  private val styles = new mutable.HashMap[Int, AttributeSet]()
+  private val linesBuf = new mutable.ArrayBuffer[Array[StyledText]]()
+  private val textsBuf = new mutable.ArrayBuffer[StyledText]()
   private var isWaitingUserInput = false
 
   /** override me to enable it, -1 means no trigger */
@@ -191,13 +195,26 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     x
   }
 
-  var currentStyle = defaultStyle
+  private var prevStyle = defaultStyle
+  private var _currStyle = defaultStyle
+  def currStyle = _currStyle
+  def currStyle_=(x: SimpleAttributeSet) {
+    prevStyle = _currStyle
+    _currStyle = x
+  }
+
+  protected def copyStyle(style: AttributeSet) = {
+    val x = new SimpleAttributeSet()
+    StyleConstants.setForeground(x, style.getAttribute(StyleConstants.Foreground).asInstanceOf[Color])
+    StyleConstants.setBackground(x, style.getAttribute(StyleConstants.Background).asInstanceOf[Color])
+    x
+  }
 
   /**
    * override to define custom line parser
    */
   protected val lineParser = new ConsoleOutputLineParser {
-    def parseLine(line: String): Array[(String, AttributeSet)] = Array((line, defaultStyle))
+    def parseLine(line: String): Array[StyledText] = Array(StyledText(line, defaultStyle))
   }
 
   val pipedOut = new PrintStream(new PipedOutputStream(pipedIn))
@@ -233,11 +250,11 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     }
   }
 
-  if (welcome ne null) {
+  if (welcome != null) {
     val messageStyle = new SimpleAttributeSet()
     StyleConstants.setBackground(messageStyle, area.getForeground)
     StyleConstants.setForeground(messageStyle, area.getBackground)
-    overwrite(welcome, messageStyle)
+    overwrite(StyledText(welcome, messageStyle))
   }
 
   /**
@@ -256,8 +273,8 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
 
   @throws(classOf[IOException])
   override def close() {
-    flush
-    handleClose
+    flush()
+    handleClose()
   }
 
   /**
@@ -280,18 +297,27 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   @throws(classOf[IOException])
   override def write(b: Array[Byte]) {
     isWaitingUserInput = false
+    if (currStyle != prevStyle) {
+      styles(buf.length) = copyStyle(currStyle)
+    }
     buf.append(new String(b, 0, b.length))
   }
 
   @throws(classOf[IOException])
   override def write(b: Array[Byte], offset: Int, length: Int) {
     isWaitingUserInput = false
+    if (currStyle != prevStyle) {
+      styles(buf.length) = copyStyle(currStyle)
+    }
     buf.append(new String(b, offset, length))
   }
 
   @throws(classOf[IOException])
   override def write(b: Int) {
     isWaitingUserInput = false
+    if (currStyle != prevStyle) {
+      styles(buf.length) = copyStyle(currStyle)
+    }
     buf.append(b.toChar)
   }
 
@@ -307,9 +333,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
    *          line.length should > 0 (with at least one char)
    */
   protected[console] def doFlushWith(isCarryOut: Boolean)(postAction: => Unit) {
-    val text = buf.toString
-    buf.delete(0, buf.length)
-    val (lines, nonLineTeminatedText) = readLines(text)
+    val (lines, nonLineTeminatedText) = toLines(buf)
 
     if (isCarryOut) {
       isWaitingUserInput = nonLineTeminatedText.length > 0
@@ -328,9 +352,9 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
             postAction
             if (theIsWaitingUserInput) {
               val input = getInputingLine
-              if (CompleteTriggerChar != -1 &&
-                input.length > 0 &&
-                input.charAt(input.length - 1) == CompleteTriggerChar) {
+              if (CompleteTriggerChar != -1
+                && input.length > 0
+                && input.charAt(input.length - 1) == CompleteTriggerChar) {
                 terminalInput.invokeCompleteAction
               }
             }
@@ -340,7 +364,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
         }
       })
     } else {
-      lines foreach outputCapturer.append
+      lines.flatten map (_.text) foreach outputCapturer.append
       val theIsWaitingUserInput = isWaitingUserInput // keep a copy for async call
       SwingUtilities.invokeLater(new Runnable() {
         def run() {
@@ -364,38 +388,51 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
    * Read lines from buf, keep not-line-completed chars in buf
    * @return (lines, non-teminated line ie. current input line)
    */
-  private def readLines(buf: String): (Array[String], String) = {
-    val len = buf.length
-    var newLineOffset = 0
-    var readOffset = -1 // offset that has read to lines
+  private def toLines(buf: StringBuilder): (Array[Array[StyledText]], String) = {
+    var currStyle: AttributeSet = defaultStyle
+    var newTextPos = 0
+    val l = buf.length
     var i = 0
-    while (i < len) {
+    while (i < l) {
       val c = buf.charAt(i)
+      val style = styles.getOrElse(i, currStyle)
+
+      if (style != currStyle && !(c == '\n' || c == '\r')) {
+        val text = buf.substring(newTextPos, i)
+        textsBuf += StyledText(text, copyStyle(currStyle))
+        currStyle = style
+        newTextPos = i
+      }
+
       if (c == '\n' || c == '\r') {
-        // trick: '\u0000' a char that is non-equalable with '\n' or '\r'
-        val c1 = if (i + 1 < len) buf.charAt(i + 1) else '\u0000'
-        val line = buf.substring(newLineOffset, i) + "\n" // strip '\r' for Windows
-        if (c == '\n' && c1 == '\r' | c == '\r' && c1 == '\n') {
-          i += 1 // bypass '\r' for Windows
+        val text = buf.substring(newTextPos, i) + "\n" // strip '\r' for Windows
+        textsBuf += StyledText(text, copyStyle(currStyle))
+        // trick: '\u0000' is a char that is non-equalable with '\n' or '\r'
+        val c1 = if (i + 1 < l) buf.charAt(i + 1) else '\u0000'
+        if (c == '\n' && c1 == '\r' || c == '\r' && c1 == '\n') {
+          i += 1 // bypass c1, which could be '\r' for Windows
         }
-        linesBuf += line
-        readOffset = i
-        newLineOffset = i + 1
+
+        linesBuf += textsBuf.toArray
+        textsBuf.clear
+        newTextPos = i + 1 // strip c 
       }
 
       i += 1
     }
 
-    val rest = buf.substring(readOffset + 1, buf.length)
+    val rest = buf.substring(newTextPos, buf.length)
 
     val lines = linesBuf.toArray
     linesBuf.clear
+    styles.clear
+    buf.delete(0, buf.length)
 
     (lines, rest)
   }
 
   @throws(classOf[Exception])
-  private def writeLines(lines: Array[String]) {
+  private def writeLines(lines: Array[Array[StyledText]]) {
     lines foreach writeLine
   }
 
@@ -403,8 +440,8 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
    * Write a line string to doc, to start a new line afterward, the line string should end with "\n"
    */
   @throws(classOf[Exception])
-  private def writeLine(line: String) {
-    lineParser.parseLine(line) foreach overwrite
+  private def writeLine(line: Array[StyledText]) {
+    line foreach overwrite
   }
 
   /**
@@ -422,7 +459,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
         case '\b' =>
           backCursor(1)
         case c =>
-          overwrite("" + c, currentStyle)
+          overwrite(StyledText("" + c, currStyle))
       }
       i += 1
     }
@@ -434,27 +471,22 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
     area.setCaretPosition(area.getCaretPosition - backNum)
   }
 
-  @throws(classOf[Exception])
-  private def overwrite(str_style: (String, AttributeSet)) {
-    overwrite(str_style._1, str_style._2)
-  }
-
   /**
    * @param string to overwrite
    * @param style
    */
   @throws(classOf[Exception])
-  private def overwrite(str: String, style: AttributeSet) {
+  private def overwrite(text: StyledText) {
     val from = area.getCaretPosition
-    val overwriteLen = math.min(doc.getLength - from, str.length)
+    val overwriteLen = math.min(doc.getLength - from, text.text.length)
     doc.remove(from, overwriteLen)
-    doc.insertString(from, str, style)
+    doc.insertString(from, text.text, text.style)
   }
 
   protected def replaceText(start: Int, end: Int, replacement: String) {
     try {
       doc.remove(start, end - start)
-      doc.insertString(start, replacement, currentStyle)
+      doc.insertString(start, replacement, currStyle)
     } catch {
       case ex: Throwable => // Ifnore
     }
@@ -728,49 +760,45 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
 
   override protected def processSetForegroundColor(color: Int) {
     StyleConstants.setForeground(term.sequenceStyle, ANSI_COLOR_MAP(color))
-    term.currentStyle = term.sequenceStyle
+    term.currStyle = term.sequenceStyle
   }
 
   override protected def processSetBackgroundColor(color: Int) {
     StyleConstants.setBackground(term.sequenceStyle, ANSI_COLOR_MAP(color))
-    term.currentStyle = term.sequenceStyle
+    term.currStyle = term.sequenceStyle
   }
 
   override protected def processDefaultTextColor {
     StyleConstants.setForeground(term.sequenceStyle, term.defaultStyle.getAttribute(StyleConstants.Foreground).asInstanceOf[Color])
-    term.currentStyle = term.sequenceStyle
+    term.currStyle = term.sequenceStyle
   }
 
   override protected def processDefaultBackgroundColor {
     StyleConstants.setBackground(term.sequenceStyle, term.defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
-    term.currentStyle = term.sequenceStyle
+    term.currStyle = term.sequenceStyle
   }
 
   override protected def processSetAttribute(attribute: Int) {
     import Ansi._
 
     attribute match {
-      case ATTRIBUTE_CONCEAL_ON =>
+      case ATTRIBUTE_CONCEAL_ON       =>
       //write("\u001B[8m")
       //concealOn = true
-      case ATTRIBUTE_INTENSITY_BOLD =>
-        StyleConstants.setBold(term.sequenceStyle, true)
-      case ATTRIBUTE_INTENSITY_NORMAL =>
-        StyleConstants.setBold(term.sequenceStyle, false)
-      case ATTRIBUTE_UNDERLINE =>
-        StyleConstants.setUnderline(term.sequenceStyle, true)
-      case ATTRIBUTE_UNDERLINE_OFF =>
-        StyleConstants.setUnderline(term.sequenceStyle, false)
-      case ATTRIBUTE_NEGATIVE_ON  =>
-      case ATTRIBUTE_NEGATIVE_Off =>
-      case _                      =>
+      case ATTRIBUTE_INTENSITY_BOLD   => StyleConstants.setBold(term.sequenceStyle, true)
+      case ATTRIBUTE_INTENSITY_NORMAL => StyleConstants.setBold(term.sequenceStyle, false)
+      case ATTRIBUTE_UNDERLINE        => StyleConstants.setUnderline(term.sequenceStyle, true)
+      case ATTRIBUTE_UNDERLINE_OFF    => StyleConstants.setUnderline(term.sequenceStyle, false)
+      case ATTRIBUTE_NEGATIVE_ON      =>
+      case ATTRIBUTE_NEGATIVE_Off     =>
+      case _                          =>
     }
 
-    term.currentStyle = term.sequenceStyle
+    term.currStyle = term.sequenceStyle
   }
 
   override protected def processAttributeRest() {
-    term.currentStyle = term.defaultStyle
+    term.currStyle = term.defaultStyle
   }
 
   // @Note before do any ansi cursor command, we should flush first to keep the
@@ -887,9 +915,14 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
     }
   }
 
-  override protected def processEraseLine(eraseOption: Int) {
+  /**
+   * Erases part of the line. If n is zero (or missing), clear from cursor to
+   * the end of the line. If n is one, clear from cursor to beginning of the
+   * line. If n is two, clear entire line. Cursor position does not change.
+   */
+  override protected def processEraseInLine(eraseOption: Int) {
     eraseOption match {
-      case 0 =>
+      case 0 => // clear from cursor to the end of the line
         term.doFlushWith(false) {
           try {
             val pos = area.getCaretPosition
@@ -898,6 +931,35 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
             case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
           }
         }
+
+      case 1 => // clear from cursor to beginning of the line
+        term.doFlushWith(false) {
+          try {
+            val pos = area.getCaretPosition
+            val root = doc.getDefaultRootElement
+            val lineNo = root.getElementIndex(pos)
+            val line = root.getElement(lineNo)
+            doc.remove(line.getStartOffset, pos - line.getStartOffset)
+          } catch {
+            case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+          }
+        }
+
+      case 2 => // clear entire line, cursor position does not change.
+        term.doFlushWith(false) {
+          try {
+            val pos = area.getCaretPosition
+            val root = doc.getDefaultRootElement
+            val lineNo = root.getElementIndex(pos)
+            val line = root.getElement(lineNo)
+            doc.remove(line.getStartOffset, line.getEndOffset - 1 - line.getStartOffset)
+            val toPos = math.min(pos, doc.getLength - 1)
+            area.setCaretPosition(toPos)
+          } catch {
+            case ex: Throwable => log.log(Level.WARNING, ex.getMessage, ex)
+          }
+        }
+
       case _ =>
     }
   }
@@ -926,7 +988,14 @@ object AnsiConsoleOutputStream {
   private val log = Logger.getLogger(getClass.getName)
 
   private val ANSI_COLOR_MAP = Array(
-    Color.BLACK, Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN, Color.WHITE)
+    new Color(0, 0, 0),
+    new Color(187, 0, 0),
+    new Color(0, 187, 0),
+    new Color(187, 187, 0),
+    new Color(0, 0, 187),
+    new Color(187, 0, 187),
+    new Color(0, 187, 187),
+    new Color(255, 255, 255))
 
   // --- Document utilities
 
@@ -1072,7 +1141,7 @@ object AnsiConsoleOutputStream {
   @throws(classOf[Exception])
   def deleteLineAtPos(doc: StyledDocument, pos: Int) {
     val line = doc.getParagraphElement(pos)
-    doc.remove(line.getStartOffset, line.getEndOffset - line.getStartOffset)
+    doc.remove(line.getStartOffset, line.getEndOffset - 1 - line.getStartOffset)
   }
 
   /**
@@ -1082,7 +1151,7 @@ object AnsiConsoleOutputStream {
     // a document is modelled as a list of lines (Element)=> index = line number
     val line = doc.getParagraphElement(pos)
     try {
-      doc.getText(line.getStartOffset, line.getEndOffset - line.getStartOffset)
+      doc.getText(line.getStartOffset, line.getEndOffset - 1 - line.getStartOffset)
     } catch {
       case ex: Exception => null
     }

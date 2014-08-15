@@ -26,6 +26,7 @@ import org.netbeans.modules.scala.console.AnsiConsoleOutputStream
 import org.netbeans.modules.scala.console.ConsoleInputOutput
 import org.netbeans.modules.scala.console.ConsoleTerminal
 import org.netbeans.modules.scala.console.ConsoleOutputLineParser
+import org.netbeans.modules.scala.console.StyledText
 import org.netbeans.modules.scala.console.TerminalInput
 import org.netbeans.modules.scala.console.TopComponentId
 import org.openide.filesystems.FileUtil
@@ -158,7 +159,7 @@ class SBTConsoleTopComponent private (project: Project, val isDebug: Boolean) ex
     args ++= additionalArgs.split(" ")
     args += s"-XX:MaxPermSize=${maxPermGenSize}m"
 
-    args += "-Dsbt.log.noformat=true"
+    //args += "-Dsbt.log.noformat=true"
     /**
      * @Note:
      * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why?
@@ -166,7 +167,7 @@ class SBTConsoleTopComponent private (project: Project, val isDebug: Boolean) ex
      * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"?
      * And jline may cause terminal unresponsed after netbeans quited.
      */
-    //args += "-Djline.terminal=jline.UnsupportedTerminal"
+    args += "-Djline.terminal=unix"
     args += "-Djline.WindowsTerminal.directConsole=false"
 
     // TODO - turn off verifier?
@@ -419,18 +420,18 @@ object SBTConsoleTopComponent {
         x
       }
 
-      def parseLine(line: String): Array[(String, AttributeSet)] = {
+      def parseLine(line: String): Array[StyledText] = {
         if (line.length < 6) {
-          Array((line, defaultStyle))
+          Array(StyledText(line, defaultStyle))
         } else {
-          val texts = new mutable.ArrayBuffer[(String, AttributeSet)]()
+          val texts = new mutable.ArrayBuffer[StyledText]()
           val testRest_style = if (line.startsWith(ERROR_PREFIX)) {
 
             val m = rERROR_WITH_FILE.matcher(line)
             if (m.matches && m.groupCount >= 3) {
-              texts += (("[", defaultStyle))
-              texts += (("error", errorStyle))
-              texts += (("] ", defaultStyle))
+              texts += StyledText("[", defaultStyle)
+              texts += StyledText("error", errorStyle)
+              texts += StyledText("] ", defaultStyle)
               val textRest = line.substring(ERROR_PREFIX.length + 1, line.length)
 
               val fileName = m.group(1)
@@ -441,23 +442,23 @@ object SBTConsoleTopComponent {
               linkStyle.addAttribute("file", fileName)
               linkStyle.addAttribute("line", lineNo)
 
-              (textRest, linkStyle)
+              StyledText(textRest, linkStyle)
             } else {
-              texts += (("[", defaultStyle))
-              texts += (("error", errorStyle))
-              texts += (("]", defaultStyle))
+              texts += StyledText("[", defaultStyle)
+              texts += StyledText("error", errorStyle)
+              texts += StyledText("]", defaultStyle)
               val textRest = line.substring(ERROR_PREFIX.length, line.length)
 
-              (textRest, errorStyle)
+              StyledText(textRest, errorStyle)
             }
 
           } else if (line.startsWith(WARN_PREFIX)) {
 
             val m = rWARN_WITH_FILE.matcher(line)
             if (m.matches && m.groupCount >= 3) {
-              texts += (("[", defaultStyle))
-              texts += (("warn", warnStyle))
-              texts += (("] ", defaultStyle))
+              texts += StyledText("[", defaultStyle)
+              texts += StyledText("warn", warnStyle)
+              texts += StyledText("] ", defaultStyle)
               val textRest = line.substring(WARN_PREFIX.length + 1, line.length)
 
               val fileName = m.group(1)
@@ -468,36 +469,36 @@ object SBTConsoleTopComponent {
               linkStyle.addAttribute("file", fileName)
               linkStyle.addAttribute("line", lineNo)
 
-              (textRest, linkStyle)
+              StyledText(textRest, linkStyle)
             } else {
-              texts += (("[", defaultStyle))
-              texts += (("warn", warnStyle))
-              texts += (("]", defaultStyle))
+              texts += StyledText("[", defaultStyle)
+              texts += StyledText("warn", warnStyle)
+              texts += StyledText("]", defaultStyle)
               val textRest = line.substring(WARN_PREFIX.length, line.length)
 
-              (textRest, warnStyle)
+              StyledText(textRest, warnStyle)
             }
 
           } else if (line.startsWith(INFO_PREFIX)) {
 
-            texts += (("[", defaultStyle))
-            texts += (("info", infoStyle))
-            texts += (("]", defaultStyle))
+            texts += StyledText("[", defaultStyle)
+            texts += StyledText("info", infoStyle)
+            texts += StyledText("]", defaultStyle)
             val textRest = line.substring(INFO_PREFIX.length, line.length)
 
-            (textRest, defaultStyle)
+            StyledText(textRest, defaultStyle)
 
           } else if (line.startsWith(SUCCESS_PREFIX)) {
 
-            texts += (("[", defaultStyle))
-            texts += (("success", successStyle))
-            texts += (("]", defaultStyle))
+            texts += StyledText("[", defaultStyle)
+            texts += StyledText("success", successStyle)
+            texts += StyledText("]", defaultStyle)
             val textRest = line.substring(SUCCESS_PREFIX.length, line.length)
 
-            (textRest, defaultStyle)
+            StyledText(textRest, defaultStyle)
 
           } else {
-            (line, defaultStyle)
+            StyledText(line, defaultStyle)
           }
 
           texts += testRest_style
