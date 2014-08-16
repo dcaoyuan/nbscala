@@ -55,7 +55,9 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
     COMMAND_RUN,
     COMMAND_DEBUG,
     COMMAND_RUN_SINGLE,
-    COMMAND_DEBUG_SINGLE)
+    COMMAND_DEBUG_SINGLE,
+    COMMAND_TEST,
+    COMMAND_TEST_ONLY)
 
   @throws(classOf[IllegalArgumentException])
   def isActionEnabled(command: String, context: Lookup): Boolean = {
@@ -141,6 +143,18 @@ class SBTActionProvider(project: SBTProject) extends ActionProvider {
             "run-main " + clazz)
           SBTConsoleTopComponent.openNewInstance(rootProject, commands, isDebug = true)()
         }
+
+      case COMMAND_TEST =>
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
+        val commands = selectProject ::: List("test")
+        SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false)()
+
+      case COMMAND_TEST_ONLY => // TODO
+        ProjectManager.getDefault.saveProject(project)
+        LifecycleManager.getDefault.saveAll
+        val commands = selectProject ::: List("test-only")
+        SBTConsoleTopComponent.openInstance(rootProject, commands, isDebug = false)()
 
       case _ =>
     }
@@ -251,6 +265,9 @@ object SBTActionProvider {
   val COMMAND_CLEAN = ActionProvider.COMMAND_CLEAN // clean
   val COMMAND_RUN = ActionProvider.COMMAND_RUN
   val COMMAND_DEBUG = ActionProvider.COMMAND_DEBUG
+
+  val COMMAND_TEST = ActionProvider.COMMAND_TEST
+  val COMMAND_TEST_ONLY = ActionProvider.COMMAND_TEST_SINGLE
 
   val COMMAND_RUN_SINGLE = ActionProvider.COMMAND_RUN_SINGLE
   val COMMAND_DEBUG_SINGLE = ActionProvider.COMMAND_DEBUG_SINGLE
