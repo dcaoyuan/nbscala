@@ -66,7 +66,7 @@
 
         <!-- module versions -->
         <libs.scala.version>2.10.3.0</libs.scala.version>
-        <libs.sbt.version>0.13.1.0</libs.sbt.version>
+        <libs.sbt.version>0.13.5.0</libs.sbt.version>
         <libs.scalariform.version>0.1.5.0</libs.scalariform.version>
         <libs.xtc.version>1.15.1</libs.xtc.version>
         <scala.debugger.version>1.6.3.0</scala.debugger.version>
