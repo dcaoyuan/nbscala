@@ -8,12 +8,12 @@ import java.io.PipedInputStream
 import java.io.PrintStream
 import java.io.PrintWriter
 import java.util.logging.Logger
-import java.util.regex.Pattern
-import javax.swing._
-import javax.swing.text.AttributeSet
+import javax.swing.BorderFactory
+import javax.swing.JScrollPane
+import javax.swing.JTextPane
+import javax.swing.SwingUtilities
+import javax.swing.UIManager
 import javax.swing.text.DefaultCaret
-import javax.swing.text.SimpleAttributeSet
-import javax.swing.text.StyleConstants
 import org.netbeans.api.extexecution.ExecutionDescriptor
 import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.extexecution.ExternalProcessBuilder
@@ -23,8 +23,6 @@ import org.netbeans.modules.scala.core.ScalaExecution
 import org.netbeans.modules.scala.console.AnsiConsoleOutputStream
 import org.netbeans.modules.scala.console.ConsoleInputOutput
 import org.netbeans.modules.scala.console.ConsoleTerminal
-import org.netbeans.modules.scala.console.ConsoleOutputLineParser
-import org.netbeans.modules.scala.console.StyledText
 import org.netbeans.modules.scala.console.TopComponentId
 import org.openide.ErrorManager
 import org.openide.filesystems.FileUtil
@@ -33,7 +31,6 @@ import org.openide.util.ImageUtilities
 import org.openide.util.NbBundle
 import org.openide.windows.TopComponent
 import org.openide.windows.WindowManager
-import scala.collection.mutable.ArrayBuffer
 
 /**
  *
@@ -304,137 +301,6 @@ object ScalaConsoleTopComponent {
     }
 
     override protected val CompleteTriggerChar = '.'
-
-    override protected val lineParser = new ConsoleOutputLineParser() {
-
-      val INFO_PREFIX = "[info]"
-      val WARN_PREFIX = "[warn]"
-      val ERROR_PREFIX = "[error]"
-      val SUCCESS_PREFIX = "[success]"
-
-      val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
-      val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
-      val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
-      val LINE = "(([1-9][0-9]*))" // line number
-      val ROL = ".*\\s?\\s?" // rest of line (may end with "\n" or "\r\n")
-      val SEP = "\\:" // seperator between file path and line number
-      val STD_SUFFIX = FILE + SEP + LINE + ROL // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-
-      val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-      val rWARN_WITH_FILE = Pattern.compile("\\Q" + WARN_PREFIX + "\\E" + "\\s?" + STD_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
-
-      lazy val infoStyle = {
-        val x = new SimpleAttributeSet()
-        StyleConstants.setForeground(x, defaultStyle.getAttribute(StyleConstants.Foreground).asInstanceOf[Color])
-        StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
-        x
-      }
-      lazy val warnStyle = {
-        val x = new SimpleAttributeSet()
-        StyleConstants.setForeground(x, new Color(0xB9, 0x7C, 0x00))
-        StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
-        x
-      }
-      lazy val errorStyle = {
-        val x = new SimpleAttributeSet()
-        StyleConstants.setForeground(x, Color.RED)
-        StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
-        x
-      }
-      lazy val successStyle = {
-        val x = new SimpleAttributeSet()
-        StyleConstants.setForeground(x, Color.GREEN)
-        StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
-        x
-      }
-
-      def parseLine(line: String): Array[StyledText] = {
-        if (line.length < 6) {
-          Array(StyledText(line, defaultStyle))
-        } else {
-          val texts = new ArrayBuffer[StyledText]()
-          val testRest_style = if (line.startsWith(ERROR_PREFIX)) {
-
-            val m = rERROR_WITH_FILE.matcher(line)
-            if (m.matches && m.groupCount >= 3) {
-              texts += StyledText("[", defaultStyle)
-              texts += StyledText("error", errorStyle)
-              texts += StyledText("] ", defaultStyle)
-              val textRest = line.substring(ERROR_PREFIX.length + 1, line.length)
-
-              val fileName = m.group(1)
-              val lineNo = m.group(2)
-              val linkStyle = new SimpleAttributeSet()
-              StyleConstants.setForeground(linkStyle, linkFg)
-              StyleConstants.setUnderline(linkStyle, true)
-              linkStyle.addAttribute("file", fileName)
-              linkStyle.addAttribute("line", lineNo)
-
-              StyledText(textRest, linkStyle)
-            } else {
-              texts += StyledText("[", defaultStyle)
-              texts += StyledText("error", errorStyle)
-              texts += StyledText("]", defaultStyle)
-              val textRest = line.substring(ERROR_PREFIX.length, line.length)
-
-              StyledText(textRest, errorStyle)
-            }
-
-          } else if (line.startsWith(WARN_PREFIX)) {
-
-            val m = rWARN_WITH_FILE.matcher(line)
-            if (m.matches && m.groupCount >= 3) {
-              texts += StyledText("[", defaultStyle)
-              texts += StyledText("warn", warnStyle)
-              texts += StyledText("] ", defaultStyle)
-              val textRest = line.substring(WARN_PREFIX.length + 1, line.length)
-
-              val fileName = m.group(1)
-              val lineNo = m.group(2)
-              val linkStyle = new SimpleAttributeSet()
-              StyleConstants.setForeground(linkStyle, linkFg)
-              StyleConstants.setUnderline(linkStyle, true)
-              linkStyle.addAttribute("file", fileName)
-              linkStyle.addAttribute("line", lineNo)
-
-              StyledText(textRest, linkStyle)
-            } else {
-              texts += StyledText("[", defaultStyle)
-              texts += StyledText("warn", warnStyle)
-              texts += StyledText("]", defaultStyle)
-              val textRest = line.substring(WARN_PREFIX.length, line.length)
-
-              StyledText(textRest, warnStyle)
-            }
-
-          } else if (line.startsWith(INFO_PREFIX)) {
-
-            texts += StyledText("[", defaultStyle)
-            texts += StyledText("info", infoStyle)
-            texts += StyledText("]", defaultStyle)
-            val textRest = line.substring(INFO_PREFIX.length, line.length)
-
-            StyledText(textRest, defaultStyle)
-
-          } else if (line.startsWith(SUCCESS_PREFIX)) {
-
-            texts += StyledText("[", defaultStyle)
-            texts += StyledText("success", successStyle)
-            texts += StyledText("]", defaultStyle)
-            val textRest = line.substring(SUCCESS_PREFIX.length, line.length)
-
-            StyledText(textRest, defaultStyle)
-
-          } else {
-            StyledText(line, defaultStyle)
-          }
-
-          texts += testRest_style
-
-          texts.toArray
-        }
-      }
-    }
   }
 
 }

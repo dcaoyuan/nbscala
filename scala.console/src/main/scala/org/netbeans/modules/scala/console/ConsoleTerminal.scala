@@ -15,6 +15,7 @@ import java.io.PrintStream
 import java.util.concurrent.Future
 import java.util.logging.Level
 import java.util.logging.Logger
+import java.util.regex.Pattern
 import javax.swing.DefaultListCellRenderer
 import javax.swing.JComboBox
 import javax.swing.JPopupMenu
@@ -33,8 +34,84 @@ import scala.collection.mutable
 
 final case class StyledText(text: String, style: AttributeSet)
 
-trait ConsoleOutputLineParser {
-  def parseLine(line: String): Array[StyledText]
+class ConsoleOutputLineParser(defaultStyle: AttributeSet) {
+  val INFO_PREFIX = "[info]"
+  val WARN_PREFIX = "[warn]"
+  val ERROR_PREFIX = "[error]"
+  val SUCCESS_PREFIX = "[success]"
+
+  val WINDOWS_DRIVE = "(?:[a-zA-Z]\\:)?"
+  val FILE_CHAR = "[^\\[\\]\\:\\\"]" // not []:", \s is allowd
+  val FILE = "(" + WINDOWS_DRIVE + "(?:" + FILE_CHAR + "*))"
+  val LINE = "(([1-9][0-9]*))" // line number
+  val ROL = ".*\\s?\\s?" // rest of line (may end with "\n" or "\r\n")
+  val SEP = "\\:" // seperator between file path and line number
+  val FILE_PATH_SUFFIX = FILE + SEP + LINE + ROL // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+
+  val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + FILE_PATH_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+  val rWARN_WITH_FILE = Pattern.compile("\\Q" + WARN_PREFIX + "\\E" + "\\s?" + FILE_PATH_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
+
+  val rFILE_PATH = Pattern.compile("\\]?\\s*" + FILE_PATH_SUFFIX)
+
+  val linkFg = Color.BLUE
+
+  lazy val infoStyle = {
+    val x = new SimpleAttributeSet()
+    StyleConstants.setForeground(x, defaultStyle.getAttribute(StyleConstants.Foreground).asInstanceOf[Color])
+    StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
+    x
+  }
+
+  lazy val warnStyle = {
+    val x = new SimpleAttributeSet()
+    StyleConstants.setForeground(x, AnsiConsoleOutputStream.YELLOW)
+    StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
+    x
+  }
+
+  lazy val errorStyle = {
+    val x = new SimpleAttributeSet()
+    StyleConstants.setForeground(x, AnsiConsoleOutputStream.RED)
+    StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
+    x
+  }
+
+  lazy val successStyle = {
+    val x = new SimpleAttributeSet()
+    StyleConstants.setForeground(x, AnsiConsoleOutputStream.GREEN)
+    StyleConstants.setBackground(x, defaultStyle.getAttribute(StyleConstants.Background).asInstanceOf[Color])
+    x
+  }
+
+  def parseLine(lineTexts: Array[StyledText]): Array[StyledText] = {
+    val texts = new mutable.ArrayBuffer[StyledText]()
+    var i = 0
+    while (i < lineTexts.length) {
+      val text = lineTexts(i)
+      val m = rFILE_PATH.matcher(text.text)
+      if (m.matches && m.groupCount >= 3) {
+        val fileName = m.group(1)
+        val lineNo = m.group(2)
+        val linkStart = m.start(1)
+        val linkEnd = m.end(2)
+
+        val linkStyle = new SimpleAttributeSet()
+        StyleConstants.setForeground(linkStyle, linkFg)
+        StyleConstants.setUnderline(linkStyle, true)
+        linkStyle.addAttribute("file", fileName)
+        linkStyle.addAttribute("line", lineNo)
+
+        texts += StyledText(text.text.substring(0, linkStart), defaultStyle)
+        texts += StyledText(text.text.substring(linkStart, linkEnd), linkStyle)
+        texts += StyledText(text.text.substring(linkEnd, text.text.length), defaultStyle)
+      } else {
+        texts += text
+      }
+      i += 1
+    }
+
+    texts.toArray
+  }
 }
 
 class ConsoleCapturer {
@@ -213,9 +290,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
   /**
    * override to define custom line parser
    */
-  protected val lineParser = new ConsoleOutputLineParser {
-    def parseLine(line: String): Array[StyledText] = Array(StyledText(line, defaultStyle))
-  }
+  protected val lineParser = new ConsoleOutputLineParser(defaultStyle)
 
   val pipedOut = new PrintStream(new PipedOutputStream(pipedIn))
   val terminalInput = new ConsoleTerminalInput
@@ -440,8 +515,8 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
    * Write a line string to doc, to start a new line afterward, the line string should end with "\n"
    */
   @throws(classOf[Exception])
-  private def writeLine(line: Array[StyledText]) {
-    line foreach overwrite
+  private def writeLine(lineTexts: Array[StyledText]) {
+    lineParser.parseLine(lineTexts) foreach overwrite
   }
 
   /**
@@ -987,15 +1062,16 @@ class AnsiConsoleOutputStream(term: ConsoleTerminal) extends AnsiOutputStream(te
 object AnsiConsoleOutputStream {
   private val log = Logger.getLogger(getClass.getName)
 
-  private val ANSI_COLOR_MAP = Array(
-    new Color(0, 0, 0),
-    new Color(187, 0, 0),
-    new Color(0, 187, 0),
-    new Color(187, 187, 0),
-    new Color(0, 0, 187),
-    new Color(187, 0, 187),
-    new Color(0, 187, 187),
-    new Color(255, 255, 255))
+  val BLACK = new Color(0, 0, 0)
+  val RED = new Color(187, 0, 0)
+  val GREEN = new Color(0, 187, 0)
+  val YELLOW = new Color(187, 187, 0)
+  val BLUE = new Color(0, 0, 187)
+  val MAGENTA = new Color(187, 0, 187)
+  val CYAN = new Color(0, 187, 187)
+  val WHITE = new Color(255, 255, 255)
+
+  private val ANSI_COLOR_MAP = Array(BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE)
 
   // --- Document utilities
 
