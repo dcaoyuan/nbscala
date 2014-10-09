@@ -178,7 +178,7 @@ trait ScalaElements { self: ScalaGlobal =>
       } else {
         val pos = symbol.pos
         _offset = if (pos.isDefined) {
-          pos.startOrPoint
+          pos.start
         } else {
           val fo = getFileObject
           if (fo != null) {

@@ -77,7 +77,7 @@ trait ScalaUtils { self: ScalaGlobal =>
     def askForKind(symbol: Symbol): ElementKind = {
       if (symbol == NoSymbol) return ElementKind.OTHER
       askForResponse { () =>
-        if (symbol.isPackage) {
+        if (symbol.hasPackageFlag) {
           ElementKind.PACKAGE
         } else if (symbol.isClass) {
           ElementKind.CLASS
@@ -169,7 +169,7 @@ trait ScalaUtils { self: ScalaGlobal =>
         val sb = paths.mkString(".")
 
         if (sb.length == 0) {
-          if (symbol.isPackage) {
+          if (symbol.hasPackageFlag) {
             ""
           } else {
             if (forScala) symbol.nameString else "Object" // it maybe a TypeParameter likes: T0
@@ -200,7 +200,7 @@ trait ScalaUtils { self: ScalaGlobal =>
     def askForHtmlFormat(symbol: Symbol, fm: HtmlFormatter) {
       askForResponse { () =>
         symbol match {
-          case _ if symbol.isPackage | symbol.isClass | symbol.isModule => fm.appendText(symbol.nameString)
+          case _ if symbol.hasPackageFlag | symbol.isClass | symbol.isModule => fm.appendText(symbol.nameString)
           case _ if symbol.isConstructor =>
             fm.appendText(symbol.owner.nameString)
             htmlTypeName(symbol, fm)
@@ -366,7 +366,7 @@ trait ScalaUtils { self: ScalaGlobal =>
           sym.varianceString + sym.nameString), fm)
 
         sym match {
-          case _ if sym.isPackage | sym.isClass | sym.isTrait =>
+          case _ if sym.hasPackageFlag | sym.isClass | sym.isTrait =>
             if (sym.hasRawInfo) htmlTypeInfo(sym.rawInfo, fm)
           case _ if sym.isModule => // object, the `rawInfo` is `TypeRef`, we should dive into `sym.moduleClass`
             if (sym.hasRawInfo) htmlTypeInfo(sym.moduleClass.rawInfo, fm)

@@ -54,7 +54,7 @@ import org.netbeans.modules.scala.refactoring.RefactoringModule
  *
  * @author  Pavel Flaska
  */
-class RenamePanel(@transient oldName: String, @transient parent: ChangeListener, name: String, editable: Boolean, showUpdateReferences: Boolean) extends JPanel with CustomRefactoringPanel {
+class RenamePanel(oldName: String, parent: ChangeListener, name: String, editable: Boolean, showUpdateReferences: Boolean) extends JPanel with CustomRefactoringPanel {
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private var jPanel1: javax.swing.JPanel = _

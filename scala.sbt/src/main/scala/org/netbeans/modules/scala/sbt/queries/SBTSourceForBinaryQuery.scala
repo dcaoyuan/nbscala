@@ -122,6 +122,8 @@ class SBTSourceForBinaryQuery(project: Project) extends SourceForBinaryQueryImpl
                 val sources = if (srcs != null) srcs.getFileObject(fo.getName + "-sources." + fo.getExt) else null
                 val javadoc = if (docs != null) docs.getFileObject(fo.getName + "-javadoc." + fo.getExt) else null
                 (sources, javadoc)
+              } catch {
+                case _: Throwable => (null, null)
               }
               ArtifactInfo(fo.getNameExt, "", "",
                 FileUtil.toFile(fo),

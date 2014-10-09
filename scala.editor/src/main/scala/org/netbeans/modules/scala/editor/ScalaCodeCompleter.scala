@@ -496,7 +496,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
 
             createSymbolProposal(sym) foreach { proposal =>
               proposal.setSortPrioOverride(prio)
-              proposal.setSmart(sym.isLocal)
+              proposal.setSmart(sym.isLocalToBlock || sym.isLocalToThis)
               proposals.add(proposal)
             }
           }
@@ -539,7 +539,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     } else if (sym.isValue) {
       val element = global.ScalaElement(sym, pr)
       Some(PlainProposal(element, this))
-    } else if (sym.isClass || sym.isTrait || sym.isModule || sym.isPackage) {
+    } else if (sym.isClass || sym.isTrait || sym.isModule || sym.hasPackageFlag) {
       val element = global.ScalaElement(sym, pr)
       Some(PlainProposal(element, this))
     } else None

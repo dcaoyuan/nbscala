@@ -412,7 +412,7 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
               // * for Select tree that is implicit call, will look forward for the nearest item and change its kind to ElementKind.RULE
               val pos = tree.pos
               if (pos.isDefined) {
-                rootScope.findNeastItemsAt(th, pos.startOrPoint) foreach { _.kind = ElementKind.RULE }
+                rootScope.findNeastItemsAt(th, pos.start) foreach { _.kind = ElementKind.RULE }
               }
             } else {
               val name = selector.decode
@@ -669,9 +669,9 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
       val name = if (knownName.length > 0) knownName else (if (sym != NoSymbol) sym.rawname.decode else "")
       if (name.length == 0) return None
 
-      val offset = if (pos.isDefined) pos.startOrPoint else return None
+      val offset = if (pos.isDefined) pos.start else return None
 
-      var endOffset = if (pos.isDefined) pos.endOrPoint else -1
+      var endOffset = if (pos.isDefined) pos.end else -1
       if (forward != -1) {
         endOffset = math.max(endOffset, offset + forward)
       }
@@ -708,9 +708,9 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
       if (name.length == 0) return None
 
       val pos = tree.pos
-      val offset = if (pos.isDefined) pos.startOrPoint else return None
+      val offset = if (pos.isDefined) pos.start else return None
 
-      var endOffset = if (pos.isDefined) pos.endOrPoint else -1
+      var endOffset = if (pos.isDefined) pos.end else -1
       if (forward != -1) {
         endOffset = math.max(endOffset, offset + forward)
       }
@@ -824,7 +824,7 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
     private def getBoundsTokens(tree: Tree): Array[Token[TokenId]] = {
       val pos = tree.pos
       val (offset, endOffset) = if (tree.pos.isDefined) {
-        (pos.startOrPoint, pos.endOrPoint)
+        (pos.start, pos.end)
       } else (-1, -1)
 
       getBoundsTokens(offset, endOffset)

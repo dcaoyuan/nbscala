@@ -81,7 +81,7 @@ object WhereUsedPanel {
   }
 }
 
-class WhereUsedPanel(name: String, @transient element: ScalaItems#ScalaItem, @transient parent: ChangeListener) extends JPanel with CustomRefactoringPanel {
+class WhereUsedPanel(name: String, element: ScalaItems#ScalaItem, parent: ChangeListener) extends JPanel with CustomRefactoringPanel {
   import WhereUsedPanel._
 
   private val MAX_NAME = 50

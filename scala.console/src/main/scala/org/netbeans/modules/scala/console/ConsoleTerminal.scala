@@ -398,7 +398,7 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
 
   @throws(classOf[IOException])
   override def flush() {
-    doFlushWith(true)()
+    doFlushWith(true)(())
   }
 
   /**

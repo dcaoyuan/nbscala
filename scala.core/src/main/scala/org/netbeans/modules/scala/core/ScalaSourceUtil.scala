@@ -327,7 +327,7 @@ object ScalaSourceUtil {
     val resp = new global.Response[global.Position]
     global.askLinkPos(symbol.asInstanceOf[global.Symbol], srcFile, resp)
     resp get match {
-      case Left(x)   => x.startOrPoint
+      case Left(x)   => x.start
       case Right(ex) => 0
     }
   }
@@ -431,7 +431,7 @@ object ScalaSourceUtil {
     try {
       chain match {
         case h :: tail =>
-          if (h.isPackage || h.isPackageClass) {
+          if (h.hasPackageFlag || h.isPackageClass) {
             pre
           } else {
             findTopEnclClass(h, tail)

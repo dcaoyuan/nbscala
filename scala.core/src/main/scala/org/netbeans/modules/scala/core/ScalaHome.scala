@@ -288,6 +288,8 @@ object ScalaHome {
         if ((scalaLib ne null) && scalaLib.exists && scalaLib.canRead) {
           return scalaLib.listFiles find { jar => jar.getName == "scala-library.jar" }
         }
+      } catch {
+        case _: Throwable => None
       }
     }
     None

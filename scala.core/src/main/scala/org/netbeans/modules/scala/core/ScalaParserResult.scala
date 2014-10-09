@@ -151,8 +151,8 @@ class ScalaParserResult private (snapshot: Snapshot) extends ParserResult(snapsh
         for (ScalaError(pos, msg, severity, force) <- scalaErrors if pos.isDefined) {
           // It seems scalac's errors may contain those from other sources that are deep referred, try to filter them here
           if (srcFile.file eq pos.source.file) {
-            val offset = pos.startOrPoint
-            val end = pos.endOrPoint
+            val offset = pos.start
+            val end = pos.end
 
             val isLineError = (end == -1)
             val error = DefaultError.createDefaultError("SYNTAX_ERROR", msg, msg, fo, offset, end, isLineError, severity)

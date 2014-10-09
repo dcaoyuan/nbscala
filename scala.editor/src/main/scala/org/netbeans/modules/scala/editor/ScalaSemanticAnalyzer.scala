@@ -146,7 +146,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
               case dfn: global.ScalaDfn =>
 
-                if (sym.hasFlag(Flags.PACKAGE) || sym.isPackage) {
+                if (sym.hasFlag(Flags.PACKAGE) || sym.hasPackageFlag) {
 
                   coloringSet.add(ColoringAttributes.PACKAGE_PRIVATE)
 
@@ -203,7 +203,7 @@ class ScalaSemanticAnalyzer extends SemanticAnalyzer[ScalaParserResult] {
 
               case ref: global.ScalaRef =>
 
-                if (sym.hasFlag(Flags.PACKAGE) || sym.isPackage) {
+                if (sym.hasFlag(Flags.PACKAGE) || sym.hasPackageFlag) {
 
                   coloringSet.add(ColoringAttributes.PACKAGE_PRIVATE)
 

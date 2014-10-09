@@ -99,7 +99,7 @@ class DirWatcher(fileName: String) extends TimerTask {
   }
 }
 
-sealed abstract class FileChangeEvent(file: FileObject, lastModified: Long) extends ChangeEvent
+sealed abstract class FileChangeEvent(file: FileObject, lastModified: Long) extends ChangeEvent()
 final case class FileAdded(file: FileObject, lastModified: Long) extends FileChangeEvent(file, lastModified)
 final case class FileDeleted(file: FileObject, lastModified: Long) extends FileChangeEvent(file, lastModified)
 final case class FileModified(file: FileObject, lastModified: Long) extends FileChangeEvent(file, lastModified)
