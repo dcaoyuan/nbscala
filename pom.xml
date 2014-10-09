@@ -350,10 +350,10 @@
         <module>libs.local</module>
         <module>libs.scala.compiler</module>
         <module>libs.scala.continuations</module>
+        <module>libs.scala.continuations.plugin</module>
         <module>libs.scala.library</module>
         <module>libs.scala.reflect</module>
         <module>libs.scala.xml</module>
-        <module>libs.scala.continuations.plugin</module>
         <module>libs.scalariform</module>
         <module>libs.sbt</module>
         <module>libs.xtc</module>

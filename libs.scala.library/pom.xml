@@ -75,7 +75,6 @@
                         <publicPackage>scala.text</publicPackage>
                         <publicPackage>scala.util</publicPackage>
                         <publicPackage>scala.util.automata</publicPackage>
-                        <publicPackage>scala.util.continuations</publicPackage>
                         <publicPackage>scala.util.control</publicPackage>
                         <publicPackage>scala.util.grammar</publicPackage>
                         <publicPackage>scala.util.hashing</publicPackage>

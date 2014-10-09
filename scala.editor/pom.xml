@@ -274,11 +274,6 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scala-continuations</artifactId>
-            <version>${libs.scala.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-libs-xtc</artifactId>
             <version>${libs.xtc.version}</version>
         </dependency>
