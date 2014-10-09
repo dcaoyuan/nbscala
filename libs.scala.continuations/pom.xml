@@ -19,19 +19,10 @@
             <artifactId>org-netbeans-libs-scala-library</artifactId>
             <version>${libs.scala.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scala-reflect</artifactId>
-            <version>${libs.scala.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scala-compiler</artifactId>
-            <version>${libs.scala.version}</version>
-        </dependency>
+
         <dependency><!-- myself -->
-            <groupId>org.scala-lang.plugins</groupId>
-            <artifactId>continuations</artifactId>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-continuations</artifactId>
             <version>${scala.version}</version>
         </dependency>
         <!-- needed to ensure, the libs are deployed in the repostiory before anything else -->
@@ -55,7 +46,7 @@
                     <licenseName>BSD-style License</licenseName>
                     <licenseFile>license.txt</licenseFile>
                     <publicPackages>
-                        <publicPackage>scala.tools.selectivecps</publicPackage>
+                        <publicPackage>scala.util.continuations</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

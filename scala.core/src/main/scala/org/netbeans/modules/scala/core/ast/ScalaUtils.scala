@@ -265,8 +265,8 @@ trait ScalaUtils { self: ScalaGlobal =>
         // pre.sym[targs]
         case RefinedType(parents, defs) =>
         // parent1 with ... with parentn { defs }
-        case AnnotatedType(annots, tp, selfsym) =>
-          htmlTypeName(tp, fm)
+        //case AnnotatedType(annots, tp, selfsym) =>
+        //  htmlTypeName(tp, fm)
         // tp @annots
 
         // the following are non-value types; you cannot write them down in Scala source.
@@ -439,7 +439,7 @@ trait ScalaUtils { self: ScalaGlobal =>
           }
           fm.appendText("{...}")
         // parent1 with ... with parentn { defs }
-        case AnnotatedType(annots, tp, selfsym) => htmlTypeInfo(tp, fm)
+        //case AnnotatedType(annots, tp, selfsym) => htmlTypeInfo(tp, fm)
         // tp @annots
 
         // the following are non-value types; you cannot write them down in Scala source.
@@ -789,8 +789,8 @@ trait ScalaUtils { self: ScalaGlobal =>
         // pre.sym[targs]
         case RefinedType(parents, defs) =>
           sb append (parents map (x => typeSimpleSig_(x, sb)) mkString (" extends ", "with ", ""))
-        case AnnotatedType(annots, tp, selfsym) =>
-          typeSimpleSig_(tp, sb)
+        //case AnnotatedType(annots, tp, selfsym) =>
+        //  typeSimpleSig_(tp, sb)
         case TypeBounds(lo, hi) =>
           sb append (">: ")
           typeSimpleSig_(lo, sb)

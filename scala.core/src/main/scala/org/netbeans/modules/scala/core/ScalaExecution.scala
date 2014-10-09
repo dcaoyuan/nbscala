@@ -290,9 +290,9 @@ object ScalaExecution {
   }
 
   def getPluginJarsDir: Option[File] = {
-    val codeNameBase = "org.netbeans.libs.scala.continuations"
+    val codeNameBase = "org.netbeans.libs.scala.continuations.plugin"
     val version = "1"
-    val pluginDir = InstalledFileLocator.getDefault.locate("modules/ext/" + codeNameBase + "/" + version + "/org-scala-lang-plugins", codeNameBase, false)
+    val pluginDir = InstalledFileLocator.getDefault.locate("modules/ext/" + codeNameBase + "/" + version + "/org-scala-lang", codeNameBase, false)
     if (pluginDir != null && pluginDir.exists && pluginDir.isDirectory) Some(pluginDir) else None
   }
 

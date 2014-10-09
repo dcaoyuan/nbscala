@@ -97,7 +97,7 @@ object ScalaHome {
     settings.classpath.value = sb.toString
 
     new ScalaGlobal(settings, new ErrorReporter) {
-      override def onlyPresentation = true
+      //override def onlyPresentation = true
     }
   }
 

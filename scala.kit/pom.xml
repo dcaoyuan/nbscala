@@ -48,6 +48,16 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-scala-xml</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-scala-continuations-plugin</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-libs-scalariform</artifactId>
             <version>${libs.scalariform.version}</version>
         </dependency>

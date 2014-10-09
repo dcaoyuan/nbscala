@@ -90,13 +90,25 @@ class ScalaSourceFile private (val fileObject: FileObject) extends SourceFile {
       super.identifier(pos)
     }
 
-  def isLineBreak(idx: Int) =
-    if (idx >= length) false else {
-      val ch = content(idx)
-      // don't identify the CR in CR LF as a line break, since LF will do.
-      if (ch == CR) (idx + 1 == length) || (content(idx + 1) != LF)
-      else isLineBreakChar(ch)
-    }
+  private def charAtIsEOL(idx: Int)(p: Char => Boolean) = {
+    // don't identify the CR in CR LF as a line break, since LF will do.
+    def notCRLF0 = content(idx) != CR || !content.isDefinedAt(idx + 1) || content(idx + 1) != LF
+
+    idx < length && notCRLF0 && p(content(idx))
+  }
+
+  def isLineBreak(idx: Int) = charAtIsEOL(idx)(isLineBreakChar)
+
+  /** True if the index is included by an EOL sequence. */
+  def isEndOfLine(idx: Int) = (content isDefinedAt idx) && PartialFunction.cond(content(idx)) {
+    case CR | LF => true
+  }
+
+  /** True if the index is end of an EOL sequence. */
+  def isAtEndOfLine(idx: Int) = charAtIsEOL(idx) {
+    case CR | LF => true
+    case _       => false
+  }
 
   def calculateLineIndices(cs: Array[Char]) = {
     val buf = new ArrayBuffer[Int]

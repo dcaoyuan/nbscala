@@ -69,15 +69,45 @@
                     </execution>
 
                     <execution>
+                        <id>install-scala-xml</id>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+                        <configuration>
+                            <file>${project.basedir}/lib/scala-xml.jar</file>
+                            <groupId>org.scala-lang</groupId>
+                            <artifactId>scala-xml</artifactId>
+                            <version>${scala.version}</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>install-scala-continuations</id>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
+                        <configuration>
+                            <file>${project.basedir}/lib/scala-continuations-library.jar</file>
+                            <groupId>org.scala-lang</groupId>
+                            <artifactId>scala-continuations</artifactId>
+                            <version>${scala.version}</version>
+                            <packaging>jar</packaging>
+                        </configuration>
+                    </execution>
+
+                    <execution>
                         <id>install-scala-plugin-continuations</id>
                         <goals>
                             <goal>install-file</goal>
                         </goals>
                         <phase>process-resources</phase> <!-- use process-resources phase to.force re-installation -->
                         <configuration>
-                            <file>${project.basedir}/lib/continuations.jar</file>
-                            <groupId>org.scala-lang.plugins</groupId>
-                            <artifactId>continuations</artifactId>
+                            <file>${project.basedir}/lib/scala-continuations-plugin.jar</file>
+                            <groupId>org.scala-lang</groupId>
+                            <artifactId>scala-continuations-plugin</artifactId>
                             <version>${scala.version}</version>
                             <packaging>jar</packaging>
                         </configuration>

@@ -242,42 +242,42 @@ class ScalaGlobal(_settings: Settings, _reporter: Reporter, projectName: String 
   }
 
   // @Note Should pass phase "lambdalift" to get anonfun's class symbol built
-  def compileSourceForDebug(srcFile: ScalaSourceFile): ScalaRootScope = {
-    compileSource(srcFile, constructors.phaseName)
-  }
+  //  def compileSourceForDebug(srcFile: ScalaSourceFile): ScalaRootScope = {
+  //    compileSource(srcFile, constructors.phaseName)
+  //  }
 
   // @Note the following setting excludes 'stopPhase' itself
-  def compileSource(source: ScalaSourceFile, stopPhase: String): ScalaRootScope = synchronized {
-    resetReporter
+  //  def compileSource(source: ScalaSourceFile, stopPhase: String): ScalaRootScope = synchronized {
+  //    resetReporter
+  //
+  //    settings.stop.value = Nil
+  //    settings.stop.tryToSetColon(List(stopPhase))
+  //    qualToRecoveredType.clear
 
-    settings.stop.value = Nil
-    settings.stop.tryToSetColon(List(stopPhase))
-    qualToRecoveredType.clear
+  //    val run = new this.Run
+  //    val srcFiles = List(source)
+  //    try {
+  //      run.compileSources(srcFiles)
+  //    } catch {
+  //      case ex: Throwable => processGlobalException(ex)
+  //    }
+  //
+  //println("selectTypeErrors:" + selectTypeErrors)
 
-    val run = new this.Run
-    val srcFiles = List(source)
-    try {
-      run.compileSources(srcFiles)
-    } catch {
-      case ex: Throwable => processGlobalException(ex)
-    }
+  //    run.units find { _.source eq source } match {
+  //      case Some(unit) =>
+  //        if (ScalaGlobal.debug) {
+  //          RequestProcessor.getDefault.post(new Runnable {
+  //            def run {
+  //              treeBrowser.browse(unit.body)
+  //            }
+  //          })
+  //        }
 
-    //println("selectTypeErrors:" + selectTypeErrors)
-
-    run.units find { _.source eq source } match {
-      case Some(unit) =>
-        if (ScalaGlobal.debug) {
-          RequestProcessor.getDefault.post(new Runnable {
-            def run {
-              treeBrowser.browse(unit.body)
-            }
-          })
-        }
-
-        astVisit(source, unit.body)
-      case None => ScalaRootScope.EMPTY
-    }
-  }
+  //        astVisit(source, unit.body)
+  //      case None => ScalaRootScope.EMPTY
+  //    }
+  //  }
 
 }
 

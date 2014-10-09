@@ -1,0 +1,65 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.netbeans.modules</groupId>
+        <artifactId>nbscala</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>org-netbeans-libs-scala-xml</artifactId>
+    <version>${libs.scala.version}</version>
+    <name>org-netbeans-libs-scala-xml</name>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scala-library</artifactId>
+            <version>${libs.scala.version}</version>
+        </dependency>
+
+        <dependency><!-- myself -->
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-xml</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+        <!-- needed to ensure, the libs are deployed in the repostiory before anything else -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-scala-local</artifactId>
+            <version>1.0</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <codeNameBase>org.netbeans.libs.scala.xml/1</codeNameBase>
+                    <licenseName>BSD-style License</licenseName>
+                    <licenseFile>license.txt</licenseFile>
+                    <publicPackages>
+                        <publicPackage>scala.xml</publicPackage>
+                        <publicPackage>scala.xml.dtd</publicPackage>
+                        <publicPackage>scala.xml.factory</publicPackage>
+                        <publicPackage>scala.xml.include</publicPackage>
+                        <publicPackage>scala.xml.include.sax</publicPackage>
+                        <publicPackage>scala.xml.parsing</publicPackage>
+                        <publicPackage>scala.xml.persistent</publicPackage>
+                        <publicPackage>scala.xml.pull</publicPackage>
+                        <publicPackage>scala.xml.transform</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+

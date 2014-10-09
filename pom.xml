@@ -207,13 +207,6 @@
                             <arg>-Xmax-classfile-name</arg>
                             <arg>143</arg> <!-- to avoid 'error: File name too long' in Linux/ecryptfs -->
                         </args>
-                        <compilerPlugins>
-                            <complierPlugin>
-                                <groupId>org.scala-lang.plugins</groupId>
-                                <artifactId>continuations</artifactId>
-                                <version>${scala.version}</version>
-                            </complierPlugin>
-                        </compilerPlugins>
                     </configuration>
                 </plugin>
 
@@ -359,6 +352,8 @@
         <module>libs.scala.continuations</module>
         <module>libs.scala.library</module>
         <module>libs.scala.reflect</module>
+        <module>libs.scala.xml</module>
+        <module>libs.scala.continuations.plugin</module>
         <module>libs.scalariform</module>
         <module>libs.sbt</module>
         <module>libs.xtc</module>

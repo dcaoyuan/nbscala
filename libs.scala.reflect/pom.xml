@@ -49,10 +49,13 @@
                         <publicPackage>scala.reflect.internal</publicPackage>
                         <publicPackage>scala.reflect.internal.pickling</publicPackage>
                         <publicPackage>scala.reflect.internal.settings</publicPackage>
+                        <publicPackage>scala.reflect.internal.tpe</publicPackage>
                         <publicPackage>scala.reflect.internal.transform</publicPackage>
                         <publicPackage>scala.reflect.internal.util</publicPackage>
                         <publicPackage>scala.reflect.io</publicPackage>
                         <publicPackage>scala.reflect.macros</publicPackage>
+                        <publicPackage>scala.reflect.macros.blackbox</publicPackage>
+                        <publicPackage>scala.reflect.macros.whitebox</publicPackage>
                         <publicPackage>scala.reflect.runtime</publicPackage>
                     </publicPackages>
                 </configuration>
