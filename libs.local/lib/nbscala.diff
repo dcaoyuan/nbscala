@@ -1,45 +1,21 @@
 diff --git a/src/compiler/scala/tools/nsc/Global.scala b/src/compiler/scala/tools/nsc/Global.scala
-index aea3e0d..788c3fb 100644
+index 452081c..58259a0 100644
 --- a/src/compiler/scala/tools/nsc/Global.scala
 +++ b/src/compiler/scala/tools/nsc/Global.scala
-@@ -202,6 +202,7 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
+@@ -210,6 +210,8 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
+   val nodeToString = nodePrinters.nodeToString
    val treeBrowser = treeBrowsers.create()
  
-   // ------------ Hooks for interactive mode-------------------------
 +  var qualToRecoveredType = new mutable.HashMap[Tree, Type] 
++
+   // ------------ Hooks for interactive mode-------------------------
  
    /** Called every time an AST node is successfully typechecked in typerPhase.
-    */
-diff --git a/src/compiler/scala/tools/nsc/interactive/Global.scala b/src/compiler/scala/tools/nsc/interactive/Global.scala
-index d6fa42b..c6772fe 100644
---- a/src/compiler/scala/tools/nsc/interactive/Global.scala
-+++ b/src/compiler/scala/tools/nsc/interactive/Global.scala
-@@ -922,8 +922,9 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
-       (!implicitlyAdded || m.implicitlyAdded)
- 
-     def add(sym: Symbol, pre: Type, implicitlyAdded: Boolean)(toMember: (Symbol, Type) => M) {
--      if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
--        add(sym.accessed, pre, implicitlyAdded)(toMember)
-+      val accessed = if (sym.isGetter || sym.isSetter) sym.accessed else NoSymbol
-+      if (accessed != NoSymbol) {
-+        add(accessed, pre, implicitlyAdded)(toMember)
-       } else if (!sym.name.decodedName.containsName(Dollar) && !sym.isSynthetic && sym.hasRawInfo) {
-         val symtpe = pre.memberType(sym) onTypeError ErrorType
-         matching(sym, symtpe, this(sym.name)) match {
-@@ -1054,7 +1055,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
-     }
- 
-     //print("add members")
--    for (sym <- ownerTpe.members)
-+    for (sym <- ownerTpe.resultType.members)
-       addTypeMember(sym, pre, sym.owner != ownerTpe.typeSymbol, NoSymbol)
-     members.allMembers #:: {
-       //print("\nadd pimped")
 diff --git a/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala b/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
-index a7b0e47..2183d5d 100644
+index 20e462b..5275fe8 100644
 --- a/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
 +++ b/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
-@@ -313,6 +313,8 @@ trait ContextErrors {
+@@ -331,6 +331,8 @@ trait ContextErrors {
  
        //typedSelect
        def NotAMemberError(sel: Tree, qual: Tree, name: Name) = {
@@ -49,22 +25,43 @@ index a7b0e47..2183d5d 100644
            val owner            = qual.tpe.typeSymbol
            val target           = qual.tpe.widen
 diff --git a/src/compiler/scala/tools/nsc/typechecker/Namers.scala b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
-index bb93807..ba3a738 100644
+index e876d4a..e845211 100644
 --- a/src/compiler/scala/tools/nsc/typechecker/Namers.scala
 +++ b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
-@@ -1281,6 +1281,7 @@ trait Namers extends MethodSynthesis {
+@@ -1351,9 +1351,11 @@ trait Namers extends MethodSynthesis {
              }
              if (!isConstr)
                methOwner.resetFlag(INTERFACE) // there's a concrete member now
 +            if (parentNamer ne null) { // 'null' should only happen forInteractive
              val default = parentNamer.enterSyntheticSym(defaultTree)
-             if (forInteractive && default.owner.isTerm) {
-               // save the default getters as attachments in the method symbol. if compiling the
-@@ -1292,6 +1293,7 @@ trait Namers extends MethodSynthesis {
-                 case None => meth.updateAttachment(new DefaultsOfLocalMethodAttachment(default))
-               }
-             }
+             if (default.owner.isTerm)
+               saveDefaultGetter(meth, default)
 +            }
-           } else if (baseHasDefault) {
+           }
+           else if (baseHasDefault) {
              // the parameter does not have a default itself, but the
-             // corresponding parameter in the base class does.
+diff --git a/src/interactive/scala/tools/nsc/interactive/Global.scala b/src/interactive/scala/tools/nsc/interactive/Global.scala
+index 174254d..4fbc100 100644
+--- a/src/interactive/scala/tools/nsc/interactive/Global.scala
++++ b/src/interactive/scala/tools/nsc/interactive/Global.scala
+@@ -985,8 +985,9 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
+       (!implicitlyAdded || m.implicitlyAdded)
+ 
+     def add(sym: Symbol, pre: Type, implicitlyAdded: Boolean)(toMember: (Symbol, Type) => M) {
+-      if ((sym.isGetter || sym.isSetter) && sym.accessed != NoSymbol) {
+-        add(sym.accessed, pre, implicitlyAdded)(toMember)
++      val accessed = if (sym.isGetter || sym.isSetter) sym.accessed else NoSymbol
++      if (accessed != NoSymbol) {
++        add(accessed, pre, implicitlyAdded)(toMember)
+       } else if (!sym.name.decodedName.containsName("$") && !sym.isSynthetic && sym.hasRawInfo) {
+         val symtpe = pre.memberType(sym) onTypeError ErrorType
+         matching(sym, symtpe, this(sym.name)) match {
+@@ -1116,7 +1117,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
+     }
+ 
+     //print("add members")
+-    for (sym <- ownerTpe.members)
++    for (sym <- ownerTpe.resultType.members)
+       addTypeMember(sym, pre, sym.owner != ownerTpe.typeSymbol, NoSymbol)
+     members.allMembers #:: {
+       //print("\nadd enrichment")
