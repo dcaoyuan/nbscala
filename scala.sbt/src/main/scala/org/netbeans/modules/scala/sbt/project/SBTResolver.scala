@@ -144,7 +144,8 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
             case entry @ <classpathentry>{ _* }</classpathentry> =>
               (entry \ "@kind").text match {
                 case "src" =>
-                  val path = (entry \ "@path").text.trim.replace("\\", "/")
+                  val path1 = (entry \ "@path").text.trim.replace("\\", "/")
+                  val path = if (path1.startsWith("multi-jvm")) "src/" + path1 else path1 // TODO
                   val isTest = (entry \ "@scope").text.trim.equalsIgnoreCase("test")
                   val isManaged = (entry \ "@managed").text.trim.equalsIgnoreCase("true")
                   val isDepProject = !((entry \ "@exported") isEmpty)
