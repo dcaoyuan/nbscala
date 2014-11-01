@@ -1,6 +1,7 @@
 package org.netbeans.modules.scala.editor
 
 import java.io.StringReader
+import java.util.logging.Logger
 import javax.swing.text.BadLocationException
 import javax.swing.text.StyledDocument
 import org.netbeans.api.project.FileOwnerQuery
@@ -20,6 +21,8 @@ import scalariform.formatter.preferences.RewriteArrowSymbols
 import scalariform.parser.ScalaParserException
 
 class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
+  private val log = Logger.getLogger(this.getClass.getName)
+
   private val doc = context.document.asInstanceOf[StyledDocument]
 
   val diffOptions = HuntDiff.Options(
@@ -56,7 +59,9 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
         val formattedText = try {
           scalariform.formatter.ScalaFormatter.format(text, prefs)
         } catch {
-          case ex: ScalaParserException => null
+          case ex: ScalaParserException =>
+            log.warning(ex.getMessage)
+            null
         }
 
         if (formattedText != null && formattedText.length > 0) {
@@ -140,6 +145,7 @@ object ScalaReformatter {
    * folder.
    */
   class Factory extends ReformatTask.Factory {
+    Logger.getLogger(this.getClass.getName).info("ScalaReformatTaskFactory created")
 
     /**
      * Create reformatting task.

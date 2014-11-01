@@ -196,6 +196,17 @@
                     </folder>
                 </folder>
 
+                <file name="org-netbeans-modules-csl-core-GsfReformatTaskFactory.instance">
+                    <!--org.netbeans.modules.javascript2.editor.JsLanguage-->
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.core.GsfReformatTaskFactory"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.modules.editor.indent.spi.ReformatTask$Factory"/>
+                </file>
+                <file name="org-netbeans-modules-csl-core-GsfIndentTaskFactory.instance">
+                    <!--org.netbeans.modules.javascript2.editor.JsLanguage-->
+                    <attr name="instanceClass" stringvalue="org.netbeans.modules.csl.core.GsfIndentTaskFactory"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.modules.editor.indent.spi.IndentTask$Factory"/>
+                </file>
+
                 <file name="Reformatter.instance">
                     <attr name="instanceClass" stringvalue="org.netbeans.modules.scala.editor.ScalaReformatter$Factory"/>
                 </file>

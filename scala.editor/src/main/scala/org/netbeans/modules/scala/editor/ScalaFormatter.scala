@@ -64,6 +64,8 @@ import scala.collection.mutable.{ ArrayBuffer, Stack }
 class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends Formatter {
   import ScalaFormatter._
 
+  val reformatterFactory = new ScalaReformatter.Factory
+
   def this() = this(null, -1)
 
   def needsParserResult: Boolean = {
@@ -85,6 +87,11 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
   }
 
   override def reformat(context: Context, info: ParserResult) {
+    val reformatter = reformatterFactory.createTask(context)
+    reformatter.reformat()
+  }
+
+  def reformatSimple(context: Context, info: ParserResult) {
     val doc = context.document
     val startOffset = context.startOffset
     val endOffset = context.endOffset
