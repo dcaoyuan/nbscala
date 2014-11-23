@@ -522,7 +522,7 @@ is divided into following sections:
                             <xsl:attribute name="excludes">@{excludes}</xsl:attribute>
                             <xsl:attribute name="force">yes</xsl:attribute>
                             <xsl:attribute name="fork">true</xsl:attribute>
-                            <xsl:attribute name="addparams">-make:transitive -dependencyfile &quot;${basedir}/${build.dir}/.scala_dependencies&quot; @{addparams}</xsl:attribute>
+                            <xsl:attribute name="addparams">-dependencyfile &quot;${basedir}/${build.dir}/.scala_dependencies&quot; @{addparams}</xsl:attribute>
                             <!--<xsl:attribute name="includeantruntime">false</xsl:attribute>-->
                             <classpath>
                                 <path>
