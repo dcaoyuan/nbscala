@@ -43,6 +43,7 @@ made subject to such option by the copyright holder.
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
 <filesystem>
     
+    <!--
     <folder name="Loaders">
         <folder name="text">
             <folder name="x-scala">
@@ -71,7 +72,9 @@ made subject to such option by the copyright holder.
             </folder>
         </folder>
     </folder>
+    -->
     
+    <!--
     <folder name="Templates">
         <folder name="Project">
 
@@ -114,6 +117,7 @@ made subject to such option by the copyright holder.
             </folder>
         </folder>
     </folder>
+    -->
 
     <!--
     <folder name="org-netbeans-api-project-libraries">
@@ -124,6 +128,7 @@ made subject to such option by the copyright holder.
     -->
     <folder name="Projects">
         <folder name="org-netbeans-modules-scala-project">
+            <!--
             <folder name="Customizer">
                 <file name="Sources.instance">
                     <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.project.ui.customizer.J2SECompositePanelProvider.createSources"/>
@@ -169,6 +174,7 @@ made subject to such option by the copyright holder.
                 </file>
 
             </folder>
+            -->
 
             <!-- register JavaType source node factory here, since this factory class can be shared by other project, it won't be registered by @NodeFactory.Registration -->
             <folder name="Nodes">
