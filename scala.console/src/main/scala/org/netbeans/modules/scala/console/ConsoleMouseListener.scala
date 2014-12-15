@@ -58,41 +58,43 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
         }
 
         openFile(file, lineNo)
+
       case _ =>
-    }
+        if (evt.getClickCount != 2) { // double click may be a text selection action
+          // [Issue 91208]  avoid of putting cursor in console on line where is not a prompt
+          val mouseX = evt.getX
+          val mouseY = evt.getY
+          // Ensure that this is done after the textpane's own mouse listener
+          SwingUtilities.invokeLater(new Runnable() {
+            def run() {
+              // Attempt to force the mouse click to appear on the last line of the text input
+              var pos = textPane.getDocument.getLength
+              if (pos == -1) {
+                return
+              }
 
-    if (evt.getClickCount != 2) { // double click may be a text selection action
-      // [Issue 91208]  avoid of putting cursor in console on line where is not a prompt
-      val mouseX = evt.getX
-      val mouseY = evt.getY
-      // Ensure that this is done after the textpane's own mouse listener
-      SwingUtilities.invokeLater(new Runnable() {
-        def run() {
-          // Attempt to force the mouse click to appear on the last line of the text input
-          var pos = textPane.getDocument.getLength
-          if (pos == -1) {
-            return
-          }
+              try {
+                val r = textPane.modelToView(pos)
+                if (mouseY >= r.y) {
+                  // The click was on the last line; try to set the X to the position where
+                  // the user clicked since perhaps it was an attempt to edit the existing
+                  // input string. Later I could perhaps cast the text document to a StyledDocument,
+                  // then iterate through the document positions and locate the end of the
+                  // input prompt (by comparing to the promptStyle in TextAreaReadline).
+                  r.x = mouseX
+                  pos = textPane.viewToModel(r.getLocation)
+                }
 
-          try {
-            val r = textPane.modelToView(pos)
-            if (mouseY >= r.y) {
-              // The click was on the last line; try to set the X to the position where
-              // the user clicked since perhaps it was an attempt to edit the existing
-              // input string. Later I could perhaps cast the text document to a StyledDocument,
-              // then iterate through the document positions and locate the end of the
-              // input prompt (by comparing to the promptStyle in TextAreaReadline).
-              r.x = mouseX
-              pos = textPane.viewToModel(r.getLocation)
+                textPane.setCaretPosition(pos)
+              } catch {
+                case ex: BadLocationException => Exceptions.printStackTrace(ex)
+              }
             }
-
-            textPane.setCaretPosition(pos)
-          } catch {
-            case ex: BadLocationException => Exceptions.printStackTrace(ex)
-          }
+          })
         }
-      })
+
     }
+
   }
 
   private def openFile(file: File, lineNo: Int) {

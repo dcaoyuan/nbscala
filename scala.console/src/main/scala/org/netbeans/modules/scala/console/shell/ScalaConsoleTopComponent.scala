@@ -220,10 +220,6 @@ final class ScalaConsoleTopComponent private (project: Project) extends TopCompo
 object ScalaConsoleTopComponent {
   private val log = Logger.getLogger(this.getClass.getName)
 
-  val defaultFg = Color.BLACK
-  val defaultBg = Color.WHITE
-  val linkFg = Color.BLUE
-
   /**
    * path to the icon used by the component and its open action
    */
