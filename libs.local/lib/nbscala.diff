@@ -1,8 +1,8 @@
 diff --git a/src/compiler/scala/tools/nsc/Global.scala b/src/compiler/scala/tools/nsc/Global.scala
-index 452081c..58259a0 100644
+index 733664c..d194523 100644
 --- a/src/compiler/scala/tools/nsc/Global.scala
 +++ b/src/compiler/scala/tools/nsc/Global.scala
-@@ -210,6 +210,8 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
+@@ -223,6 +223,8 @@ class Global(var currentSettings: Settings, var reporter: Reporter)
    val nodeToString = nodePrinters.nodeToString
    val treeBrowser = treeBrowsers.create()
  
@@ -12,7 +12,7 @@ index 452081c..58259a0 100644
  
    /** Called every time an AST node is successfully typechecked in typerPhase.
 diff --git a/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala b/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
-index 20e462b..5275fe8 100644
+index 866ca37..7519dd5 100644
 --- a/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
 +++ b/src/compiler/scala/tools/nsc/typechecker/ContextErrors.scala
 @@ -331,6 +331,8 @@ trait ContextErrors {
@@ -25,10 +25,10 @@ index 20e462b..5275fe8 100644
            val owner            = qual.tpe.typeSymbol
            val target           = qual.tpe.widen
 diff --git a/src/compiler/scala/tools/nsc/typechecker/Namers.scala b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
-index e876d4a..e845211 100644
+index 0bb94be..3632c7c 100644
 --- a/src/compiler/scala/tools/nsc/typechecker/Namers.scala
 +++ b/src/compiler/scala/tools/nsc/typechecker/Namers.scala
-@@ -1351,9 +1351,11 @@ trait Namers extends MethodSynthesis {
+@@ -1354,9 +1354,11 @@ trait Namers extends MethodSynthesis {
              }
              if (!isConstr)
                methOwner.resetFlag(INTERFACE) // there's a concrete member now
@@ -40,11 +40,21 @@ index e876d4a..e845211 100644
            }
            else if (baseHasDefault) {
              // the parameter does not have a default itself, but the
+@@ -1771,7 +1773,8 @@ trait Namers extends MethodSynthesis {
+     // SI-7264 Force the info of owners from previous compilation runs.
+     //         Doing this generally would trigger cycles; that's what we also
+     //         use the lower-level scan through the current Context as a fall back.
+-    if (!currentRun.compiles(owner)) owner.initialize
++    if (!currentRun.compiles(owner) && !owner.rawInfo.isInstanceOf[TypeCompleter])
++      owner.initialize
+     original.companionSymbol orElse {
+       ctx.lookup(original.name.companionName, owner).suchThat(sym =>
+         (original.isTerm || sym.hasModuleFlag) &&
 diff --git a/src/interactive/scala/tools/nsc/interactive/Global.scala b/src/interactive/scala/tools/nsc/interactive/Global.scala
-index 174254d..4fbc100 100644
+index 5d00141..b181be2 100644
 --- a/src/interactive/scala/tools/nsc/interactive/Global.scala
 +++ b/src/interactive/scala/tools/nsc/interactive/Global.scala
-@@ -985,8 +985,9 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
+@@ -992,8 +992,9 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
        (!implicitlyAdded || m.implicitlyAdded)
  
      def add(sym: Symbol, pre: Type, implicitlyAdded: Boolean)(toMember: (Symbol, Type) => M) {
@@ -56,7 +66,7 @@ index 174254d..4fbc100 100644
        } else if (!sym.name.decodedName.containsName("$") && !sym.isSynthetic && sym.hasRawInfo) {
          val symtpe = pre.memberType(sym) onTypeError ErrorType
          matching(sym, symtpe, this(sym.name)) match {
-@@ -1116,7 +1117,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
+@@ -1123,7 +1124,7 @@ class Global(settings: Settings, _reporter: Reporter, projectName: String = "")
      }
  
      //print("add members")
