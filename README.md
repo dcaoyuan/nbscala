@@ -4,10 +4,10 @@ NetBeans Plugin for Scala
 ## Index
 1. Common Informations
  1. Where to start?
- 2. Community
- 3. Snapshot Builds
-2. Build Instructions
-3. Project Details
+ 1. Community
+ 1. Snapshot Builds
+1. Build Instructions
+1. Project Details
 
 ## Common Informations
 This is a plugin of the Netbeans Platform for the [scala language](http://http://www.scala-lang.org/). In the case of a maven scala project, no local installation of scala is needed. It enables syntax checking, syntax highlighting, auto-completion, pretty formatter, occurrences mark, brace matching, indentation, code folding, function navigator, go to declaration, project management and a shell console. It's is specially useful if you are a maven user.
@@ -48,7 +48,7 @@ Cause of the small group of people involved in the project we only supply update
 * NetBeans 7.4+
 
 ### Branches:
-* master -- tracking Scala 2.10.x currently
+* master -- tracking Scala 2.10.x and 2.11.x currently
 * 2.9.x  -- for Scala 2.9.x
 
 ### Setting nb.installation property for maven
@@ -149,7 +149,7 @@ Pack a zip file for plugins.netbeans.org:
 
 ## Project Details
 
-The Project targets version 2.10.x of the scala release.
+The Project targets version 2.10.x and 2.11.x of the scala release.
 
 
 
@@ -184,7 +184,7 @@ The Project targets version 2.10.x of the scala release.
 ### How to
 
 * Install the newest nbscala plugins, [download directly](http://plugins.netbeans.org/plugin/54162) or [build by yourself](https://github.com/dcaoyuan/nbscala) on NetBeans 7.4+.
-* Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt> (nbsbt-plugin 1.1.2 has been deployed to repo.scala-sbt.org, that means it will be automatilly resolved when you run sbt):
+* Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt> (nbsbt-plugin 1.1.2+ has been deployed to repo.scala-sbt.org, that means it will be automatilly resolved when you run sbt):
 
         git clone git@github.com:dcaoyuan/nbsbt.git
         cd nbsbt
@@ -192,7 +192,7 @@ The Project targets version 2.10.x of the scala release.
 
 * Add nbsbt to your plugin definition file. You can use either the global one at  **~/.sbt/0.13/plugins/plugins.sbt** or the project-specific one at **PROJECT_DIR/project/plugins.sbt**
 
-        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.1.2")
+        addSbtPlugin("org.netbeans.nbsbt" % "nbsbt-plugin" % "1.1.4")
 
 
 ## FAQ
@@ -212,7 +212,7 @@ The Project targets version 2.10.x of the scala release.
 **A**: Try to remove published nbsbt plugin from your local .ivy2 repository and sbt plugins cache:
 
     rm -r ~/.ivy2/local/org.netbeans.nbsbt
-    rm -r ~/.sbt/plugins/target
+    rm -r ~/.sbt/0.13/plugins/target
 
 and redo 'publish-local' for the NetBeans sbt plugin <https://github.com/dcaoyuan/nbsbt>.
 
