@@ -1,15 +1,7 @@
 NetBeans Plugin for Scala
 =========================
 
-## Index
-1. Common Informations
- 1. Where to start?
- 1. Community
- 1. Snapshot Builds
-1. Build Instructions
-1. Project Details
-
-## Common Informations
+## Project Informations
 This is a plugin of the Netbeans Platform for the [scala language](http://http://www.scala-lang.org/). In the case of a maven scala project, no local installation of scala is needed. It enables syntax checking, syntax highlighting, auto-completion, pretty formatter, occurrences mark, brace matching, indentation, code folding, function navigator, go to declaration, project management and a shell console. It's is specially useful if you are a maven user.
 
 ### Notice ###
@@ -21,10 +13,12 @@ The project central point is [https://github.com/dcaoyuan/nbscala](). There are 
 ### Community
 Until recently, this has mostly been a one man project. Some patches were supplied by different people, but I'm still convinced that it will gather a community soon. For questions and bug reports use the [issue tracker](https://github.com/dcaoyuan/nbscala/issues). If interested in joining the project, you can write me directly or send patches/pull requests.
 
-### Where to download
-Released builds can be found here [https://sourceforge.net/projects/erlybird/files/nb-scala/](https://sourceforge.net/projects/erlybird/files/nb-scala/). Choose proper folder which begins with NetBeans version number then followed supported Scala version. If I have time, the plugins will also be uploaded to [http://plugins.netbeans.org](plugins.netbeans.org), and may be avaliable via the NetBeans Update Center automatically when it passed verification by NetBeans staffs.
+## Installation
 
-### Installation
+### Installation via NetBeans Update Center
+The plugins will be available at [http://plugins.netbeans.org](plugins.netbeans.org), thus could be installed via the NetBeans Update Center automatically when it passed verification by NetBeans staffs.
+
+### Manual Installation
 Make sure you don't have an old version installed. (Check your netbeans installation for a 'nbscala' directory: if it exists, delete it.)
 
 1. Download the latest release at plugins.netbeans.org.
@@ -34,18 +28,25 @@ Make sure you don't have an old version installed. (Check your netbeans installa
 5. Select all extracted files.
 6. Accept the license and the installation of unsigned plugins. 
 
+### Installation Notes:
+
+ * After installation, it's always better to restart NetBeans
+ * You may need to delete NetBeans' old cache to get improved features working. To find the cache location, read the netbeans.conf at:
+
+        $NetBeansInstallationPlace/etc/netbeans.conf
+
 ## Build Instructions
-Cause of the small group of people involved in the project we only supply updates for the latest netbeans version.
+Cause of the small group of people involved in the project we only supply updates for the latest NetBean version.
 
-### Requirement - Run:
+### Requirement - Running:
 * Java 1.6+
-* NetBeans 7.4+
+* NetBeans 8.0+
 
-### Requirement - Build:
+### Requirement - Building:
 * Java 1.7 (for master branch)
 * Java 1.6 (for 2.9.x branch)
 * Maven 2.x/3.x 
-* NetBeans 7.4+
+* NetBeans 8.0+
 
 ### Branches:
 * master -- tracking Scala 2.10.x and 2.11.x currently
@@ -74,7 +75,7 @@ Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:r
 
 or even more:
 
-    MAVEN_OPTS=-Xss8M -Xmx1024M
+    MAVEN_OPTS=-Xss8M -Xmx2048M
 
 ### Build all nbms
 
@@ -111,7 +112,7 @@ Build-Debug-Cycle: (after changed module was successfuly built)
 
 ### Publish to plugins.netbeans.org
 
-Generate keys/keystore (note: The keystore and key password needs to be the same):
+Generate keys/keystore (note: The keystore and key password needs to be the same) (only need to create once):
 
     keytool -genkey -dname "CN=Caoyuan Deng, OU=nbscala, O=inloop.io, L=Richmond, S=BC, C=CA" -alias nbscala -validity 1800
     keytool -list -v
@@ -139,23 +140,13 @@ Pack a zip file for plugins.netbeans.org:
     zip nbscala-version.zip *.nbm
 
 
-
-### Installation Notes:
-
- * After installation, it's always better to restart NetBeans
- * You may need to delete NetBeans' old cache to get improved features working. To find the cache location, read the netbeans.conf at:
-
-        $NetBeansInstallationPlace/etc/netbeans.conf
-
 ## Project Details
 
-The Project targets version 2.10.x and 2.11.x of the scala release.
-
-
+The Project targets version 2.10.x and 2.11.x of the Scala release.
 
 ## Scala Console Integration
 
-### A new Scala shell console was implemented recently (since Feb 27, 2013)
+### A new Scala shell console was implemented since Feb 27, 2013
 
 ### To open it, right click on project, and choose "Open Scala Console"
 
@@ -165,11 +156,9 @@ The Project targets version 2.10.x and 2.11.x of the scala release.
 * Popup auto-completion when press \<tab\>
 * Applied also to Java SE projects and Maven projects
 
+## SBT Integration
 
-
-## Sbt Integration
-
-### Only Scala-2.10+ is supported under NetBeans
+### Only Scala-2.10+ is supported under for SBT integration 
 
 * That is, always try to set your project's Scala version to 2.10+ in Build.scala or build.sbt: 
 
@@ -179,16 +168,11 @@ The Project targets version 2.10.x and 2.11.x of the scala release.
 
 * Recognize sbt project and open in NetBeans
 * Open sbt console in NetBeans (Right click on sbt project, choose "Open Sbt")
-* Jump to/Open compile error lines
+* Jump to compile error lines
 
 ### How to
 
-* Install the newest nbscala plugins, [download directly](http://plugins.netbeans.org/plugin/54162) or [build by yourself](https://github.com/dcaoyuan/nbscala) on NetBeans 7.4+.
-* Git clone, build and publish-local a NetBeans special sbt plugin <https://github.com/dcaoyuan/nbsbt> (nbsbt-plugin 1.1.2+ has been deployed to repo.scala-sbt.org, that means it will be automatilly resolved when you run sbt):
-
-        git clone git@github.com:dcaoyuan/nbsbt.git
-        cd nbsbt
-        sbt clean compile publish-local
+* nbsbt-plugin 1.1.2+ has been deployed to repo.scala-sbt.org, that means it will be automatilly resolved when you run sbt):
 
 * Add nbsbt to your plugin definition file. You can use either the global one at  **~/.sbt/0.13/plugins/plugins.sbt** or the project-specific one at **PROJECT_DIR/project/plugins.sbt**
 
@@ -197,13 +181,16 @@ The Project targets version 2.10.x and 2.11.x of the scala release.
 
 ## FAQ
 
+
 **Q**: NetBeans' response becomes slower after a while.
 
-**A**: Edit your NetBeans configuration file (NetBeansInstallationPlace/etc/netbeans.conf), add -J-Xmx1024M (or bigger)
+**A**: Edit your NetBeans configuration file (NetBeansInstallationPlace/etc/netbeans.conf), add -J-Xmx2048M (or bigger)
 
-**Q**: How to navigate sbt project's dependency sources.
 
-**A**: From version 1.6.3, this plugin supported to open ivy's sources jar. You may need to have sbt download the dependency's sources, please see http://www.scala-sbt.org/0.13.1/docs/Detailed-Topics/Library-Management.html#download-sources. Hint: run "updateClassifiers"
+**Q**: How to navigate SBT project's dependency sources.
+
+**A**: You should have SBT download the dependency's sources via sbt command: `sbt updateClassifiers`, please see http://www.scala-sbt.org/0.13.1/docs/Detailed-Topics/Library-Management.html#download-sources. 
+
 
 **Q**: I got:
 
