@@ -231,6 +231,7 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <author>Caoyuan Deng</author>
                     <codeNameBase>org.netbeans.modules.scala.core/1</codeNameBase>
                     <licenseName>CDDL-GPLV2</licenseName>
                     <licenseFile>license.txt</licenseFile>

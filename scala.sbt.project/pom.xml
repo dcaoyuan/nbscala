@@ -57,74 +57,12 @@
             <version>${netbeans.version}</version>
         </dependency>
 
-        <!--
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
-            <version>${netbeans.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scala-library</artifactId>
-            <version>${libs.scala.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scala-xml</artifactId>
-            <version>${libs.scala.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-modules-scala-console</artifactId>
-            <version>${scala.console.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-modules-scala-core</artifactId>
-            <version>${scala.core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-modules-scala-editor</artifactId>
-            <version>${scala.editor.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-modules-scala-project</artifactId>
-            <version>${scala.project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scalariform</artifactId>
-            <version>${libs.scalariform.version}</version>
-        </dependency>
--->
-        <!-- sbt-launcher.jar contains a redundant copy of scala runtime packages, which may be conflict
-             on standard scala runtime dependencies, and causes something like:
-             WARNING [org.netbeans.ProxyClassLoader]: Will not load class scala.collection.immutable.List
-             arbitrarily from one of ModuleCL@236b9929[org.netbeans.libs.sbt] and
-             ModuleCL@482ee649[org.netbeans.libs.scala.library] starting from SystemClassLoader[458 modules];
-             see http://wiki.netbeans.org/DevFaqModuleCCE
-             So, set the scope to runtime.
-             If in the future, we need compile dependencies on sbt's package, we should put the runtime only
-             sbt-launcher.jar to a standardalone module.
-        -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-libs-sbt</artifactId>
             <version>${libs.sbt.version}</version>
             <scope>runtime</scope>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-modules-options-api</artifactId>
-            <version>${netbeans.version}</version>
-        </dependency>
-        -->
     </dependencies>
 
     <build>
@@ -146,6 +84,7 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <author>Caoyuan Deng</author>
                     <codeNameBase>org.netbeans.modules.scala.sbt.project.template/1</codeNameBase>
                     <licenseName>CDDL-GPLV2</licenseName>
                     <licenseFile>license.txt</licenseFile>

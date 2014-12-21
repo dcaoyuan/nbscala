@@ -42,6 +42,7 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <author>Caoyuan Deng</author>
                     <codeNameBase>org.netbeans.libs.scala.xml/1</codeNameBase>
                     <licenseName>BSD-style License</licenseName>
                     <licenseFile>license.txt</licenseFile>

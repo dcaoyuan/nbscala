@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
+OpenIDE-Module-Display-Category: Scala
 AutoUpdate-Show-In-Client: true
 OpenIDE-Module: org.netbeans.modules.scala.sbt.project.template
 OpenIDE-Module-Localizing-Bundle: org/netbeans/modules/scala/sbt/project/template/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.0
 

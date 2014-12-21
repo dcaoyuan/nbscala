@@ -26,6 +26,7 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
+                    <author>Caoyuan Deng</author>
                     <codeNameBase>xtc/1</codeNameBase>
                     <licenseName>LGPL version 2.1</licenseName>
                     <licenseFile>license.txt</licenseFile>
