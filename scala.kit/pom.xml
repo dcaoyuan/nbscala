@@ -98,6 +98,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-sbt-project-template</artifactId>
+            <version>${scala.sbt.project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-modules-scala-stdplatform</artifactId>
             <version>${scala.stdplatform.version}</version>
         </dependency>

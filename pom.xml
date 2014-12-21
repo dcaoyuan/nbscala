@@ -58,7 +58,7 @@
              we should build it using lower version NetBeans to get it to be able installed both
              on lower and higher version, unless we use un-compatible features of higher version.
         -->
-        <netbeans.version>RELEASE80</netbeans.version>
+        <netbeans.version>RELEASE802</netbeans.version>
 
         <scala.version>2.11.3-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
         <sbt.version>0.13.1</sbt.version>
@@ -77,6 +77,7 @@
         <scala.maven.version>1.7.0.0</scala.maven.version>
         <scala.platform.version>1.7.0.0</scala.platform.version>
         <scala.sbt.version>1.7.0.0</scala.sbt.version>
+        <scala.sbt.project.version>1.7.0.0</scala.sbt.project.version>
         <scala.stdplatform.version>1.7.0.0</scala.stdplatform.version>
         <scala.project.version>1.7.0.0</scala.project.version>
         <scala.refactoring.version>1.7.0.0</scala.refactoring.version>
@@ -365,6 +366,7 @@
         <module>scala.maven</module>
         <module>scala.platform</module>
         <module>scala.sbt</module>
+        <module>scala.sbt.project</module>
         <module>scala.stdplatform</module>
         <module>scala.project</module>
         <module>scala.refactoring</module>
