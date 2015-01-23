@@ -2,7 +2,6 @@ package org.netbeans.modules.scala.sbt.project
 
 import java.io.IOException
 import org.netbeans.api.project.Project
-import org.netbeans.api.project.ProjectManager
 import org.netbeans.spi.project.ProjectFactory
 import org.netbeans.spi.project.ProjectState
 import org.openide.filesystems.FileObject
@@ -62,7 +61,7 @@ object SBTProjectType {
   }
 
   def isSBTProjectDir(projDir: FileObject) = {
-    !isMavenProject(projDir) && !isProjectFolder(projDir) && !isWithinOtherProject(projDir) &&
+    !isMavenProject(projDir) && !isProjectFolder(projDir) && !isUnderSrcFolder(projDir) &&
       (hasSbtProjectDefinition(projDir) || hasStdScalaSrcDir(projDir) || hasNBDescriptorFile(projDir))
   }
 
@@ -89,16 +88,8 @@ object SBTProjectType {
     projectDir.getNameExt == "project"
   }
 
-  def isWithinOtherProject(projectDir: FileObject) = {
-    isProjectRecursiveParent(projectDir.getParent)
-  }
-
-  private def isProjectRecursiveParent(dir: FileObject): Boolean = Option(dir) match {
-    case None => false
-    case Some(x) => if (ProjectManager.getDefault.isProject(x))
-      true
-    else
-      isProjectRecursiveParent(x.getParent)
+  def isUnderSrcFolder(projectDir: FileObject) = {
+    projectDir.getPath.split("/") find (_ == "src") isDefined
   }
 
   def hasStdScalaSrcDir(projectDir: FileObject): Boolean = {
