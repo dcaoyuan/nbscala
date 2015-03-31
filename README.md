@@ -16,7 +16,7 @@ Until recently, this has mostly been a one man project. Some patches were suppli
 ## Installation
 
 ### Installation via NetBeans Update Center
-The plugins will be available at [http://plugins.netbeans.org](plugins.netbeans.org), thus could be installed via the NetBeans Update Center automatically when it passed verification by NetBeans staffs.
+The plugins will be available at [http://plugins.netbeans.org](http://plugins.netbeans.org), thus could be installed via the NetBeans Update Center automatically when it passed verification by NetBeans staffs.
 
 ### Manual Installation
 Make sure you don't have an old version installed. (Check your netbeans installation for a 'nbscala' directory: if it exists, delete it.)
