@@ -756,11 +756,6 @@ class ConsoleTerminal(val area: JTextPane, pipedIn: PipedInputStream, welcome: S
       // --- evt consumes
       keyCode match {
         case VK_C if evt.isMetaDown | evt.isControlDown => // copy action (@Note Ctrl+A is used to move to line begin)
-        case VK_V if evt.isMetaDown | evt.isControlDown => // paste action
-          // for console, only paste at the end is meaningful. Anyway, just write them to terminalInput dicarding the caret position
-          val data = Toolkit.getDefaultToolkit.getSystemClipboard.getData(DataFlavor.stringFlavor).asInstanceOf[String]
-          terminalInput.write(data.getBytes("utf-8"))
-          evt.consume
         case _ =>
           evt.consume
       }
