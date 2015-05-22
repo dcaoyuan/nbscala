@@ -77,7 +77,7 @@ class RefactoringTreeElement(element: RefactoringElement) extends TreeElement {
 
   override def getText(isLogical: Boolean): String = {
     if (isLogical) {
-      RetoucheUtils.htmlize(thisFeature.toString()) + " ... " + element.getDisplayText
+      RetoucheUtils.htmlize(thisFeature.name) + " ... " + element.getDisplayText
     } else {
       element.getDisplayText
     }
