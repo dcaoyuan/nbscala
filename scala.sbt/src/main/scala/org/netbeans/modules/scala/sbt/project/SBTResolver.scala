@@ -160,8 +160,10 @@ class SBTResolver(project: SBTProject) extends ChangeListener {
                   }
 
                   if (srcFo != null && !isDepProject) {
-                    val isJava = srcFo.getPath.split("/") find (_ == "java") isDefined
-                    val isResources = srcFo.getPath.split("/") find (_ == "resources") isDefined
+                    // use 'path' directly instead of srcFo as the full path could contain 'java' in the parent
+                    // e.g. /usr/local/java/projects/fooProj/src/main/scala is identified as a "java" source
+                    val isJava = path.split("/") find (_ == "java") isDefined
+                    val isResources = path.split("/") find (_ == "resources") isDefined
                     val srcDir = FileUtil.toFile(srcFo)
                     val srcs = if (isTest) {
                       if (isManaged) {
