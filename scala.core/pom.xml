@@ -68,6 +68,10 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-java-source-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-java-sourceui</artifactId>
         </dependency>
         <dependency>
@@ -80,11 +84,19 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-parsing-indexing</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-projectapi</artifactId>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-projectuiapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-projectuiapi-base</artifactId>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
@@ -136,15 +148,19 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-windows</artifactId>
         </dependency>
 
-        <!-- scalac transitive dependencies (scalac will check class dependencies deeply): <scope>provided</scope> -->
-        <dependency>
+        <!-- maven or scalac transitive dependencies (scalac will check class dependencies deeply): <scope>runtime</scope> -->
+<!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
-            <scope>provided</scope>
-        </dependency>
+            <scope>runtime</scope>
+        </dependency>-->
 
         <!-- subproject dependencies -->
         <dependency>
@@ -200,7 +216,7 @@
                     <!-- to resolve the references to friend modules or private classes -->
                     <moduleDependencies>
                         <dependency>
-                            <id>org.netbeans.api:org-netbeans-modules-parsing-api</id>
+                            <id>org.netbeans.api:org-netbeans-modules-parsing-indexing</id>
                             <type>impl</type>
                         </dependency>
                     </moduleDependencies>

@@ -80,24 +80,11 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
-            <artifactId>org-openide-windows</artifactId>
-        </dependency>
-
-        <!-- scalac transitive dependencies (scalac will check class dependencies deeply): <scope>provided</scope> -->
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-modules-debugger-jpda-ui</artifactId>
-            <scope>provided</scope>
+            <artifactId>org-openide-util-ui</artifactId>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
-            <artifactId>org-netbeans-libs-javacapi</artifactId>
-            <scope>provided</scope>
+            <artifactId>org-openide-windows</artifactId>
         </dependency>
 
         <dependency> <!-- to avoid transitive dependencies on following jars that are brought in by log4j-1.2.15 -->
