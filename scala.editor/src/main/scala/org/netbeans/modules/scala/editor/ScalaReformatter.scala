@@ -3,8 +3,8 @@ package org.netbeans.modules.scala.editor
 import java.io.StringReader
 import java.util.logging.Logger
 import javax.swing.text.BadLocationException
-import javax.swing.text.StyledDocument
 import org.netbeans.api.project.FileOwnerQuery
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.editor.indent.spi.Context
 import org.netbeans.modules.editor.indent.spi.ExtraLock
 import org.netbeans.modules.editor.indent.spi.ReformatTask
@@ -23,7 +23,7 @@ import scalariform.parser.ScalaParserException
 class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
   private val log = Logger.getLogger(this.getClass.getName)
 
-  private val doc = context.document.asInstanceOf[StyledDocument]
+  private val doc = context.document.asInstanceOf[BaseDocument]
 
   val diffOptions = HuntDiff.Options(
     ignoreCase = false,
@@ -33,7 +33,12 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
   @throws(classOf[BadLocationException])
   def reformat() {
     val cs = CodeStyle.get(doc)
-    val project = FileOwnerQuery.getOwner(source.getFileObject)
+    val fo = source.getFileObject
+    if (fo == null) {
+      return
+    }
+
+    val project = FileOwnerQuery.getOwner(fo)
     val prefs = if (project != null) {
       val formPrefsProvider = project.getLookup.lookup(classOf[ScalariformPrefsProvider])
       if (formPrefsProvider != null) {
