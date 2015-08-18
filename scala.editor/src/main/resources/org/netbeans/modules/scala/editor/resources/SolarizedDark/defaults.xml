@@ -28,7 +28,7 @@
     <fontcolor name="default" foreColor="93a1a1" bgColor="002b36"> <!-- base1/base03 -->
         <font name="Monospaced" size="13" style="plain" />
     </fontcolor>
-    <fontcolor name="number" foreCorlor="2aa198" /> <!-- cyan -->
+    <fontcolor name="number" foreColor="2aa198" /> <!-- cyan -->
     <fontcolor name="char" foreColor="2aa198" /> <!-- cyan -->
     <fontcolor name="string" foreColor="2aa198" /> <!-- cyan -->
     <fontcolor name="keyword" foreColor="6c71c4"> <!-- voilet -->

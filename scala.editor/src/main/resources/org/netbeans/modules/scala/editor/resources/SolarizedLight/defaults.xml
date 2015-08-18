@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE fontscolors PUBLIC "-//NetBeans//DTD Editor Fonts and Colors settings 1.1//EN" "http://www.netbeans.org/dtds/EditorFontsColors-1_1.dtd">
+
 <fontscolors>
     <!-- see http://ethanschoonover.com/solarized -->
 
@@ -28,7 +29,7 @@
     <fontcolor name="default" foreColor="586e75" bgColor="fdf6e3"> <!-- base01/base3 -->
         <font name="Monospaced" size="13" style="plain" />
     </fontcolor>
-    <fontcolor name="number" foreCorlor="2aa198" /> <!-- cyan -->
+    <fontcolor name="number" foreColor="2aa198" /> <!-- cyan -->
     <fontcolor name="char" foreColor="2aa198" /> <!-- cyan -->
     <fontcolor name="string" foreColor="2aa198" /> <!-- cyan -->
     <fontcolor name="keyword" foreColor="6c71c4"> <!-- violet -->
