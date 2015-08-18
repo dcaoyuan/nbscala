@@ -28,7 +28,7 @@ class AggProjectsNodeFactory extends NodeFactory {
 
 object AggProjectsNodeFactory {
   private val AGG_PROJECTS = "agg-projects"
-  private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png") //NOI18N
+  private val ICON_LIB_BADGE = ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/resources/libraries-badge.png") //NOI18N
 
   private class ProjectsNodeList(project: SBTProject) extends NodeList[String] {
     private val cs = new ChangeSupport(this)
