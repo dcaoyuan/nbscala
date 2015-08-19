@@ -40,8 +40,9 @@
 package org.netbeans.modules.scala.editor
 
 import javax.swing.text.{ BadLocationException, Caret, Document, JTextComponent }
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.api.lexer.{ TokenHierarchy, TokenId }
-import org.netbeans.editor.{ BaseDocument, Utilities }
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.csl.api.{ EditorOptions, KeystrokeHandler, OffsetRange }
 import org.netbeans.modules.csl.spi.{ GsfUtilities, ParserResult }
 import org.netbeans.modules.editor.indent.api.IndentUtils
@@ -118,10 +119,10 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
     val caret = target.getCaret
     val doc = document.asInstanceOf[BaseDocument]
 
-    val lineBeg = Utilities.getRowStart(doc, offset)
-    val lineEnd = Utilities.getRowEnd(doc, offset)
+    val lineStart = LineDocumentUtils.getLineStart(doc, offset)
+    val lineEnd = LineDocumentUtils.getLineEnd(doc, offset)
 
-    if (lineBeg == offset && lineEnd == offset) {
+    if (lineStart == offset && lineEnd == offset) {
       return -1 // pressed return on a blank newline - do nothing
     }
 
@@ -152,7 +153,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       val insertRBrace = insertRBraceResult(0)
       val indent = indentResult(0)
 
-      val offsetLastNonWhite = Utilities.getRowLastNonWhite(doc, offset)
+      val offsetLastNonWhite = LineDocumentUtils.getLineLastNonWhitespace(doc, offset)
 
       // We've either encountered a further indented line, or a line that doesn't
       // look like the end we're after, so insert a matching end.
@@ -163,7 +164,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       } else {
         // I'm inserting a newline in the middle of a sentence, such as the scenario in #118656
         // I should insert the end AFTER the text on the line
-        val restOfLine = doc.getText(offset, Utilities.getRowEnd(doc, offsetLastNonWhite) - offset)
+        val restOfLine = doc.getText(offset, LineDocumentUtils.getLineEnd(doc, offsetLastNonWhite) - offset)
         sb.append(restOfLine)
         sb.append("\n")
         sb.append(IndentUtils.createIndentString(doc, indent))
@@ -189,7 +190,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         // * See if it's a block comment opener, since this token is Identifier,
         // * means it's not comment closed yet
         val text = token.text.toString
-        if (text.startsWith("/*") && ts.offset == Utilities.getRowFirstNonWhite(doc, offset)) {
+        if (text.startsWith("/*") && ts.offset == LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)) {
           val indent = GsfUtilities.getLineIndent(doc, offset)
           val sb = new StringBuilder
           sb.append(IndentUtils.createIndentString(doc, indent))
@@ -252,7 +253,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
     // brace on the line below the insert position, and indent properly.
     // Catch this scenario and handle it properly.
     id match {
-      case ScalaTokenId.RBrace | ScalaTokenId.RBracket if Utilities.getRowLastNonWhite(doc, offset) == offset =>
+      case ScalaTokenId.RBrace | ScalaTokenId.RBracket if LineDocumentUtils.getLineLastNonWhitespace(doc, offset) == offset =>
         def insertIndent = {
           val indent = GsfUtilities.getLineIndent(doc, offset)
           val sb = new StringBuilder
@@ -278,7 +279,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         // * Pressing newline in the whitespace before a comment
         // * should be identical to pressing newline with the caret
         // * at the beginning of the comment
-        val begin = Utilities.getRowFirstNonWhite(doc, offset)
+        val begin = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
         if (begin != -1 && offset < begin) {
           ts.move(begin)
           if (ts.moveNext) {
@@ -296,9 +297,9 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         id != ScalaTokenId.BlockCommentEnd && id != ScalaTokenId.DocCommentEnd &&
         offset > ts.offset =>
         // * continue stars
-        val begin = Utilities.getRowFirstNonWhite(doc, offset)
-        val end = Utilities.getRowEnd(doc, offset) + 1
-        var line = doc.getText(begin, end - begin)
+        val start = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
+        val end = LineDocumentUtils.getLineEnd(doc, offset) + 1
+        var line = doc.getText(start, end - start)
         val isBlockStart = line.startsWith("/*")
         if (isBlockStart || line.startsWith("*")) {
           var indent = GsfUtilities.getLineIndent(doc, offset)
@@ -309,8 +310,8 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
           sb.append(IndentUtils.createIndentString(doc, indent))
           sb.append("*") // NOI18N
           // * copy existing indentation after `*`
-          val afterStar = if (isBlockStart) begin + 2 else begin + 1
-          line = doc.getText(afterStar, Utilities.getRowEnd(doc, afterStar) - afterStar)
+          val afterStar = if (isBlockStart) start + 2 else start + 1
+          line = doc.getText(afterStar, LineDocumentUtils.getLineEnd(doc, afterStar) - afterStar)
           var i = 0
           var break = false
           while (i < line.length && !break) {
@@ -322,9 +323,9 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
           }
 
           var insertOffset = offset
-          if (offset == begin && insertOffset > 0) {
-            insertOffset = Utilities.getRowStart(doc, offset)
-            val sp = Utilities.getRowStart(doc, offset) + sb.length
+          if (offset == start && insertOffset > 0) {
+            insertOffset = LineDocumentUtils.getLineStart(doc, offset)
+            val sp = LineDocumentUtils.getLineStart(doc, offset) + sb.length
             doc.insertString(insertOffset, sb.toString, null)
             caret.setDot(sp)
 
@@ -350,15 +351,15 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       // * or if the next line is a comment!
 
       var continueComment = false
-      val begin = Utilities.getRowFirstNonWhite(doc, offset)
+      val start = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
 
       // * We should only continue comments if the previous line had a comment
       // * (and a comment from the beginning, not a trailing comment)
       var prevLineIsComment = false
       var nextLineIsComment = false
-      val rowStart = Utilities.getRowStart(doc, offset)
-      if (rowStart > 0) {
-        Utilities.getRowFirstNonWhite(doc, rowStart - 1) match {
+      val lineStart = LineDocumentUtils.getLineStart(doc, offset)
+      if (lineStart > 0) {
+        LineDocumentUtils.getLineFirstNonWhitespace(doc, lineStart - 1) match {
           case -1 =>
           case prevBegin => ScalaLexUtil.getTokenId(doc, prevBegin) match {
             case Some(ScalaTokenId.LineComment) => prevLineIsComment = true
@@ -366,11 +367,11 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
           }
         }
       }
-      val rowEnd = Utilities.getRowEnd(doc, offset)
-      if (rowEnd < doc.getLength) {
-        Utilities.getRowFirstNonWhite(doc, rowEnd + 1) match {
+      val lineEnd = LineDocumentUtils.getLineEnd(doc, offset)
+      if (lineEnd < doc.getLength) {
+        LineDocumentUtils.getLineFirstNonWhitespace(doc, lineEnd + 1) match {
           case -1 =>
-          case nextBegin => ScalaLexUtil.getTokenId(doc, nextBegin) match {
+          case nextStart => ScalaLexUtil.getTokenId(doc, nextStart) match {
             case Some(ScalaTokenId.LineComment) => nextLineIsComment = true
             case _                              =>
           }
@@ -384,14 +385,14 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         offset > ts.offset && offset < ts.offset + ts.token.length) {
         if (ts.offset + token.length > offset + 1) {
           // See if the remaining text is just whitespace
-          val trailing = doc.getText(offset, Utilities.getRowEnd(doc, offset) - offset)
+          val trailing = doc.getText(offset, LineDocumentUtils.getLineEnd(doc, offset) - offset)
           if (trailing.trim.length != 0) {
             continueComment = true
           }
         } else if (CONTINUE_COMMENTS) {
           // * See if the "continue comments" options is turned on, and this is a line that
           // * contains only a comment (after leading whitespace)
-          ScalaLexUtil.getTokenId(doc, begin) match {
+          ScalaLexUtil.getTokenId(doc, start) match {
             case Some(ScalaTokenId.LineComment) => continueComment = true
             case _                              =>
           }
@@ -399,9 +400,9 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         if (!continueComment) {
           // * See if the next line is a comment; if so we want to continue
           // * comments editing the middle of the comment
-          val nextLine = Utilities.getRowEnd(doc, offset) + 1
+          val nextLine = LineDocumentUtils.getLineEnd(doc, offset) + 1
           if (nextLine < doc.getLength) {
-            Utilities.getRowFirstNonWhite(doc, nextLine) match {
+            LineDocumentUtils.getLineFirstNonWhitespace(doc, nextLine) match {
               case -1 =>
               case nextLineFirst => ScalaLexUtil.getTokenId(doc, nextLineFirst) match {
                 case Some(ScalaTokenId.LineComment) => continueComment = true
@@ -419,8 +420,8 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         sb.append(IndentUtils.createIndentString(doc, indent))
         sb.append("//") // NOI18N
         // * Copy existing indentation
-        val afterSlash = begin + 2
-        val line = doc.getText(afterSlash, Utilities.getRowEnd(doc, afterSlash) - afterSlash)
+        val afterSlash = start + 2
+        val line = doc.getText(afterSlash, LineDocumentUtils.getLineEnd(doc, afterSlash) - afterSlash)
         var i = 0
         var break = false
         while (i < line.length && !break) {
@@ -432,9 +433,9 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
         }
 
         var insertOffset = offset
-        if (offset == begin && insertOffset > 0) {
-          insertOffset = Utilities.getRowStart(doc, offset)
-          val sp = Utilities.getRowStart(doc, offset) + sb.length
+        if (offset == start && insertOffset > 0) {
+          insertOffset = LineDocumentUtils.getLineStart(doc, offset)
+          val sp = LineDocumentUtils.getLineStart(doc, offset) + sb.length
           doc.insertString(insertOffset, sb.toString, null)
           caret.setDot(sp)
 
@@ -494,7 +495,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
     // indentation level higher than the current line was), OR that
     // there is no actual end or } coming up.
     if (startOffsetResult ne null) {
-      startOffsetResult(0) = Utilities.getRowFirstNonWhite(doc, offset)
+      startOffsetResult(0) = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
     }
 
     val beginEndBalance = ScalaLexUtil.getBeginEndLineBalance(doc, offset, true)
@@ -510,9 +511,9 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       // or if its line balance is -1 (e.g. it's an end) we're done
       var insertEnd = beginEndBalance > 0
       var insertRBrace = braceBalance.size > 0
-      var next = Utilities.getRowEnd(doc, offset) + 1
+      var next = LineDocumentUtils.getLineEnd(doc, offset) + 1
       while (next < length) {
-        if (Utilities.isRowEmpty(doc, next) || Utilities.isRowWhite(doc, next) ||
+        if (LineDocumentUtils.isLineEmpty(doc, next) || LineDocumentUtils.isLineWhitespace(doc, next) ||
           ScalaLexUtil.isCommentOnlyLine(doc, next)) {
         } else {
           val nextIndent = GsfUtilities.getLineIndent(doc, next)
@@ -527,7 +528,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
                 // See if I have a structure word like "else", "ensure", etc.
                 // (These are indent words that are not also begin words)
                 // and if so refrain from inserting the end
-                val lineBegin = Utilities.getRowFirstNonWhite(doc, next)
+                val lineBegin = LineDocumentUtils.getLineFirstNonWhitespace(doc, next)
                 ScalaLexUtil.getTokenId(doc, lineBegin) match {
                   case Some(id) if ScalaLexUtil.isIndent(id) && !ScalaLexUtil.isBegin(id) => insertEnd = false
                   case _ =>
@@ -538,7 +539,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
             }
           }
         }
-        next = Utilities.getRowEnd(doc, next) + 1
+        next = LineDocumentUtils.getLineEnd(doc, next) + 1
       }
 
       if (insertEndResult ne null) {
@@ -877,7 +878,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
     val token = ts.token
 
     if (token.id == id) {
-      val rowFirstNonWhite = Utilities.getRowFirstNonWhite(doc, offset)
+      val rowFirstNonWhite = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
       // Ensure that this token is at the beginning of the line
       if (ts.offset > rowFirstNonWhite) {
         return
@@ -1238,7 +1239,7 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       ts.token
     } else null
 
-    val lastNonWhite = Utilities.getRowLastNonWhite(doc, dotPos)
+    val lastNonWhite = LineDocumentUtils.getLineLastNonWhitespace(doc, dotPos)
 
     // eol - true if the caret is at the end of line (ignoring whitespaces)
     val eol = lastNonWhite < dotPos
@@ -1350,18 +1351,18 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
       return true
     } else {
       // test that we are in front of ) , " or ' ... etc.
-      val eol = Utilities.getRowEnd(doc, dotPos)
+      val eol = LineDocumentUtils.getLineEnd(doc, dotPos)
 
       if (dotPos == eol || eol == -1) {
         return false
       }
 
-      val firstNonWhiteFwd = Utilities.getFirstNonWhiteFwd(doc, dotPos, eol)
-      if (firstNonWhiteFwd == -1) {
+      val nextNonWhite = LineDocumentUtils.getNextNonWhitespace(doc, dotPos, eol)
+      if (nextNonWhite == -1) {
         return false
       }
 
-      doc.getChars(firstNonWhiteFwd, 1)(0) match {
+      doc.getChars(nextNonWhite, 1)(0) match {
         case ')' | ',' | '+' | '}' | ';' | ']' | '/' => true
         case _                                       => false
       }
@@ -1454,22 +1455,22 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
             ranges.add(new OffsetRange(begin, end))
           case ScalaTokenId.LineComment =>
             // First add a range for the current line
-            var begin = Utilities.getRowStart(doc, caretOffset)
-            var end = Utilities.getRowEnd(doc, caretOffset)
+            var start = LineDocumentUtils.getLineStart(doc, caretOffset)
+            var end = LineDocumentUtils.getLineEnd(doc, caretOffset)
 
             if (ScalaLexUtil.isCommentOnlyLine(doc, caretOffset)) {
-              ranges.add(new OffsetRange(Utilities.getRowFirstNonWhite(doc, begin),
-                Utilities.getRowLastNonWhite(doc, end) + 1))
+              ranges.add(new OffsetRange(LineDocumentUtils.getLineFirstNonWhitespace(doc, start),
+                LineDocumentUtils.getLineLastNonWhitespace(doc, end) + 1))
 
-              val lineBegin = begin
+              val lineStart = start
               val lineEnd = end
               var break = false
-              while (begin > 0 && !break) {
-                val newBegin = Utilities.getRowStart(doc, begin - 1)
+              while (start > 0 && !break) {
+                val newBegin = LineDocumentUtils.getLineStart(doc, start - 1)
 
-                begin = if (newBegin < 0 || !ScalaLexUtil.isCommentOnlyLine(doc, newBegin)) {
+                start = if (newBegin < 0 || !ScalaLexUtil.isCommentOnlyLine(doc, newBegin)) {
                   break = true
-                  Utilities.getRowFirstNonWhite(doc, begin)
+                  LineDocumentUtils.getLineFirstNonWhitespace(doc, start)
                 } else {
                   newBegin
                 }
@@ -1477,18 +1478,18 @@ class ScalaKeystrokeHandler extends KeystrokeHandler {
 
               break = false
               while (!break) {
-                val newEnd = Utilities.getRowEnd(doc, end + 1)
+                val newEnd = LineDocumentUtils.getLineEnd(doc, end + 1)
 
                 end = if (newEnd >= length || !ScalaLexUtil.isCommentOnlyLine(doc, newEnd)) {
                   break = true
-                  Utilities.getRowLastNonWhite(doc, end) + 1
+                  LineDocumentUtils.getLineLastNonWhitespace(doc, end) + 1
                 } else {
                   newEnd
                 }
               }
 
-              if (lineBegin > begin || lineEnd < end) {
-                ranges.add(new OffsetRange(begin, end))
+              if (lineStart > start || lineEnd < end) {
+                ranges.add(new OffsetRange(start, end))
               }
             } else {
               // It's just a line comment next to some code; select the comment

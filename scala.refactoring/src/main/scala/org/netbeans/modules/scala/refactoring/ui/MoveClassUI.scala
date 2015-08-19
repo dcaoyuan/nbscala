@@ -152,7 +152,7 @@ class MoveClassUI(javaObject: DataObject, targetFolder: FileObject, pasteType: P
   }
 
   def getHelpCtx: HelpCtx = {
-    new HelpCtx(classOf[MoveClassUI])
+    new HelpCtx("MoveClassUI")
   }
 
   def isRefactoringBypassRequired: Boolean = {

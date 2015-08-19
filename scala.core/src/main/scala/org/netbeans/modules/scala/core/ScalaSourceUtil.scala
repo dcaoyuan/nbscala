@@ -32,6 +32,7 @@ import java.net.URL
 import java.util.logging.Logger
 import javax.swing.text.BadLocationException
 import javax.swing.text.StyledDocument
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.java.classpath.GlobalPathRegistry
 import org.netbeans.api.java.queries.SourceForBinaryQuery
@@ -811,7 +812,7 @@ object ScalaSourceUtil {
    */
   private def getRawEnd(doc: org.netbeans.editor.BaseDocument, offset: Int) = {
     val end = try {
-      org.netbeans.editor.Utilities.getRowLastNonWhite(doc, offset) + 1 // * @Note row should plus 1 to equal NetBeans' doc offset
+      LineDocumentUtils.getLineLastNonWhitespace(doc, offset) + 1 // * @Note line should plus 1 to equal NetBeans' doc offset
     } catch {
       case ex: javax.swing.text.BadLocationException => -1
     }

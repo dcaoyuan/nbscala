@@ -40,10 +40,11 @@ package org.netbeans.modules.scala.editor
 
 import javax.lang.model.element.ExecutableElement
 import javax.swing.text.BadLocationException
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.api.java.source.ClassIndex
 import org.netbeans.api.java.source.ClassIndex.NameKind
 import org.netbeans.api.lexer.{ Token, TokenHierarchy, TokenId, TokenSequence }
-import org.netbeans.editor.{ BaseDocument, Utilities }
+import org.netbeans.editor.{ BaseDocument }
 import org.netbeans.modules.csl.api.CodeCompletionHandler.QueryType
 import org.netbeans.modules.csl.api.{ CodeCompletionHandler, CompletionProposal }
 import org.netbeans.modules.csl.spi.{ DefaultCompletionResult, ParserResult }
@@ -54,7 +55,6 @@ import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ScalaSourceUtil
 import org.netbeans.modules.scala.core.ScalaSymbolResolver
 import org.netbeans.modules.scala.core.lexer.{ ScalaLexUtil, ScalaTokenId }
-import org.netbeans.modules.scala.core.ScalaGlobal
 import org.netbeans.modules.scala.core.rats.ParserScala
 
 /**
@@ -189,13 +189,13 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
 
   @throws(classOf[BadLocationException])
   def completeComments(proposals: java.util.List[CompletionProposal]): Boolean = {
-    val rowStart = Utilities.getRowFirstNonWhite(doc, lexOffset)
-    if (rowStart == -1) {
+    val lineStart = LineDocumentUtils.getLineFirstNonWhitespace(doc, lexOffset)
+    if (lineStart == -1) {
       return false
     }
 
-    val line = doc.getText(rowStart, Utilities.getRowEnd(doc, lexOffset) - rowStart)
-    val delta = lexOffset - rowStart
+    val line = doc.getText(lineStart, LineDocumentUtils.getLineEnd(doc, lexOffset) - lineStart)
+    val delta = lexOffset - lineStart
 
     var i = delta - 1
     var break = false
@@ -208,7 +208,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
     }
     i += 1
     prefix = line.substring(i, delta)
-    anchor = rowStart + i
+    anchor = lineStart + i
 
     // Regular expression matching.  {
     for (j <- 0 to scalaDocWords.length) {
@@ -396,7 +396,7 @@ class ScalaCodeCompleter(val pr: ScalaParserResult) {
 
       val call = closestOpt.getOrElse(null)
 
-      val currentLineStart = Utilities.getRowStart(doc, lexOffset)
+      val currentLineStart = LineDocumentUtils.getLineStart(doc, lexOffset)
       if (callLineStart != -1 && currentLineStart == callLineStart) {
         // We know the method call
         targetMethod = callMethod

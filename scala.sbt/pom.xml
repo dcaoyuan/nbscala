@@ -52,6 +52,10 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-extexecution-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-java-platform</artifactId>
         </dependency>
         <dependency>
@@ -216,6 +220,10 @@
                         </dependency>
                         <dependency>
                             <id>org.netbeans.modules:org-netbeans-modules-options-editor</id>
+                            <type>impl</type>
+                        </dependency>
+                        <dependency>
+                            <id>org.netbeans.api:org-netbeans-modules-extexecution-base</id>
                             <type>impl</type>
                         </dependency>
                     </moduleDependencies>

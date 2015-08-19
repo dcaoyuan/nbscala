@@ -28,6 +28,10 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-extexecution-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-projectapi</artifactId>
         </dependency>
         <dependency>
@@ -125,6 +129,12 @@
                     <codeNameBase>org.netbeans.modules.scala.console/1</codeNameBase>
                     <licenseName>CDDL-GPLV2</licenseName>
                     <licenseFile>license.txt</licenseFile>
+                    <moduleDependencies>
+                        <dependency>
+                            <id>org.netbeans.api:org-netbeans-modules-extexecution-base</id>
+                            <type>impl</type>
+                        </dependency>
+                    </moduleDependencies>
                     <publicPackages>
                         <pulicPackage>org.netbeans.modules.scala.console</pulicPackage>
                         <pulicPackage>org.netbeans.modules.scala.console.shell</pulicPackage>
