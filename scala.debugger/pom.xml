@@ -32,6 +32,10 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-java-source-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-java-sourceui</artifactId>
         </dependency>
         <dependency>
@@ -110,7 +114,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        
+
         <!-- subproject dependencies -->
         <dependency>
             <groupId>org.netbeans.modules</groupId>
@@ -128,7 +132,7 @@
             <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-scala-debugger-projects</artifactId>
         </dependency>
-       
+
     </dependencies>
 
     <build>
@@ -145,7 +149,7 @@
                     <author>Caoyuan Deng</author>
                     <codeNameBase>org.netbeans.modules.scala.debugger/1</codeNameBase>
                     <licenseName>CDDL-GPLV2</licenseName>
-                    <licenseFile>license.txt</licenseFile>    
+                    <licenseFile>license.txt</licenseFile>
                     <publicPackages>
                     </publicPackages>
                 </configuration>
