@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Editors">
+        <!-- Reference binding color themes are under module: main/defaults/src/org/netbeans/modules/defaults -->
+        <!-- color theme for nbeditor-settings-ColoringType -->
+        <folder name="FontsColors">
+            <folder name="Twilight">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="Twilight/fontsColors.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="Twilight/defaults.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                    </file>
+                </folder>
+            </folder>
+            <folder name="EmacsStandard">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="EmacsStandard/fontsColors.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                </folder>
+            </folder>
+            <folder name="SolarizedLight">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="SolarizedLight/fontsColors.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="SolarizedLight/defaults.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                    </file>
+                </folder>
+            </folder>
+            <folder name="SolarizedDark">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="SolarizedDark/fontsColors.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="SolarizedDark/defaults.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                    </file>
+                </folder>
+            </folder>
+            <folder name="Darcula">
+                <folder name="Defaults">
+                    <file name="org-netbeans-modules-defaults-highlight-colorings.xml" url="Darcula/fontsColors.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                        <attr name="nbeditor-settings-ColoringType" stringvalue="highlight"/>
+                    </file>
+                    <file name="org-netbeans-modules-defaults-token-colorings.xml" url="Darcula/defaults.xml">
+                        <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.defaults.Bundle"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+
+        <folder name="text">
+            <folder name="x-scala">
+                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.fontscolors.Bundle"/>
+
+                <file name="language.instance">
+                    <attr name="instanceCreate" methodvalue="org.netbeans.modules.scala.core.lexer.ScalaTokenId.language"/>
+                    <attr name="instanceOf" stringvalue="org.netbeans.api.lexer.Language"/>
+                </file>
+
+                <folder name="BracesMatchers">
+                    <file name="org-netbeans-modules-scala-editor-ScalaBracesMatcherFactory.instance">
+                        <attr name="position" intvalue="0"/>
+                    </file>
+                </folder>
+
+                <folder name="Preferences">
+                    <folder name="Defaults">
+                        <file name="org-netbeans-modules-editor-scala-preferences.xml" url="defaultPreferences.xml" />
+                    </folder>
+                </folder>
+
+                <!-- TODO - this should not be necessary; I'm doing this now to work around
+                bugs in color initialization -->
+                <folder name="FontsColors">
+                    <folder name="Twilight">
+                        <folder name="Defaults">
+                            <file name="coloring.xml" url="Twilight/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.fontscolors.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                    <folder name="EmacsStandard">
+                        <folder name="Defaults">
+                            <file name="coloring.xml" url="EmacsStandard/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.fontscolors.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                    <folder name="SolarizedLight">
+                        <folder name="Defaults">
+                            <file name="colorings.xml" url="SolarizedLight/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.fontscolors.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                    <folder name="SolarizedDark">
+                        <folder name="Defaults">
+                            <file name="colorings.xml" url="SolarizedDark/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.fontscolors.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                    <folder name="Darcula">
+                        <folder name="Defaults">
+                            <file name="colorings.xml" url="Darcula/fontsColors.xml">
+                                <attr name="SystemFileSystem.localizingBundle" stringvalue="org.netbeans.modules.scala.fontscolors.Bundle"/>
+                            </file>
+                        </folder>
+                    </folder>
+                </folder>
+
+            </folder>
+        </folder>
+    </folder>
+
+</filesystem>

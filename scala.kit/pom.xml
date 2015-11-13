@@ -28,11 +28,15 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-libs-scala-compiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-libs-scala-continuations</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>org-netbeans-libs-scala-compiler</artifactId>
+            <artifactId>org-netbeans-libs-scala-continuations-plugin</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -45,10 +49,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-libs-scala-xml</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>org-netbeans-libs-scala-continuations-plugin</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -72,11 +72,36 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>org-netbeans-modules-scala-project</artifactId>
+            <artifactId>org-netbeans-modules-scala-debugger</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-debugger-projects</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-editor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-fontscolors</artifactId>
+        </dependency>
+        <!-- Can't test the maven component. See http://netbeans.org/bugzilla/show_bug.cgi?id=216738 -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-maven</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-modules-scala-platform</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-project</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org-netbeans-modules-scala-refactoring</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -89,27 +114,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>org-netbeans-modules-scala-stdplatform</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>org-netbeans-modules-scala-editor</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>org-netbeans-modules-scala-debugger</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>org-netbeans-modules-scala-debugger-projects</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>org-netbeans-modules-scala-refactoring</artifactId>
-        </dependency>
-        <!-- Can't test the maven component. See http://netbeans.org/bugzilla/show_bug.cgi?id=216738 -->
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>org-netbeans-modules-scala-maven</artifactId>
         </dependency>
 
         <!-- The clusters platform, java, ide and nb represent a full functioning Netbeans IDE -->
