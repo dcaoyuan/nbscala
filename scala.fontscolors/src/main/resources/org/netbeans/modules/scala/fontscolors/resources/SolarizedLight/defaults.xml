@@ -36,7 +36,7 @@
         <font style="bold" />
     </fontcolor>
     <fontcolor name="comment" foreColor="93a1a1" /> <!-- base1 -->
-    <fontcolor name="error" foreColor="657b83" waveUnderlined="ff3333" />
+    <fontcolor name="error" waveUnderlined="ff3333" />
     <fontcolor name="method" default="identifier" />
     <fontcolor name="field" default="identifier" />
     <fontcolor name="separator" />
