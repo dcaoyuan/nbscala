@@ -26,17 +26,18 @@
     green     859900  2/2 green     64 #5f8700 60 -20  65 133 153   0  68 100  60
 
     -->
-    <fontcolor name="default" foreColor="586e75" bgColor="fdf6e3"> <!-- base01/base3 -->
+    <fontcolor name="default" foreColor="657b83" bgColor="fdf6e3"> <!-- base00/base3 -->
         <font name="Monospaced" size="13" style="plain" />
     </fontcolor>
     <fontcolor name="number" foreColor="2aa198" /> <!-- cyan -->
-    <fontcolor name="char" foreColor="2aa198" /> <!-- cyan -->
-    <fontcolor name="string" foreColor="2aa198" /> <!-- cyan -->
-    <fontcolor name="keyword" foreColor="6c71c4"> <!-- violet -->
+    <fontcolor name="char" foreColor="859900" /> <!-- green -->
+    <fontcolor name="string" foreColor="859900" /> <!-- green -->
+    <fontcolor name="keyword" foreColor="b58900"> <!-- yellow -->
         <font style="bold" />
     </fontcolor>
     <fontcolor name="comment" foreColor="93a1a1" /> <!-- base1 -->
-    <fontcolor name="error" waveUnderlined="ff3333" />
+    <fontcolor name="error" waveUnderlined="dc322f" /> <!--  red -->
+    <fontcolor name="warning" waveUnderlined="93a1a1" /> <!-- base1 -->
     <fontcolor name="method" default="identifier" />
     <fontcolor name="field" default="identifier" />
     <fontcolor name="separator" />

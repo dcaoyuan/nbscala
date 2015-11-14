@@ -35,8 +35,8 @@
         <font style="bold" />
     </fontcolor>
     <fontcolor name="comment" foreColor="586E75" /> <!-- base01 -->
-    <fontcolor name="error" waveUnderlined="dc322f" /> <!--  base01 -->
-    <fontcolor name="warning" waveUnderlined="586e75" /> <!-- base00 ~ base01 -->
+    <fontcolor name="error" waveUnderlined="dc322f" /> <!--  red -->
+    <fontcolor name="warning" waveUnderlined="586e75" /> <!-- base01 -->
     <fontcolor name="method" default="identifier" />
     <fontcolor name="field" default="identifier" />
     <fontcolor name="separator" />
