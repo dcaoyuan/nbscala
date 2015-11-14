@@ -55,9 +55,9 @@
     </fontcolor>
     <fontcolor name="mod-deprecated" strikeThrough="586e75" /> <!-- base01 -->
 
-    <fontcolor name="mod-class" foreColor="678CB1" /> <!-- violet, Type -->
+    <fontcolor name="mod-class" foreColor="5A7FA4" /> <!-- violet, Type -->
 
-    <fontcolor name="mod-method" foreColor="678CB1" /> <!-- violet, method def -->
+    <fontcolor name="mod-method" foreColor="5A7FA4" /> <!-- violet, method def -->
     <fontcolor name="mod-constructor" foreColor="657b83" /> <!-- base00, method ref -->
     <fontcolor name="mod-custom1"> <!-- implicit method Ref -->
         <font style="italic" />
