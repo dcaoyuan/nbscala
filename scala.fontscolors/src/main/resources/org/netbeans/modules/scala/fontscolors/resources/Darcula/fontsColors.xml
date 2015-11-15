@@ -66,7 +66,7 @@
     <fontcolor name="mod-interface" default="comment" />
     
     <fontcolor name="mod-field" foreColor="a9b7c6" /> <!-- val -->
-    <fontcolor name="mod-local-variable" foreColor="79ABFF" /> <!-- var -->
+    <fontcolor name="mod-local-variable" foreColor="cb4b16" /> <!-- var -->
     <fontcolor name="mod-parameter" foreColor="BFA4A4" /> <!-- param -->
 
 
@@ -74,7 +74,7 @@
     <fontcolor name="mod-enum" />
 
     <fontcolor name="mod-private" />
-    <fontcolor name="mod-package-private" foreColor="cb4b16" /> <!-- orange, packege name -->
+    <fontcolor name="mod-package-private" foreColor="79ABFF" /> <!-- packege name -->
     <fontcolor name="mod-protected" />
 
     <fontcolor name="mod-unused" default="comment" />
