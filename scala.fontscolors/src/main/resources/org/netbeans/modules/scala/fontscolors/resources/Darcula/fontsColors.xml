@@ -97,7 +97,7 @@
     <!-- "editor" highlighting: -->
     <fontcolor name="highlight-caret-row" bgColor="333333" />  <!-- base02 -->
     <fontcolor name="line-number" foreColor="A9B7C6" bgColor="2b2b2b" />  <!-- base1/base02 -->
-    <fontcolor name="indent-guide-lines" foreColor="586e75" /> <!-- base01 -->
+    <fontcolor name="indent-guide-lines" foreColor="darkGray" /> 
     <fontcolor name="text-limit-line-color" foreColor="586e75" />  <!-- base01 --> 
     <fontcolor name="caret-color-insert-mode" foreColor="white" />
     <fontcolor name="caret-color-overwrite-mode" foreColor="white" />
