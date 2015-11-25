@@ -65,42 +65,50 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
         }
 
         if (formattedText != null && formattedText.length > 0) {
-          val root = doc.getDefaultRootElement
-
           val diffs = HuntDiff.diff(new StringReader(text), new StringReader(formattedText), ScalaReformatter.diffOptions)
-          // reverse the order so we can modify text forward from the end
-          java.util.Arrays.sort(diffs, DiffComparator)
-
-          for (diff <- diffs) {
-            diff.tpe match {
-              case Diff.ADD =>
-                val startLineNo = diff.secondStart
-                val startOffset = root.getElement(startLineNo - 1).getStartOffset
-                val t = diff.secondText
-                doc.insertString(startOffset, t, null)
-
-              case Diff.DELETE =>
-                val startLineNo = diff.firstStart
-                val endLineNo = diff.firstEnd
-                val startOffset = root.getElement(startLineNo - 1).getStartOffset
-                val endOffset = root.getElement(endLineNo - 1).getEndOffset
-                doc.remove(startOffset, endOffset - startOffset)
-
-              case Diff.CHANGE =>
-                val startLineNo = diff.firstStart
-                val endLineNo = diff.firstEnd
-                val startOffset = root.getElement(startLineNo - 1).getStartOffset
-                val endOffset = root.getElement(endLineNo - 1).getEndOffset
-                doc.remove(startOffset, endOffset - startOffset)
-                val t = diff.secondText
-                doc.insertString(startOffset, t, null)
-            }
-          }
+          applyDiffs(diffs)
         } else {
           // Cannot be parsed by scalariform, fall back to ScalaFormatter
           new ScalaFormatter(cs, -1).reindent(context)
         }
       }
+    }
+  }
+
+  private def applyDiffs(diffs: Array[Diff]) {
+    val root = doc.getDefaultRootElement
+
+    // reverse the order so we can modify text forward from the end
+    java.util.Arrays.sort(diffs, DiffComparator)
+
+    var i = 0
+    while (i < diffs.length) {
+      val diff = diffs(i)
+      println("diff: " + diff)
+      diff.tpe match {
+        case Diff.ADD =>
+          val startLineNo = diff.firstStart
+          val startOffset = root.getElement(startLineNo - 1).getStartOffset
+          val delta = diff.secondText
+          doc.insertString(startOffset, delta, null)
+
+        case Diff.DELETE =>
+          val startLineNo = diff.firstStart
+          val endLineNo = diff.firstEnd
+          val startOffset = root.getElement(startLineNo - 1).getStartOffset
+          val endOffset = root.getElement(endLineNo - 1).getEndOffset
+          doc.remove(startOffset, endOffset - startOffset)
+
+        case Diff.CHANGE =>
+          val startLineNo = diff.firstStart
+          val endLineNo = diff.firstEnd
+          val startOffset = root.getElement(startLineNo - 1).getStartOffset
+          val endOffset = root.getElement(endLineNo - 1).getEndOffset
+          doc.remove(startOffset, endOffset - startOffset)
+          val delta = diff.secondText
+          doc.insertString(startOffset, delta, null)
+      }
+      i += 1
     }
   }
 
@@ -174,7 +182,7 @@ object DiffComparator extends java.util.Comparator[Diff] {
     if (o1.firstStart < o2.firstStart) {
       1
     } else if (o1.firstStart == o2.firstStart) {
-      if (o1.firstEnd < o2.firstEnd) {
+      if (o1.firstEnd < o2.firstEnd) { // NOTE for ADD tpe, firstEnd will be 0, so ADD will always be put in front
         1
       } else if (o1.firstEnd == o2.firstEnd) {
         if (o1.secondStart < o2.secondStart) {
