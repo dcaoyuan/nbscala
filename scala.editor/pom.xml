@@ -222,11 +222,15 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.modules</groupId>
+            <artifactId>org-netbeans-libs-scalariform</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.modules</groupId>
             <artifactId>org-netbeans-modules-scala-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.netbeans.modules</groupId>
-            <artifactId>org-netbeans-libs-scalariform</artifactId>
+            <artifactId>org-netbeans-modules-scala-fontscolors</artifactId>
         </dependency>
     </dependencies>
 

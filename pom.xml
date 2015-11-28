@@ -73,8 +73,8 @@
         <scala.core.version>1.8.1.0</scala.core.version>
         <scala.debugger.version>1.8.1.0</scala.debugger.version>
         <scala.debugger.projects.version>1.8.1.0</scala.debugger.projects.version>
-        <scala.editor.version>1.8.1.0</scala.editor.version>
-        <scala.fontscolors.version>1.8.1.0</scala.fontscolors.version>
+        <scala.editor.version>1.8.1.1</scala.editor.version>
+        <scala.fontscolors.version>1.8.1.1</scala.fontscolors.version>
         <scala.maven.version>1.8.1.0</scala.maven.version>
         <scala.platform.version>1.8.1.0</scala.platform.version>
         <scala.project.version>1.8.1.0</scala.project.version>
