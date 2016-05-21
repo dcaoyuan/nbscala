@@ -21,16 +21,16 @@
         <font style="bold" />
     </fontcolor>
 
-    <fontcolor name="True" foreColor="cc7832" /> 
-    <fontcolor name="False" foreColor="cc7832" />
-    <fontcolor name="Abstract" foreColor="cc7832" />
-    <fontcolor name="Final" foreColor="cc7832" />
-    <fontcolor name="Implicit" foreColor="cc7832" />
-    <fontcolor name="Lazy" foreColor="cc7832" />
-    <fontcolor name="Override" foreColor="cc7832" />
-    <fontcolor name="Private" foreColor="cc7832" />
-    <fontcolor name="Protected" foreColor="cc7832" />
-    <fontcolor name="Sealed" foreColor="cc7832" />
+    <fontcolor name="True" foreColor="b58900" /> <!-- yellow -->
+    <fontcolor name="False" foreColor="b58900" />
+    <fontcolor name="Abstract" foreColor="b58900" />
+    <fontcolor name="Final" foreColor="b58900" />
+    <fontcolor name="Implicit" foreColor="b58900" />
+    <fontcolor name="Lazy" foreColor="b58900" />
+    <fontcolor name="Override" foreColor="b58900" />
+    <fontcolor name="Private" foreColor="b58900" />
+    <fontcolor name="Protected" foreColor="b58900" />
+    <fontcolor name="Sealed" foreColor="b58900" />
 
     <!-- This is intended for an embedded regular expression language -->
     <!--
@@ -53,33 +53,31 @@
     <fontcolor name="mod-abstract">
         <font style="italic" />
     </fontcolor>
-    <fontcolor name="mod-deprecated" strikeThrough="a9b7c6" /> 
+    <fontcolor name="mod-deprecated" strikeThrough="93a1a1" /> <!-- base1 -->
 
-    <fontcolor name="mod-class" foreColor="769aa5" /> <!-- Type -->
+    <fontcolor name="mod-class" foreColor="678CB1" /> <!-- violet, Type -->
 
-    <fontcolor name="mod-method" foreColor="ffc66d" /> <!-- method def -->
-    <fontcolor name="mod-constructor" foreColor="a9b7c6" /> <!--  method ref -->
+    <fontcolor name="mod-method" foreColor="678CB1" /> <!-- violet, method def -->
+    <fontcolor name="mod-constructor" foreColor="839496" /> <!-- base0, method ref -->
     <fontcolor name="mod-custom1"> <!-- implicit method Ref -->
         <font style="italic" />
     </fontcolor>
-    <fontcolor name="mod-custom2" underline="a9b7c6" /> <!-- base1, lazy val Ref/Dfn -->
-    <fontcolor name="mod-interface" default="comment" />
-    
-    <fontcolor name="mod-field" foreColor="a9b7c6" /> <!-- val -->
-    <fontcolor name="mod-local-variable" foreColor="79ABFF" /> <!-- var -->
-    <fontcolor name="mod-parameter" foreColor="BFA4A4" /> <!-- param -->
+ 
+    <fontcolor name="mod-custom2" underline="859900" /> <!-- green lazy val Ref/Dfn -->
+    <fontcolor name="mod-field" foreColor="859900" /> <!-- green val -->
+    <fontcolor name="mod-local-variable" foreColor="dc322f" /> <!-- red, var -->
+    <fontcolor name="mod-parameter" foreColor="6c71c4" /> <!-- violet param -->
 
+    <fontcolor name="mod-unused" waveUnderlined="999999" />
 
     <fontcolor name="mod-annotation-type" />
     <fontcolor name="mod-enum" />
 
     <fontcolor name="mod-private" />
-    <fontcolor name="mod-package-private" foreColor="cb4b16" /> <!-- orange, packege name -->
+    <fontcolor name="mod-package-private" foreColor="268bd2" /> <!-- blue, packege name -->
     <fontcolor name="mod-protected" />
 
-    <fontcolor name="mod-unused" default="comment" />
-    <fontcolor name="mark-occurrences" bgColor="006300" /> 
-
+    <fontcolor name="mod-interface" default="comment" />
     <fontcolor name="mod-regexp" foreColor="e9c062" />
 
     <!--currently not used:-->
@@ -87,6 +85,8 @@
     <fontcolor name="mod-type-parameter-use" bgColor="green"/>
     <fontcolor name="mod-undefined" foreColor="red"/>-->
 
+    <!--mark occurrences:-->
+    <fontcolor name="mark-occurrences" bgColor="38566f" /> 
 
     <!-- JsCommentTokenId categories -->
     <fontcolor name="js-comment-tag" default="comment" />
@@ -95,18 +95,16 @@
     <fontcolor name="right-curly" default="comment" />
     
     <!-- "editor" highlighting: -->
-    <fontcolor name="highlight-caret-row" bgColor="333333" />  <!-- base02 -->
-    <fontcolor name="line-number" foreColor="A9B7C6" bgColor="2b2b2b" />  <!-- base1/base02 -->
-    <fontcolor name="indent-guide-lines" foreColor="586e75" /> <!-- base01 -->
+    <fontcolor name="highlight-caret-row" bgColor="073642" />  <!-- base02 -->
+    <fontcolor name="line-number" foreColor="657B83" />  <!-- base00 -->
+    <fontcolor name="indent-guide-lines" foreColor="21505c" /> <!-- base02 lighten 10% -->
     <fontcolor name="text-limit-line-color" foreColor="586e75" />  <!-- base01 --> 
-    <fontcolor name="caret-color-insert-mode" foreColor="white" />
-    <fontcolor name="caret-color-overwrite-mode" foreColor="white" />
-    <fontcolor name="selection" bgColor="D0D0D0" />  
+    <fontcolor name="caret-color-insert-mode" foreColor="fdf6e3" /> <!-- base3 -->
+    <fontcolor name="caret-color-overwrite-mode" foreColor="fdf6e3" /> <!-- base3 -->
+    <fontcolor name="selection" bgColor="eee8d5" />  <!-- base2 --> 
     <fontcolor name="inc-search" bgColor="38566f" />
     <fontcolor name="highlight-search" bgColor="38566f" />
     <fontcolor name="nbeditor-bracesMatching-match" bgColor="cb4b16" /> <!-- orange --> 
     <fontcolor name="nbeditor-bracesMatching-mismatch" bgColor="cc6600" foreColor="white" />
-    <fontcolor name="code-folding-bar" foreColor="D8D8D8"/>
-    <fontcolor name="code-folding" foreColor="D8D8D8" />
 
 </fontscolors>

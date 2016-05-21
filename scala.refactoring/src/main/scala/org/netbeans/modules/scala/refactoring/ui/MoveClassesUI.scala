@@ -215,7 +215,7 @@ class MoveClassesUI(javaObjects: Set[FileObject], targetFolder: FileObject, past
   }
 
   def getHelpCtx: HelpCtx = {
-    new HelpCtx(classOf[MoveClassesUI])
+    new HelpCtx("MoveClassesUI")
   }
 
   def isRefactoringBypassRequired: Boolean = {

@@ -14,7 +14,7 @@ object Icons {
   private val ICON_KEY_UIMANAGER_NB = "Nb.Explorer.Folder.icon" // NOI18N
   private val OPENED_ICON_KEY_UIMANAGER_NB = "Nb.Explorer.Folder.openedIcon" // NOI18N
 
-  lazy val ICON_LIBARARIES_BADGE = ImageUtilities.loadImage("org/netbeans/modules/java/j2seproject/ui/resources/libraries-badge.png") //NOI18N
+  lazy val ICON_LIBARARIES_BADGE = ImageUtilities.loadImage("org/netbeans/modules/scala/sbt/resources/libraries-badge.png") //NOI18N
 
   private lazy val folderIconCache = getTreeFolderIcon(false)
   private lazy val openedFolderIconCache = getTreeFolderIcon(true)

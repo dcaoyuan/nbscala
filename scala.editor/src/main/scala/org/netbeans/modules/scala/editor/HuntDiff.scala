@@ -11,12 +11,14 @@ import scala.collection.mutable.ArrayBuffer
  *
  */
 object HuntDiff {
-
   private val spaces = Pattern.compile("(\\s+)")
 
   case class Options(ignoreLeadingAndtrailingWhitespace: Boolean, ignoreInnerWhitespace: Boolean, ignoreCase: Boolean)
   private case class Line(lineNo: Int, line: String) { val hash = line.hashCode }
   private case class Candidate(a: Int, b: Int, c: Candidate)
+  private object LineComparator extends java.util.Comparator[Line] {
+    def compare(l1: Line, l2: Line) = l1.line.compareTo(l2.line)
+  }
 
   @throws(classOf[IOException])
   private def getLines(r: Reader): Array[String] = {
@@ -53,9 +55,7 @@ object HuntDiff {
       l2s(i) = new Line(i, lines2(i - 1))
       i += 1
     }
-    java.util.Arrays.sort(l2s, 1, n + 1, new java.util.Comparator[Line]() {
-      def compare(l1: Line, l2: Line) = l1.line.compareTo(l2.line)
-    })
+    java.util.Arrays.sort(l2s, 1, n + 1, LineComparator)
 
     val equvalenceLines = Array.ofDim[Int](n + 1)
     val equivalence = Array.ofDim[Boolean](n + 1)
@@ -336,7 +336,8 @@ object HuntDiff {
           val d1f1l1 = add.firstStart - (del.firstEnd - del.firstStart)
           val d2f1l1 = del.firstStart
           if (d1f1l1 == d2f1l1) {
-            val newDiff = Diff(Diff.CHANGE,
+            val newDiff = Diff(
+              Diff.CHANGE,
               d1f1l1, del.firstEnd, add.secondStart, add.secondEnd,
               del.firstText, add.secondText)
             diffs(i - 1) = newDiff

@@ -40,14 +40,25 @@ object FmtTabsIndents {
 
 class FmtTabsIndents extends javax.swing.JPanel {
 
+  // Variables declaration - do not modify//GEN-BEGIN:variables
+  private var continuationIndentSizeField: javax.swing.JTextField = _
+  private var continuationIndentSizeLabel: javax.swing.JLabel = _
+  private var indentHtmlCheckBox: javax.swing.JCheckBox = _
+  private var indentSizeField: javax.swing.JTextField = _
+  private var indentSizeLabel: javax.swing.JLabel = _
+  private var jCheckBox3: javax.swing.JCheckBox = _
+  private var jTextField3: javax.swing.JTextField = _
+  private var reformatCommentsCheckBox: javax.swing.JCheckBox = _
+  // End of variables declaration//GEN-END:variables
+
   initComponents
   // Not yet implemented
   //indentCasesFromSwitchCheckBox.setVisible(false);
 
-  indentSizeField.putClientProperty(Customizer.OPTION_ID, SimpleValueNames.INDENT_SHIFT_WIDTH);
-  continuationIndentSizeField.putClientProperty(Customizer.OPTION_ID, continuationIndentSize);
-  reformatCommentsCheckBox.putClientProperty(Customizer.OPTION_ID, reformatComments);
-  indentHtmlCheckBox.putClientProperty(Customizer.OPTION_ID, indentXml);
+  indentSizeField.putClientProperty(Customizer.OPTION_ID, SimpleValueNames.INDENT_SHIFT_WIDTH)
+  continuationIndentSizeField.putClientProperty(Customizer.OPTION_ID, continuationIndentSize)
+  reformatCommentsCheckBox.putClientProperty(Customizer.OPTION_ID, reformatComments)
+  indentHtmlCheckBox.putClientProperty(Customizer.OPTION_ID, indentXml)
 
   /**
    * This method is called from within the constructor to
@@ -58,14 +69,14 @@ class FmtTabsIndents extends javax.swing.JPanel {
   // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
   private def initComponents {
 
-    jTextField3 = new javax.swing.JTextField();
-    jCheckBox3 = new javax.swing.JCheckBox();
-    indentSizeLabel = new javax.swing.JLabel();
-    indentSizeField = new javax.swing.JTextField();
-    continuationIndentSizeLabel = new javax.swing.JLabel();
-    continuationIndentSizeField = new javax.swing.JTextField();
-    reformatCommentsCheckBox = new javax.swing.JCheckBox();
-    indentHtmlCheckBox = new javax.swing.JCheckBox();
+    jTextField3 = new javax.swing.JTextField()
+    jCheckBox3 = new javax.swing.JCheckBox()
+    indentSizeLabel = new javax.swing.JLabel()
+    indentSizeField = new javax.swing.JTextField()
+    continuationIndentSizeLabel = new javax.swing.JLabel()
+    continuationIndentSizeField = new javax.swing.JTextField()
+    reformatCommentsCheckBox = new javax.swing.JCheckBox()
+    indentHtmlCheckBox = new javax.swing.JCheckBox()
 
     jTextField3.setText("jTextField3");
 
@@ -117,16 +128,5 @@ class FmtTabsIndents extends javax.swing.JPanel {
           .add(indentHtmlCheckBox)
           .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MaxValue)));
   } // </editor-fold>//GEN-END:initComponents
-
-  // Variables declaration - do not modify//GEN-BEGIN:variables
-  private var continuationIndentSizeField: javax.swing.JTextField = _
-  private var continuationIndentSizeLabel: javax.swing.JLabel = _
-  private var indentHtmlCheckBox: javax.swing.JCheckBox = _
-  private var indentSizeField: javax.swing.JTextField = _
-  private var indentSizeLabel: javax.swing.JLabel = _
-  private var jCheckBox3: javax.swing.JCheckBox = _
-  private var jTextField3: javax.swing.JTextField = _
-  private var reformatCommentsCheckBox: javax.swing.JCheckBox = _
-  // End of variables declaration//GEN-END:variables
 
 }

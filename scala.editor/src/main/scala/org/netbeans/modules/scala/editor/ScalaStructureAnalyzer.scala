@@ -40,8 +40,9 @@ package org.netbeans.modules.scala.editor
 
 import javax.swing.ImageIcon
 import javax.swing.text.{ BadLocationException }
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.api.language.util.ast.{ AstDfn, AstScope }
-import org.netbeans.editor.{ BaseDocument, Utilities }
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.csl.api.{
   ElementHandle,
   ElementKind,
@@ -163,7 +164,7 @@ class ScalaStructureAnalyzer extends StructureScanner {
         case ScalaTokenId.RBrace =>
           if (!blocks.isEmpty) {
             val blockStart = blocks.pop
-            val lineEnd = Utilities.getRowEnd(doc, blockStart)
+            val lineEnd = LineDocumentUtils.getLineEnd(doc, blockStart)
             if (ts.offset + tk.length > lineEnd) { // not in same line
               val blockRange = new OffsetRange(blockStart, ts.offset + tk.length)
               codefolds.add(blockRange)
@@ -176,11 +177,11 @@ class ScalaStructureAnalyzer extends StructureScanner {
 
     try {
       /** @see GsfFoldManager#addTree() for suitable fold names. */
-      importEnd = Utilities.getRowEnd(doc, importEnd)
+      importEnd = LineDocumentUtils.getLineEnd(doc, importEnd)
 
       // * same strategy here for the import statements: We have to have
       // * *more* than one line to fold them.
-      if (Utilities.getRowCount(doc, importStart, importEnd) > 1) {
+      if (LineDocumentUtils.getLineCount(doc, importStart, importEnd) > 1) {
         val importfolds = new java.util.ArrayList[OffsetRange]
         val range = new OffsetRange(importStart, importEnd)
         importfolds.add(range)
@@ -204,7 +205,7 @@ class ScalaStructureAnalyzer extends StructureScanner {
           var range = dfn.getOffsetRange(pResult)
           var start = range.getStart
           // * start the fold at the end of the line behind last non-whitespace, should add 1 to start after "->"
-          start = Utilities.getRowLastNonWhite(doc, start) + 1
+          start = LineDocumentUtils.getLineLastNonWhitespace(doc, start) + 1
           val end = range.getEnd
           if (start != -1 && end != -1 && start < end && end <= doc.getLength) {
             range = new OffsetRange(start, end)

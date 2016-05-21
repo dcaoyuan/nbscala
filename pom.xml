@@ -8,7 +8,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Scala Support for NetBeans</name>
-    <url>http://blogtrader.net</url>
+    <url>http://github.com/dcaoyuan/nbscala</url>
     <description>NetBeans Plugins for Scala</description>
     <organization>
         <name>NetBeans</name>
@@ -58,29 +58,30 @@
              we should build it using lower version NetBeans to get it to be able installed both
              on lower and higher version, unless we use un-compatible features of higher version.
         -->
-        <netbeans.version>RELEASE802</netbeans.version>
+        <netbeans.version>RELEASE81</netbeans.version>
 
         <scala.version>2.11.3-nbscala</scala.version> <!-- use nbscala patched scala runtime @see libs.local-->
         <sbt.version>0.13.1</sbt.version>
         <scalariform.version>0.1.5</scalariform.version>
 
         <!-- module versions -->
-        <libs.scala.version>2.11.3.0</libs.scala.version>
-        <libs.sbt.version>0.13.5.0</libs.sbt.version>
-        <libs.scalariform.version>0.1.5.1</libs.scalariform.version>
-        <libs.xtc.version>1.15.1</libs.xtc.version>
-        <scala.debugger.version>1.7.0.0</scala.debugger.version>
-        <scala.debugger.projects.version>1.7.0.0</scala.debugger.projects.version>
-        <scala.core.version>1.7.0.0</scala.core.version>
-        <scala.editor.version>1.7.0.0</scala.editor.version>
-        <scala.console.version>1.7.0.0</scala.console.version>
-        <scala.maven.version>1.7.0.0</scala.maven.version>
-        <scala.platform.version>1.7.0.0</scala.platform.version>
-        <scala.sbt.version>1.7.0.0</scala.sbt.version>
-        <scala.sbt.project.version>1.7.0.0</scala.sbt.project.version>
-        <scala.stdplatform.version>1.7.0.0</scala.stdplatform.version>
-        <scala.project.version>1.7.0.0</scala.project.version>
-        <scala.refactoring.version>1.7.0.0</scala.refactoring.version>
+        <libs.sbt.version>0.13.5.1</libs.sbt.version>
+        <libs.scala.version>2.11.3.1</libs.scala.version>
+        <libs.scalariform.version>0.1.5.2</libs.scalariform.version>
+        <libs.xtc.version>1.15.2</libs.xtc.version>
+        <scala.console.version>1.8.1.0</scala.console.version>
+        <scala.core.version>1.8.1.0</scala.core.version>
+        <scala.debugger.version>1.8.1.0</scala.debugger.version>
+        <scala.debugger.projects.version>1.8.1.0</scala.debugger.projects.version>
+        <scala.editor.version>1.8.1.1</scala.editor.version>
+        <scala.fontscolors.version>1.8.1.1</scala.fontscolors.version>
+        <scala.maven.version>1.8.1.0</scala.maven.version>
+        <scala.platform.version>1.8.1.0</scala.platform.version>
+        <scala.project.version>1.8.1.0</scala.project.version>
+        <scala.refactoring.version>1.8.1.0</scala.refactoring.version>
+        <scala.sbt.version>1.8.1.0</scala.sbt.version>
+        <scala.sbt.project.version>1.8.1.0</scala.sbt.project.version>
+        <scala.stdplatform.version>1.8.1.0</scala.stdplatform.version>
     </properties>
 
     <repositories>
@@ -127,20 +128,34 @@
             <plugins>
                 <!-- Plugins required for creating and packaging a NetBeans module -->
                 <plugin>
+                    <!-- https://github.com/mojohaus/nbm-maven-plugin -->
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>nbm-maven-plugin</artifactId>
-                    <version>3.13.3</version>
+                    <version>3.14.1</version>
                     <extensions>true</extensions>
                     <configuration>
                         <brandingToken>${brandingToken}</brandingToken>
                         <cluster>${brandingToken}</cluster>
                         <forcedVersion>${netbeans.version}</forcedVersion>
-                        <netbeansInstallDirectory>${nb.installation}</netbeansInstallDirectory> <!-- to have the goal 'nbm:populate-repository' find the installation and populating the local repository with them, set it on your maven settings.xml -->
-                        <netbeansInstallation>${nb.installation}</netbeansInstallation> <!-- to have the goal 'nbm:run-ide' find the installation of the local netbeans -->
+                        <!-- to have the goal 'nbm:run-ide' find the installation of the local netbeans -->
+                        <netbeansInstallation>${nb.installation}</netbeansInstallation>
                         <additionalArguments>${nbm.run.arguments}</additionalArguments>
                         <keystore>${nbm.sign.keystore}</keystore>
                         <keystorealias>${nbm.sign.keystorealias}</keystorealias>
                         <keystorepassword>${nbm.sign.keystorepassword}</keystorepassword>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <!-- https://github.com/mojohaus/nb-repository-plugin/ -->
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>nb-repository-plugin</artifactId>
+                    <version>1.3</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <!-- to have the goal 'nb-repository:populate' find the installation and populating the local repository with them, set it on your maven settings.xml -->
+                        <netbeansInstallDirectory>${nb.installation}</netbeansInstallDirectory>
+                        <netbeansNbmDirectory>${nb.nbmdirectory}</netbeansNbmDirectory>
                     </configuration>
                 </plugin>
 
@@ -341,11 +356,585 @@
         <profile>
             <id>debug-ide</id>
             <properties>
-                <nbm.run.arguments>-J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8888</nbm.run.arguments>
+                <nbm.run.arguments>-J-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888</nbm.run.arguments>
                 <!--nbm.run.arguments>-J-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8888</nbm.run.arguments-->
             </properties>
         </profile>
     </profiles>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- nbscala modules -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-scala-compiler</artifactId>
+                <version>${libs.scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-scala-continuations</artifactId>
+                <version>${libs.scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-scala-continuations-plugin</artifactId>
+                <version>${libs.scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-scala-library</artifactId>
+                <version>${libs.scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-scala-reflect</artifactId>
+                <version>${libs.scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-scala-xml</artifactId>
+                <version>${libs.scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-scalariform</artifactId>
+                <version>${libs.scalariform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-sbt</artifactId>
+                <version>${libs.sbt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-libs-xtc</artifactId>
+                <version>${libs.xtc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-console</artifactId>
+                <version>${scala.console.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-core</artifactId>
+                <version>${scala.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-debugger</artifactId>
+                <version>${scala.debugger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-debugger-projects</artifactId>
+                <version>${scala.debugger.projects.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-editor</artifactId>
+                <version>${scala.editor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-fontscolors</artifactId>
+                <version>${scala.fontscolors.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-maven</artifactId>
+                <version>${scala.maven.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-platform</artifactId>
+                <version>${scala.platform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-project</artifactId>
+                <version>${scala.project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-sbt</artifactId>
+                <version>${scala.sbt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-sbt-project-template</artifactId>
+                <version>${scala.sbt.project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-stdplatform</artifactId>
+                <version>${scala.stdplatform.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>org-netbeans-modules-scala-refactoring</artifactId>
+                <version>${scala.refactoring.version}</version>
+            </dependency>
+
+            <!-- The clusters platform, java, ide and nb represent a full functioning Netbeans IDE -->
+            <dependency>
+                <groupId>org.netbeans.cluster</groupId>
+                <artifactId>platform</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.cluster</groupId>
+                <artifactId>java</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.cluster</groupId>
+                <artifactId>nb</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.cluster</groupId>
+                <artifactId>ide</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+
+            <!-- netbeans modules -->
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-apisupport-kit</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-core</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-java-preprocessorbridge</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-debugger-jpda-ui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-debugger-jpda-ant</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-debugger-jpda-projects</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-parsing-lucene</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-maven</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-options-editor</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-editor-errorstripe</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-web-browser-api</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+
+
+
+            <!-- netbeans api -->
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-libs-javacapi</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-progress</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-progress-nb</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-nbjunit</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-jellytools-ide</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-websvc-saas-codegen-java</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-jellytools-java</artifactId>
+                <version>${netbeans.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-extexecution</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-extexecution-base</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-project-libraries-ui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-projectapi</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-projectuiapi</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-projectuiapi-base</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-queries</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-dialogs</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-filesystems</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-loaders</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-io</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-modules</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-text</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-util</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-util-lookup</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-util-ui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-windows</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-awt</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-nodes</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-java-classpath</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-classfile</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-csl-api</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-document</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-lib</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-lib2</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-mimelookup</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-settings</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-util</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-java-lexer</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-java-project</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-java-project-ui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-java-source</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-java-sourceui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-java-source-base</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-lexer</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-parsing-api</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-parsing-indexing</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-refactoring-api</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-debugger</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-debugger-jpda</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-spi-debugger-ui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-spi-viewmodel</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-java</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-java-platform</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-java-platform-ui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-jdesktop-layout</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-core-multiview</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-libs-lucene</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-bracesmatching</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-indent</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-indent-project</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-options-api</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-annotations-common</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-explorer</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-apache-tools-ant-module</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-ant-browsetask</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-java-api-common</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-project-ant</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-project-ant-ui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-project-libraries</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-actions</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-execution</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-editor-codetemplates</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+
+
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>1.2.15</version>
+                <scope>provided</scope>
+            </dependency>
+
+
+        </dependencies>
+    </dependencyManagement>
 
     <modules>
         <module>libs.local</module>
@@ -358,18 +947,19 @@
         <module>libs.scalariform</module>
         <module>libs.sbt</module>
         <module>libs.xtc</module>
-        <module>scala.core</module>
-        <module>scala.editor</module>
         <module>scala.console</module>
-        <module>scala.debugger.projects</module>
+        <module>scala.core</module>
         <module>scala.debugger</module>
+        <module>scala.debugger.projects</module>
+        <module>scala.editor</module>
+        <module>scala.fontscolors</module>
         <module>scala.maven</module>
         <module>scala.platform</module>
+        <module>scala.project</module>
+        <module>scala.refactoring</module>
         <module>scala.sbt</module>
         <module>scala.sbt.project</module>
         <module>scala.stdplatform</module>
-        <module>scala.project</module>
-        <module>scala.refactoring</module>
         <module>scala.kit</module>
     </modules>
 

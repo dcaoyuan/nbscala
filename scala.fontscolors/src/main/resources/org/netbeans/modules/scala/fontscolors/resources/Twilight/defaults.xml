@@ -14,7 +14,7 @@
     <fontcolor name="string" foreColor="8F9D6A"/>
     <fontcolor name="operator" foreColor="FFFFFF"/>
     <fontcolor name="comment" foreColor="918A93"/>
-    <fontcolor name="error" foreColor="white" bgColor="2B2B2B" waveUnderlined="red"/>
+    <fontcolor name="error" waveUnderlined="red"/>
     <fontcolor name="method" foreColor="7587A6"/>
     <fontcolor name="field" default="identifier"/>
     <fontcolor name="markup-attribute-value" default="string"/>

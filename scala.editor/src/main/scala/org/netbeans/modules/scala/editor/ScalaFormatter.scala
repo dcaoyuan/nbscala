@@ -40,8 +40,9 @@
 package org.netbeans.modules.scala.editor
 
 import javax.swing.text.{ BadLocationException, Document }
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.api.lexer.{ Token, TokenId }
-import org.netbeans.editor.{ BaseDocument, Utilities }
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.csl.api.Formatter
 import org.netbeans.modules.csl.api.OffsetRange
 import org.netbeans.modules.csl.spi.{ GsfUtilities, ParserResult }
@@ -161,9 +162,9 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
    */
   @throws(classOf[BadLocationException])
   private def getFirstTokenOnLine(doc: BaseDocument, offset: Int): Option[Token[_]] = {
-    val lineBegin = Utilities.getRowFirstNonWhite(doc, offset)
-    if (lineBegin != -1) {
-      return ScalaLexUtil.getToken(doc, lineBegin)
+    val lineStart = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
+    if (lineStart != -1) {
+      return ScalaLexUtil.getToken(doc, lineStart)
     }
 
     None
@@ -179,13 +180,13 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
         endOffset = doc.getLength
       }
 
-      startOffset = Utilities.getRowStart(doc, startOffset)
+      startOffset = LineDocumentUtils.getLineStart(doc, startOffset)
       val lineStart = startOffset
 
       var initialOffset = 0
       var initialIndent = 0
       if (startOffset > 0) {
-        val prevOffset = Utilities.getRowStart(doc, startOffset - 1)
+        val prevOffset = LineDocumentUtils.getLineStart(doc, startOffset - 1)
         initialOffset = getFormatStableStart(doc, prevOffset)
         initialIndent = GsfUtilities.getLineIndent(doc, initialOffset)
       }
@@ -242,8 +243,8 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
                   val actualPrevIndent = GsfUtilities.getLineIndent(doc, prevOffset)
                   if (actualPrevIndent != prevIndent) {
                     // For blank lines, indentation may be 0, so don't adjust in that case
-                    if (!(Utilities.isRowEmpty(doc, prevOffset) || Utilities.isRowWhite(doc, prevOffset))) {
-                      indent = actualPrevIndent + (indent - prevIndent);
+                    if (!(LineDocumentUtils.isLineEmpty(doc, prevOffset) || LineDocumentUtils.isLineWhitespace(doc, prevOffset))) {
+                      indent = actualPrevIndent + (indent - prevIndent)
                     }
                   }
                 }
@@ -306,7 +307,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
       // At the end of the day, we're recording a set of line offsets and indents.
       // This can be used either to reformat the buffer, or indent a new line.
       // State:
-      var offset = Utilities.getRowStart(doc, startOffset) // The line's offset
+      var offset = LineDocumentUtils.getLineStart(doc, startOffset) // The line's offset
 
       val end = endOffset
 
@@ -333,14 +334,14 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
 
       var idx = 0
       while (!includeEnd && offset < end || includeEnd && offset <= end) {
-        val lineBegin = Utilities.getRowFirstNonWhite(doc, offset)
-        val lineEnd = Utilities.getRowEnd(doc, offset)
+        val lineStart = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
+        val lineEnd = LineDocumentUtils.getLineEnd(doc, offset)
 
-        if (lineBegin != -1) {
+        if (lineStart != -1) {
           val results = computeLineIndent(indent, prevIndent, continueIndent,
             openingBraces, specialTokens,
             offsets, indents,
-            doc, lineBegin, lineEnd, idx)
+            doc, lineStart, lineEnd, idx)
 
           indent = results(0)
           nextIndent = results(1)
@@ -357,7 +358,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
         }
 
         // Insert whitespace on empty lines too -- needed for abbreviations expansion
-        if (lineBegin != -1 || indentEmptyLines) {
+        if (lineStart != -1 || indentEmptyLines) {
           indents += indent
           offsets += offset
           idx += 1
@@ -397,7 +398,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
     var indent = aindent
     var continueIndent = acontinueIndent
 
-    val rawStart = Utilities.getRowStart(doc, lineBegin) // lineBegin is the RowFirstNonWhite
+    val lineStart = LineDocumentUtils.getLineStart(doc, lineBegin) // lineBegin is the RowFirstNonWhite
     // * token index on this line (we only count not-white tokens,
     // * if noWSIdx == 0, means the first non-white token on this line
     var noWSIdx = -1
@@ -470,7 +471,7 @@ class ScalaFormatter(codeStyle: CodeStyle, rightMarginOverride: Int) extends For
               }
 
               // * determine some cases when first token of this line is:
-              if (offset == rawStart) {
+              if (offset == lineStart) {
                 id match {
                   case ScalaTokenId.LineComment =>
                     indent = -1

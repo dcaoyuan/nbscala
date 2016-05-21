@@ -39,15 +39,15 @@
 
 package org.netbeans.modules.scala.editor.imports
 
-import java.util.EnumSet;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import java.util.EnumSet
+import java.util.logging.Logger
+import java.util.logging.Level
 import java.util.regex.Pattern
-import org.netbeans.api.java.source.{ ClassIndex };
-import org.netbeans.api.java.source.ClassIndex.NameKind;
-import org.netbeans.editor.BaseDocument;
+import org.netbeans.api.java.source.ClassIndex
+import org.netbeans.api.editor.document.LineDocumentUtils
+import org.netbeans.api.java.source.ClassIndex.NameKind
+import org.netbeans.editor.BaseDocument
 import org.netbeans.api.lexer.{ Token, TokenHierarchy, TokenId, TokenSequence }
-import org.netbeans.editor.Utilities;
 import org.netbeans.api.java.source.ui.ElementIcons
 import org.netbeans.modules.csl.api.{ EditList, OffsetRange }
 import org.netbeans.modules.scala.core.{ ScalaSourceUtil }
@@ -94,7 +94,7 @@ object FixImportsHelper {
 
   def calcOffsetRange(doc: BaseDocument, start: Int, end: Int): Option[OffsetRange] = {
     try {
-      Some(new OffsetRange(Utilities.getRowStart(doc, start), Utilities.getRowEnd(doc, end)))
+      Some(new OffsetRange(LineDocumentUtils.getLineStart(doc, start), LineDocumentUtils.getLineEnd(doc, end)))
     } catch { case x: Exception => None }
   }
 
@@ -280,8 +280,8 @@ object FixImportsHelper {
       ts.token.id match {
         case ScalaTokenId.Case | ScalaTokenId.Class | ScalaTokenId.Object | ScalaTokenId.Trait | ScalaTokenId.Import | ScalaTokenId.Sealed |
           ScalaTokenId.At | ScalaTokenId.Abstract | ScalaTokenId.Final | ScalaTokenId.Private | ScalaTokenId.Protected =>
-          val lineBegin = Utilities.getRowStart(doc, ts.offset)
-          candidateOffset = lineBegin
+          val lineStart = LineDocumentUtils.getLineStart(doc, ts.offset)
+          candidateOffset = lineStart
           break = true
         case _ =>
       }

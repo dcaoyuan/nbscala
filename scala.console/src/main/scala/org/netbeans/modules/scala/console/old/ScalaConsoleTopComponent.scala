@@ -9,10 +9,10 @@ import java.io._
 import java.util.logging.Logger
 import javax.swing._
 import javax.swing.text.BadLocationException
-import org.netbeans.api.extexecution.ExecutionDescriptor;
-import org.netbeans.api.extexecution.ExecutionService;
-import org.netbeans.api.extexecution.ExternalProcessBuilder;
+import org.netbeans.api.extexecution.ExecutionDescriptor
+import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.project.ui.OpenProjects
+import org.netbeans.modules.extexecution.base.ExternalProcessBuilder
 import org.netbeans.modules.scala.console.readline.TextAreaReadline
 import org.openide.ErrorManager
 import org.openide.filesystems.FileUtil
@@ -192,7 +192,7 @@ final class ScalaConsoleTopComponent private () extends TopComponent {
     log.info("==== End of Scala console args ====")
 
     // XXX under Mac OS jdk7, the java.home is point to /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/jre
-    // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which cause the lack of javac
+    // instead of /Library/Java/JavaVirtualMachines/jdk1.7.0_xx.jdk/Contents/Home/, which causes the lack of javac
     //builder = builder.addEnvironmentVariable("JAVA_HOME", ScalaExecution.getJavaHome)
     builder = builder.addEnvironmentVariable("SCALA_HOME", ScalaExecution.getScalaHome)
     builder = builder.workingDirectory(pwd)

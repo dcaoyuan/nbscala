@@ -48,11 +48,11 @@ import javax.swing.Action
 import javax.swing.text.BadLocationException
 import javax.swing.text.Document
 import javax.swing.text.JTextComponent
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.editor.AnnotationDesc
 import org.netbeans.editor.BaseDocument
 import org.netbeans.editor.ImplementationProvider
 import org.netbeans.editor.JumpList
-import org.netbeans.editor.Utilities
 import org.openide.ErrorManager
 import org.openide.filesystems.FileObject
 import org.openide.loaders.DataObject
@@ -135,8 +135,8 @@ class IsOverriddenAnnotationAction extends AbstractAction {
         doc.render(new Runnable {
           def run {
             try {
-              val line = Utilities.getLineOffset(doc, currentPosition)
-              val startOffset = Utilities.getRowStartFromLineOffset(doc, line)
+              val line = LineDocumentUtils.getLineIndex(doc, currentPosition)
+              val startOffset = LineDocumentUtils.getLineStartFromIndex(doc, line)
               val desc = annotations.getActiveAnnotation(line)
               p(0) = comp.modelToView(startOffset).getLocation
               annotation(0) = findAnnotation(comp, desc, startOffset)
