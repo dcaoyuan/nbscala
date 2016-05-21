@@ -194,17 +194,17 @@
                         <dependency>
                             <id>org.netbeans.modules:org.netbeans.modules.java.preprocessorbridge</id>
                             <type>impl</type>
-                            <!--<explicitValue>org.netbeans.modules.debugger.jpda.ui/1 > 1.23</explicitValue>-->
+                            <explicitValue>org.netbeans.modules.debugger.jpda.ui/1 > 1.52</explicitValue>
                         </dependency>
                         <dependency>
                             <id>org.netbeans.modules:org-netbeans-modules-debugger-jpda-ui</id>
                             <type>impl</type>
-                            <!--<explicitValue>org.netbeans.modules.debugger.jpda.ui/1 > 1.23</explicitValue>-->
+                            <explicitValue>org.netbeans.modules.debugger.jpda.ui/1 > 1.52</explicitValue>
                         </dependency>
                         <dependency>
                             <id>org.netbeans.modules:org-netbeans-modules-debugger-jpda-projects</id>
                             <type>impl</type>
-                            <!--<explicitValue>org.netbeans.modules.debugger.jpda.projects > 1.33</explicitValue>-->
+                            <explicitValue>org.netbeans.modules.debugger.jpda.projects > 1.34</explicitValue>
                         </dependency>
                     </moduleDependencies>
                     <publicPackages>
