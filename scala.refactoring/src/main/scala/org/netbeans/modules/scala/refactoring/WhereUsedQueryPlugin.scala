@@ -42,26 +42,26 @@ package org.netbeans.modules.scala.refactoring;
 
 import java.io.IOException
 import java.util.logging.Logger
-import javax.swing.Icon;
-import javax.swing.text.Document;
+//import javax.swing.Icon;
+//import javax.swing.text.Document;
 import org.netbeans.modules.csl.api.ElementKind;
 import org.netbeans.modules.csl.api.Error;
 import org.netbeans.modules.csl.api.Modifier;
 import org.netbeans.modules.csl.api.OffsetRange;
 import org.netbeans.modules.csl.api.Severity;
-import org.netbeans.api.java.classpath.ClassPath
+//import org.netbeans.api.java.classpath.ClassPath
 import org.netbeans.api.java.source.ClasspathInfo
 import org.netbeans.api.language.util.text.BoyerMoore
 import org.netbeans.api.lexer.Token;
-import org.netbeans.api.lexer.TokenHierarchy;
+//import org.netbeans.api.lexer.TokenHierarchy;
 import org.netbeans.api.lexer.TokenId;
 import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.api.lexer.TokenUtilities;
-import org.netbeans.editor.BaseDocument;
+//import org.netbeans.editor.BaseDocument;
 import org.netbeans.modules.csl.api.UiUtils
-import org.netbeans.modules.csl.spi.GsfUtilities;
+//import org.netbeans.modules.csl.spi.GsfUtilities;
 import org.netbeans.modules.csl.spi.support.ModificationResult;
-import org.netbeans.modules.parsing.api.Source
+//import org.netbeans.modules.parsing.api.Source
 import org.netbeans.modules.refactoring.api.Problem;
 import org.netbeans.modules.refactoring.api.ProgressEvent;
 import org.netbeans.modules.refactoring.api.WhereUsedQuery;
@@ -72,7 +72,9 @@ import org.netbeans.modules.scala.core.ast.{ ScalaItems, ScalaRootScope }
 import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.openide.filesystems.FileObject
 import org.openide.util.NbBundle;
+import scala.collection.mutable.MutableList
 import scala.collection.mutable.HashSet
+import scala.collection.JavaConversions._
 import scala.reflect.internal.Flags
 
 /**
@@ -259,6 +261,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
       val th = pr.getSnapshot.getTokenHierarchy
       val root = pr.rootScope
       val global = pr.global
+      val foundElements = new MutableList[WhereUsedElement]()
 
       if (root == ScalaRootScope.EMPTY) {
         val sourceText = pr.getSnapshot.getText.toString
@@ -300,7 +303,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
           val icon = UiUtils.getElementIcon(ElementKind.ERROR, java.util.Collections.emptySet[Modifier])
           val range = new OffsetRange(start, end)
           val element = WhereUsedElement(pr, targetName, desc, range, icon)
-          elements.add(refactoring, element)
+          foundElements += element
         }
       }
 
@@ -367,7 +370,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
             if token.text.toString == targetName && isRef(sym) && tokens.add(token)
           } {
             logger.info(pr.getSnapshot.getSource.getFileObject + ": find where used element " + sym.fullName)
-            elements.add(refactoring, WhereUsedElement(pr, item.asInstanceOf[ScalaItem]))
+            foundElements += WhereUsedElement(pr, item.asInstanceOf[ScalaItem])
           }
         } get match {
           case Left(_)   =>
@@ -380,6 +383,8 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
         // TODO
       }
 
+      elements.addAll(refactoring, foundElements.sortWith(_.compare(_) < 0))
+      
       Nil
     }
 
