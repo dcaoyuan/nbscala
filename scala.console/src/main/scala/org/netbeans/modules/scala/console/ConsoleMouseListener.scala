@@ -9,12 +9,10 @@ import java.io.IOException
 import javax.swing.JTextPane
 import javax.swing.SwingUtilities
 import javax.swing.text.BadLocationException
-import org.netbeans.api.java.classpath.GlobalPathRegistry
 import org.openide.DialogDisplayer
 import org.openide.ErrorManager
 import org.openide.NotifyDescriptor
 import org.openide.cookies.EditorCookie
-import org.openide.filesystems.FileObject
 import org.openide.filesystems.FileUtil
 import org.openide.loaders.DataObject
 import org.openide.loaders.DataObjectNotFoundException
@@ -99,19 +97,12 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
 
   }
 
-//  private def getFileObject(relativePath: String): FileObject = {
-//    GlobalPathRegistry.getDefault().findResource(relativePath)
-//  }
-//
   private def openFile(file: File, lineNo: Int) {
-//    val fo = FileUtil.toFileObject(file)
-//    openFile(fo, lineNo)
-//  }
-//  private def openFile(fo: FileObject, lineNo: Int) {
+
     ConsoleMouseListener.FileOpenRP.post(new Runnable() {
       override def run() {
         try {
-                    val fo = FileUtil.toFileObject(file)
+          val fo = FileUtil.toFileObject(file)
           val dob = DataObject.find(fo)
           val ed = dob.getLookup.lookup(classOf[EditorCookie])
           if (ed != null && /* not true e.g. for *_ja.properties */ (fo eq dob.getPrimaryFile)) {
@@ -145,11 +136,6 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
             }
           } else {
             Toolkit.getDefaultToolkit.beep
-            System.out.println("fo: " + fo)
-            System.out.println("dob: " + dob)
-            System.out.println("ed: " + ed)
-            new RuntimeException().fillInStackTrace().printStackTrace()
-
           }
         } catch {
           case ex: DataObjectNotFoundException => ErrorManager.getDefault.notify(ErrorManager.WARNING, ex)

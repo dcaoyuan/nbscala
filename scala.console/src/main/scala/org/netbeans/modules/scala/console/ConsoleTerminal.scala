@@ -128,9 +128,6 @@ class ConsoleOutputLineParser(defaultStyle: AttributeSet) {
       val text = lineTexts(i)
       val mFile = rFILE_PATH.matcher(text.text)
       val mStackFrame = rSTACK_FRAME_PATTERN.matcher(text.text)
-      println("text.text: " + text.text)
-      println("mStackFrame: " + mStackFrame.matches + " " + mStackFrame.groupCount)
-      println("mFile: " + mFile.matches + " " + mFile.groupCount)
 
       if (mStackFrame.matches && mStackFrame.groupCount >= 5) {
         val pkg = mStackFrame.group(1)
@@ -161,13 +158,9 @@ class ConsoleOutputLineParser(defaultStyle: AttributeSet) {
   }
 
   private def getFile(relativePath: String): File = {
-    println("relativePath: " + relativePath)
     val fileObject = GlobalPathRegistry.getDefault().findResource(relativePath)
-    println("FileObject: " + fileObject)
-    if (fileObject != null)
-      FileUtil.toFile(fileObject)
-    else
-      null
+
+    if (fileObject != null) FileUtil.toFile(fileObject) else null
   }
 }
 
