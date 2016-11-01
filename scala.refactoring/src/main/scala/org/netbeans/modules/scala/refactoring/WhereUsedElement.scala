@@ -40,27 +40,19 @@
  */
 package org.netbeans.modules.scala.refactoring
 
-import java.util.Collections;
-import java.util.Set;
-import javax.swing.Icon;
-import javax.swing.text.Position.Bias;
-import org.netbeans.editor.BaseDocument;
-import org.netbeans.editor.Utilities;
-import org.netbeans.modules.csl.api.Modifier
+import javax.swing.Icon
+import javax.swing.text.Position.Bias
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.modules.csl.api.OffsetRange
 import org.netbeans.modules.csl.spi.GsfUtilities
 import org.netbeans.modules.refactoring.spi.SimpleRefactoringElementImplementation
 import org.openide.filesystems.FileObject
-import org.openide.text.CloneableEditorSupport
 import org.openide.text.PositionBounds
-import org.openide.text.PositionRef
 import org.openide.util.Exceptions
 import org.openide.util.Lookup
 import org.openide.util.lookup.Lookups
-
-import org.netbeans.modules.scala.core.ScalaParserResult;
+import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ast.ScalaItems
-import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.netbeans.modules.scala.refactoring.ui.tree.ElementGripFactory
 
 /**
@@ -96,16 +88,16 @@ object WhereUsedElement {
       // for for example find subclasses (using a singly dummy FileInfo) I need
       // to read it here instead
       content = bdoc.getText(0, bdoc.getLength)
-      sta = Utilities.getRowFirstNonWhite(bdoc, start)
+      sta = LineDocumentUtils.getLineFirstNonWhitespace(bdoc, start)
 
       if (sta == -1) {
-        sta = Utilities.getRowStart(bdoc, start)
+        sta = LineDocumentUtils.getLineStart(bdoc, start)
       }
 
-      en = Utilities.getRowLastNonWhite(bdoc, start)
+      en = LineDocumentUtils.getLineLastNonWhitespace(bdoc, start)
 
       if (en == -1) {
-        en = Utilities.getRowEnd(bdoc, start)
+        en = LineDocumentUtils.getLineEnd(bdoc, start)
       } else {
         // Last nonwhite - left side of the last char, not inclusive
         en += 1
@@ -172,10 +164,13 @@ object WhereUsedElement {
 }
 
 class WhereUsedElement(bounds: PositionBounds, displayText: String, parentFile: FileObject,
-                       name: String, range: OffsetRange, icon: Icon) extends SimpleRefactoringElementImplementation {
+                       name: String, range: OffsetRange, icon: Icon) extends SimpleRefactoringElementImplementation
+      with scala.math.Ordered[WhereUsedElement] {
 
   ElementGripFactory.getDefault.put(parentFile, name, range, icon)
 
+  def compare(that: WhereUsedElement) = (this.getPosition().getBegin().getLine() - that.getPosition().getBegin().getLine())
+  
   def getLookup: Lookup = {
     val composite = ElementGripFactory.getDefault.get(parentFile, bounds.getBegin.getOffset) match {
       case null => parentFile

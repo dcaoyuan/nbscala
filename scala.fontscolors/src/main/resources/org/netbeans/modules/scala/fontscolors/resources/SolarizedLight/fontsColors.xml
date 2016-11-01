@@ -21,16 +21,16 @@
         <font style="bold" />
     </fontcolor>
 
-    <fontcolor name="True" foreColor="6c71c4" /> <!-- violet -->
-    <fontcolor name="False" foreColor="6c71c4" />
-    <fontcolor name="Abstract" foreColor="6c71c4" />
-    <fontcolor name="Final" foreColor="6c71c4" />
-    <fontcolor name="Implicit" foreColor="6c71c4" />
-    <fontcolor name="Lazy" foreColor="6c71c4" />
-    <fontcolor name="Override" foreColor="6c71c4" />
-    <fontcolor name="Private" foreColor="6c71c4" />
-    <fontcolor name="Protected" foreColor="6c71c4" />
-    <fontcolor name="Sealed" foreColor="6c71c4" />
+    <fontcolor name="True" foreColor="b58900" /> <!-- yellow -->
+    <fontcolor name="False" foreColor="b58900" />
+    <fontcolor name="Abstract" foreColor="b58900" />
+    <fontcolor name="Final" foreColor="b58900" />
+    <fontcolor name="Implicit" foreColor="b58900" />
+    <fontcolor name="Lazy" foreColor="b58900" />
+    <fontcolor name="Override" foreColor="b58900" />
+    <fontcolor name="Private" foreColor="b58900" />
+    <fontcolor name="Protected" foreColor="b58900" />
+    <fontcolor name="Sealed" foreColor="b58900" />
 
     <!-- This is intended for an embedded regular expression language -->
     <!--
@@ -55,18 +55,18 @@
     </fontcolor>
     <fontcolor name="mod-deprecated" strikeThrough="586e75" /> <!-- base01 -->
 
-    <fontcolor name="mod-class" foreColor="b58900" /> <!-- yellow, Type -->
+    <fontcolor name="mod-class" foreColor="5A7FA4" /> <!-- violet, Type -->
 
-    <fontcolor name="mod-method" foreColor="586e75" /> <!-- base01 method def -->
-    <fontcolor name="mod-constructor" foreColor="586e75" /> <!-- base01, method ref -->
+    <fontcolor name="mod-method" foreColor="5A7FA4" /> <!-- violet, method def -->
+    <fontcolor name="mod-constructor" foreColor="657b83" /> <!-- base00, method ref -->
     <fontcolor name="mod-custom1"> <!-- implicit method Ref -->
         <font style="italic" />
     </fontcolor>
     
     <fontcolor name="mod-custom2" underline="859900" /> <!-- green lazy val Ref/Dfn -->
     <fontcolor name="mod-field" foreColor="859900" /> <!-- green val -->
-    <fontcolor name="mod-local-variable" foreColor="d33682" /> <!-- magenta, var -->
-    <fontcolor name="mod-parameter" foreColor="268bd2" /> <!-- blue param -->
+    <fontcolor name="mod-local-variable" foreColor="dc322f" /> <!-- red, var -->
+    <fontcolor name="mod-parameter" foreColor="6c71c4" /> <!-- violet param -->
 
     <fontcolor name="mod-unused" waveUnderlined="999999" />
 
@@ -74,7 +74,7 @@
     <fontcolor name="mod-enum" />
 
     <fontcolor name="mod-private" />
-    <fontcolor name="mod-package-private" foreColor="cb4b16" /> <!-- orange packege name -->
+    <fontcolor name="mod-package-private" foreColor="268bd2" /> <!-- blue packege name -->
     <fontcolor name="mod-protected" />
 
     <fontcolor name="mod-interface" default="comment" />
@@ -96,9 +96,11 @@
     
     <!-- "editor" highlighting: -->
     <fontcolor name="highlight-caret-row" bgColor="eee8d5" />  <!-- base2 -->
-    <fontcolor name="line-number" foreColor="586e75" bgColor="eee8d5" /> <!-- base01/base2 -->
+    <fontcolor name="line-number" foreColor="586e75" /> <!-- base01 -->
     <!--fontcolor name="indent-guide-lines" foreColor="93a1a1" /--> <!-- base1 -->
     <!--fontcolor name="text-limit-line-color" foreColor="93a1a1" /--> <!-- base1 -->
+    <fontcolor name="caret-color-insert-mode" foreColor="002b36" /> <!-- base03 -->
+    <fontcolor name="caret-color-overwrite-mode" foreColor="002b36" /> <!-- base03 -->
     <fontcolor name="selection" bgColor="073642" /> <!-- base02 -->
     
 </fontscolors>

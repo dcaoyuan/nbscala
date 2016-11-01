@@ -40,16 +40,15 @@ package org.netbeans.api.language.util.lex
 
 import java.io.IOException
 import javax.swing.text.{ BadLocationException, Document }
-
 import org.netbeans.modules.csl.api.OffsetRange
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.api.lexer.{ Language, Token, TokenHierarchy, TokenId, TokenSequence }
-import org.netbeans.editor.{ BaseDocument, Utilities }
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.parsing.spi.Parser
 import org.openide.cookies.EditorCookie
 import org.openide.filesystems.{ FileObject, FileUtil }
 import org.openide.loaders.{ DataObject, DataObjectNotFoundException }
 import org.openide.util.Exceptions
-
 import scala.collection.mutable.{ Stack }
 
 /**
@@ -628,7 +627,7 @@ trait LexUtil {
 
     // Look at the first token of the current line
     try {
-      val first = Utilities.getRowFirstNonWhite(doc, offset)
+      val first = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
       if (first != -1) {
         getToken(doc, first) match {
           case Some(x) =>
@@ -653,11 +652,11 @@ trait LexUtil {
    */
   def getBeginEndLineBalance(doc: BaseDocument, offset: Int, upToOffset: Boolean): Int = {
     try {
-      val begin = Utilities.getRowStart(doc, offset);
-      val end = if (upToOffset) offset else Utilities.getRowEnd(doc, offset)
+      val start = LineDocumentUtils.getLineStart(doc, offset)
+      val end = if (upToOffset) offset else LineDocumentUtils.getLineEnd(doc, offset)
 
-      val ts = getTokenSequence(doc, begin).getOrElse(return 0)
-      ts.move(begin)
+      val ts = getTokenSequence(doc, start).getOrElse(return 0)
+      ts.move(start)
       if (!ts.moveNext) {
         return 0
       }
@@ -684,11 +683,11 @@ trait LexUtil {
   def getLineBalance(doc: BaseDocument, offset: Int, up: TokenId, down: TokenId): Stack[Token[TokenId]] = {
     val balanceStack = new Stack[Token[TokenId]]
     try {
-      val begin = Utilities.getRowStart(doc, offset)
-      val end = Utilities.getRowEnd(doc, offset)
+      val start = LineDocumentUtils.getLineStart(doc, offset)
+      val end = LineDocumentUtils.getLineEnd(doc, offset)
 
-      val ts = getTokenSequence(doc, begin).getOrElse(return balanceStack)
-      ts.move(begin)
+      val ts = getTokenSequence(doc, start).getOrElse(return balanceStack)
+      ts.move(start)
       if (!ts.moveNext) {
         return balanceStack
       }
@@ -781,7 +780,7 @@ trait LexUtil {
    */
   @throws(classOf[BadLocationException])
   def isCommentOnlyLine(doc: BaseDocument, offset: Int): Boolean = {
-    val begin = Utilities.getRowFirstNonWhite(doc, offset)
+    val begin = LineDocumentUtils.getLineFirstNonWhitespace(doc, offset)
 
     if (begin == -1) {
       return false // whitespace only
@@ -1096,18 +1095,18 @@ trait LexUtil {
 
       if ((token ne null) && isLineComment(token.id)) {
         // First add a range for the current line
-        var begin = Utilities.getRowStart(doc, caretOffset)
-        var end = Utilities.getRowEnd(doc, caretOffset)
+        var start = LineDocumentUtils.getLineStart(doc, caretOffset)
+        var end = LineDocumentUtils.getLineEnd(doc, caretOffset)
 
         if (isCommentOnlyLine(doc, caretOffset)) {
           var break = false
-          while (begin > 0 && !break) {
-            val newBegin = Utilities.getRowStart(doc, begin - 1)
-            if (newBegin < 0 || !isCommentOnlyLine(doc, newBegin)) {
-              begin = Utilities.getRowFirstNonWhite(doc, begin)
+          while (start > 0 && !break) {
+            val newStart = LineDocumentUtils.getLineStart(doc, start - 1)
+            if (newStart < 0 || !isCommentOnlyLine(doc, newStart)) {
+              start = LineDocumentUtils.getLineFirstNonWhitespace(doc, start)
               break = true
             } else {
-              begin = newBegin
+              start = newStart
             }
           }
 
@@ -1115,17 +1114,17 @@ trait LexUtil {
 
           break = false
           while (!break) {
-            val newEnd = Utilities.getRowEnd(doc, end + 1)
+            val newEnd = LineDocumentUtils.getLineEnd(doc, end + 1)
             if (newEnd >= length || !isCommentOnlyLine(doc, newEnd)) {
-              end = Utilities.getRowLastNonWhite(doc, end) + 1
+              end = LineDocumentUtils.getLineLastNonWhitespace(doc, end) + 1
               break = true
             } else {
               end = newEnd
             }
           }
 
-          if (begin < end) {
-            return new OffsetRange(begin, end)
+          if (start < end) {
+            return new OffsetRange(start, end)
           }
         } else {
           // It's just a line comment next to some code
@@ -1180,10 +1179,10 @@ trait LexUtil {
     var allowPrevLine = false
     var lineStart: Int = 0
     try {
-      lineStart = Utilities.getRowStart(doc, math.min(lexOffset, doc.getLength))
+      lineStart = LineDocumentUtils.getLineStart(doc, math.min(lexOffset, doc.getLength))
       var prevLast = lineStart - 1
       if (lineStart > 0) {
-        prevLast = Utilities.getRowLastNonWhite(doc, lineStart - 1);
+        prevLast = LineDocumentUtils.getLineLastNonWhitespace(doc, lineStart - 1)
         if (prevLast != -1) {
           val c = doc.getText(prevLast, 1).charAt(0)
           if (c == ',') {
@@ -1193,13 +1192,13 @@ trait LexUtil {
         }
       }
       if (!allowPrevLine) {
-        val firstNonWhite = Utilities.getRowFirstNonWhite(doc, lineStart)
+        val firstNonWhite = LineDocumentUtils.getLineFirstNonWhitespace(doc, lineStart)
         if (lexOffset <= firstNonWhite || firstNonWhite == -1) {
           return lexOffset
         }
       } else {
         // Make lineStart so small that math.max won't cause any problems
-        val firstNonWhite = Utilities.getRowFirstNonWhite(doc, lineStart)
+        val firstNonWhite = LineDocumentUtils.getLineFirstNonWhitespace(doc, lineStart)
         if (prevLast >= 0 && (lexOffset <= firstNonWhite || firstNonWhite == -1)) {
           return prevLast + 1
         }
@@ -1249,17 +1248,17 @@ trait LexUtil {
       // Search to previous lines, locate comments. Once we have a non-whitespace line that isn't
       // a comment, we're done
 
-      var offset = Utilities.getRowStart(baseDoc, elementBegin)
+      var offset = LineDocumentUtils.getLineStart(baseDoc, elementBegin)
       offset -= 1
 
       // Skip empty and whitespace lines
       var break = false
       while (offset >= 0 && !break) {
         // Find beginning of line
-        offset = Utilities.getRowStart(baseDoc, offset)
+        offset = LineDocumentUtils.getLineStart(baseDoc, offset)
 
-        if (!Utilities.isRowEmpty(baseDoc, offset) &&
-          !Utilities.isRowWhite(baseDoc, offset)) {
+        if (!LineDocumentUtils.isLineEmpty(baseDoc, offset) &&
+          !LineDocumentUtils.isLineWhitespace(baseDoc, offset)) {
           break = true
         } else {
           offset -= 1
@@ -1273,15 +1272,15 @@ trait LexUtil {
       break = true
       while (offset >= 0 && !break) {
         // Find beginning of line
-        offset = Utilities.getRowStart(baseDoc, offset)
+        offset = LineDocumentUtils.getLineStart(baseDoc, offset)
 
-        if (Utilities.isRowEmpty(baseDoc, offset) || Utilities.isRowWhite(baseDoc, offset)) {
+        if (LineDocumentUtils.isLineEmpty(baseDoc, offset) || LineDocumentUtils.isLineWhitespace(baseDoc, offset)) {
           // Empty lines not allowed within an rdoc
           break = true
         } else {
           // This is a comment line we should include
-          val lineBegin = Utilities.getRowFirstNonWhite(baseDoc, offset)
-          val lineEnd = Utilities.getRowLastNonWhite(baseDoc, offset) + 1
+          val lineBegin = LineDocumentUtils.getLineFirstNonWhitespace(baseDoc, offset)
+          val lineEnd = LineDocumentUtils.getLineLastNonWhitespace(baseDoc, offset) + 1
           val line = baseDoc.getText(lineBegin, lineEnd - lineBegin)
 
           // Tolerate "public", "private" and "protected" here --

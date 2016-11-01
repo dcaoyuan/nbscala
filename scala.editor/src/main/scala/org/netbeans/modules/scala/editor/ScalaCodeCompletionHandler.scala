@@ -40,7 +40,7 @@
 package org.netbeans.modules.scala.editor
 
 import javax.swing.text.{ BadLocationException, JTextComponent }
-import org.netbeans.editor.{ BaseDocument, Utilities }
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.csl.api.CodeCompletionHandler.QueryType
 import org.netbeans.modules.csl.api.{
   CodeCompletionContext,
@@ -54,6 +54,7 @@ import org.netbeans.modules.csl.spi.{ DefaultCompletionResult, ParserResult }
 import org.netbeans.modules.parsing.spi.indexing.support.QuerySupport
 import org.openide.util.{ Exceptions, NbBundle }
 
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.api.language.util.ast.AstElementHandle
 import org.netbeans.modules.scala.core.ScalaParserResult
 import org.netbeans.modules.scala.core.ScalaSourceUtil
@@ -189,14 +190,14 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
       }
 
       val caretToken = ts.token
-      val currLineEnd = Utilities.getRowEnd(doc, ts.offset)
+      val currLineEnd = LineDocumentUtils.getLineEnd(doc, ts.offset)
       val closestToken = ScalaLexUtil.findPreviousNoWsNoComment(ts).get
-      var prevLineEnd = Utilities.getRowEnd(doc, ts.offset)
+      var prevLineEnd = LineDocumentUtils.getLineEnd(doc, ts.offset)
       if (caretToken == closestToken) {
         if (ts.movePrevious) {
           ScalaLexUtil.findPreviousNoWsNoComment(ts) match {
             case Some(token) =>
-              prevLineEnd = Utilities.getRowEnd(doc, ts.offset)
+              prevLineEnd = LineDocumentUtils.getLineEnd(doc, ts.offset)
             case None =>
           }
 
@@ -696,18 +697,19 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
         //            }
       }
 
-      val lineBegin = Utilities.getRowStart(doc, lexOffset)
-      if (lineBegin != -1) {
-        val lineEnd = Utilities.getRowEnd(doc, lexOffset)
-        val line = doc.getText(lineBegin, lineEnd - lineBegin)
-        val lineOffset = lexOffset - lineBegin
+      val lineStart = LineDocumentUtils.getLineStart(doc, lexOffset)
+      if (lineStart != -1) {
+        val lineEnd = LineDocumentUtils.getLineEnd(doc, lexOffset)
+        val line = doc.getText(lineStart, lineEnd - lineStart)
+        val lineOffset = lexOffset - lineStart
         var start = lineOffset
         if (lineOffset > 0) {
-          for {
-            i <- lineOffset - 1 to 0
-            c = line.charAt(i) if ScalaSourceUtil.isIdentifierChar(c)
-          } {
-            start = i
+          var i = lineOffset - 1
+          while (i >= 0) {
+            if (ScalaSourceUtil.isIdentifierChar(line.charAt(i))) {
+              start = i
+            }
+            i -= 1
           }
         }
 
@@ -716,16 +718,17 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
           line.substring(start, lineOffset)
         } else {
           if (lineOffset == line.length) {
-            line.substring(start);
+            line.substring(start)
           } else {
             val n = line.length
             var end = lineOffset
-            for (
-              j <- lineOffset until n;
-              d = line.charAt(j) if ScalaSourceUtil.isStrictIdentifierChar(d)
-            ) {
-              // Try to accept Foo::Bar as well
-              end = j + 1
+            var j = lineOffset
+            while (j < n) {
+              if (ScalaSourceUtil.isStrictIdentifierChar(line.charAt(j))) {
+                // Try to accept Foo::Bar as well
+                end = j + 1
+              }
+              j += 1
             }
             line.substring(start, end)
           }
@@ -758,16 +761,16 @@ class ScalaCodeCompletionHandler extends CodeCompletionHandler with ScalaHtmlFor
             }
           } else {
             var break = false
-            for (
-              i <- prefix.length - 2 to 0; // -2: the last position (-1) can legally be =, ! or ?
-              c = prefix.charAt(i) if !break
-            ) {
+            var i = prefix.length - 2 // -2: the last position (-1) can legally be =, ! or ?
+            while (!break && i >= 0) {
+              val c = prefix.charAt(i)
               if (i == 0 && c == ':') {
                 // : is okay at the begining of prefixes
               } else if (!(Character.isJavaIdentifierPart(c) || c == '@' || c == '$')) {
                 prefix = prefix.substring(i + 1)
                 break = true
               }
+              i -= 1
             }
           }
 

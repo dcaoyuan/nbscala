@@ -40,50 +40,43 @@
  */
 package org.netbeans.modules.scala.refactoring
 
-import java.util.logging.Level;
-import org.netbeans.modules.csl.api.Error;
-import org.netbeans.modules.csl.api.Severity;
-import org.netbeans.modules.csl.spi.GsfUtilities;
-import org.netbeans.editor.Utilities;
-import org.netbeans.modules.parsing.api.ParserManager;
-import org.netbeans.modules.parsing.api.UserTask;
-import org.openide.filesystems.FileUtil;
-import org.openide.util.Exceptions;
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.logging.Logger;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.Position.Bias;
+import java.util.logging.Level
+import org.netbeans.modules.csl.api.Error
+import org.netbeans.modules.csl.api.Severity
+import org.netbeans.modules.csl.spi.GsfUtilities
+import org.netbeans.modules.parsing.api.ParserManager
+import org.netbeans.modules.parsing.api.UserTask
+import org.openide.filesystems.FileUtil
+import org.openide.util.Exceptions
+import java.io.IOException
+import java.util.logging.Logger
+import javax.swing.text.BadLocationException
+import javax.swing.text.Position.Bias
+import org.netbeans.api.editor.document.LineDocumentUtils
 import org.netbeans.api.java.source.ClasspathInfo
-import org.netbeans.api.language.util.ast.{ AstDfn, AstScope }
+import org.netbeans.api.language.util.ast.AstDfn
 import org.netbeans.api.language.util.text.BoyerMoore
 import org.netbeans.api.lexer.Token
-import org.netbeans.api.lexer.TokenHierarchy;
-import org.netbeans.api.lexer.TokenId;
-import org.netbeans.api.lexer.TokenSequence;
-import org.netbeans.api.lexer.TokenUtilities;
-import org.netbeans.editor.BaseDocument;
-import org.netbeans.modules.csl.api.ElementKind;
-import org.netbeans.modules.csl.api.OffsetRange;
-import org.netbeans.modules.csl.spi.support.ModificationResult;
-import org.netbeans.modules.csl.spi.support.ModificationResult.Difference;
+import org.netbeans.api.lexer.TokenHierarchy
+import org.netbeans.api.lexer.TokenId
+import org.netbeans.api.lexer.TokenSequence
+import org.netbeans.api.lexer.TokenUtilities
+import org.netbeans.editor.BaseDocument
+import org.netbeans.modules.csl.api.OffsetRange
+import org.netbeans.modules.csl.spi.support.ModificationResult
+import org.netbeans.modules.csl.spi.support.ModificationResult.Difference
 import org.netbeans.modules.scala.core.{ ScalaMimeResolver, ScalaParserResult }
 import org.netbeans.modules.scala.core.ast.{ ScalaItems, ScalaRootScope }
-import org.netbeans.modules.scala.core.lexer.{ ScalaTokenId, ScalaLexUtil }
-import org.netbeans.modules.parsing.spi.Parser
+import org.netbeans.modules.scala.core.lexer.ScalaLexUtil
 import org.netbeans.modules.refactoring.api._
 import org.openide.filesystems.FileObject
 import org.netbeans.modules.refactoring.spi.RefactoringElementsBag
-import org.netbeans.modules.parsing.api.ResultIterator;
-import org.netbeans.modules.parsing.api.Source;
-import org.netbeans.modules.parsing.spi.ParseException;
-import org.openide.text.PositionRef;
-import org.openide.util.NbBundle;
+import org.netbeans.modules.parsing.api.ResultIterator
+import org.netbeans.modules.parsing.api.Source
+import org.netbeans.modules.parsing.spi.ParseException
+import org.openide.util.NbBundle
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.HashMap
 import scala.collection.mutable.HashSet
-import scala.tools.nsc.ast.Trees
 
 import org.openide.text.CloneableEditorSupport
 import scala.reflect.internal.Flags
@@ -685,8 +678,8 @@ class RenameRefactoringPlugin(rename: RenameRefactoring) extends ScalaRefactorin
         // occasionally happens) the user's source won't get munged
         if (!oldCode.equals(doc.getText(start, end - start))) {
           // Look back and forwards by 1 at first
-          val lineStart = Utilities.getRowFirstNonWhite(doc, start)
-          val lineEnd = Utilities.getRowLastNonWhite(doc, start) + 1 // +1: after last char
+          val lineStart = LineDocumentUtils.getLineFirstNonWhitespace(doc, start)
+          val lineEnd = LineDocumentUtils.getLineLastNonWhitespace(doc, start) + 1 // +1: after last char
           if (lineStart == -1 || lineEnd == -1) { // We're really on the wrong line!
             println("Empty line entry in " + FileUtil.getFileDisplayName(workingCopy.getSnapshot.getSource.getFileObject) +
               "; no match for " + oldCode + " in line " + start + " referenced by node " +

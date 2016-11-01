@@ -69,7 +69,7 @@ class ElementGripTreeElement(element: ElementGrip) extends TreeElement {
   }
 
   override def getText(isLogical: Boolean) = {
-    RetoucheUtils.htmlize(element.toString)
+    RetoucheUtils.htmlize(element.name)
   }
 
   override def getUserObject: Object = {

@@ -111,6 +111,7 @@
     <fontcolor name="caret-color-insert-mode" foreColor="lightGray"/>
     <fontcolor name="highlight-caret-row" bgColor="ff181818" />
     <fontcolor name="line-number" foreColor="ffdd7522"/>
+    <fontcolor name="indent-guide-lines" foreColor="darkGray" /> 
     <fontcolor name="text-limit-line-color" foreColor="ff253e5a"/>
     <fontcolor name="code-folding-bar" foreColor="918A93"/>
     <fontcolor name="code-folding" foreColor="918A93" />

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fontscolors PUBLIC "-//NetBeans//DTD Editor Fonts and Colors settings 1.1//EN" "http://www.netbeans.org/dtds/EditorFontsColors-1_1.dtd">
+
+<fontscolors>
+    <!-- See http://ui.netbeans.org/docs/ui/editor_fonts_colors/Editor_fonts_and_colors.htm#ruby -->
+    <!-- See http://bits.netbeans.org/dev/javadoc/org-netbeans-modules-editor-settings-storage/architecture-summary.html -->
+    <!-- See org.netbeans.modules.csl.api.ColoringAttributes.java -->
+    <!-- A couple of things are not accurate yet; globals are not bold, and method calls are
+    black and bold instead of green (which would be identical to fields) -->
+
+    <fontcolor name="CLASS_VAR" foreColor="ff098618">
+        <font style="bold+italic" />
+    </fontcolor>
+
+    <fontcolor name="xml" foreColor="2E92C7" />
+
+    <!-- ScalaTokenId categories -->
+    <fontcolor name="Character" default="char" foreColor="9999FF" />
+    <fontcolor name="String" default="string" foreColor="CE7B00" />
+    <fontcolor name="Errors" default="error" />
+    <fontcolor name="Identifier" default="identifier" />
+    <fontcolor name="Keyword" default="keyword" />
+    <fontcolor name="Literal" default="keyword" />
+    <fontcolor name="Comment" default="comment" />
+    <fontcolor name="Number" default="number" />
+    <fontcolor name="Operator" default="operator" />
+    <fontcolor name="Separator" default="separator" />
+    <fontcolor name="Whitespace" default="whitespace" />
+    <fontcolor name="Keyword-directive" default="keyword" />
+
+    <fontcolor name="StringLiteral" default="String" />
+    <fontcolor name="CharacterLiteral" default="Character" />
+    <fontcolor name="SymbolLiteral" default="Identifier" />
+    <fontcolor name="IntegerLiteral" default="Number" />
+    <fontcolor name="FloatingPointLiteral" default="Number" />
+    <fontcolor name="DoubleLiteral" default="Number" />
+    <fontcolor name="INSTANCE_VAR" default="Field" />
+    <fontcolor name="GLOBAL_VAR" foreColor="black">
+        <font style="italic" />
+    </fontcolor>
+
+    <fontcolor name="BlockComment" default="Comment" />
+    <fontcolor name="LineComment" default="Comment" />
+    <fontcolor name="DocComment" default="Comment" />
+    <fontcolor name="CommentTag" default="Comment">
+        <font style="bold" />
+    </fontcolor>
+
+    <fontcolor name="Final" default="keyword" />
+    <fontcolor name="Override" default="keyword" />
+    <fontcolor name="Private" default="keyword" />
+    <fontcolor name="Protected" default="keyword" />
+    <fontcolor name="Sealed" default="keyword" />
+
+    <fontcolor name="REGEXP_LITERAL" foreColor="9933CC" />
+    <fontcolor name="Error" default="error" />
+    <fontcolor name="CONSTANT" foreColor="black">
+        <font style="italic" />
+    </fontcolor>
+    <fontcolor name="TYPE_SYMBOL" foreColor="2E92C7" />
+    <fontcolor name="Identifier" default="identifier" />
+    <fontcolor name="Ws" default="whitespace" />
+    <fontcolor name="Keyword" default="keyword" />
+    <fontcolor name="TODO" foreColor="ff99006b">
+        <font style="bold" />
+    </fontcolor>
+    <fontcolor name="QUOTED_STRING_LITERAL" default="string" />
+
+    <!-- This is intended for an embedded regular expression language -->
+    <!--
+    <fontcolor name="REGEXP_TEXT" foreColor="ff006f00" />
+    <fontcolor name="REGEXP_META" foreColor="ff006f00">
+        <font style="bold" />
+    </fontcolor>
+    <fontcolor name="REGEXP_INVALID" foreColor="ffff006b" strikeThrough="ffff006b" >
+        <font style="bold" />
+    </fontcolor>
+    -->
+
+    <!--"semantic" highlighting:-->
+    <fontcolor name="mod-declaration">
+        <font style="bold" />
+    </fontcolor>
+    <fontcolor name="mod-static">
+        <font style="bold+italic" />
+    </fontcolor>
+    <fontcolor name="mod-global">
+        <font style="italic" />
+    </fontcolor>
+    <fontcolor name="mod-public" underline="000000" />
+    <fontcolor name="mod-abstract">
+        <font style="italic" />
+    </fontcolor>
+    <fontcolor name="mod-deprecated" strikeThrough="404040" />
+
+    <fontcolor name="mod-class" foreColor="7E0021" />
+
+    <fontcolor name="mod-method" /> <!-- method def -->
+    <fontcolor name="mod-constructor" /> <!-- method ref -->
+    <fontcolor name="mod-custom1"> <!-- implicit method Ref -->
+        <font style="italic" />
+    </fontcolor>
+    <fontcolor name="mod-custom2" underline="000000" /> <!-- lazy val Ref/Dfn -->
+    <fontcolor name="mod-interface" default="comment" />
+
+    <fontcolor name="mod-field" foreColor="009B00" /> <!-- val -->
+    <fontcolor name="mod-local-variable" foreColor="CC0000" /> <!-- var -->
+    <fontcolor name="mod-parameter" foreColor="808000" />
+
+    <fontcolor name="mod-unused" waveUnderlined="999999" />
+
+    <fontcolor name="mod-annotation-type" />
+
+    <fontcolor name="mod-private" />
+    <fontcolor name="mod-package-private" />
+    <fontcolor name="mod-protected" />
+
+    <fontcolor name="mod-regexp" foreColor="9933CC" />
+
+    <!--currently not used:-->
+    <!--    <fontcolor name="mod-type-parameter-declaration" bgColor="lightGray" />
+    <fontcolor name="mod-type-parameter-use" bgColor="green" />
+    <fontcolor name="mod-undefined" foreColor="red" />-->
+
+    <!--mark occurrences:-->
+    <fontcolor name="mark-occurrences" bgColor="ECEBA3" />
+
+    <fontcolor name="html-tag" default="comment">
+        <font style="bold" />
+    </fontcolor>
+    <fontcolor name="left-curly" default="comment" />
+    <fontcolor name="right-curly" default="comment" />
+
+</fontscolors>

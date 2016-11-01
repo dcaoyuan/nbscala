@@ -7,6 +7,7 @@ import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
+import java.io.File
 import java.io.IOException
 import java.io.OutputStream
 import java.io.PipedInputStream
@@ -31,6 +32,9 @@ import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 import javax.swing.text.StyledDocument
 import scala.collection.mutable
+import org.netbeans.api.java.classpath.GlobalPathRegistry
+import org.openide.filesystems.FileObject
+import org.openide.filesystems.FileUtil
 
 final case class StyledText(text: String, style: AttributeSet)
 
@@ -48,10 +52,19 @@ class ConsoleOutputLineParser(defaultStyle: AttributeSet) {
   val SEP = "\\:" // seperator between file path and line number
   val FILE_PATH_SUFFIX = FILE + SEP + LINE + ROL // ((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
 
+  val METHOD = "((?:[\\w\\$]+)|<init>)"
+
+  val PACKAGE_PREFIX = "((?:(?:\\w+)\\.)*?)"
+
+  val CLASS = PACKAGE_PREFIX + "((?:[\\w\\$])+)"
+  val STACK_FRAME_PREFIX = "\\]?\\s+at\\s"
+  val STACK_FRAME = STACK_FRAME_PREFIX + CLASS + "\\." + METHOD + "\\((\\w+\\.\\w+)" + SEP + LINE + "\\)" + ROL
+
   val rERROR_WITH_FILE = Pattern.compile("\\Q" + ERROR_PREFIX + "\\E" + "\\s?" + FILE_PATH_SUFFIX) // \Q[error]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
   val rWARN_WITH_FILE = Pattern.compile("\\Q" + WARN_PREFIX + "\\E" + "\\s?" + FILE_PATH_SUFFIX) //  \Q[warn]\E\s?((?:[a-zA-Z]\:)?(?:[^\[\]\:\"]*))\:(([1-9][0-9]*)).*\s?
 
   val rFILE_PATH = Pattern.compile("\\]?\\s*" + FILE_PATH_SUFFIX)
+  val rSTACK_FRAME_PATTERN = Pattern.compile(STACK_FRAME)
 
   val linkFg = Color.BLUE
 
@@ -83,27 +96,58 @@ class ConsoleOutputLineParser(defaultStyle: AttributeSet) {
     x
   }
 
+  /**
+   * fully qualified classname to relative path in classpath
+   */
+  private def classNameToPath(pkg: String, fileName: String): String = {
+    val fileSep = System.getProperty("file.separator", "/")
+    pkg.replaceAll("\\.", fileSep) + fileSep + fileName
+  }
+
   def parseLine(lineTexts: Array[StyledText]): Array[StyledText] = {
     val texts = new mutable.ArrayBuffer[StyledText]()
     var i = 0
-    while (i < lineTexts.length) {
-      val text = lineTexts(i)
-      val m = rFILE_PATH.matcher(text.text)
-      if (m.matches && m.groupCount >= 3) {
-        val fileName = m.group(1)
-        val lineNo = m.group(2)
-        val linkStart = m.start(1)
-        val linkEnd = m.end(2)
 
+    def addStyledTexts(line: String, fileName: String, lineNo: String, linkStart: Int, linkEnd: Int) {
+      if (linkStart >= 0 && linkEnd >= 0) {
         val linkStyle = new SimpleAttributeSet()
         StyleConstants.setForeground(linkStyle, linkFg)
         StyleConstants.setUnderline(linkStyle, true)
         linkStyle.addAttribute("file", fileName)
         linkStyle.addAttribute("line", lineNo)
 
-        texts += StyledText(text.text.substring(0, linkStart), defaultStyle)
-        texts += StyledText(text.text.substring(linkStart, linkEnd), linkStyle)
-        texts += StyledText(text.text.substring(linkEnd, text.text.length), defaultStyle)
+        texts += StyledText(line.substring(0, linkStart), defaultStyle)
+        texts += StyledText(line.substring(linkStart, linkEnd), linkStyle)
+        texts += StyledText(line.substring(linkEnd, line.length), defaultStyle)
+      } else {
+        texts += StyledText(line, defaultStyle)
+      }
+    }
+
+    while (i < lineTexts.length) {
+      val text = lineTexts(i)
+      val mFile = rFILE_PATH.matcher(text.text)
+      val mStackFrame = rSTACK_FRAME_PATTERN.matcher(text.text)
+
+      if (mStackFrame.matches && mStackFrame.groupCount >= 5) {
+        val pkg = mStackFrame.group(1)
+        val fileName = mStackFrame.group(4)
+        val lineNo = mStackFrame.group(5)
+        val file = getFile(classNameToPath(pkg, fileName))
+        val filePath = if (file != null) file.getAbsolutePath else pkg + "." + fileName
+        val linkStart = if (file != null) mStackFrame.start(4) else -1
+        val linkEnd = if (file != null) mStackFrame.end(5) else -1
+
+        addStyledTexts(text.text, filePath, lineNo, linkStart, linkEnd)
+
+      } else if (mFile.matches && mFile.groupCount >= 3) {
+        val fileName = mFile.group(1)
+        val lineNo = mFile.group(2)
+        val linkStart = mFile.start(1)
+        val linkEnd = mFile.end(2)
+
+        addStyledTexts(text.text, fileName, lineNo, linkStart, linkEnd)
+
       } else {
         texts += text
       }
@@ -111,6 +155,12 @@ class ConsoleOutputLineParser(defaultStyle: AttributeSet) {
     }
 
     texts.toArray
+  }
+
+  private def getFile(relativePath: String): File = {
+    val fileObject = GlobalPathRegistry.getDefault().findResource(relativePath)
+
+    if (fileObject != null) FileUtil.toFile(fileObject) else null
   }
 }
 

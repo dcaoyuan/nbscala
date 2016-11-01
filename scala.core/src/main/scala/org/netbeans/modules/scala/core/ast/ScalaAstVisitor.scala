@@ -70,7 +70,11 @@ trait ScalaAstVisitor { self: ScalaGlobal =>
    * call this method only via askForResponse to avoid race condition upon interactive presnetation compiler
    */
   protected def astVisit(srcFile: ScalaSourceFile, rootTree: Tree): ScalaRootScope = {
-    new treeTraverser(srcFile, rootTree).apply()
+    if (srcFile.content.length > 0) {
+      new treeTraverser(srcFile, rootTree).apply()
+    } else {
+      ScalaRootScope.EMPTY
+    }
   }
 
   /**

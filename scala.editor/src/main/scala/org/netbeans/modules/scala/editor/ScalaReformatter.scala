@@ -3,8 +3,8 @@ package org.netbeans.modules.scala.editor
 import java.io.StringReader
 import java.util.logging.Logger
 import javax.swing.text.BadLocationException
-import javax.swing.text.StyledDocument
 import org.netbeans.api.project.FileOwnerQuery
+import org.netbeans.editor.BaseDocument
 import org.netbeans.modules.editor.indent.spi.Context
 import org.netbeans.modules.editor.indent.spi.ExtraLock
 import org.netbeans.modules.editor.indent.spi.ReformatTask
@@ -23,17 +23,18 @@ import scalariform.parser.ScalaParserException
 class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
   private val log = Logger.getLogger(this.getClass.getName)
 
-  private val doc = context.document.asInstanceOf[StyledDocument]
-
-  val diffOptions = HuntDiff.Options(
-    ignoreCase = false,
-    ignoreInnerWhitespace = false,
-    ignoreLeadingAndtrailingWhitespace = false)
+  private val doc = context.document.asInstanceOf[BaseDocument]
 
   @throws(classOf[BadLocationException])
   def reformat() {
+    val fo = source.getFileObject
+    if (fo == null) {
+      return
+    }
+
     val cs = CodeStyle.get(doc)
-    val project = FileOwnerQuery.getOwner(source.getFileObject)
+
+    val project = FileOwnerQuery.getOwner(fo)
     val prefs = if (project != null) {
       val formPrefsProvider = project.getLookup.lookup(classOf[ScalariformPrefsProvider])
       if (formPrefsProvider != null) {
@@ -48,7 +49,6 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
     val indentRegions = context.indentRegions
     java.util.Collections.reverse(indentRegions)
     val regions = indentRegions.iterator
-
     while (regions.hasNext) {
       val region = regions.next
       val start = region.getStartOffset
@@ -65,44 +65,50 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
         }
 
         if (formattedText != null && formattedText.length > 0) {
-          val root = doc.getDefaultRootElement
-
-          val diffs = HuntDiff.diff(new StringReader(text), new StringReader(formattedText), diffOptions)
-          // reverse the order so we can modify text forward from the end
-          java.util.Arrays.sort(diffs, new java.util.Comparator[Diff]() {
-            def compare(o1: Diff, o2: Diff) = -o1.firstStart.compareTo(o2.firstStart)
-          })
-
-          for (diff <- diffs) {
-            diff.tpe match {
-              case Diff.ADD =>
-                val startLineNo = diff.secondStart
-                val startOffset = root.getElement(startLineNo - 1).getStartOffset
-                val t = diff.secondText
-                doc.insertString(startOffset, t, null)
-
-              case Diff.DELETE =>
-                val startLineNo = diff.firstStart
-                val endLineNo = diff.firstEnd
-                val startOffset = root.getElement(startLineNo - 1).getStartOffset
-                val endOffset = root.getElement(endLineNo - 1).getEndOffset
-                doc.remove(startOffset, endOffset - startOffset)
-
-              case Diff.CHANGE =>
-                val startLineNo = diff.firstStart
-                val endLineNo = diff.firstEnd
-                val startOffset = root.getElement(startLineNo - 1).getStartOffset
-                val endOffset = root.getElement(endLineNo - 1).getEndOffset
-                doc.remove(startOffset, endOffset - startOffset)
-                val t = diff.secondText
-                doc.insertString(startOffset, t, null)
-            }
-          }
+          val diffs = HuntDiff.diff(new StringReader(text), new StringReader(formattedText), ScalaReformatter.diffOptions)
+          applyDiffs(diffs)
         } else {
           // Cannot be parsed by scalariform, fall back to ScalaFormatter
           new ScalaFormatter(cs, -1).reindent(context)
         }
       }
+    }
+  }
+
+  private def applyDiffs(diffs: Array[Diff]) {
+    val root = doc.getDefaultRootElement
+
+    // reverse the order so we can modify text forward from the end
+    java.util.Arrays.sort(diffs, DiffComparator)
+
+    var i = 0
+    while (i < diffs.length) {
+      val diff = diffs(i)
+      println("diff: " + diff)
+      diff.tpe match {
+        case Diff.ADD =>
+          val startLineNo = diff.firstStart
+          val startOffset = root.getElement(startLineNo - 1).getStartOffset
+          val delta = diff.secondText
+          doc.insertString(startOffset, delta, null)
+
+        case Diff.DELETE =>
+          val startLineNo = diff.firstStart
+          val endLineNo = diff.firstEnd
+          val startOffset = root.getElement(startLineNo - 1).getStartOffset
+          val endOffset = root.getElement(endLineNo - 1).getEndOffset
+          doc.remove(startOffset, endOffset - startOffset)
+
+        case Diff.CHANGE =>
+          val startLineNo = diff.firstStart
+          val endLineNo = diff.firstEnd
+          val startOffset = root.getElement(startLineNo - 1).getStartOffset
+          val endOffset = root.getElement(endLineNo - 1).getEndOffset
+          doc.remove(startOffset, endOffset - startOffset)
+          val delta = diff.secondText
+          doc.insertString(startOffset, delta, null)
+      }
+      i += 1
     }
   }
 
@@ -138,6 +144,11 @@ class ScalaReformatter(source: Source, context: Context) extends ReformatTask {
 }
 
 object ScalaReformatter {
+  val diffOptions = HuntDiff.Options(
+    ignoreCase = false,
+    ignoreInnerWhitespace = false,
+    ignoreLeadingAndtrailingWhitespace = false)
+
   /**
    * Reformat task factory produces reformat tasks for the given context.
    * <br/>
@@ -164,4 +175,34 @@ object ScalaReformatter {
     .setPreference(RewriteArrowSymbols, false)
     .setPreference(AlignParameters, true)
     .setPreference(AlignSingleLineCaseStatements, true)
+}
+
+object DiffComparator extends java.util.Comparator[Diff] {
+  def compare(o1: Diff, o2: Diff) = {
+    if (o1.firstStart < o2.firstStart) {
+      1
+    } else if (o1.firstStart == o2.firstStart) {
+      if (o1.firstEnd < o2.firstEnd) { // NOTE for ADD tpe, firstEnd will be 0, so ADD will always be put in front
+        1
+      } else if (o1.firstEnd == o2.firstEnd) {
+        if (o1.secondStart < o2.secondStart) {
+          1
+        } else if (o1.secondStart == o2.secondStart) {
+          if (o1.secondEnd < o2.secondEnd) {
+            1
+          } else if (o1.secondEnd == o2.secondEnd) {
+            0
+          } else {
+            -1
+          }
+        } else {
+          -1
+        }
+      } else {
+        -1
+      }
+    } else {
+      -1
+    }
+  }
 }

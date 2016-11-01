@@ -8,7 +8,6 @@ import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 import org.netbeans.modules.scala.core.ProjectResources
 import org.netbeans.modules.scala.core.ScalaSourceUtil
-import org.netbeans.modules.scala.project.ui.customizer.MainClassWarning
 import org.netbeans.modules.scala.sbt.console.SBTConsoleTopComponent
 import org.apache.tools.ant.module.api.support.ActionUtils
 import org.netbeans.api.debugger.jpda.DebuggerStartException

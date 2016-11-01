@@ -40,13 +40,13 @@ Cause of the small group of people involved in the project we only supply update
 
 ### Requirement - Running:
 * Java 1.6+
-* NetBeans 8.0+
+* NetBeans 8.1+
 
 ### Requirement - Building:
 * Java 1.7 (for master branch)
 * Java 1.6 (for 2.9.x branch)
 * Maven 2.x/3.x 
-* NetBeans 8.0+
+* NetBeans 8.1+
 
 ### Branches:
 * master -- tracking Scala 2.10.x and 2.11.x currently
@@ -64,7 +64,8 @@ Make a new copy of your installed NetBeans (which will be used to run 'mvn nbm:r
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <nb.installation>${user.home}/myapps/netbeans-8.0-fordev</nb.installation>
+                <nb.installation>${user.home}/myapps/netbeans-8.1-fordev</nb.installation>
+                <nb.nbmdirectory>${user.home}/myprjs/nbsrc-8.1/nbbuild/nbms</nb.nbmdirectory>
             </properties>
         </profile>
     </profiles>

@@ -49,9 +49,9 @@ import org.openide.filesystems.FileObject
  * @author Jan Becicka
  * @author Tor Norbye
  */
-class ElementGrip(name: String, val fileObject: FileObject, icon: Icon) {
+class ElementGrip(val name: String, val fileObject: FileObject, icon: Icon) {
   override def toString = {
-    super.toString
+    s"Element Grip [name=$name, fileObject=${fileObject.getName}]"
   }
 
   def getParent: ElementGrip = {
