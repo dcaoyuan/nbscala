@@ -20,7 +20,6 @@ import org.openide.text.Line
 import org.openide.util.Exceptions
 import org.openide.util.RequestProcessor
 import org.openide.util.UserQuestionException
-
 /**
  *
  * @author Caoyuan Deng
@@ -41,7 +40,8 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
   override def mouseClicked(evt: MouseEvent) {
     val offset = textPane.viewToModel(evt.getPoint)
     val element = textPane.getStyledDocument.getCharacterElement(offset)
-    element.getAttributes.getAttribute("file") match {
+    val attrs = element.getAttributes()
+    attrs.getAttribute("file") match {
       case filePath: String =>
         val file = new File(filePath.trim)
         if (file == null || !file.exists) {
@@ -49,7 +49,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
           return
         }
         val lineNo = try {
-          element.getAttributes.getAttribute("line") match {
+          attrs.getAttribute("line") match {
             case line: String => line.toInt
             case _            => -1
           }
@@ -98,6 +98,7 @@ class ConsoleMouseListener(textPane: JTextPane) extends MouseAdapter {
   }
 
   private def openFile(file: File, lineNo: Int) {
+
     ConsoleMouseListener.FileOpenRP.post(new Runnable() {
       override def run() {
         try {
