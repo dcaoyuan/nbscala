@@ -158,7 +158,10 @@
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-windows</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-csl-types</artifactId>
+        </dependency>
         <!-- maven or scalac transitive dependencies (scalac will check class dependencies deeply): <scope>runtime</scope> -->
 <!--        <dependency>
             <groupId>org.netbeans.modules</groupId>
