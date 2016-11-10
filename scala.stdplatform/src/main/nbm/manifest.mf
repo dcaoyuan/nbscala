@@ -4,4 +4,5 @@ AutoUpdate-Show-In-Client: true
 OpenIDE-Module-Localizing-Bundle: org/netbeans/modules/scala/stdplatform/resources/Bundle.properties
 OpenIDE-Module-Layer: org/netbeans/modules/scala/stdplatform/resources/layer.xml
 OpenIDE-Module-Install: org/netbeans/modules/scala/stdplatform/J2SEPlatformModule.class
+OpenIDE-Module-Provides: org.netbeans.modules.scala.stdplatform
 
