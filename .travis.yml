@@ -7,7 +7,7 @@ script:
 deploy:
   provider: releases
   api_key: "$GH_TOKEN"
-  file: "$HOME/build/$USER/nbscala/target/netbeans_site/nbscala-plugins.zip"
+  file: "$HOME/build/$TRAVIS_REPO_SLUG/target/netbeans_site/nbscala-plugins.zip"
   skip_cleanup: true
   on:
     tags: true
