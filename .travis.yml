@@ -1,4 +1,6 @@
 language: java
+jdk:
+  - oraclejdk8
 script: 
   - mvn clean install nbm:autoupdate
   - cd target/netbeans_site && zip -r nbscala-plugins.zip *.nbm
