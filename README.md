@@ -43,7 +43,7 @@ Cause of the small group of people involved in the project we only supply update
 * NetBeans 8.1+
 
 ### Requirement - Building:
-* Java 1.7 (for master branch)
+* Java 1.8 (for master branch)
 * Java 1.6 (for 2.9.x branch)
 * Maven 2.x/3.x 
 * NetBeans 8.1+
