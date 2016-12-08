@@ -187,20 +187,6 @@
             <scope>runtime</scope>
         </dependency>
         
-<!--        
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest</artifactId>
-            <version>3.0.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalamock</groupId>
-            <artifactId>scalamock-scalatest-support_2.11</artifactId>
-            <version>3.3.0</version>
-            <scope>test</scope>
-            
-        </dependency> -->
     </dependencies>
 
     <build>
