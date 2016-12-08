@@ -56,23 +56,10 @@ final class SBTClassPath(project: Project, tpe: String, isTest: Boolean) extends
   private def getResolvedClassPath(resolver: SBTResolver, isTest: Boolean, result: java.util.ArrayList[PathResourceImplementation]) {
     for {
       file <- resolver.getResolvedClassPath(tpe, isTest)
-      fo = FileUtil.toFileObject(file)
+
     } {
       try {
-        val rootUrl = if (fo != null) {
-          if (FileUtil.isArchiveFile(fo)) {
-            FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
-            FileUtil.getArchiveRoot(fo).toURL
-          } else {
-            file.toURI.toURL
-          }
-        } else { // fo is null, file does not exist
-          // file is a classes/srcs *folder* and may not exist yet, we must add a slash at the end.
-          // to tell ClassPathSupport that it's a folder instead of a general file
-          // @Note should avoid url string ends with doubled "/", i.e. "//"
-          val uriStr = file.toURI.toString
-          URI.create(if (uriStr.endsWith("/")) uriStr else uriStr + "/").toURL
-        }
+        val rootUrl = ProjectFileUrlConverter.convert(project, file)
         result.add(ClassPathSupport.createResource(rootUrl))
       } catch {
         case ex: FileStateInvalidException => Exceptions.printStackTrace(ex)
@@ -124,5 +111,31 @@ final class SBTClassPath(project: Project, tpe: String, isTest: Boolean) extends
 
   def addPropertyChangeListener(listener: PropertyChangeListener) {
     pcs.addPropertyChangeListener(listener)
+  }
+}
+
+object ProjectFileUrlConverter {
+  import org.openide.filesystems.FileObject
+  def convert(project: Project, file: java.io.File): java.net.URL = {
+    val fo = FileUtil.toFileObject(file)
+    if (fo != null) {
+      if (FileUtil.isArchiveFile(fo)) {
+        FileOwnerQuery.markExternalOwner(fo, project, FileOwnerQuery.EXTERNAL_ALGORITHM_TRANSIENT)
+        FileUtil.getArchiveRoot(fo).toURL
+      } else {
+
+        if (file.isDirectory) {
+          FileUtil.urlForArchiveOrDir(file)
+        } else {
+          file.toURI.toURL
+        }
+      }
+    } else { // fo is null, file does not exist
+      // file is a classes/srcs *folder* and may not exist yet, we must add a slash at the end.
+      // to tell ClassPathSupport that it's a folder instead of a general file
+      // @Note should avoid url string ends with doubled "/", i.e. "//"
+      val uriStr = file.toURI.toString
+      URI.create(if (uriStr.endsWith("/")) uriStr else uriStr + "/").toURL
+    }
   }
 }
