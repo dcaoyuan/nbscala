@@ -20,7 +20,7 @@ import org.netbeans.api.extexecution.ExecutionDescriptor
 import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.progress.ProgressHandle
 import org.netbeans.api.project.Project
-import org.netbeans.modules.extexecution.base.ExternalProcessBuilder
+import org.netbeans.api.extexecution.ExternalProcessBuilder
 import org.netbeans.modules.scala.core.ScalaExecution
 import org.netbeans.modules.scala.console.AnsiConsoleOutputStream
 import org.netbeans.modules.scala.console.ConsoleInputOutput

@@ -12,7 +12,7 @@ import javax.swing.text.BadLocationException
 import org.netbeans.api.extexecution.ExecutionDescriptor
 import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.project.ui.OpenProjects
-import org.netbeans.modules.extexecution.base.ExternalProcessBuilder
+import org.netbeans.api.extexecution.ExternalProcessBuilder
 import org.netbeans.modules.scala.console.readline.TextAreaReadline
 import org.openide.ErrorManager
 import org.openide.filesystems.FileUtil
