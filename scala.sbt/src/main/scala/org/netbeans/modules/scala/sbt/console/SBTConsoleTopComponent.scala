@@ -307,27 +307,27 @@ object SBTConsoleTopComponent {
    * Obtain the SBTConsoleTopComponent instance by project
    */
   private def openInstance(project: Project, commands: List[String], isForceNew: Boolean, isDebug: Boolean, background: Boolean)(postAction: String => Unit) {
-    val (tc, isNewCreated) = if (isDebug) {
-      (SBTConsoleTopComponent(project, isDebug), true)
-    } else {
-      projectToDefault.get(project) match {
-        case None =>
-          val default = SBTConsoleTopComponent(project, isDebug)
-          projectToDefault.put(project, default)
-          (default, true)
-        case Some(tc) =>
-          if (isForceNew || tc.isRunningCommand) {
-            (SBTConsoleTopComponent(project, isDebug), true)
-          } else {
-            (tc, false)
-          }
-      }
-    }
-
-    tc.isRunningCommand = true
 
     val runnableTask = new Runnable() {
       def run {
+        val (tc, isNewCreated) = if (isDebug) {
+          (SBTConsoleTopComponent(project, isDebug), true)
+        } else {
+          projectToDefault.get(project) match {
+            case None =>
+              val default = SBTConsoleTopComponent(project, isDebug)
+              projectToDefault.put(project, default)
+              (default, true)
+            case Some(tc) =>
+              if (isForceNew || tc.isRunningCommand) {
+                (SBTConsoleTopComponent(project, isDebug), true)
+              } else {
+                (tc, false)
+              }
+          }
+        }
+
+        tc.isRunningCommand = true
 
         val progressHandle = ProgressHandle.createHandle("Running sbt commnad...",
           new Cancellable() {
