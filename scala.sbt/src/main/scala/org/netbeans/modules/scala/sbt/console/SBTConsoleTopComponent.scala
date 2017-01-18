@@ -16,6 +16,7 @@ import javax.swing.JTextPane
 import javax.swing.SwingUtilities
 import javax.swing.UIManager
 import javax.swing.text.DefaultCaret
+import org.apache.commons.lang3.SystemUtils
 import org.netbeans.api.extexecution.ExecutionDescriptor
 import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.progress.ProgressHandle
@@ -170,15 +171,7 @@ class SBTConsoleTopComponent private (project: Project, val isDebug: Boolean) ex
     args += s"-XX:MaxPermSize=${maxPermGenSize}m"
 
     //args += "-Dsbt.log.noformat=true"
-    /**
-     * @Note:
-     * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why?
-     * Also, from Scala-2.7.1, jline is used for scala shell, we should
-     * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"?
-     * And jline may cause terminal unresponsed after netbeans quited.
-     */
-    args += "-Djline.terminal=unix"
-    args += "-Djline.WindowsTerminal.directConsole=false"
+    args ++= jlineArgs
 
     // TODO - turn off verifier?
 
@@ -359,6 +352,21 @@ object SBTConsoleTopComponent {
     }
 
     SwingUtilities.invokeLater(runnableTask)
+  }
+
+  /**
+   * @Note:
+   * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why?
+   * lAlso, from Scala-2.7.1, jline is used for scala shell, we should
+   * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"?
+   * And jline may cause terminal unresponsed after netbeans quited.
+   */
+  private lazy val jlineArgs: Seq[String] = {
+    val osMap = Seq(
+      (SystemUtils.IS_OS_WINDOWS, Seq("-Djline.terminal=windows", "-Djline.WindowsTerminal.directConsole=false")), // NOI18N
+      (SystemUtils.IS_OS_UNIX, Seq("-Djline.terminal=unix"))) // NOI18N
+
+    osMap.find(_._1).map(_._2).getOrElse(Seq("-Djline.terminal=jline.UnsupportedTerminal")) // NOI18N
   }
 
   class SbtConsoleTerminal(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleTerminal(_area, pipedIn, welcome) {

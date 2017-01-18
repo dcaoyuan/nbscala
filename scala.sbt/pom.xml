@@ -186,6 +186,12 @@
             <artifactId>org-netbeans-libs-sbt</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${libs.commons-lang3.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
