@@ -16,7 +16,6 @@ import javax.swing.JTextPane
 import javax.swing.SwingUtilities
 import javax.swing.UIManager
 import javax.swing.text.DefaultCaret
-import org.apache.commons.lang3.SystemUtils
 import org.netbeans.api.extexecution.ExecutionDescriptor
 import org.netbeans.api.extexecution.ExecutionService
 import org.netbeans.api.progress.ProgressHandle
@@ -356,17 +355,25 @@ object SBTConsoleTopComponent {
 
   /**
    * @Note:
-   * jline's UnitTerminal will hang in my Mac OS, when call "stty(...)", why?
-   * lAlso, from Scala-2.7.1, jline is used for scala shell, we should
+   * jline's UnixTerminal will hang in my Mac OS, when call "stty(...)", why?
+   * Also, from Scala-2.7.1, jline is used for scala shell, we should
    * disable it here by add "-Djline.terminal=jline.UnsupportedTerminal"?
    * And jline may cause terminal unresponsed after netbeans quited.
+   *
+   * By default jline uses WindowsTerminal on Windows, UnixTerminal otherwise,
+   * and UnsupportedTerminal if neither of these work.
+   * The only thing we really want is to set jline.WindowsTerminal.directConsole
+   * on Windows and the rest is handled for us.
    */
   private lazy val jlineArgs: Seq[String] = {
-    val osMap = Seq(
-      (SystemUtils.IS_OS_WINDOWS, Seq("-Djline.terminal=windows", "-Djline.WindowsTerminal.directConsole=false")), // NOI18N
-      (SystemUtils.IS_OS_UNIX, Seq("-Djline.terminal=unix"))) // NOI18N
+    val os = System.getProperty("os.name").toLowerCase
 
-    osMap.find(_._1).map(_._2).getOrElse(Seq("-Djline.terminal=jline.UnsupportedTerminal")) // NOI18N
+    val isWindows = "windows.*".r
+
+    os match {
+      case isWindows() => Seq("-Djline.WindowsTerminal.directConsole=false")
+      case _           => Seq()
+    }
   }
 
   class SbtConsoleTerminal(_area: JTextPane, pipedIn: PipedInputStream, welcome: String) extends ConsoleTerminal(_area, pipedIn, welcome) {
