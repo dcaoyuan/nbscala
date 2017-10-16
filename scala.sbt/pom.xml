@@ -186,6 +186,7 @@
             <artifactId>org-netbeans-libs-sbt</artifactId>
             <scope>runtime</scope>
         </dependency>
+        
     </dependencies>
 
     <build>

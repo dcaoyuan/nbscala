@@ -72,14 +72,14 @@
         <scala.console.version>1.8.2.0</scala.console.version>
         <scala.core.version>1.8.2.0</scala.core.version>
         <scala.debugger.version>1.8.2.0</scala.debugger.version>
-        <scala.debugger.projects.version>1.8.2.0</scala.debugger.projects.version>
+        <scala.debugger.projects.version>1.8.2.1</scala.debugger.projects.version>
         <scala.editor.version>1.8.2.0</scala.editor.version>
         <scala.fontscolors.version>1.8.2.0</scala.fontscolors.version>
         <scala.maven.version>1.8.2.0</scala.maven.version>
         <scala.platform.version>1.8.2.0</scala.platform.version>
         <scala.project.version>1.8.2.0</scala.project.version>
         <scala.refactoring.version>1.8.2.0</scala.refactoring.version>
-        <scala.sbt.version>1.8.2.0</scala.sbt.version>
+        <scala.sbt.version>1.8.2.1</scala.sbt.version>
         <scala.sbt.project.version>1.8.2.0</scala.sbt.project.version>
         <scala.stdplatform.version>1.8.2.0</scala.stdplatform.version>
     </properties>

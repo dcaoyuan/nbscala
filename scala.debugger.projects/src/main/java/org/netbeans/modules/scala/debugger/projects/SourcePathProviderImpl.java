@@ -73,6 +73,7 @@ import org.netbeans.api.project.SourceGroup;
 import org.netbeans.api.project.Sources;
 import org.netbeans.api.project.ui.OpenProjects;
 import org.netbeans.spi.java.classpath.ClassPathProvider;
+import org.netbeans.spi.java.classpath.PathResourceImplementation;
 import org.netbeans.spi.java.classpath.support.ClassPathSupport;
 
 import org.openide.filesystems.FileObject;
@@ -202,9 +203,8 @@ public class SourcePathProviderImpl extends SourcePathProvider {
                     allSourceRoots1.add(fo);
                 }
             }
-            originalSourcePath = ClassPathSupport.createClassPath (
-                allSourceRoots1.toArray(new FileObject [allSourceRoots1.size()])
-            );
+            originalSourcePath = createClassPath(allSourceRoots1);
+            
             projectSourceRoots = getSourceRoots(originalSourcePath);
             
             JavaPlatform[] platforms = JavaPlatformManager.getDefault ().
@@ -217,10 +217,7 @@ public class SourcePathProviderImpl extends SourcePathProvider {
                 for (j = 0; j < jj; j++)
                     allSourceRoots1.remove (roots [j]);
             }
-            smartSteppingSourcePath = ClassPathSupport.createClassPath (
-                allSourceRoots1.toArray 
-                    (new FileObject [allSourceRoots1.size()])
-            );
+            smartSteppingSourcePath = createClassPath(allSourceRoots1);
         }
         
         if (verbose) 
@@ -231,6 +228,32 @@ public class SourcePathProviderImpl extends SourcePathProvider {
                 "SPPI: init smartSteppingSourcePath " + smartSteppingSourcePath
             );    
     }
+    
+    /** 
+     * Creates a ClassPath, while guarding for an IllegalArgumentException, 
+     * as exemplified in  org.netbeans.modules.debugger.jpda.projects.SourcePathProviderImpl
+     * @param froots file object list from which to create the classpath
+     * @return 
+     */
+    private ClassPath createClassPath(List<FileObject> froots) {
+        List<PathResourceImplementation> pris = new ArrayList<PathResourceImplementation> ();
+        for (FileObject fo : froots) {
+            if (fo != null && fo.canRead()) {
+                try {
+                    URL url = fo.toURL();
+                    pris.add(ClassPathSupport.createResource(url));
+                } catch (IllegalArgumentException iaex) {
+                    // Can be thrown from ClassPathSupport.createResource()
+                    // Ignore - bad source root
+                    //logger.log(Level.INFO, "Invalid source root = "+fo, iaex);
+                    logger.warning(iaex.getLocalizedMessage());
+                }
+            }
+        }
+        return ClassPathSupport.createClassPath(pris);
+    }
+    
+    
 
     /**
      * Translates a relative path ("java/lang/Thread.java") to url 
