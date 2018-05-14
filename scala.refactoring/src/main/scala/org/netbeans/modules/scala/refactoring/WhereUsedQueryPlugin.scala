@@ -384,7 +384,7 @@ class WhereUsedQueryPlugin(refactoring: WhereUsedQuery) extends ScalaRefactoring
       }
 
       elements.addAll(refactoring, foundElements.sortWith(_.compare(_) < 0))
-      
+
       Nil
     }
 

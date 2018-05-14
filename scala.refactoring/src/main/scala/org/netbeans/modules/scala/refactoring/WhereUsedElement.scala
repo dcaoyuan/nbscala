@@ -165,12 +165,12 @@ object WhereUsedElement {
 
 class WhereUsedElement(bounds: PositionBounds, displayText: String, parentFile: FileObject,
                        name: String, range: OffsetRange, icon: Icon) extends SimpleRefactoringElementImplementation
-      with scala.math.Ordered[WhereUsedElement] {
+    with scala.math.Ordered[WhereUsedElement] {
 
   ElementGripFactory.getDefault.put(parentFile, name, range, icon)
 
   def compare(that: WhereUsedElement) = (this.getPosition().getBegin().getLine() - that.getPosition().getBegin().getLine())
-  
+
   def getLookup: Lookup = {
     val composite = ElementGripFactory.getDefault.get(parentFile, bounds.getBegin.getOffset) match {
       case null => parentFile

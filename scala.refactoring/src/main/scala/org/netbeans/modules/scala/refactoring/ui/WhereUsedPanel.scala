@@ -70,6 +70,9 @@ import org.netbeans.modules.scala.core.ast.ScalaItems
 import org.netbeans.modules.scala.refactoring.RefactoringModule
 import scala.reflect.internal.Flags
 
+import javax.swing.GroupLayout
+import javax.swing.LayoutStyle
+
 /**
  * @author  Jan Becicka
  */
@@ -438,20 +441,20 @@ class WhereUsedPanel(name: String, element: ScalaItems#ScalaItem, parent: Change
       }
     });
 
-    val scopePanelLayout = new org.jdesktop.layout.GroupLayout(scopePanel);
+    val scopePanelLayout = new GroupLayout(scopePanel);
     scopePanel.setLayout(scopePanelLayout);
     scopePanelLayout.setHorizontalGroup(
-      scopePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-        .add(scopePanelLayout.createSequentialGroup()
-          .addContainerGap()
-          .add(scopeLabel)
-          .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-          .add(scope, 0, 266, Short.MaxValue)
-          .addContainerGap()));
+      scopePanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+        .addGroup(scopePanelLayout.createSequentialGroup
+          .addContainerGap
+          .addComponent(scopeLabel)
+          .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+          .addComponent(scope, 0, 266, Short.MaxValue)
+          .addContainerGap));
     scopePanelLayout.setVerticalGroup(
-      scopePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-        .add(scopeLabel)
-        .add(scope, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, Short.MaxValue));
+      scopePanelLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+        .addComponent(scopeLabel)
+        .addComponent(scope, GroupLayout.PREFERRED_SIZE, 20, Short.MaxValue));
 
     scope.getAccessibleContext().setAccessibleDescription("N/A");
 

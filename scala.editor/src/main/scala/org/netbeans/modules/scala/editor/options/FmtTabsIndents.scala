@@ -23,6 +23,9 @@ import org.netbeans.api.editor.settings.SimpleValueNames
 import org.netbeans.modules.options.editor.spi.PreferencesCustomizer
 import org.openide.util.NbBundle
 
+import javax.swing.GroupLayout
+import javax.swing.LayoutStyle
+
 import org.netbeans.modules.scala.editor.options.FmtOptions._
 
 /**
@@ -95,38 +98,36 @@ class FmtTabsIndents extends javax.swing.JPanel {
 
     org.openide.awt.Mnemonics.setLocalizedText(indentHtmlCheckBox, org.openide.util.NbBundle.getMessage(classOf[FmtTabsIndents], "LBL_IndentHTML")); // NOI18N
 
-    val layout = new org.jdesktop.layout.GroupLayout(this);
+    val layout = new GroupLayout(this)
     this.setLayout(layout);
     layout.setHorizontalGroup(
-      layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-        .add(layout.createSequentialGroup()
-          .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-              .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                .add(indentSizeLabel)
-                .add(continuationIndentSizeLabel))
-              .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-              .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                .add(indentSizeField)
-                .add(continuationIndentSizeField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 75, Short.MaxValue)))
-            .add(reformatCommentsCheckBox)
-            .add(indentHtmlCheckBox))
-          .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MaxValue)));
+      layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+        .addGroup(layout.createSequentialGroup.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+          .addGroup(layout.createSequentialGroup.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addComponent(indentSizeLabel)
+            .addComponent(continuationIndentSizeLabel))
+            .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
+              .addComponent(indentSizeLabel)
+              .addComponent(continuationIndentSizeLabel, GroupLayout.DEFAULT_SIZE, 75, Short.MaxValue)))
+          .addComponent(reformatCommentsCheckBox)
+          .addComponent(indentHtmlCheckBox))
+          .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MaxValue)))
+
     layout.setVerticalGroup(
-      layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-        .add(layout.createSequentialGroup()
-          .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-            .add(indentSizeLabel)
-            .add(indentSizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-          .add(14, 14, 14)
-          .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-            .add(continuationIndentSizeLabel)
-            .add(continuationIndentSizeField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-          .add(18, 18, 18)
-          .add(reformatCommentsCheckBox)
-          .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-          .add(indentHtmlCheckBox)
-          .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MaxValue)));
+      layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+        .addGroup(layout.createSequentialGroup.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+          .addComponent(indentSizeLabel)
+          .addComponent(indentSizeField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+          .addGap(14, 14, 14)
+          .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+            .addComponent(continuationIndentSizeLabel)
+            .addComponent(continuationIndentSizeField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+          .addGap(18, 18, 18)
+          .addComponent(reformatCommentsCheckBox)
+          .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+          .addComponent(indentHtmlCheckBox)
+          .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MaxValue)))
   } // </editor-fold>//GEN-END:initComponents
 
 }
