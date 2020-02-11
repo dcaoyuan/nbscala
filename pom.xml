@@ -88,7 +88,7 @@
         <repository>
             <id>netbeans</id>
             <name>NetBeans Platform Maven Repository</name>
-            <url>http://bits.netbeans.org/nexus/content/groups/netbeans</url>
+            <url>https://bits.netbeans.org/nexus/content/groups/netbeans</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -100,16 +100,16 @@
         <repository>
             <id>repository.jboss.org-public</id>
             <name>JBoss.org Maven repository</name>
-            <url>http://repository.jboss.org/nexus/content/groups/public</url>
+            <url>https://repository.jboss.org/nexus/content/groups/public</url>
         </repository>
 
         <repository>
             <id>Typesafe releases</id>
-            <url>http://repo.typesafe.com/typesafe/ivy-releases</url>
+            <url>https://repo.typesafe.com/typesafe/ivy-releases</url>
         </repository>
         <repository>
             <id>Typesafe snapshots</id>
-            <url>http://repo.typesafe.com/typesafe/ivy-snapshots</url>
+            <url>https://repo.typesafe.com/typesafe/ivy-snapshots</url>
         </repository>
 
     </repositories>
